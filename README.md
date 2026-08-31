@@ -164,7 +164,7 @@ unset to get every language and choose per request.
 
 ## The other services
 
-Twelve of the Emporix services are covered, each with the full set of
+Nineteen of the Emporix services are covered, each with the full set of
 operations the API offers for it. Each hangs off the client under a name that
 says what it owns:
 
@@ -183,6 +183,13 @@ says what it owns:
 | `client.Orders` | a customer's own orders |
 | `client.SalesOrders` | the administrative order collection |
 | `client.Media` | assets, links, downloads |
+| `client.Taxes` | tax configuration and calculation |
+| `client.Fees` | fees, and what they attach to |
+| `client.Coupons` | coupons, redemptions, referral coupons |
+| `client.Payments` | payment methods, and moving money |
+| `client.Shipping` | zones, methods, quotes, delivery times |
+| `client.Returns` | returns against an order |
+| `client.Invoices` | invoice generation, as a job |
 
 A storefront flow from browsing to order:
 
@@ -217,6 +224,11 @@ Some services group operations that belong together:
 | `client.Products.Templates` | the attribute sets products are built from |
 | `client.Categories.Assignments` | what sits in a category, also by reference |
 | `client.Customers.Addresses` | a customer's own addresses and their tags |
+| `client.Payments.Modes` | what a tenant accepts, and the reduced view a browser may see |
+| `client.Shipping.ForSite(site)` | zones, methods, quotes, groups — everything per site |
+| `client.Shipping.DeliveryTimes` | delivery times and slots, configured tenant-wide |
+| `client.Coupons.Redemptions(code)` | the redemptions of one coupon |
+| `client.Fees.ForItem(yrn)` · `client.Fees.ForProduct(id)` | the fees attached to one thing |
 
 A cart item is addressed by its YRN, not by a bare product id — `ProductYrn.Create(tenant, id)`
 builds one, and passing a bare id is refused before the request leaves. It also
@@ -229,10 +241,11 @@ the request is sent. Carts, checkout and own-orders do the same.
 
 ### What is not here yet
 
-These twelve services carry the operations the Emporix API offers for them.
-What is missing is the other 36 services — payments, coupons, taxes, shipping,
-quotes, IAM and the rest. Their generated types ship in the package, so
-anything missing is reachable through the underlying `HttpClient`.
+These nineteen services carry the operations the Emporix API offers for them.
+What is missing is the other 29 services — B2B (companies, contacts, quotes,
+approvals), platform (IAM, schemas, webhooks) and the AI and import services.
+Their generated types ship in the package, so anything missing is reachable
+through the underlying `HttpClient`.
 
 The full picture is in
 [docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31), and what happens

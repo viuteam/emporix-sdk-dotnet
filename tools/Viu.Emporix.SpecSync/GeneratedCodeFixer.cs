@@ -224,6 +224,64 @@ internal static partial class GeneratedCodeFixer
         return (result, retyped);
     }
 
+    /// <summary>
+    /// Renames generated types that differ only in letter case.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The shipping specification defines both <c>MetaData</c> and
+    /// <c>Metadata</c> — different shapes, same name to anything
+    /// case-insensitive. The JSON source generator derives one file per type
+    /// from the type name, so the second collides with the first and the
+    /// generator aborts with «hintName must be unique». It does not fail
+    /// gracefully: every other serialization context in the assembly stops
+    /// being generated too, and the resulting errors point everywhere except
+    /// here.
+    /// </para>
+    /// <para>
+    /// The later declaration is suffixed so both survive. Renaming rather than
+    /// merging is deliberate: the two carry different fields, and a caller
+    /// reading a <c>version</c> off the one that only has timestamps would get
+    /// a silent null.
+    /// </para>
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Renamed) ResolveCaseInsensitiveCollisions(string source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        List<string> declared = [.. ClassDeclaration().Matches(source).Select(m => m.Groups[1].Value)];
+        Dictionary<string, string> seen = new(StringComparer.OrdinalIgnoreCase);
+        List<string> renamed = [];
+        string result = source;
+
+        foreach (string name in declared)
+        {
+            if (!seen.TryGetValue(name, out string? existing))
+            {
+                seen[name] = name;
+                continue;
+            }
+
+            // An exactly repeated name is not a collision: NSwag declares
+            // ApiException twice, once generic and once not, and both belong.
+            // Only a difference in case breaks the generator.
+            if (string.Equals(existing, name, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Suffixed rather than numbered: a reader seeing «MetadataCased»
+            // can tell it was renamed, and by what rule.
+            string replacement = name + "Cased";
+
+            result = new Regex($@"\b{Regex.Escape(name)}\b").Replace(result, replacement);
+            renamed.Add($"{name} → {replacement}");
+            seen[replacement] = replacement;
+        }
+
+        return (result, renamed);
+    }
+
     private static bool IsTypeParameter(string name)
         => name.Length >= 1
             && name[0] == 'T'
@@ -256,6 +314,9 @@ internal static partial class GeneratedCodeFixer
         + @"[ \t]*\{\r?\n(?:[ \t]*\r?\n)*[ \t]*\}\r?\n",
         RegexOptions.Multiline)]
     private static partial Regex EmptyAliasClass();
+
+    [GeneratedRegex(@"^    public partial class (\w+)", RegexOptions.Multiline)]
+    private static partial Regex ClassDeclaration();
 
     /// <summary>A field whose type is the alias being dissolved.</summary>
     private static Regex PropertyDeclaration(string alias)

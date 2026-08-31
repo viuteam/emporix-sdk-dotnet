@@ -263,3 +263,126 @@ internal sealed partial class OrderJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetUpdateLink))]
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetReferenceUpdate))]
 internal sealed partial class MediaJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the tax service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.TaxServiceModels.TaxRetrieval))]
+[JsonSerializable(typeof(List<Viu.Emporix.TaxServiceModels.TaxRetrieval>))]
+[JsonSerializable(typeof(Viu.Emporix.TaxServiceModels.TaxCreation))]
+[JsonSerializable(typeof(Viu.Emporix.TaxServiceModels.TaxCreationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.TaxServiceModels.TaxUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.TaxServiceModels.TaxCalculationRequest))]
+[JsonSerializable(typeof(Viu.Emporix.TaxServiceModels.TaxCalculationResponse))]
+internal sealed partial class TaxJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the returns service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.ReturnsModels.FullEmployeeReturn))]
+[JsonSerializable(typeof(List<Viu.Emporix.ReturnsModels.FullEmployeeReturn>))]
+[JsonSerializable(typeof(Viu.Emporix.ReturnsModels.BasicEmployeeReturn))]
+[JsonSerializable(typeof(Viu.Emporix.ReturnsModels.UpdateEmployeeReturn))]
+[JsonSerializable(typeof(Viu.Emporix.ReturnsModels.ReturnId))]
+[JsonSerializable(typeof(List<Viu.Emporix.ReturnsModels.PatchOperation>))]
+internal sealed partial class ReturnJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the invoice service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.InvoiceModels.JobRequest))]
+[JsonSerializable(typeof(Viu.Emporix.InvoiceModels.JobCreationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.InvoiceModels.JobStatusResponse))]
+internal sealed partial class InvoiceJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the coupon service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.Coupon))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.BaseCoupon))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.CouponCreation))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.CouponWithIdAndStatus))]
+[JsonSerializable(typeof(List<Viu.Emporix.CouponModels.CouponWithIdAndStatus>))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.Redemption))]
+[JsonSerializable(typeof(List<Viu.Emporix.CouponModels.Redemption>))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.RedemptionCreation))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.ReferralCoupon))]
+[JsonSerializable(typeof(Viu.Emporix.CouponModels.ResourceLocation))]
+internal sealed partial class CouponJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the fee service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.Fee))]
+[JsonSerializable(typeof(List<Viu.Emporix.FeeModels.Fee>))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.FeeWithItems))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.ItemFee))]
+[JsonSerializable(typeof(List<Viu.Emporix.FeeModels.ItemFee>))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.ItemFeeCreationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.FeeIdsUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.ItemYRNs))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.SearchItemFee))]
+[JsonSerializable(typeof(Viu.Emporix.FeeModels.SearchItemsFee))]
+internal sealed partial class FeeJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the payment service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.PaymentModeRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.PaymentMethodUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.PaymentModeResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.PaymentModels.PaymentModeResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.PaymentModeFrontendResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.PaymentModels.PaymentModeFrontendResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.InitializePaymentRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.InitializePaymentResponse))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.AuthorizePaymentRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.AuthorizeFrontendPaymentRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.AuthorizePaymentResponse))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.CaptureRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.RefundRequest))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.CommonPaymentResponse))]
+[JsonSerializable(typeof(Viu.Emporix.PaymentModels.PaymentTransactionResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.PaymentModels.PaymentTransactionResponse>))]
+internal sealed partial class PaymentJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the shipping service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.Site))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.Site>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.FindSiteRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.ActualDeliveryWindow))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.ActualDeliveryWindow>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.DeliveryWindowValidationDto))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.DeliveryCycle))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.Zone))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.Zone>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.Method))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.Method>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.ResourceCreatedResponse))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.QuotePayload))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.QuoteSlot))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.QuoteResponseItem))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.QuoteResponseItem>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.MinimumFee))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.Group))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.Group>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.CGRelation))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.CGRelation>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.BasicDeliveryTime))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.BasicDeliveryTime>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.DeliveryTime))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.DeliveryTime>))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.UpdateDeliveryTime))]
+[JsonSerializable(typeof(Viu.Emporix.ShippingModels.SlotCreation))]
+[JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.SlotCreation>))]
+internal sealed partial class ShippingJsonContext : JsonSerializerContext;
+

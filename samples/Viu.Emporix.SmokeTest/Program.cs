@@ -235,6 +235,73 @@ await runner.RunAsync("read the current cart", async () =>
         : Step.Failed($"expected the new cart, got {cart?.Id ?? "nothing"}");
 });
 
+await runner.RunAsync("shipping zones for the site", async () =>
+{
+    IReadOnlyList<Viu.Emporix.ShippingModels.Zone> zones =
+        await client.Shipping.ForSite(configuration.Site).ListZonesAsync(shopper);
+
+    // No zone means nothing can be delivered from this site, which is worth
+    // saying out loud rather than passing on an empty list.
+    return zones.Count > 0
+        ? Step.Ok($"{zones.Count} zone(s)")
+        : Step.Empty("no shipping zones — nothing is deliverable from this site");
+});
+
+await runner.RunAsync("shipping quote", async () =>
+{
+    // A quote takes a total and a destination, not a cart — the endpoint is
+    // usable before a cart exists, which is why a product page can show
+    // «delivery from».
+    Viu.Emporix.ShippingModels.QuotePayload payload = new()
+    {
+        CartTotal = new Viu.Emporix.ShippingModels.CartTotal
+        {
+            Amount = 50,
+            Currency = configuration.Currency ?? "CHF",
+        },
+        ShipToAddress = new Viu.Emporix.ShippingModels.Address
+        {
+            Street = "Rennweg",
+            StreetNumber = "38",
+        },
+    };
+
+    try
+    {
+        IReadOnlyList<Viu.Emporix.ShippingModels.QuoteResponseItem> quote =
+            await client.Shipping.ForSite(configuration.Site).QuoteAsync(payload, shopper);
+
+        return quote.Count > 0
+            ? Step.Ok($"{quote.Count} method(s) offered")
+            : Step.Empty("no delivery method applies to this total and address");
+    }
+    catch (EmporixValidationException exception)
+        when (exception.Message.Contains("No matching method", StringComparison.OrdinalIgnoreCase))
+    {
+        // Emporix answers «we do not deliver there» with a 400, not an empty
+        // list. The SDK is right to surface that as an exception — a malformed
+        // request looks the same to it — but for this smoke test it means the
+        // address used here is outside the tenant's zone, not that the call is
+        // broken. The rest of the step ran: the request was accepted, routed
+        // and answered.
+        return Step.Empty(
+            "the address used here is outside this tenant's delivery zone — "
+            + "the call itself reached the service and was understood");
+    }
+});
+
+await runner.RunAsync("payment methods a shopper may see", async () =>
+{
+    // The reduced view. Reaching the configured one from a storefront token
+    // would be a leak, and Emporix refuses it — which is the point.
+    IReadOnlyList<Viu.Emporix.PaymentModels.PaymentModeFrontendResponse> modes =
+        await client.Payments.Modes.ListForFrontendAsync(shopper);
+
+    return modes.Count > 0
+        ? Step.Ok($"{modes.Count} method(s)")
+        : Step.Empty("no payment method is enabled for this tenant");
+});
+
 await runner.RunAsync("validate the cart", async () =>
 {
     if (cartId is null)

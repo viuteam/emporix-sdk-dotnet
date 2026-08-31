@@ -54,7 +54,21 @@ roughly a further nine. Budget for them rather than treating each as a surprise.
 Ordered by who is blocked without them, not by size. A storefront can already
 browse, price and order; everything below extends that.
 
-### Wave 2 — completing a real checkout (7 services, 104 operations)
+### Wave 2 — completing a real checkout (7 services, 101 operations) — done
+
+Delivered as 101 operations against the 104 the Node SDK counts: the three
+differences are shape, as in wave 1. Emporix attaches fees to items by YRN and
+to products by id through two path families with identical behaviour, so one
+`FeeAttachmentOperations` serves both rather than duplicating four methods.
+
+One defect, and the guards caught it before any call was made: the shipping
+specification defines both `MetaData` and `Metadata`, which collide in a
+case-insensitive file name and made the JSON source generator abort — taking
+every other serialization context in the assembly with it and reporting the
+errors everywhere except the cause. The generation pipeline now renames the
+later declaration. `SpecPathTests` passed on all 61 new calls at the first
+attempt.
+
 
 The purchase path works, but only for the simple case. These are what a
 production storefront needs before it can take money.
@@ -189,7 +203,7 @@ real at least once.
 | Wave | Services | Operations | State |
 | --- | ---: | ---: | --- |
 | 1 | 12 | 193 | done |
-| 2 — checkout | 7 | 104 | planned |
+| 2 — checkout | 7 | 101 | done |
 | 3 — B2B | 8 | 92 | planned |
 | 4 — platform | 12 | 133 | planned |
 | 5 — needs decisions | 9 | 104 | blocked on the three ADRs |

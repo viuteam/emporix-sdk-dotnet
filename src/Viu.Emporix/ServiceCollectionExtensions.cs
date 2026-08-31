@@ -187,6 +187,33 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<EmporixHttpClient>(),
             provider.GetRequiredService<IOptions<EmporixOptions>>()));
 
+        services.TryAddSingleton(static provider => new TaxService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new FeeService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new CouponService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new PaymentService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new ShippingService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new ReturnService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new InvoiceService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
         // The client bundles the services. Here it uses the parts from the
         // container and therefore releases nothing itself.
         services.TryAddSingleton(static provider => new EmporixClient(

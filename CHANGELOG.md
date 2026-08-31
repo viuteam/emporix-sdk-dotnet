@@ -9,6 +9,33 @@ exactly that package version.
 
 ## [Unreleased]
 
+### Added
+
+- Seven services that complete a checkout: `Taxes`, `Fees`, `Coupons`,
+  `Payments`, `Shipping`, `Returns` and `Invoices` — 101 operations. Nineteen of
+  the 48 Emporix services are now covered.
+- Grouped operations for the new services: `Payments.Modes`,
+  `Shipping.ForSite(site)`, `Shipping.DeliveryTimes`, `Coupons.Redemptions(code)`,
+  `Fees.ForItem(yrn)` and `Fees.ForProduct(id)`.
+
+### Fixed
+
+- The generation pipeline renames generated types that differ only in letter
+  case. The shipping specification defines both `MetaData` and `Metadata`, which
+  collide in a case-insensitive file name and made the JSON source generator
+  abort — silently taking every other serialization context in the assembly with
+  it.
+
+### Notes
+
+- No payment call is ever retried. Emporix offers no idempotency key on
+  authorize, capture, refund or cancel, so a retry cannot be made safe.
+- `Fees.SearchByProductsAsync` takes the product ids as a single string, not a
+  list. The specification types the field that way despite the plural name, and
+  neither it nor the published documentation says how several ids are encoded
+  inside it. Passing the value through verbatim beats guessing a separator; use
+  `SearchByProductAsync`, which is fully specified.
+
 ## [0.1.0-preview.1]
 
 The first prerelease. The core is complete, and so are twelve of the 48 Emporix

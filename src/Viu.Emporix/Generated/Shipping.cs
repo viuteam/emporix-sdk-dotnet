@@ -94,7 +94,7 @@ namespace Viu.Emporix.ShippingModels
         public string? SlotId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetaData? Metadata { get; set; } = default!;
+        public MetaData? MetadataCased { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -184,7 +184,7 @@ namespace Viu.Emporix.ShippingModels
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetaData? Metadata { get; set; } = default!;
+        public MetaData? MetadataCased { get; set; } = default!;
 
     }
 
@@ -196,7 +196,7 @@ namespace Viu.Emporix.ShippingModels
         /// metadata of the document
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public Metadata? Metadata { get; set; } = default!;
+        public MetadataCased? MetadataCased { get; set; } = default!;
 
     }
 
@@ -466,7 +466,7 @@ namespace Viu.Emporix.ShippingModels
         public System.Collections.Generic.ICollection<ZoneWithActualDeliveryWindows>? Zones { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetaData? Metadata { get; set; } = default!;
+        public MetaData? MetadataCased { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -1293,7 +1293,7 @@ namespace Viu.Emporix.ShippingModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Metadata
+    public partial class MetadataCased
     {
 
         /// <summary>

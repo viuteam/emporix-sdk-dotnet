@@ -57,6 +57,13 @@ public sealed class EmporixClient : IDisposable
     private OrderService? _orders;
     private SalesOrderService? _salesOrders;
     private MediaService? _media;
+    private TaxService? _tax;
+    private FeeService? _fee;
+    private CouponService? _coupon;
+    private PaymentService? _payment;
+    private ShippingService? _shipping;
+    private ReturnService? _return;
+    private InvoiceService? _invoice;
     private bool _disposed;
 
     /// <summary>
@@ -314,6 +321,83 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _media ??= new MediaService(_http, _options);
+        }
+    }
+
+    /// <summary>Tax configuration and calculation.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public TaxService Taxes
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _tax ??= new TaxService(_http, _options);
+        }
+    }
+
+    /// <summary>Fees, and what they are attached to.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public FeeService Fees
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _fee ??= new FeeService(_http, _options);
+        }
+    }
+
+    /// <summary>Coupons, redemptions and referral coupons.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public CouponService Coupons
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _coupon ??= new CouponService(_http, _options);
+        }
+    }
+
+    /// <summary>Payment methods, and moving money.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public PaymentService Payments
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _payment ??= new PaymentService(_http, _options);
+        }
+    }
+
+    /// <summary>Zones, methods, quotes and delivery times.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ShippingService Shipping
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _shipping ??= new ShippingService(_http, _options);
+        }
+    }
+
+    /// <summary>Returns against an order.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ReturnService Returns
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _return ??= new ReturnService(_http, _options);
+        }
+    }
+
+    /// <summary>Invoice generation, as a background job.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public InvoiceService Invoices
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _invoice ??= new InvoiceService(_http, _options);
         }
     }
 

@@ -203,6 +203,13 @@ static async Task<IReadOnlyList<string>> PostProcessAsync(
     (content, IReadOnlyList<string> dangling) = GeneratedCodeFixer.ResolveDanglingTypeReferences(content);
     (content, IReadOnlyList<string> retyped) =
         GeneratedCodeFixer.RetypeLocalizedProperties(content, localized);
+    (content, IReadOnlyList<string> renamed) =
+        GeneratedCodeFixer.ResolveCaseInsensitiveCollisions(content);
+
+    if (renamed.Count > 0)
+    {
+        resolved = [.. resolved, .. renamed];
+    }
 
     if (retyped.Count > 0)
     {
