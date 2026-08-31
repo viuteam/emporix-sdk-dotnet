@@ -147,6 +147,21 @@ await client.Products.UpdateAsync("p1", changes);
 await client.Products.DeleteAsync("p1", force: true);
 ```
 
+### Localized text
+
+Names and descriptions are `LocalizedString`, not `string`. Emporix returns the
+same field in two shapes — every translation when the request named no language,
+one text when it did — and this type reads both:
+
+```csharp
+product.Name?.ToString()   // some text, whichever the response carried
+product.Name?.Get("de")    // that language, or null
+product.Name?.GetOrAny("de")   // that language, or any other rather than nothing
+```
+
+Set `EmporixStorefrontContext.Language` to have Emporix translate; leave it
+unset to get every language and choose per request.
+
 ## The other services
 
 Twelve of the Emporix services are covered, each with the full set of
@@ -193,6 +208,19 @@ var order = await client.Checkout.PlaceOrderAsync(checkout, shopper);
 // Afterwards, from the customer's own token.
 var mine = await client.Orders.ListMineAsync(AuthContext.Customer(token));
 ```
+
+Some services group operations that belong together:
+
+| | |
+| --- | --- |
+| `client.Prices.Models` · `client.Prices.Lists` | price models, price lists and their prices |
+| `client.Products.Templates` | the attribute sets products are built from |
+| `client.Categories.Assignments` | what sits in a category, also by reference |
+| `client.Customers.Addresses` | a customer's own addresses and their tags |
+
+A cart item is addressed by its YRN, not by a bare product id — `ProductYrn.Create(tenant, id)`
+builds one, and passing a bare id is refused before the request leaves. It also
+needs the `priceId` from a price match: Emporix rejects an item without one.
 
 Several services refuse the wrong kind of token instead of failing quietly.
 Price matching with a service token would return an empty list — indistinguishable
@@ -295,8 +323,13 @@ not be parsed at all, a price match that returned the request type instead of
 the response, and three places where the specification disagrees with the API.
 
 ```bash
-EMPORIX_TENANT=your-tenant EMPORIX_CLIENT_ID=your-client-id EMPORIX_SITE=main EMPORIX_CURRENCY=CHF dotnet run --project samples/Viu.Emporix.SmokeTest
+EMPORIX_TENANT=your-tenant EMPORIX_CLIENT_ID=your-client-id EMPORIX_SITE=main EMPORIX_CURRENCY=CHF EMPORIX_COUNTRY=CH EMPORIX_PRODUCT_ID=a-priced-product dotnet run --project samples/Viu.Emporix.SmokeTest
 ```
+
+`EMPORIX_PRODUCT_ID` is worth setting: a tenant can list plenty of products and
+have prices for none of them, and then the pricing and cart-item steps skip
+themselves and prove nothing. Naming one product that is priced walks the flow
+to the end. `EMPORIX_HOST` overrides the API host; everything else is optional.
 
 Credentials come from the environment and are never read from a file in the
 repository. Nothing it prints contains a token.
