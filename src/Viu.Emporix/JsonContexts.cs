@@ -52,6 +52,14 @@ internal sealed class SearchQueryBody
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BasicProductBulkUpdate>))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.ResourceLocation))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BulkResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationJobResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.ProductModels.DynamicVariantRecalculationJobResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ProductTemplateResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.ProductModels.ProductTemplateResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ProductTemplateCreation))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ProductTemplateUpdate))]
 internal sealed partial class ProductJsonContext : JsonSerializerContext;
 
 /// <summary>The identifier Emporix returns when a cart is created.</summary>
@@ -214,4 +222,8 @@ internal sealed partial class OrderJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.MediaModels.GetAsset>))]
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetCreateLink))]
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.GetAssetLink))]
+[JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetCreateBlob))]
+[JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetUpdateBlob))]
+[JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetUpdateLink))]
+[JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetReferenceUpdate))]
 internal sealed partial class MediaJsonContext : JsonSerializerContext;

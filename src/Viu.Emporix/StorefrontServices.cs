@@ -1,4 +1,7 @@
 using System.Globalization;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 
 namespace Viu.Emporix;
@@ -1121,11 +1124,13 @@ public sealed class MediaService
     /// <param name="pageNumber">The page number, counting from 1.</param>
     /// <param name="pageSize">The page size.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="productId">An optional product whose assets to list.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     public async Task<PaginatedItems<MediaModels.GetAsset>> ListAsync(
         int pageNumber = 1,
         int pageSize = 60,
         AuthContext auth = default,
+        string? productId = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
@@ -1141,6 +1146,9 @@ public sealed class MediaService
                 [
                     new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
                     new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+                    // Emporix filters by reference, which is how «the images of
+                    // this product» is expressed.
+                    new("refIds.id", productId),
                 ],
             },
             MediaJsonContext.Default.ListGetAsset,
@@ -1225,5 +1233,257 @@ public sealed class MediaService
                 Auth = Defaults.Service(auth),
             },
             cancellationToken);
+    }
+
+    /// <summary>Uploads a file as an asset.</summary>
+    /// <param name="content">The file's bytes.</param>
+    /// <param name="fileName">The file name Emporix should record.</param>
+    /// <param name="mimeType">The content type, for example <c>image/jpeg</c>.</param>
+    /// <param name="productId">An optional product to attach the asset to right away.</param>
+    /// <param name="isPublic">Whether the asset is publicly readable. Public by default.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Sent as <c>multipart/form-data</c> with the bytes under <c>file</c> and
+    /// the metadata as JSON under <c>body</c> — the shape Emporix expects, and
+    /// the reason this is not an ordinary JSON call.
+    /// </remarks>
+    public async Task<MediaModels.GetAsset?> UploadAsync(
+        Stream content,
+        string fileName,
+        string mimeType,
+        string? productId = null,
+        bool isPublic = true,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(mimeType);
+
+        MediaModels.AssetCreateBlob descriptor = new()
+        {
+            Type = MediaModels.AssetCreateBlobType.BLOB,
+            Access = isPublic ? MediaModels.AssetAccess.PUBLIC : MediaModels.AssetAccess.PRIVATE,
+            Details = new MediaModels.AssetDetailsCreate { Filename = fileName, MimeType = mimeType },
+            RefIds = productId is { Length: > 0 }
+                ? [new MediaModels.RefId { Type = "PRODUCT", Id = productId }]
+                : null,
+        };
+
+        using MultipartFormDataContent form = BuildForm(
+            content,
+            fileName,
+            mimeType,
+            JsonSerializer.Serialize(descriptor, MediaJsonContext.Default.AssetCreateBlob));
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Content = form,
+            },
+            MediaJsonContext.Default.GetAsset,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Replaces an asset's file.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="content">The new bytes.</param>
+    /// <param name="fileName">The file name Emporix should record.</param>
+    /// <param name="mimeType">The content type.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The asset keeps its id, so anything referencing it keeps working — which
+    /// is the point of replacing rather than creating a new one.
+    /// </remarks>
+    public async Task<MediaModels.GetAsset?> ReplaceFileAsync(
+        string assetId,
+        Stream content,
+        string fileName,
+        string mimeType,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(mimeType);
+
+        MediaModels.AssetUpdateBlob descriptor = new()
+        {
+            Type = MediaModels.AssetUpdateBlobType.BLOB,
+            Details = new MediaModels.AssetDetailsCreate { Filename = fileName, MimeType = mimeType },
+        };
+
+        using MultipartFormDataContent form = BuildForm(
+            content,
+            fileName,
+            mimeType,
+            JsonSerializer.Serialize(descriptor, MediaJsonContext.Default.AssetUpdateBlob));
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
+                Auth = Defaults.Service(auth),
+                Content = form,
+            },
+            MediaJsonContext.Default.GetAsset,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Changes a linked asset's target.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="asset">The new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<MediaModels.GetAsset?> UpdateLinkAsync(
+        string assetId,
+        MediaModels.AssetUpdateLink asset,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+        ArgumentNullException.ThrowIfNull(asset);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(asset, MediaJsonContext.Default.AssetUpdateLink),
+            },
+            MediaJsonContext.Default.GetAsset,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Lists the assets attached to a product.</summary>
+    /// <param name="productId">The product.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<PaginatedItems<MediaModels.GetAsset>> ListForProductAsync(
+        string productId,
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+
+        return ListAsync(pageNumber, pageSize, auth, productId, cancellationToken);
+    }
+
+    /// <summary>Attaches an asset to a product.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="productId">The product.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// References live in the asset's own list and the update replaces that
+    /// list, so this reads first and writes the references back together with
+    /// the new one. Attaching twice changes nothing.
+    /// </remarks>
+    public Task<MediaModels.GetAsset?> AttachToProductAsync(
+        string assetId,
+        string productId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => ChangeReferencesAsync(assetId, productId, attach: true, auth, cancellationToken);
+
+    /// <summary>Detaches an asset from a product.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="productId">The product.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Removes the reference, not the asset. Detaching something that was never
+    /// attached changes nothing.
+    /// </remarks>
+    public Task<MediaModels.GetAsset?> DetachFromProductAsync(
+        string assetId,
+        string productId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => ChangeReferencesAsync(assetId, productId, attach: false, auth, cancellationToken);
+
+    private async Task<MediaModels.GetAsset?> ChangeReferencesAsync(
+        string assetId,
+        string productId,
+        bool attach,
+        AuthContext auth,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+
+        AuthContext service = Defaults.Service(auth);
+
+        MediaModels.GetAsset? asset =
+            await GetAsync(assetId, service, cancellationToken).ConfigureAwait(false);
+
+        if (asset is null)
+        {
+            return null;
+        }
+
+        List<MediaModels.RefId> references =
+        [
+            .. (asset.RefIds ?? []).Where(r => !IsProduct(r, productId)),
+        ];
+
+        if (attach)
+        {
+            references.Add(new MediaModels.RefId { Type = "PRODUCT", Id = productId });
+        }
+        else if (references.Count == (asset.RefIds?.Count ?? 0))
+        {
+            // Nothing was attached, so there is nothing to write.
+            return asset;
+        }
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
+                Auth = service,
+                Content = EmporixJsonContent.Create(
+                    new MediaModels.AssetReferenceUpdate
+                    {
+                        Type = asset.Type?.ToString() ?? "BLOB",
+                        RefIds = references,
+                    },
+                    MediaJsonContext.Default.AssetReferenceUpdate),
+            },
+            MediaJsonContext.Default.GetAsset,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static bool IsProduct(MediaModels.RefId reference, string productId)
+        => string.Equals(reference.Type, "PRODUCT", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(reference.Id, productId, StringComparison.Ordinal);
+
+    private static MultipartFormDataContent BuildForm(
+        Stream content,
+        string fileName,
+        string mimeType,
+        string descriptor)
+    {
+        MultipartFormDataContent form = [];
+
+        StreamContent file = new(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
+        form.Add(file, "file", fileName);
+        form.Add(new StringContent(descriptor, Encoding.UTF8, "application/json"), "body");
+
+        return form;
     }
 }

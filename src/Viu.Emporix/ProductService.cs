@@ -627,4 +627,255 @@ public sealed partial class ProductService
     /// <summary>Characters that act as delimiters inside a value list.</summary>
     [GeneratedRegex(@"[(),""\s]")]
     private static partial Regex QueryDelimiters();
+
+    /// <summary>Replaces many products in one call.</summary>
+    /// <param name="products">The products in their new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Each entry reports its own status: a 200 on the call does not mean every
+    /// product was written.
+    /// </remarks>
+    public async Task<IReadOnlyList<BulkResponse>> UpdateManyAsync(
+        IEnumerable<BasicProductBulkUpdate> products,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(products);
+
+        List<BasicProductBulkUpdate> body = [.. products];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Put,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        ProductJsonContext.Default.ListBasicProductBulkUpdate),
+                },
+                ProductJsonContext.Default.ListBulkResponse,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Starts recalculating dynamic variants.</summary>
+    /// <param name="request">Which products to recalculate.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Recalculation runs in the background: the response identifies a job, not
+    /// a result. Follow it with <see cref="GetRecalculationJobAsync"/>.
+    /// </remarks>
+    public async Task<DynamicVariantRecalculationResponse?> RecalculateVariantsAsync(
+        DynamicVariantRecalculationRequest request,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/recalculate",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    request,
+                    ProductJsonContext.Default.DynamicVariantRecalculationRequest),
+            },
+            ProductJsonContext.Default.DynamicVariantRecalculationResponse,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Lists the recalculation jobs.</summary>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<IReadOnlyList<DynamicVariantRecalculationJobResponse>> ListRecalculationJobsAsync(
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/recalculate/jobs",
+                Auth = Defaults.Service(auth),
+            },
+            ProductJsonContext.Default.ListDynamicVariantRecalculationJobResponse,
+            cancellationToken).ConfigureAwait(false) ?? [];
+
+    /// <summary>Reads one recalculation job.</summary>
+    /// <param name="jobId">The job id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<DynamicVariantRecalculationJobResponse?> GetRecalculationJobAsync(
+        string jobId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/recalculate/jobs/{Uri.EscapeDataString(jobId)}",
+                Auth = Defaults.Service(auth),
+            },
+            ProductJsonContext.Default.DynamicVariantRecalculationJobResponse,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Product templates: the attribute sets products are built from.</summary>
+    public ProductTemplateOperations Templates => new(_http, _tenant);
+}
+
+/// <summary>
+/// Product templates.
+/// </summary>
+/// <remarks>
+/// A template defines which attributes a product carries. Reached through
+/// <see cref="ProductService.Templates"/>.
+/// </remarks>
+public sealed class ProductTemplateOperations
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal ProductTemplateOperations(EmporixHttpClient http, string tenant)
+    {
+        _http = http;
+        _tenant = tenant;
+    }
+
+    private string BasePath => $"/product/{_tenant}/product-templates";
+
+    /// <summary>Lists the templates.</summary>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<PaginatedItems<ProductTemplateResponse>> ListAsync(
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Query =
+                [
+                    new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
+                    new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+                ],
+            },
+            ProductJsonContext.Default.ListProductTemplateResponse,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Fetches a template.</summary>
+    /// <param name="templateId">The template id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<ProductTemplateResponse?> GetAsync(
+        string templateId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(templateId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(templateId)}",
+                Auth = Defaults.Service(auth),
+            },
+            ProductJsonContext.Default.ProductTemplateResponse,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Creates a template.</summary>
+    /// <param name="template">The template to create.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<ResourceLocation?> CreateAsync(
+        ProductTemplateCreation template,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    template,
+                    ProductJsonContext.Default.ProductTemplateCreation),
+            },
+            ProductJsonContext.Default.ResourceLocation,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Replaces a template.</summary>
+    /// <param name="templateId">The template id.</param>
+    /// <param name="template">The new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task UpdateAsync(
+        string templateId,
+        ProductTemplateUpdate template,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(templateId);
+        ArgumentNullException.ThrowIfNull(template);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(templateId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    template,
+                    ProductJsonContext.Default.ProductTemplateUpdate),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Deletes a template.</summary>
+    /// <param name="templateId">The template id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task DeleteAsync(
+        string templateId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(templateId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/{Uri.EscapeDataString(templateId)}",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
 }
