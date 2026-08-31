@@ -230,7 +230,9 @@ public sealed class CustomerService
         return await _http.SendAsync(
             new EmporixRequest
             {
-                Method = HttpMethod.Put,
+                // PATCH, not PUT: the endpoint has no full replace, and a PUT
+                // is simply not routed.
+                Method = HttpMethod.Patch,
                 Path = $"{BasePath}/me",
                 Auth = RequireCustomer(auth),
                 Content = EmporixJsonContent.Create(customer, CustomerJsonContext.Default.Customer),
@@ -269,6 +271,251 @@ public sealed class CustomerService
             cancellationToken);
     }
 
+
+    /// <summary>Signs in through a social identity provider.</summary>
+    /// <param name="providerToken">The token the provider issued.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The token comes from the provider's own flow, which the SDK does not
+    /// drive — it only exchanges the result for an Emporix session.
+    /// </remarks>
+    public Task<CustomerSession> SocialLoginAsync(
+        string providerToken,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerToken);
+
+        return PostSessionAsync(
+            $"{BasePath}/socialLogin",
+            EmporixJsonContent.Create(
+                new SocialLoginRequest { Token = providerToken },
+                CustomerJsonContext.Default.SocialLoginRequest),
+            Defaults.Anonymous(auth),
+            "social login",
+            cancellationToken);
+    }
+
+    /// <summary>Exchanges a token issued elsewhere for an Emporix session.</summary>
+    /// <param name="subjectAccessToken">The token to exchange.</param>
+    /// <param name="config">The exchange configuration to apply.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<CustomerSession> ExchangeTokenAsync(
+        string subjectAccessToken,
+        string? config = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subjectAccessToken);
+
+        return PostSessionAsync(
+            $"{BasePath}/exchangeauthtoken",
+            content: null,
+            Defaults.Anonymous(auth),
+            "token exchange",
+            cancellationToken,
+            query:
+            [
+                new("subjectAccessToken", subjectAccessToken),
+                new("config", config),
+            ]);
+    }
+
+    /// <summary>Checks whether a customer token is still good.</summary>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>What the token is good for, or <see langword="null"/> for an empty answer.</returns>
+    /// <exception cref="EmporixAuthenticationException">The token is not valid.</exception>
+    /// <remarks>
+    /// A rejected token surfaces as an exception, not as a <see langword="false"/> —
+    /// the distinction between «expired» and «never valid» is in the failure.
+    /// </remarks>
+    public async Task<CustomerModels.ValidateTokenResponse?> ValidateTokenAsync(
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+        => await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/validateauthtoken",
+                Auth = auth,
+            },
+            CustomerJsonContext.Default.ValidateTokenResponse,
+            cancellationToken).ConfigureAwait(false);
+
+    /// <summary>Changes the signed-in customer's password.</summary>
+    /// <param name="currentPassword">The password in force.</param>
+    /// <param name="newPassword">The replacement.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixValidationException">
+    /// The current password is wrong, or the new one fails the tenant's rules.
+    /// </exception>
+    /// <remarks>
+    /// Emporix may invalidate existing sessions on success, so treat the
+    /// caller's token as spent and sign in again.
+    /// </remarks>
+    public Task ChangePasswordAsync(
+        string currentPassword,
+        string newPassword,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentPassword);
+        ArgumentException.ThrowIfNullOrWhiteSpace(newPassword);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/password/change",
+                Auth = auth,
+                Content = EmporixJsonContent.Create(
+                    new CustomerModels.PasswordChangeDto
+                    {
+                        CurrentPassword = currentPassword,
+                        NewPassword = newPassword,
+                    },
+                    CustomerJsonContext.Default.PasswordChangeDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Completes a password reset.</summary>
+    /// <param name="token">The token from the reset mail.</param>
+    /// <param name="newPassword">The new password.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixValidationException">The token has expired or the password is rejected.</exception>
+    public Task ConfirmPasswordResetAsync(
+        string token,
+        string newPassword,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        ArgumentException.ThrowIfNullOrWhiteSpace(newPassword);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/password/reset/update",
+                Auth = Defaults.Anonymous(auth),
+                Content = EmporixJsonContent.Create(
+                    new CustomerModels.PasswordUpdate { Token = token, Password = newPassword },
+                    CustomerJsonContext.Default.PasswordUpdate),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Confirms a sign-up from the activation mail.</summary>
+    /// <param name="token">The token from the mail.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task ConfirmSignUpAsync(
+        string token,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/signup/optin/{Uri.EscapeDataString(token)}",
+                Auth = Defaults.Anonymous(auth),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Sends the activation mail again.</summary>
+    /// <param name="email">The address the sign-up was made with.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Identified by the address rather than by a token: the point is that the
+    /// person never received the first mail and has no token to offer.
+    /// </remarks>
+    public Task ResendActivationAsync(
+        string email,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/signup/optin/refresh_token",
+                Auth = Defaults.Anonymous(auth),
+                Content = EmporixJsonContent.Create(
+                    new CustomerModels.RefreshToken { Email = email },
+                    CustomerJsonContext.Default.RefreshToken),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Starts changing the signed-in customer's email address.</summary>
+    /// <param name="request">The current address, the password and the new address.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The address does not change here: Emporix sends a confirmation mail, and
+    /// <see cref="ConfirmEmailChangeAsync"/> completes it.
+    /// </remarks>
+    public Task ChangeEmailAsync(
+        CustomerModels.ChangeEmailRequestDto request,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/me/accounts/internal/email/change",
+                Auth = auth,
+                Content = EmporixJsonContent.Create(
+                    request,
+                    CustomerJsonContext.Default.ChangeEmailRequestDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Completes an email change.</summary>
+    /// <param name="token">The token from the confirmation mail.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The sign-in address changes here, so a session minted against the old
+    /// address may no longer resolve.
+    /// </remarks>
+    public Task ConfirmEmailChangeAsync(
+        string token,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/me/accounts/internal/email/change/confirm",
+                Auth = auth,
+                Content = EmporixJsonContent.Create(
+                    new CustomerModels.UpdateEmail { Token = token },
+                    CustomerJsonContext.Default.UpdateEmail),
+            },
+            cancellationToken);
+    }
+
     /// <summary>
     /// Reads a session out of a login response.
     /// </summary>
@@ -281,10 +528,11 @@ public sealed class CustomerService
     /// </remarks>
     private async Task<CustomerSession> PostSessionAsync(
         string path,
-        HttpContent content,
+        HttpContent? content,
         AuthContext auth,
         string operation,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyList<KeyValuePair<string, string?>>? query = null)
     {
         string body = await _http.SendForBodyAsync(
             new EmporixRequest
@@ -293,6 +541,7 @@ public sealed class CustomerService
                 Path = path,
                 Auth = auth,
                 Content = content,
+                Query = query,
             },
             cancellationToken).ConfigureAwait(false);
 
@@ -463,7 +712,8 @@ public sealed class CustomerAddressOperations
         return _http.SendAsync(
             new EmporixRequest
             {
-                Method = HttpMethod.Put,
+                // PATCH, as with the profile: there is no full replace here.
+                Method = HttpMethod.Patch,
                 Path = $"{BasePath}/{Uri.EscapeDataString(addressId)}",
                 Auth = RequireCustomer(auth),
                 Content = EmporixJsonContent.Create(
@@ -499,4 +749,78 @@ public sealed class CustomerAddressOperations
             ? auth
             : throw new EmporixConfigurationException(
                 "Addresses belong to a signed-in customer and require that customer's own token.");
+
+    /// <summary>Fetches one of the customer's addresses.</summary>
+    /// <param name="addressId">The address id.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<AddressDto?> GetAsync(
+        string addressId,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(addressId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(addressId)}",
+                Auth = auth,
+            },
+            CustomerJsonContext.Default.AddressDto,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Tags an address.</summary>
+    /// <param name="addressId">The address id.</param>
+    /// <param name="tags">The tags to add, for example <c>BILLING</c> or <c>SHIPPING</c>.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Tags travel as one comma-separated query parameter, which is how the
+    /// endpoint is specified — a tag containing a comma cannot be expressed.
+    /// </remarks>
+    public Task AddTagsAsync(
+        string addressId,
+        IEnumerable<string> tags,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+        => ChangeTagsAsync(HttpMethod.Post, addressId, tags, auth, cancellationToken);
+
+    /// <summary>Removes tags from an address.</summary>
+    /// <param name="addressId">The address id.</param>
+    /// <param name="tags">The tags to remove.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task RemoveTagsAsync(
+        string addressId,
+        IEnumerable<string> tags,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+        => ChangeTagsAsync(HttpMethod.Delete, addressId, tags, auth, cancellationToken);
+
+    private Task ChangeTagsAsync(
+        HttpMethod method,
+        string addressId,
+        IEnumerable<string> tags,
+        AuthContext auth,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(addressId);
+        ArgumentNullException.ThrowIfNull(tags);
+
+        string joined = string.Join(',', tags);
+        ArgumentException.ThrowIfNullOrWhiteSpace(joined, nameof(tags));
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = method,
+                Path = $"{BasePath}/{Uri.EscapeDataString(addressId)}/tags",
+                Auth = auth,
+                Query = [new("tags", joined)],
+            },
+            cancellationToken);
+    }
 }

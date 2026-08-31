@@ -263,4 +263,84 @@ public class CustomerServiceTests
             await customers.Addresses.DeleteAsync("", SignedIn));
         Assert.Equal(0, handler.CallCount);
     }
+
+    // ---------- Profile, password and tags ----------
+
+    [Fact]
+    public async Task Updating_the_profile_patches()
+    {
+        // The endpoint routes PATCH only; a PUT is a 404 dressed up as a bug
+        // report about «updates not saving».
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"c1"}""");
+        CustomerService customers = Create(handler);
+
+        await customers.UpdateMeAsync(new Customer(), SignedIn);
+
+        Assert.Equal(HttpMethod.Patch, handler.RequestMethods[0]);
+        Assert.Equal("/customer/acme/me", Uri(handler));
+    }
+
+    [Fact]
+    public async Task Changing_a_password_sends_both_of_them()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        CustomerService customers = Create(handler);
+
+        await customers.ChangePasswordAsync("old-one", "new-one", SignedIn);
+
+        Assert.Equal("/customer/acme/password/change", Uri(handler));
+        Assert.Contains("old-one", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("new-one", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Tags_travel_comma_separated()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        CustomerService customers = Create(handler);
+
+        await customers.Addresses.AddTagsAsync("a1", ["BILLING", "SHIPPING"], SignedIn);
+
+        Assert.Equal(
+            "/customer/acme/me/addresses/a1/tags?tags=BILLING%2CSHIPPING",
+            Uri(handler));
+    }
+
+    [Fact]
+    public async Task No_tags_is_rejected_before_the_request()
+    {
+        // An empty list would send tags= and clear nothing, silently.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        CustomerService customers = Create(handler);
+
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await customers.Addresses.RemoveTagsAsync("a1", [], SignedIn));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task An_address_update_patches_too()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"a1"}""");
+        CustomerService customers = Create(handler);
+
+        await customers.Addresses.UpdateAsync(
+            "a1",
+            new AddressUpdateDto(),
+            SignedIn);
+
+        Assert.Equal(HttpMethod.Patch, handler.RequestMethods[0]);
+    }
+
+    [Fact]
+    public async Task Confirming_a_sign_up_carries_the_token_in_the_path()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        CustomerService customers = Create(handler);
+
+        await customers.ConfirmSignUpAsync("tok en/1");
+
+        Assert.Equal("/customer/acme/signup/optin/tok%20en%2F1", Uri(handler));
+    }
 }

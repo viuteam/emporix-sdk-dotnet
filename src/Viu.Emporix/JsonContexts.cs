@@ -155,6 +155,13 @@ internal sealed partial class CatalogJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.CustomerModels.AddressDto>))]
 [JsonSerializable(typeof(Viu.Emporix.CustomerModels.AddressCreateDto))]
 [JsonSerializable(typeof(Viu.Emporix.CustomerModels.AddressUpdateDto))]
+[JsonSerializable(typeof(SocialLoginRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerModels.ValidateTokenResponse))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerModels.PasswordChangeDto))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerModels.PasswordUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerModels.RefreshToken))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerModels.ChangeEmailRequestDto))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerModels.UpdateEmail))]
 internal sealed partial class CustomerJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the price service. See <see cref="ProductJsonContext"/>.</summary>
