@@ -235,7 +235,8 @@ quotes, IAM and the rest. Their generated types ship in the package, so
 anything missing is reachable through the underlying `HttpClient`.
 
 The full picture is in
-[docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31).
+[docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31), and what happens
+to the other 36 in [docs/roadmap.md](docs/roadmap.md).
 
 ## Error handling
 

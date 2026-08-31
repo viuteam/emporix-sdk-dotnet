@@ -544,6 +544,8 @@ insight after the third service.
 | **V1.x** | payments, coupons, taxes, shipping, fees, quotes, invoices, returns, segments, rewardPoints, companies, contacts, locations, customerGroups, customerAdmin, approvals | ~215 | B2B, loyalty and fulfilment. |
 | **Later** | iam, schemas, webhooks, imports, indexing, ai, aiResources, ragIndexer, sequentialIds, units, countries, currencies, vendors, pickPack, shoppingLists, sites, sessionContext, tenantConfig, clientConfig, cloudFunctions | ~275 | Administration and platform. Little demand from a storefront perspective. |
 
+The plan for the 36 that remain is in [roadmap.md](roadmap.md).
+
 ### Actual coverage (2026-08-31)
 
 The twelve V1 services carry the Node SDK's full operation set. Measured by
