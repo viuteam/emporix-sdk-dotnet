@@ -222,8 +222,14 @@ public sealed class CheckoutService
 }
 
 /// <summary>
-/// Customer orders.
+/// A customer's own orders, as a storefront sees them.
 /// </summary>
+/// <remarks>
+/// Emporix keeps two order collections. This one, <c>/orders</c>, shows a person
+/// what they ordered; the token decides which orders that is. The administrative
+/// collection — creating, searching, splitting, calculating — is
+/// <see cref="SalesOrderService"/>.
+/// </remarks>
 public sealed class OrderService
 {
     private readonly EmporixHttpClient _http;
@@ -238,13 +244,13 @@ public sealed class OrderService
         _tenant = options.Value.Tenant;
     }
 
-    private string BasePath => $"/order/{_tenant}/salesorders";
+    private string BasePath => $"/order-v2/{_tenant}/orders";
 
-    /// <summary>Fetches an order by its id.</summary>
+    /// <summary>Fetches one of the caller's own orders.</summary>
     /// <param name="orderId">The order id.</param>
-    /// <param name="auth">What to authorise with. Required.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <exception cref="EmporixNotFoundException">No order exists with this id.</exception>
+    /// <exception cref="EmporixNotFoundException">No such order, or it is not this customer's.</exception>
     public async Task<OrderV2Models.Order?> GetAsync(
         string orderId,
         AuthContext auth,
@@ -257,7 +263,7 @@ public sealed class OrderService
             {
                 Method = HttpMethod.Get,
                 Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}",
-                Auth = auth,
+                Auth = RequireCustomer(auth),
             },
             OrderJsonContext.Default.Order,
             cancellationToken).ConfigureAwait(false);
@@ -285,6 +291,165 @@ public sealed class OrderService
         ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
 
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = RequireCustomer(auth),
+                Query = Paging(pageNumber, pageSize, query),
+            },
+            OrderJsonContext.Default.ListOrder,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Lists the statuses an order may move to next.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Ask this before offering a «cancel» button: what is allowed depends on
+    /// where the order currently stands.
+    /// </remarks>
+    public async Task<IReadOnlyList<OrderV2Models.Transition>> ListTransitionsAsync(
+        string orderId,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/transitions",
+                Auth = RequireCustomer(auth),
+            },
+            OrderJsonContext.Default.ListTransition,
+            cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Moves the order to another status.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="status">The target status.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="saasToken">An optional SaaS token, where the tenant requires one.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixValidationException">
+    /// The transition is not allowed from the order's current status.
+    /// </exception>
+    public Task ChangeStatusAsync(
+        string orderId,
+        OrderV2Models.OrderStatus status,
+        AuthContext auth,
+        string? saasToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/transitions",
+                Auth = RequireCustomer(auth),
+                Content = EmporixJsonContent.Create(
+                    new OrderV2Models.Transition { Status = status },
+                    OrderJsonContext.Default.Transition),
+                Headers = saasToken is { Length: > 0 } ? [new("saas-token", saasToken)] : null,
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Cancels the order.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="saasToken">An optional SaaS token, where the tenant requires one.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Cancelling is the <c>DECLINED</c> transition. Whether it is available at
+    /// all depends on how far the order has progressed — check
+    /// <see cref="ListTransitionsAsync"/> first.
+    /// </remarks>
+    public Task CancelAsync(
+        string orderId,
+        AuthContext auth,
+        string? saasToken = null,
+        CancellationToken cancellationToken = default)
+        => ChangeStatusAsync(
+            orderId,
+            OrderV2Models.OrderStatus.DECLINED,
+            auth,
+            saasToken,
+            cancellationToken);
+
+    /// <summary>Lists a legal entity's orders.</summary>
+    /// <param name="legalEntityId">The legal entity.</param>
+    /// <param name="auth">A customer context with access to that entity. Required.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The B2B view: everything ordered on behalf of a company, not just what
+    /// this one person ordered.
+    /// </remarks>
+    public async Task<PaginatedItems<OrderV2Models.Order>> ListForLegalEntityAsync(
+        string legalEntityId,
+        AuthContext auth,
+        int pageNumber = 1,
+        int pageSize = 60,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(legalEntityId);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"/order-v2/{_tenant}/legal-entity-orders"
+                    + $"/{Uri.EscapeDataString(legalEntityId)}",
+                Auth = RequireCustomer(auth),
+                Query = Paging(pageNumber, pageSize, null),
+            },
+            OrderJsonContext.Default.ListOrder,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Fetches one of a legal entity's orders.</summary>
+    /// <param name="legalEntityId">The legal entity.</param>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">A customer context with access to that entity. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<OrderV2Models.Order?> GetForLegalEntityAsync(
+        string legalEntityId,
+        string orderId,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(legalEntityId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"/order-v2/{_tenant}/legal-entity-orders"
+                    + $"/{Uri.EscapeDataString(legalEntityId)}"
+                    + $"/{Uri.EscapeDataString(orderId)}",
+                Auth = RequireCustomer(auth),
+            },
+            OrderJsonContext.Default.Order,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    internal static List<KeyValuePair<string, string?>> Paging(int pageNumber, int pageSize, string? query)
+    {
         List<KeyValuePair<string, string?>> parameters =
         [
             new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
@@ -296,56 +461,404 @@ public sealed class OrderService
             parameters.Add(new KeyValuePair<string, string?>("q", query));
         }
 
-        return await _http.SendPageAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = BasePath,
-                Auth = RequireCustomer(auth),
-                Query = parameters,
-            },
-            OrderJsonContext.Default.ListOrder,
-            pageNumber,
-            pageSize,
-            cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Moves an order to another status.
-    /// </summary>
-    /// <param name="orderId">The order id.</param>
-    /// <param name="status">The target status.</param>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    /// <exception cref="EmporixValidationException">
-    /// The transition is not allowed from the order's current status.
-    /// </exception>
-    public Task ChangeStatusAsync(
-        string orderId,
-        string status,
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(status);
-
-        return _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Put,
-                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/status"
-                    + $"/{Uri.EscapeDataString(status)}",
-                Auth = Defaults.Service(auth),
-            },
-            cancellationToken);
+        return parameters;
     }
 
     private static AuthContext RequireCustomer(AuthContext auth)
         => auth.Kind is AuthKind.Customer or AuthKind.Raw
             ? auth
             : throw new EmporixConfigurationException(
-                "Listing a customer's own orders derives them from the token and therefore "
-                + "requires that customer's own context.");
+                "Storefront order calls derive the orders from the token and therefore "
+                + "require that customer's own context. For administrative access use "
+                + "SalesOrderService.");
+}
+
+/// <summary>
+/// The administrative order collection.
+/// </summary>
+/// <remarks>
+/// <c>/salesorders</c> is the back-office view: every order in the tenant,
+/// creatable, searchable and editable. It defaults to a service token. What a
+/// shopper sees is <see cref="OrderService"/>.
+/// </remarks>
+public sealed class SalesOrderService
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal SalesOrderService(EmporixHttpClient http, IOptions<EmporixOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _http = http;
+        _tenant = options.Value.Tenant;
+    }
+
+    private string BasePath => $"/order-v2/{_tenant}/salesorders";
+
+    /// <summary>Fetches a sales order by its id.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<OrderV2Models.SalesOrder?> GetAsync(
+        string orderId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}",
+                Auth = Defaults.Service(auth),
+            },
+            OrderJsonContext.Default.SalesOrder,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Fetches one page of sales orders.</summary>
+    /// <param name="query">An optional Emporix filter.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<PaginatedItems<OrderV2Models.SalesOrder>> ListAsync(
+        string? query = null,
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Query = OrderService.Paging(pageNumber, pageSize, query),
+            },
+            OrderJsonContext.Default.ListSalesOrder,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Searches sales orders.</summary>
+    /// <param name="query">The Emporix search expression.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Sent as a <c>POST</c> because the expression does not fit in an address,
+    /// but declared repeatable: the call only reads.
+    /// </remarks>
+    public async Task<PaginatedItems<OrderV2Models.SalesOrder>> SearchAsync(
+        string query,
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/search",
+                Auth = Defaults.Service(auth),
+                Query = OrderService.Paging(pageNumber, pageSize, null),
+                Content = EmporixJsonContent.Create(
+                    new OrderV2Models.SearchRequest { Q = query },
+                    OrderJsonContext.Default.SearchRequest),
+                Idempotent = true,
+            },
+            OrderJsonContext.Default.ListSalesOrder,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Creates a sales order.</summary>
+    /// <param name="order">The order to create.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Deliberately not marked repeatable: a retried create is a second order.
+    /// </remarks>
+    public async Task<OrderV2Models.ResourceLocation?> CreateAsync(
+        OrderV2Models.SalesOrderCreationDto order,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(order);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    order,
+                    OrderJsonContext.Default.SalesOrderCreationDto),
+            },
+            OrderJsonContext.Default.ResourceLocation,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Replaces a sales order.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="order">The new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task ReplaceAsync(
+        string orderId,
+        OrderV2Models.OrderCreationDto order,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+        ArgumentNullException.ThrowIfNull(order);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    order,
+                    OrderJsonContext.Default.OrderCreationDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Updates parts of a sales order.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="changes">The fields to change.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task UpdateAsync(
+        string orderId,
+        OrderV2Models.OrderUpdateDto changes,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+        ArgumentNullException.ThrowIfNull(changes);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Patch,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    changes,
+                    OrderJsonContext.Default.OrderUpdateDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Deletes a sales order.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task DeleteAsync(
+        string orderId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Lists the statuses the order may move to next.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<IReadOnlyList<OrderV2Models.Transition>> ListTransitionsAsync(
+        string orderId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/transitions",
+                Auth = Defaults.Service(auth),
+            },
+            OrderJsonContext.Default.ListTransition,
+            cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Moves the order to another status.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="status">The target status.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="saasToken">An optional SaaS token, where the tenant requires one.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixValidationException">
+    /// The transition is not allowed from the order's current status.
+    /// </exception>
+    public Task ChangeStatusAsync(
+        string orderId,
+        OrderV2Models.OrderStatus status,
+        AuthContext auth = default,
+        string? saasToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/transitions",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    new OrderV2Models.Transition { Status = status },
+                    OrderJsonContext.Default.Transition),
+                Headers = saasToken is { Length: > 0 } ? [new("saas-token", saasToken)] : null,
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Reads the order's status history.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>Where the order has been, rather than where it may go next.</remarks>
+    public async Task<OrderV2Models.HistoricalTransitionsResponse?> ListHistoricalTransitionsAsync(
+        string orderId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/historical-transitions",
+                Auth = Defaults.Service(auth),
+            },
+            OrderJsonContext.Default.HistoricalTransitionsResponse,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Recalculates the order's totals.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="calculation">What to recalculate.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// A <c>POST</c> that computes rather than changes, so it is declared
+    /// repeatable.
+    /// </remarks>
+    public async Task<OrderV2Models.SalesOrder?> CalculateAsync(
+        string orderId,
+        OrderV2Models.OrderCalculationDto calculation,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+        ArgumentNullException.ThrowIfNull(calculation);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/calculations",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    calculation,
+                    OrderJsonContext.Default.OrderCalculationDto),
+                Idempotent = true,
+            },
+            OrderJsonContext.Default.SalesOrder,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Replaces the order's entries.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="entries">The entries in their new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task UpdateEntriesAsync(
+        string orderId,
+        OrderV2Models.OrderEntriesDto entries,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+        ArgumentNullException.ThrowIfNull(entries);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/entries",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    entries,
+                    OrderJsonContext.Default.OrderEntriesDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Splits the order into several.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="request">How to split.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Fulfilment from several warehouses, typically. Not repeatable: splitting
+    /// twice creates orders twice.
+    /// </remarks>
+    public async Task<OrderV2Models.OrderSplitResponse?> SplitAsync(
+        string orderId,
+        OrderV2Models.OrderSplitRequest request,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+        ArgumentNullException.ThrowIfNull(request);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/split",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    request,
+                    OrderJsonContext.Default.OrderSplitRequest),
+            },
+            OrderJsonContext.Default.OrderSplitResponse,
+            cancellationToken).ConfigureAwait(false);
+    }
 }
 
 /// <summary>

@@ -228,6 +228,170 @@ public class CartServiceTests
             await carts.RemoveItemAsync("c1", "", Shopper));
         Assert.Equal(0, handler.CallCount);
     }
+    // ---------- Addresses, batches and merging ----------
+
+    [Fact]
+    public async Task Setting_the_shipping_address_keeps_the_billing_one()
+    {
+        // Emporix replaces the whole address array on write. Sending only the
+        // new one would silently delete the invoice address.
+        const string CartWithBilling = """
+            {"id":"c1","addresses":[{"type":"BILLING","street":"Rennweg","city":"Zurich"}]}
+            """;
+
+        StubHttpMessageHandler handler = new((_, call) =>
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(call == 2 ? "" : CartWithBilling),
+            });
+
+        CartService carts = Create(handler);
+
+        await carts.SetShippingAddressAsync(
+            "c1",
+            new AddressRequest { Street = "Bahnhofstrasse", City = "Zurich" },
+            Shopper);
+
+        // read, write, read back
+        Assert.Equal(3, handler.CallCount);
+        string written = handler.RequestBodies.Single(b => b.Length > 0);
+        Assert.Contains("Rennweg", written, StringComparison.Ordinal);
+        Assert.Contains("Bahnhofstrasse", written, StringComparison.Ordinal);
+        Assert.Contains("BILLING", written, StringComparison.Ordinal);
+        Assert.Contains("SHIPPING", written, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Setting_both_addresses_needs_no_prior_read()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"c1"}""");
+        CartService carts = Create(handler);
+
+        await carts.SetAddressesAsync(
+            "c1",
+            new AddressRequest { Street = "Bahnhofstrasse" },
+            new AddressRequest { Street = "Rennweg" },
+            Shopper);
+
+        // write, read back — no read first
+        Assert.Equal(2, handler.CallCount);
+        Assert.Equal(HttpMethod.Put, handler.RequestMethods[0]);
+    }
+
+    [Fact]
+    public async Task Merging_carts_refuses_an_anonymous_token()
+    {
+        // The target cart belongs to the signed-in customer. An anonymous token
+        // cannot own it, and Emporix checks.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"c1"}""");
+        CartService carts = Create(handler);
+
+        await Assert.ThrowsAsync<EmporixConfigurationException>(async () =>
+            await carts.MergeAsync("c1", ["anon-1"], Shopper));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Merging_carts_sends_the_anonymous_ids()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"c1"}""");
+        CartService carts = Create(handler);
+
+        await carts.MergeAsync("c1", ["anon-1", "anon-2"], AuthContext.Customer("token"));
+
+        Assert.Equal("/cart/acme/carts/c1/merge", Uri(handler));
+        Assert.Contains("anon-2", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Changing_the_site_reads_the_cart_back()
+    {
+        // The server re-matches prices, so the cart you held is stale.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"c1"}""");
+        CartService carts = Create(handler);
+
+        await carts.ChangeSiteAsync("c1", "main", Shopper);
+
+        Assert.Equal(2, handler.CallCount);
+        Assert.Equal("/cart/acme/carts/c1/changeSite", Uri(handler));
+        Assert.Equal("/cart/acme/carts/c1", Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task Changing_the_currency_sends_the_code()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"c1"}""");
+        CartService carts = Create(handler);
+
+        await carts.ChangeCurrencyAsync("c1", "CHF", Shopper);
+
+        Assert.Equal("/cart/acme/carts/c1/changeCurrency", Uri(handler));
+        Assert.Contains("CHF", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Adding_items_in_bulk_reports_a_status_per_item()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """[{"index":0,"status":201},{"index":1,"status":409}]""");
+
+        CartService carts = Create(handler);
+
+        IReadOnlyList<SingleBatchResponse> result = await carts.AddItemsAsync(
+            "c1",
+            [new CartItemRequest(), new CartItemRequest()],
+            Shopper);
+
+        Assert.Equal("/cart/acme/carts/c1/itemsBatch", Uri(handler));
+        Assert.Equal(2, result.Count);
+        Assert.Equal(409, result[1].Status);
+    }
+
+    [Fact]
+    public async Task Searching_carts_only_reads_and_is_repeatable()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"c1"}]""");
+        CartService carts = Create(handler);
+
+        await carts.SearchAsync("status:ACTIVE", AuthContext.Service());
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.StartsWith("/cart/acme/carts/search", Uri(handler), StringComparison.Ordinal);
+        Assert.True(handler.LastRequest!.Options.TryGetValue(
+            EmporixRequestOptions.Idempotent,
+            out bool idempotent));
+        Assert.True(idempotent);
+    }
+
+    [Fact]
+    public async Task Removing_a_discount_rejects_a_negative_index()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");
+        CartService carts = Create(handler);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await carts.RemoveDiscountAsync("c1", -1, Shopper));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Delivery_restrictions_are_read_from_the_cart()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """{"leadTime":2,"nonDelivery":["SUNDAY"]}""");
+
+        CartService carts = Create(handler);
+
+        CartDTRestrictions? restrictions =
+            await carts.GetDeliveryRestrictionsAsync("c1", Shopper);
+
+        Assert.Equal(2, restrictions?.LeadTime);
+        Assert.Equal("/cart/acme/carts/c1/dtRestrictions", Uri(handler));
+    }
 }
 
 public class ProductYrnTests

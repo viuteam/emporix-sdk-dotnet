@@ -55,6 +55,7 @@ public sealed class EmporixClient : IDisposable
     private AvailabilityService? _availability;
     private CheckoutService? _checkout;
     private OrderService? _orders;
+    private SalesOrderService? _salesOrders;
     private MediaService? _media;
     private bool _disposed;
 
@@ -283,7 +284,7 @@ public sealed class EmporixClient : IDisposable
         }
     }
 
-    /// <summary>Customer orders.</summary>
+    /// <summary>A customer's own orders.</summary>
     /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
     public OrderService Orders
     {
@@ -291,6 +292,17 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _orders ??= new OrderService(_http, _options);
+        }
+    }
+
+    /// <summary>The administrative order collection.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SalesOrderService SalesOrders
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _salesOrders ??= new SalesOrderService(_http, _options);
         }
     }
 

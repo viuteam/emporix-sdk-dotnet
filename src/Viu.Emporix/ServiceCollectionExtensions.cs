@@ -179,6 +179,10 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<EmporixHttpClient>(),
             provider.GetRequiredService<IOptions<EmporixOptions>>()));
 
+        services.TryAddSingleton(static provider => new SalesOrderService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
         services.TryAddSingleton(static provider => new MediaService(
             provider.GetRequiredService<EmporixHttpClient>(),
             provider.GetRequiredService<IOptions<EmporixOptions>>()));

@@ -25,6 +25,9 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
     /// <summary>The addresses of all requests, in arrival order.</summary>
     public IReadOnlyList<Uri> RequestUris => _requestUris;
 
+    /// <summary>The methods of all requests, in arrival order.</summary>
+    public IReadOnlyList<HttpMethod> RequestMethods => _requestMethods;
+
     /// <summary>The bodies of all requests, in arrival order.</summary>
     public IReadOnlyList<string> RequestBodies => _requestBodies;
 
@@ -68,6 +71,7 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
     public TimeSpan Delay { get; set; }
 
     private readonly List<Uri> _requestUris = [];
+    private readonly List<HttpMethod> _requestMethods = [];
     private readonly List<string> _requestBodies = [];
     private readonly List<Dictionary<string, string>> _headers = [];
     private readonly Lock _recordLock = new();
@@ -94,6 +98,7 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
         lock (_recordLock)
         {
             _requestUris.Add(request.RequestUri!);
+            _requestMethods.Add(request.Method);
             _requestBodies.Add(body);
             _headers.Add(headers);
             LastRequest = request;

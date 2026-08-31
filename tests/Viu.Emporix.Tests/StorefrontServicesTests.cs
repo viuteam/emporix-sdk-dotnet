@@ -6,6 +6,7 @@ namespace Viu.Emporix.Tests;
 public class StorefrontServicesTests
 {
     private static readonly AuthContext Shopper = AuthContext.Anonymous();
+    private static readonly AuthContext Customer = AuthContext.Customer("token");
 
     private static IOptions<EmporixOptions> Options()
         => Microsoft.Extensions.Options.Options.Create(new EmporixOptions { Tenant = "acme" });
@@ -190,7 +191,7 @@ public class StorefrontServicesTests
         OrderService orders = new(Http(handler), Options());
 
         PaginatedItems<OrderV2Models.Order> page =
-            await orders.ListMineAsync(AuthContext.Customer("token"));
+            await orders.ListMineAsync(Customer);
 
         Assert.Single(page.Items);
         Assert.DoesNotContain("customer", Uri(handler), StringComparison.OrdinalIgnoreCase);
@@ -209,15 +210,79 @@ public class StorefrontServicesTests
     }
 
     [Fact]
-    public async Task A_status_change_addresses_the_target_status()
+    public async Task A_status_change_posts_a_transition()
+    {
+        // Emporix has no «set status» endpoint. A status change is a transition
+        // the server may or may not allow from where the order stands.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        OrderService orders = new(Http(handler), Options());
+
+        await orders.ChangeStatusAsync("o1", OrderV2Models.OrderStatus.SHIPPED, Customer);
+
+        Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
+        Assert.Equal("/order-v2/acme/orders/o1/transitions", Uri(handler));
+        Assert.Contains("SHIPPED", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Cancelling_is_the_declined_transition()
     {
         StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
         OrderService orders = new(Http(handler), Options());
 
-        await orders.ChangeStatusAsync("o1", "SHIPPED");
+        await orders.CancelAsync("o1", Customer);
 
-        Assert.Equal(HttpMethod.Put, handler.LastRequest!.Method);
-        Assert.Equal("/order/acme/salesorders/o1/status/SHIPPED", Uri(handler));
+        Assert.Contains("DECLINED", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Storefront_and_administrative_orders_are_separate_collections()
+    {
+        // /orders is what a shopper sees; /salesorders is the back office. Using
+        // one for the other is a 404 at best and a data leak at worst.
+        StubHttpMessageHandler shopper = new(HttpStatusCode.OK, """[{"id":"o1"}]""");
+        StubHttpMessageHandler admin = new(HttpStatusCode.OK, """[{"id":"o1"}]""");
+
+        await new OrderService(Http(shopper), Options()).ListMineAsync(Customer);
+        await new SalesOrderService(Http(admin), Options()).ListAsync();
+
+        Assert.StartsWith("/order-v2/acme/orders", Uri(shopper), StringComparison.Ordinal);
+        Assert.StartsWith("/order-v2/acme/salesorders", Uri(admin), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_legal_entity_has_its_own_order_list()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"o1"}]""");
+        OrderService orders = new(Http(handler), Options());
+
+        await orders.ListForLegalEntityAsync("le-1", Customer);
+
+        Assert.StartsWith("/order-v2/acme/legal-entity-orders/le-1", Uri(handler), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Creating_a_sales_order_is_never_repeatable()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, "{}");
+        SalesOrderService orders = new(Http(handler), Options());
+
+        await orders.CreateAsync(new OrderV2Models.SalesOrderCreationDto());
+
+        Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
+    }
+
+    [Fact]
+    public async Task Calculating_only_reads_and_is_repeatable()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");
+        SalesOrderService orders = new(Http(handler), Options());
+
+        await orders.CalculateAsync("o1", new OrderV2Models.OrderCalculationDto());
+
+        Assert.True(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out bool idempotent));
+        Assert.True(idempotent);
+        Assert.Equal("/order-v2/acme/salesorders/o1/calculations", Uri(handler));
     }
 
     // ---------- Media ----------
@@ -273,7 +338,7 @@ public class StorefrontServicesTests
         await Assert.ThrowsAsync<ArgumentException>(async () =>
             await new AvailabilityService(Http(handler), Options()).GetAsync("", "main"));
         await Assert.ThrowsAsync<ArgumentException>(async () =>
-            await new OrderService(Http(handler), Options()).GetAsync(" ", Shopper));
+            await new OrderService(Http(handler), Options()).GetAsync(" ", Customer));
         await Assert.ThrowsAsync<ArgumentException>(async () =>
             await new MediaService(Http(handler), Options()).GetAsync(""));
 

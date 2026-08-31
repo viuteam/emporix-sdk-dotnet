@@ -74,6 +74,18 @@ public sealed class CartCreated
 [JsonSerializable(typeof(List<Viu.Emporix.CartModels.CartItemResponse>))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.UpdateCartItem))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.CartValidationResult))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.UpdateCart))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.Search))]
+[JsonSerializable(typeof(List<Viu.Emporix.CartModels.BaseCartItemResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.CartItemsBatchRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.CartItemsBatchUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.BatchResponse))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.CartItemsBatchUpdateResponse))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.ChangeSite))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.Body))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.MergeCart))]
+[JsonSerializable(typeof(List<Viu.Emporix.CartModels.DiscountResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.CartDTRestrictions))]
 internal sealed partial class CartJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the category service. See <see cref="ProductJsonContext"/>.</summary>
@@ -170,6 +182,20 @@ internal sealed partial class CheckoutJsonContext : JsonSerializerContext;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Viu.Emporix.OrderV2Models.Order))]
 [JsonSerializable(typeof(List<Viu.Emporix.OrderV2Models.Order>))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.SalesOrder))]
+[JsonSerializable(typeof(List<Viu.Emporix.OrderV2Models.SalesOrder>))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.Transition))]
+[JsonSerializable(typeof(List<Viu.Emporix.OrderV2Models.Transition>))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.HistoricalTransitionsResponse))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.SearchRequest))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.SalesOrderCreationDto))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.OrderCreationDto))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.OrderUpdateDto))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.OrderCalculationDto))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.OrderEntriesDto))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.OrderSplitRequest))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.OrderSplitResponse))]
+[JsonSerializable(typeof(Viu.Emporix.OrderV2Models.ResourceLocation))]
 internal sealed partial class OrderJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the media service. See <see cref="ProductJsonContext"/>.</summary>
