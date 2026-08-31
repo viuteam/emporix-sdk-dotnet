@@ -97,8 +97,19 @@ public sealed class LocalizedString
         => _text ?? _translations!.Values.FirstOrDefault() ?? string.Empty;
 
     /// <summary>Reads both shapes Emporix uses for a localized field.</summary>
-    internal sealed class LocalizedStringConverter : JsonConverter<LocalizedString>
+    /// <remarks>
+    /// Public because the attribute above names it: a consumer whose own
+    /// serialization context includes a type carrying a localized field has to
+    /// be able to reach the converter, or the source generator refuses to
+    /// generate for that type at all.
+    /// </remarks>
+    public sealed class LocalizedStringConverter : JsonConverter<LocalizedString>
     {
+        /// <summary>Reads a localized value in either shape.</summary>
+        /// <param name="reader">The reader.</param>
+        /// <param name="typeToConvert">The target type.</param>
+        /// <param name="options">The serializer options.</param>
+        /// <exception cref="JsonException">The value is neither a string nor an object.</exception>
         public override LocalizedString? Read(
             ref Utf8JsonReader reader,
             Type typeToConvert,
@@ -115,6 +126,10 @@ public sealed class LocalizedString
                     $"A localized value must be a string or an object, not {reader.TokenType}."),
             };
 
+        /// <summary>Writes a localized value in the shape it was read in.</summary>
+        /// <param name="writer">The writer.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="options">The serializer options.</param>
         public override void Write(
             Utf8JsonWriter writer,
             LocalizedString value,

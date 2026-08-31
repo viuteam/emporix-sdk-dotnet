@@ -258,6 +258,22 @@ seconds. A server-supplied `Retry-After` takes precedence.
 repeatable. A server error can arrive after the server has already applied the
 change — a repeated order would be a duplicate order.
 
+## Samples
+
+| Project | What it shows |
+| --- | --- |
+| `samples/Viu.Emporix.Sample` | the smallest thing that works — no container |
+| `samples/Viu.Emporix.Storefront` | an ASP.NET Core backend: `AddEmporix`, an `AuthContext` per request, SDK failures mapped to status codes in one place |
+| `samples/Viu.Emporix.SmokeTest` | the anonymous flow against a real tenant (see below) |
+
+The storefront sample is the shape most consumers will build, and it publishes
+Native AOT like the rest — being trimmable in a console app would prove little
+about the host the SDK actually runs in.
+
+```bash
+EMPORIX_TENANT=your-tenant EMPORIX_CLIENT_ID=your-client-id EMPORIX_SITE=main EMPORIX_CURRENCY=CHF dotnet run --project samples/Viu.Emporix.Storefront
+```
+
 ## Before releasing: the smoke test
 
 Unit tests use a stubbed `HttpMessageHandler`, which cannot tell a right address
@@ -269,9 +285,14 @@ rejects, a response that deserialises to nothing, or a scope a token turns out
 not to carry.
 
 `samples/Viu.Emporix.SmokeTest` walks the anonymous storefront flow against a
-real tenant — session, products, categories, prices, availability, cart,
+real tenant — session, products, categories, prices, availability, cart, item,
 validation — and exits non-zero if any step fails. It creates one cart and
 deletes it again; it places no order.
+
+It has already earned its keep: the first run against a live tenant broke on
+the first call and turned up seven defects, among them product names that could
+not be parsed at all, a price match that returned the request type instead of
+the response, and three places where the specification disagrees with the API.
 
 ```bash
 EMPORIX_TENANT=your-tenant EMPORIX_CLIENT_ID=your-client-id EMPORIX_SITE=main EMPORIX_CURRENCY=CHF dotnet run --project samples/Viu.Emporix.SmokeTest

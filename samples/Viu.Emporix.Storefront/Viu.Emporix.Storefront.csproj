@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Viu.Emporix.Storefront</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Published AOT like the other samples. A web host is where the SDK actually
+    runs, so this is the honest test of ADR-0004: if the SDK is not trimmable
+    inside ASP.NET Core, being trimmable in a console app proves little.
+  -->
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Viu.Emporix/Viu.Emporix.csproj" />
+  </ItemGroup>
+
+</Project>

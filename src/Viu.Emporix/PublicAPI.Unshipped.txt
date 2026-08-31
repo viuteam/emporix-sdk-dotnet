@@ -453,3 +453,7 @@ override Viu.Emporix.LocalizedString.ToString() -> string!
 static Viu.Emporix.LocalizedString.implicit operator Viu.Emporix.LocalizedString?(string? text) -> Viu.Emporix.LocalizedString?
 Viu.Emporix.PriceService.MatchByContextAsync(Viu.Emporix.PriceModels.MatchByContext! request, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.PriceModels.MatchResponse!>!>!
 Viu.Emporix.PriceService.MatchByContextChunkedAsync(System.Collections.Generic.IReadOnlyCollection<Viu.Emporix.PriceModels.Items!>! items, Viu.Emporix.PriceMatchOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.PriceModels.MatchResponse!>!>!
+Viu.Emporix.LocalizedString.LocalizedStringConverter
+Viu.Emporix.LocalizedString.LocalizedStringConverter.LocalizedStringConverter() -> void
+override Viu.Emporix.LocalizedString.LocalizedStringConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> Viu.Emporix.LocalizedString?
+override Viu.Emporix.LocalizedString.LocalizedStringConverter.Write(System.Text.Json.Utf8JsonWriter! writer, Viu.Emporix.LocalizedString! value, System.Text.Json.JsonSerializerOptions! options) -> void
