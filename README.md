@@ -149,8 +149,8 @@ await client.Products.DeleteAsync("p1", force: true);
 
 ## The other services
 
-Twelve services are covered. Each hangs off the client under a name that says
-what it owns:
+Twelve of the Emporix services are covered, with the operations a storefront
+reaches for. Each hangs off the client under a name that says what it owns:
 
 | Property | Covers |
 |---|---|
@@ -197,9 +197,27 @@ Price matching with a service token would return an empty list — indistinguish
 from «no prices configured» — so it throws `EmporixConfigurationException` before
 the request is sent. Carts, checkout and own-orders do the same.
 
-Services not yet covered are listed in
-[docs/analysis.md](docs/analysis.md#8-feature-parity-matrix-node--net). Anything
-missing is reachable through the underlying `HttpClient`.
+### What is not here yet
+
+Emporix exposes 48 services; these twelve carry 84 of the roughly 198 operations
+they define. The common paths are covered — the gaps are mostly administrative
+or bulk operations. The larger ones:
+
+| Service | Missing |
+| --- | --- |
+| orders | cancel, transitions, history, legal-entity orders, calculate, split |
+| price | price models, price lists, bulk operations |
+| cart | addresses, merge, batch items, discounts, delivery restrictions |
+| customer | social login, token exchange, email change, address tags |
+| category | tree rebuild, parents/children, reference-based assignments |
+| media | upload, replace, product attachment |
+
+The remaining 36 services — payments, coupons, taxes, shipping, quotes, IAM and
+the rest — have no facade at all yet. Their generated types ship in the package,
+so anything missing is reachable through the underlying `HttpClient`.
+
+The full picture is in
+[docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31).
 
 ## Error handling
 

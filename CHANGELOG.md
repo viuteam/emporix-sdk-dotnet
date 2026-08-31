@@ -11,10 +11,11 @@ exactly that package version.
 
 ## [0.1.0-preview.1]
 
-The first prerelease. The core is complete, and so is the first wave of twelve
-services — enough for a storefront from browsing to placed order. Further waves
-follow (see
-[docs/analysis.md](docs/analysis.md#8-feature-parity-matrix-node--net)).
+The first prerelease. The core is complete. Twelve services cover the storefront
+path from browsing to placed order — with the operations that path needs, not the
+full Emporix surface: 84 of roughly 198 operations across 12 of 48 services. The
+gaps are listed in
+[docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31).
 
 ### Added
 
@@ -35,7 +36,7 @@ follow (see
   the token endpoints.
 - Pagination with three-tier next-page detection and `IAsyncEnumerable` walking
   through `ListAllAsync`.
-- Twelve services on `EmporixClient`:
+- Twelve services on `EmporixClient`, each covering the common paths:
   - `Products` — reads, search including name search, bulk fetch by id and code
     with automatic chunking, variant listing, and the full write surface.
   - `Categories` — categories, the category tree, and assignments.

@@ -541,11 +541,35 @@ insight after the third service.
 | Wave | Services | Ops (approx.) | Rationale |
 | --- | --- | --- | --- |
 | **V1** | products, categories, prices, carts, checkout, customers, orders, media, availability, catalogs, brands, labels | ~180 | The storefront path. Covers every read and the complete purchase. |
-| **V1.x** | payments, coupons, taxes, shipping, fees, quotes, invoices, returns, segments, companies, contacts, locations, customerGroups, customerAdmin, approvals | ~200 | B2B and fulfilment. |
-| **Later** | iam, schemas, webhooks, imports, indexing, ai, ragIndexer, sequentialIds, units, countries, currencies, vendors, pickPack, shoppingLists, sites, sessionContext, tenantConfig, clientConfig, cloudFunctions | ~270 | Administration and platform. Little demand from a storefront perspective. |
+| **V1.x** | payments, coupons, taxes, shipping, fees, quotes, invoices, returns, segments, rewardPoints, companies, contacts, locations, customerGroups, customerAdmin, approvals | ~215 | B2B, loyalty and fulfilment. |
+| **Later** | iam, schemas, webhooks, imports, indexing, ai, aiResources, ragIndexer, sequentialIds, units, countries, currencies, vendors, pickPack, shoppingLists, sites, sessionContext, tenantConfig, clientConfig, cloudFunctions | ~275 | Administration and platform. Little demand from a storefront perspective. |
 
-**Status (2026-08-31):** wave V1 is complete — all twelve services are
-implemented, tested and part of the first prerelease.
+### Actual coverage (2026-08-31)
+
+All twelve V1 services exist, but they carry the common paths rather than the
+Node SDK's full operation set. Measured by counting `Promise<T>` / `AsyncIterable<T>`
+returns in the Node facades against public operations on the .NET services:
+
+| Service | Node | .NET | Missing on the .NET side |
+| --- | ---: | ---: | --- |
+| product | 24 | 14 | bulk update, recalculation jobs, templates |
+| category | 28 | 11 | tree rebuild, parents/children, reference-based assignments |
+| brand | 6 | 5 | `PATCH` |
+| label | 6 | 5 | `PATCH` |
+| catalog | 7 | 6 | `PATCH` |
+| cart | 29 | 13 | addresses, merge, batch items, discounts, delivery restrictions |
+| customer | 24 | 11 | social login, token exchange, email change, address tags |
+| price | 32 | 6 | price models, price lists, bulk operations |
+| availability | 9 | 4 | update, bulk operations, multi-product fetch |
+| checkout | 2 | 1 | order from quote |
+| orders | 19 | 3 | cancel, transitions, history, legal-entity orders, calculate, split |
+| media | 12 | 5 | upload, replace, product attachment |
+| **Total** | **198** | **84** | |
+
+Against the whole Node SDK that is **84 of 649 operations across 12 of 48
+services**. The gap is deliberate for the 36 absent services and incidental for
+the twelve present ones — closing the latter costs facade work only, since the
+generated types are already there.
 
 The generation pipeline downloads and generates **all 43 specifications** from the
 start — only the hand-written facades are staged. A later wave then costs only
