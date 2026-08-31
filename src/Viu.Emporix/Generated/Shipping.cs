@@ -505,7 +505,7 @@ namespace Viu.Emporix.ShippingModels
         public bool? Default { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("shipTo")]
         public ShipTo ShipTo { get; set; } = new ShipTo();
@@ -574,7 +574,7 @@ namespace Viu.Emporix.ShippingModels
         public string Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("maxOrderValue")]
         public MonetaryAmount? MaxOrderValue { get; set; } = default!;
@@ -925,7 +925,7 @@ namespace Viu.Emporix.ShippingModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("fee")]
         public MonetaryAmount? Fee { get; set; } = default!;
@@ -997,7 +997,7 @@ namespace Viu.Emporix.ShippingModels
         public string Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

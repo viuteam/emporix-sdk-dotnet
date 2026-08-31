@@ -501,7 +501,7 @@ namespace Viu.Emporix.CartModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Unique identifier of the fee.
@@ -1436,7 +1436,7 @@ namespace Viu.Emporix.CartModels
         public string? Yrn { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("taxCode")]
         public string? TaxCode { get; set; } = default!;
@@ -3856,7 +3856,7 @@ namespace Viu.Emporix.CartModels
         public string? TaxCode { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("taxAggregate")]
-        public TaxAggregate3? TaxAggregate { get; set; } = default!;
+        public CalculatedTaxAggregate? TaxAggregate { get; set; } = default!;
 
     }
 
@@ -4268,24 +4268,6 @@ namespace Viu.Emporix.CartModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class TaxAggregate3
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("lines")]
-        public Lines? Lines { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum Price6Calculated
     {
 
@@ -4480,42 +4462,6 @@ namespace Viu.Emporix.CartModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"FREE_SHIPPING")]
         FREE_SHIPPING = 2,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Lines : CalculatedPrice
-    {
-
-        /// <summary>
-        /// Net value of the tax, value without tax.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("netValue")]
-        public double? NetValue { get; set; } = default!;
-
-        /// <summary>
-        /// Gross value of the tax, value with tax.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("grossValue")]
-        public double? GrossValue { get; set; } = default!;
-
-        /// <summary>
-        /// Tax value of the tax, it's the actual amount of tax that has to be paid.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("taxValue")]
-        public double? TaxValue { get; set; } = default!;
-
-        /// <summary>
-        /// Tax code applied to the tax, a tax code is a country's set of tax rules.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("taxCode")]
-        public string? TaxCode { get; set; } = default!;
-
-        /// <summary>
-        /// Tax rate applied to the tax, it's the percentage at which an individual or business is taxed.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("taxRate")]
-        public double? TaxRate { get; set; } = default!;
 
     }
 

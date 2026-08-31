@@ -13,6 +13,7 @@ internal sealed record Configuration(
     string Site,
     string? Currency,
     string? Country,
+    string? ProductId,
     string? Host)
 {
     /// <summary>
@@ -54,6 +55,7 @@ internal sealed record Configuration(
             site!,
             Read("EMPORIX_CURRENCY"),
             Read("EMPORIX_COUNTRY"),
+            Read("EMPORIX_PRODUCT_ID"),
             Read("EMPORIX_HOST"));
     }
 

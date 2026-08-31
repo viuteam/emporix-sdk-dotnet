@@ -86,6 +86,82 @@ internal static partial class SpecPatches
     public static IReadOnlyDictionary<string, IReadOnlyList<SpecPatch>> ByService { get; } =
         new Dictionary<string, IReadOnlyList<SpecPatch>>(StringComparer.Ordinal)
         {
+            ["price"] =
+            [
+                new SpecPatch(
+                    "upstream: matchResponse.metadata.version is declared as a string, but the "
+                    + "live API answers with a number. The generated model then fails to parse "
+                    + "a successful price match — the storefront's central call. Every other "
+                    + "«version» in this specification is already an integer, so the string is "
+                    + "the outlier rather than the rule.",
+                    ReplaceAll(
+                        "            version:\n              type: string\n              description: Version of the price object.",
+                        "            version:\n              type: integer\n              description: Version of the price object.")),
+
+                new SpecPatch(
+                    "upstream: matchResponse declares the matched item under «itemRef», but "
+                    + "the API sends «itemId» — as does the specification's own response "
+                    + "example a few lines further down. A caller then cannot tell which "
+                    + "product a price belongs to, and cannot build the cart item that needs "
+                    + "both the product and the price id.",
+                    ReplaceAll(
+                        "        itemRef:\n          type: object\n          description: Item (product or price) for which the price was matched.",
+                        "        itemId:\n          type: object\n          description: Item (product or price) for which the price was matched.")),
+            ],
+
+            ["cart"] =
+            [
+                new SpecPatch(
+                    "upstream: the tax aggregate on a calculated cart price declares its "
+                    + "«lines» as a single object, while its own description calls it «a list "
+                    + "of tax values» and the API sends an array. Reading a cart that has a "
+                    + "priced item then fails to parse — an empty cart does not, because the "
+                    + "field only appears once there is something to tax. The sibling schema "
+                    + "calculatedTaxAggregate models the same thing correctly, so the inline "
+                    + "block is pointed at it.",
+                    yaml =>
+                    {
+                        const string Marker =
+                            "                taxAggregate:\n                  properties:\n"
+                            + "                    lines:\n                      allOf:\n"
+                            + "                        - $ref: '#/components/schemas/calculatedPrice'";
+
+                        int start = yaml.IndexOf(Marker, StringComparison.Ordinal);
+                        if (start < 0)
+                        {
+                            return null;
+                        }
+
+                        // The block runs until the next line indented no further
+                        // than «taxAggregate» itself.
+                        int end = start + Marker.Length;
+                        while (true)
+                        {
+                            int lineEnd = yaml.IndexOf('\n', end);
+                            if (lineEnd < 0)
+                            {
+                                end = yaml.Length;
+                                break;
+                            }
+
+                            string line = yaml[(lineEnd + 1)..Math.Min(yaml.Length, lineEnd + 18)];
+                            if (line.Length > 0 && !string.IsNullOrWhiteSpace(line) && !line.StartsWith("                 ", StringComparison.Ordinal))
+                            {
+                                end = lineEnd + 1;
+                                break;
+                            }
+
+                            end = lineEnd + 1;
+                        }
+
+                        return yaml[..start]
+                            + "                taxAggregate:\n"
+                            + "                  $ref: '#/components/schemas/calculatedTaxAggregate'\n"
+                            + yaml[end..];
+                    }),
+            ],
+
+
             ["approval-service"] =
             [
                 new SpecPatch(

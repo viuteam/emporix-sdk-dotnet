@@ -2700,7 +2700,7 @@ components:
           type: string
           description: |
             Price list's unique identifier. The property is populated only in case when the return price belongs to any price list.
-        itemRef:
+        itemId:
           type: object
           description: Item (product or price) for which the price was matched.
           properties:
@@ -2831,7 +2831,7 @@ components:
           type: object
           properties:
             version:
-              type: string
+              type: integer
               description: Version of the price object.
             createdAt:
               type: string

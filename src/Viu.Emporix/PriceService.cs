@@ -56,8 +56,13 @@ public sealed class PriceService
     /// Sent as a <c>POST</c> because the item list does not fit in an address,
     /// but declared repeatable: the call only reads.
     /// </para>
+    /// <para>
+    /// Each entry carries the <c>priceId</c> a cart item needs — Emporix rejects
+    /// an item without one, so this call comes before adding to a cart, not
+    /// after.
+    /// </para>
     /// </remarks>
-    public async Task<IReadOnlyList<Match>> MatchByContextAsync(
+    public async Task<IReadOnlyList<MatchResponse>> MatchByContextAsync(
         MatchByContext request,
         AuthContext auth,
         CancellationToken cancellationToken = default)
@@ -75,7 +80,7 @@ public sealed class PriceService
                     PriceJsonContext.Default.MatchByContext),
                 Idempotent = true,
             },
-            PriceJsonContext.Default.ListMatch,
+            PriceJsonContext.Default.ListMatchResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 
@@ -92,7 +97,7 @@ public sealed class PriceService
     /// The context still comes from the token — there is nothing else to carry
     /// across the chunks.
     /// </remarks>
-    public async Task<IReadOnlyList<Match>> MatchByContextChunkedAsync(
+    public async Task<IReadOnlyList<MatchResponse>> MatchByContextChunkedAsync(
         IReadOnlyCollection<Items> items,
         PriceMatchOptions? options = null,
         AuthContext auth = default,
@@ -108,7 +113,7 @@ public sealed class PriceService
             return [];
         }
 
-        List<Match> all = [];
+        List<MatchResponse> all = [];
 
         foreach (Items[] chunk in items.Chunk(chunkSize))
         {

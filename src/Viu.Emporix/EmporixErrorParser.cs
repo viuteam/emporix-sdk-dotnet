@@ -47,6 +47,18 @@ internal static partial class EmporixErrorParser
             ? $"{requestDescription} → {(int)statusCode}: {parsedMessage}"
             : $"{requestDescription} → {(int)statusCode}";
 
+        // Emporix answers a validation failure with «check the details» and puts
+        // what is actually wrong in those details. A message that repeats the
+        // instruction without carrying it out is worse than no message, so they
+        // are folded in — bounded, because a bulk call can return hundreds.
+        if (details.Count > 0)
+        {
+            const int Shown = 5;
+
+            message += $" ({string.Join("; ", details.Take(Shown))}"
+                + (details.Count > Shown ? $"; and {details.Count - Shown} more)" : ")");
+        }
+
         return statusCode switch
         {
             HttpStatusCode.Unauthorized
@@ -127,6 +139,31 @@ internal static partial class EmporixErrorParser
                 ? value.GetString()
                 : null;
 
+    /// <summary>
+    /// Turns a structured validation detail into one readable line.
+    /// </summary>
+    /// <remarks>
+    /// A detail like <c>{"field":"currency","message":"currency: must not be
+    /// null"}</c> becomes <c>currency: must not be null</c>. The message
+    /// usually repeats the field, so the field is only prefixed when it does
+    /// not.
+    /// </remarks>
+    private static string Flatten(JsonElement detail)
+    {
+        string? field = ReadString(detail, "field");
+        string? message = ReadString(detail, "message");
+
+        if (message is null)
+        {
+            return detail.GetRawText();
+        }
+
+        return field is { Length: > 0 }
+            && !message.StartsWith(field, StringComparison.OrdinalIgnoreCase)
+                ? $"{field}: {message}"
+                : message;
+    }
+
     private static List<string> ReadDetails(JsonElement root)
     {
         if (!root.TryGetProperty("details", out JsonElement details)
@@ -139,13 +176,16 @@ internal static partial class EmporixErrorParser
 
         foreach (JsonElement detail in details.EnumerateArray())
         {
-            // Emporix specifies strings. An entry of another shape is taken as
-            // raw JSON text — nothing is lost, and no model is needed that the
-            // API does not promise.
+            // Emporix specifies strings, but a validation failure sends objects
+            // carrying the offending field. Those are flattened to «field:
+            // message» — the raw JSON says the same thing across four lines and
+            // reads far worse in an exception message. Any other shape falls
+            // back to raw text, so nothing is lost.
             string? text = detail.ValueKind switch
             {
                 JsonValueKind.String => detail.GetString(),
                 JsonValueKind.Null or JsonValueKind.Undefined => null,
+                JsonValueKind.Object => Flatten(detail),
                 _ => detail.GetRawText(),
             };
 

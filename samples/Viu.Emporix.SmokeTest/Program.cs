@@ -31,6 +31,7 @@ if (configuration is null)
     Console.WriteLine("  EMPORIX_SITE       the site code, e.g. main");
     Console.WriteLine("  EMPORIX_CURRENCY   ISO 4217, e.g. CHF        (optional, but prices need it)");
     Console.WriteLine("  EMPORIX_COUNTRY    ISO 3166-1, e.g. CH       (optional)");
+    Console.WriteLine("  EMPORIX_PRODUCT_ID a product known to have a price (optional)");
     Console.WriteLine("  EMPORIX_HOST       override the API host      (optional)");
     return 2;
 }
@@ -45,14 +46,28 @@ Console.WriteLine();
 
 // The first call is also the token check: it cannot succeed unless the anonymous
 // session was minted and attached.
+List<string> productIds = [];
+bool priced = false;
+(string Product, string PriceId, string? Currency, double? Original, double? Effective)? pricedProduct = null;
+
 string? productId = await runner.RunAsync("anonymous session and product list", async () =>
 {
     PaginatedItems<Viu.Emporix.ProductModels.BasicProductWithId> page =
         await client.Products.ListAsync(new ProductPageOptions { PageSize = 5 }, shopper);
 
-    return page.Items.Count == 0
+    productIds.AddRange(page.Items.Select(p => p.Id).Where(id => id is { Length: > 0 })!);
+
+    // A tenant may list plenty of products and have prices for none of them,
+    // which makes the pricing steps prove nothing. EMPORIX_PRODUCT_ID names one
+    // that is priced, so the flow can be walked to the end.
+    if (configuration.ProductId is { Length: > 0 } known && !productIds.Contains(known))
+    {
+        productIds.Insert(0, known);
+    }
+
+    return productIds.Count == 0
         ? Step.Empty("no products in this tenant — the later steps have nothing to work with")
-        : Step.Ok($"{page.Items.Count} products", page.Items[0].Id);
+        : Step.Ok($"{page.Items.Count} products", productIds[0]);
 });
 
 await runner.RunAsync("fetch one product", async () =>
@@ -87,19 +102,45 @@ await runner.RunAsync("price matching by context", async () =>
         return Step.Skipped("no product id");
     }
 
-    IReadOnlyList<Viu.Emporix.PriceModels.Match> matches = await client.Prices.MatchByContextChunkedAsync(
-        [new Viu.Emporix.PriceModels.Items
+    // Every product on the page, not just the first: one product without a
+    // price says nothing about whether pricing works.
+    IReadOnlyList<Viu.Emporix.PriceModels.Items> items =
+    [
+        .. productIds.Select(id => new Viu.Emporix.PriceModels.Items
         {
-            ItemId = new Viu.Emporix.PriceModels.ItemId4 { Id = productId, ItemType = "PRODUCT" },
-        }],
-        auth: shopper);
+            ItemId = new Viu.Emporix.PriceModels.ItemId5 { Id = id, ItemType = "PRODUCT" },
+
+            // Required: without it Emporix answers «Quantity must not be null».
+            Quantity = new Viu.Emporix.PriceModels.MatchMeasurementUnit { Quantity = 1 },
+        }),
+    ];
+
+    IReadOnlyList<Viu.Emporix.PriceModels.MatchResponse> matches =
+        await client.Prices.MatchByContextChunkedAsync(items, auth: shopper);
 
     // An empty list is not an error here, but it is the exact symptom of a
     // token minted without currency, site and country — worth saying out loud
     // rather than reporting a pass.
-    return matches.Count > 0
-        ? Step.Ok($"{matches.Count} price(s)")
-        : Step.Empty("no prices — check EMPORIX_CURRENCY, EMPORIX_SITE and EMPORIX_COUNTRY");
+    // The priceId is what a cart item needs, so the matched product and its
+    // price are carried forward rather than just a yes-or-no.
+    foreach (Viu.Emporix.PriceModels.MatchResponse match in matches)
+    {
+        if (match.PriceId is { Length: > 0 } id && match.ItemId?.Id is { Length: > 0 } item)
+        {
+            pricedProduct = (item, id, match.Currency, match.OriginalValue, match.EffectiveValue);
+            break;
+        }
+    }
+
+    priced = matches.Count > 0;
+
+    return priced
+        ? Step.Ok(
+            $"{matches.Count} price(s) for {items.Count} product(s)"
+            + (pricedProduct is { } p ? $", first on {p.Product}" : ", none usable for a cart item"))
+        : Step.Empty(
+            $"no prices for any of {items.Count} products — either none are configured "
+            + "for this currency and site, or the token carries no context");
 });
 
 await runner.RunAsync("availability", async () =>
@@ -122,12 +163,60 @@ await runner.RunAsync("availability", async () =>
 string? cartId = await runner.RunAsync("create a cart", async () =>
 {
     CartCreated? cart = await client.Carts.CreateAsync(
-        new Viu.Emporix.CartModels.CreateCart { SiteCode = configuration.Site },
+        new Viu.Emporix.CartModels.CreateCart
+        {
+            SiteCode = configuration.Site,
+
+            // Required: a cart without a currency cannot price anything.
+            Currency = configuration.Currency ?? "CHF",
+        },
         shopper);
 
     return cart?.CartId is { Length: > 0 } id
         ? Step.Ok("created", id)
         : Step.Failed("no cart id came back");
+});
+
+await runner.RunAsync("add an item to the cart", async () =>
+{
+    if (cartId is null)
+    {
+        return Step.Skipped("no cart");
+    }
+
+    if (pricedProduct is not { } match)
+    {
+        // Emporix refuses an item without a price id, and that id comes from the
+        // match that found nothing. Reporting this as a failure would blame the
+        // SDK for a tenant with no prices configured.
+        return Step.Skipped("no price was matched, and a cart item needs one");
+    }
+
+    // Emporix identifies the item by its YRN, not by the bare id — the guard in
+    // CartService rejects a bare id before the request leaves. The price id
+    // comes from the match: without it the item is rejected as «Internal type
+    // must have priceId set».
+    Viu.Emporix.CartModels.CartItemResponse? item = await client.Carts.AddItemAsync(
+        cartId,
+        new Viu.Emporix.CartModels.CartItemRequest
+        {
+            ItemYrn = ProductYrn.Create(configuration.Tenant, match.Product),
+            Quantity = 1,
+            // Emporix wants the price the storefront showed, not just its id:
+            // it checks that the cart agrees with what the customer saw.
+            Price = new Viu.Emporix.CartModels.PriceRowItem
+            {
+                PriceId = match.PriceId,
+                Currency = match.Currency ?? configuration.Currency ?? "CHF",
+                OriginalAmount = match.Original ?? 0,
+                EffectiveAmount = match.Effective ?? match.Original ?? 0,
+            },
+        },
+        shopper);
+
+    return item is null
+        ? Step.Failed("the item did not come back")
+        : Step.Ok("added");
 });
 
 await runner.RunAsync("read the current cart", async () =>

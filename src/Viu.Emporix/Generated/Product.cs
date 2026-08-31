@@ -630,7 +630,7 @@ namespace Viu.Emporix.ProductModels
         /// Product name.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Unique product identifier, defined by the user.
@@ -642,7 +642,7 @@ namespace Viu.Emporix.ProductModels
         /// Product description.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("vendor")]
         public Vendor? Vendor { get; set; } = default!;
@@ -762,7 +762,7 @@ namespace Viu.Emporix.ProductModels
         public string? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("image")]
         public System.Uri? Image { get; set; } = default!;
@@ -1236,7 +1236,7 @@ namespace Viu.Emporix.ProductModels
         public string Qualifier { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Optional unit code for measurement attributes (for example, `"MMT"` for millimetres, `"PCE"` for pieces). Unit translations are resolved by the frontend from a separate dictionary.
@@ -1265,7 +1265,7 @@ namespace Viu.Emporix.ProductModels
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("value")]
         public DynamicVariantAttributeValue Value { get; set; } = new DynamicVariantAttributeValue();
@@ -1322,7 +1322,7 @@ namespace Viu.Emporix.ProductModels
         public string? Code { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Identifier of the immediate parent product in the variant hierarchy.
@@ -1502,10 +1502,10 @@ namespace Viu.Emporix.ProductModels
         public string Code { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]

@@ -23,14 +23,16 @@ public class StorefrontServicesTests
     public async Task Price_matching_posts_the_items_and_is_repeatable()
     {
         // The item list does not fit in an address, but the call only reads.
-        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"productId":"p1"}]""");
+        // The endpoint answers matchResponse, carrying the priceId a cart
+        // item cannot be added without.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"priceId":"pr1"}]""");
         PriceService prices = new(Http(handler), Options());
 
-        IReadOnlyList<PriceModels.Match> matches = await prices.MatchByContextAsync(
+        IReadOnlyList<PriceModels.MatchResponse> matches = await prices.MatchByContextAsync(
             new PriceModels.MatchByContext(),
             Shopper);
 
-        Assert.Single(matches);
+        Assert.Equal("pr1", Assert.Single(matches).PriceId);
         Assert.Equal("/price/acme/match-prices-by-context", Uri(handler));
         Assert.True(handler.LastRequest!.Options.TryGetValue(
             EmporixRequestOptions.Idempotent,

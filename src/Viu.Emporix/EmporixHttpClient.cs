@@ -42,9 +42,10 @@ internal sealed class EmporixHttpClient
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(typeInfo);
 
-        (string body, _) = await ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+        (string body, _, string correlationId) =
+            await ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
 
-        return Deserialize(body, typeInfo, request);
+        return Deserialize(body, typeInfo, request, correlationId);
     }
 
     /// <summary>
@@ -62,7 +63,7 @@ internal sealed class EmporixHttpClient
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        (string body, _) = await ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
+        (string body, _, _) = await ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
 
         return body;
     }
@@ -95,11 +96,11 @@ internal sealed class EmporixHttpClient
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(typeInfo);
 
-        (string body, HttpResponseHeaders headers) =
+        (string body, HttpResponseHeaders headers, string correlationId) =
             await ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
 
         // For a list an empty body is an empty page, not a failure.
-        List<T> items = Deserialize(body, typeInfo, request) ?? [];
+        List<T> items = Deserialize(body, typeInfo, request, correlationId) ?? [];
 
         int? totalCount = ReadNonNegativeInt(headers, "X-Total-Count");
         string? nextCursor = ReadHeader(headers, "X-Next-Cursor");
@@ -147,7 +148,7 @@ internal sealed class EmporixHttpClient
     /// <summary>
     /// Sends the request, checks the status and returns body and headers.
     /// </summary>
-    private async Task<(string Body, HttpResponseHeaders Headers)> ExecuteAsync(
+    private async Task<(string Body, HttpResponseHeaders Headers, string CorrelationId)> ExecuteAsync(
         EmporixRequest request,
         CancellationToken cancellationToken)
     {
@@ -170,7 +171,7 @@ internal sealed class EmporixHttpClient
 
             if (response.IsSuccessStatusCode)
             {
-                return (body, response.Headers);
+                return (body, response.Headers, correlationId);
             }
 
             EmporixApiException failure = EmporixErrorParser.CreateException(
@@ -246,7 +247,11 @@ internal sealed class EmporixHttpClient
         return new Uri(new Uri(_options.Host), builder.ToString());
     }
 
-    private static T? Deserialize<T>(string body, JsonTypeInfo<T> typeInfo, EmporixRequest request)
+    private static T? Deserialize<T>(
+        string body,
+        JsonTypeInfo<T> typeInfo,
+        EmporixRequest request,
+        string correlationId)
     {
         if (string.IsNullOrWhiteSpace(body))
         {
@@ -263,10 +268,17 @@ internal sealed class EmporixHttpClient
             // A success status with an unreadable body is a genuine failure —
             // unlike an error response, where an unreadable body merely means
             // the error details are missing.
-            throw new EmporixApiException(
+            EmporixApiException failure = new(
                 $"{Describe(request)}: the response could not be parsed. {exception.Message}",
                 System.Net.HttpStatusCode.OK,
                 rawBody: body);
+
+            // A parse failure is the hardest kind to chase down, so it needs the
+            // correlation id most: without it there is nothing to match against
+            // what Emporix logged.
+            failure.CorrelationId = correlationId;
+
+            throw failure;
         }
     }
 

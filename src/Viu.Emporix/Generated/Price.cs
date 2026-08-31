@@ -939,8 +939,8 @@ namespace Viu.Emporix.PriceModels
         /// <summary>
         /// Item (product or price) for which the price was matched.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("itemRef")]
-        public ItemRef? ItemRef { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("itemId")]
+        public ItemId3? ItemId { get; set; } = default!;
 
         /// <summary>
         /// Site to which the matched price applies.
@@ -1189,7 +1189,7 @@ namespace Viu.Emporix.PriceModels
         /// Item for which the price is defined.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("itemId")]
-        public ItemId3? ItemId { get; set; } = default!;
+        public ItemId4? ItemId { get; set; } = default!;
 
         /// <summary>
         /// ID of the price model to which the price is assigned. If the ID is not provided, the default price model is used.
@@ -1630,7 +1630,7 @@ namespace Viu.Emporix.PriceModels
         /// Product or price for which a price should be matched.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("itemId")]
-        public ItemId4? ItemId { get; set; } = default!;
+        public ItemId5? ItemId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("quantity")]
         public MatchMeasurementUnit? Quantity { get; set; } = default!;
@@ -1677,7 +1677,7 @@ namespace Viu.Emporix.PriceModels
         /// Product or price for which a price should be matched.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("itemId")]
-        public ItemId5? ItemId { get; set; } = default!;
+        public ItemId6? ItemId { get; set; } = default!;
 
         /// <summary>
         /// Quantity of the product for which a matched price should be calculated.
@@ -1772,7 +1772,7 @@ namespace Viu.Emporix.PriceModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ItemRef
+    public partial class ItemId3
     {
 
         /// <summary>
@@ -1900,7 +1900,7 @@ namespace Viu.Emporix.PriceModels
         /// Version of the price object.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("version")]
-        public string? Version { get; set; } = default!;
+        public int? Version { get; set; } = default!;
 
         /// <summary>
         /// Date and time when the matched price was created.
@@ -2013,7 +2013,7 @@ namespace Viu.Emporix.PriceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ItemId3
+    public partial class ItemId4
     {
 
         /// <summary>
@@ -2117,7 +2117,7 @@ namespace Viu.Emporix.PriceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ItemId4
+    public partial class ItemId5
     {
 
         /// <summary>
@@ -2149,7 +2149,7 @@ namespace Viu.Emporix.PriceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ItemId5
+    public partial class ItemId6
     {
 
         /// <summary>

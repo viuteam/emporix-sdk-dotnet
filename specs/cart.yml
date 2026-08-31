@@ -5864,32 +5864,7 @@ components:
                   type: string
                   description: The common tax code of the line item and all applicable fees. If at least one fee does not have a defined tax code, the common tax code cannot be determined, and the field is empty.
                 taxAggregate:
-                  properties:
-                    lines:
-                      allOf:
-                        - $ref: '#/components/schemas/calculatedPrice'
-                        - type: object
-                          description: A list of tax values grouped by `taxCode` and `taxRate`. It includes the sum of `item[].calculatedPrice.discountedPrice` or `item[].calculatedPrice.price`, `item[].calculatedPrice.fees[].discountedPrice` or `item[].calculatedPrice.fees[].price`, `calculatedPrice.totalShipping` and `calculatedPrice.paymentFees`. If any of these values have the same `taxRate` but different `taxCode`, they are listed separately. The aggregation also includes items that do not have a `taxRate` or `taxCode` defined.
-                          properties:
-                            netValue:
-                              type: number
-                              format: double
-                              description: Net value of the tax, value without tax.
-                            grossValue:
-                              type: number
-                              format: double
-                              description: Gross value of the tax, value with tax.
-                            taxValue:
-                              type: number
-                              format: double
-                              description: Tax value of the tax, it's the actual amount of tax that has to be paid.
-                            taxCode:
-                              type: string
-                              description: Tax code applied to the tax, a tax code is a country's set of tax rules.
-                            taxRate:
-                              type: number
-                              format: double
-                              description: Tax rate applied to the tax, it's the percentage at which an individual or business is taxed.
+                  $ref: '#/components/schemas/calculatedTaxAggregate'
     calculatedFee:
       type: object
       properties:

@@ -152,6 +152,78 @@ internal static partial class GeneratedCodeFixer
     /// like a dangling reference. Replacing it would destroy the class that
     /// introduces it.
     /// </remarks>
+    /// <summary>
+    /// Retypes the properties a specification declares as localized values.
+    /// </summary>
+    /// <param name="source">The generated file.</param>
+    /// <param name="localized">
+    /// The properties to retype, as <c>ClassName.PropertyName</c>, taken from
+    /// the specification rather than guessed at from the names.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Emporix declares a localized field as <c>oneOf: [string, object]</c> —
+    /// the same field arrives as <c>"Kaffee"</c> when the request asked for one
+    /// language and as <c>{"de":"Kaffee"}</c> when it did not. NSwag resolves the
+    /// union to its first branch and types the property <c>string</c>, so the
+    /// untranslated shape fails to parse: reading products from a real tenant
+    /// throws unless <c>Accept-Language</c> happens to be set.
+    /// </para>
+    /// <para>
+    /// <see cref="T:Viu.Emporix.LocalizedString"/> reads both shapes, so the
+    /// properties are pointed at it here. Which classes and properties are
+    /// affected is read out of the specification during generation — a name
+    /// like «Name» or «Description» is not evidence of anything.
+    /// </para>
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Retyped) RetypeLocalizedProperties(
+        string source,
+        IReadOnlyCollection<string> localized)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(localized);
+
+        List<string> retyped = [];
+        string result = source;
+
+        foreach (string entry in localized)
+        {
+            int separator = entry.LastIndexOf('.');
+            if (separator <= 0)
+            {
+                continue;
+            }
+
+            string className = entry[..separator];
+            string propertyName = entry[(separator + 1)..];
+
+            // Anchored on the class so a property name shared by several classes
+            // is only touched where the specification says it is localized.
+            Regex declaration = new(
+                $@"(?<class>public partial class {Regex.Escape(className)}\b(?:[^{{]*)\{{)(?<body>.*?)(?<property>public\s+)string\??(?<tail>\s+{Regex.Escape(propertyName)}\s*\{{)",
+                RegexOptions.Singleline);
+
+            Match match = declaration.Match(result);
+            if (!match.Success)
+            {
+                continue;
+            }
+
+            result = declaration.Replace(
+                result,
+                m => m.Groups["class"].Value
+                    + m.Groups["body"].Value
+                    + m.Groups["property"].Value
+                    + "Viu.Emporix.LocalizedString?"
+                    + m.Groups["tail"].Value,
+                1);
+
+            retyped.Add(entry);
+        }
+
+        return (result, retyped);
+    }
+
     private static bool IsTypeParameter(string name)
         => name.Length >= 1
             && name[0] == 'T'

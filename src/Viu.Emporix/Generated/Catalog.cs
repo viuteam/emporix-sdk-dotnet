@@ -43,10 +43,10 @@ namespace Viu.Emporix.CatalogModels
         public string Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         public Status? Status { get; set; } = default!;
@@ -97,13 +97,13 @@ namespace Viu.Emporix.CatalogModels
         /// Name of the catalog. Must be provided as a map of language codes to translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Description of the catalog. Must be provided as a map of language codes to translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("visibility")]
         public VisibilityInformation? Visibility { get; set; } = default!;
@@ -277,13 +277,13 @@ namespace Viu.Emporix.CatalogModels
         /// Name of the catalog. Must be provided as a map of language codes to translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Description of the catalog. Must be provided as a map of language codes to translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("visibility")]
         public VisibilityInformation? Visibility { get; set; } = default!;
@@ -325,13 +325,13 @@ namespace Viu.Emporix.CatalogModels
         /// Name of the catalog. Must be provided as a map of language codes to translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Description of the catalog. Must be provided as a map of language codes to translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("visibility")]
         public VisibilityInformation? Visibility { get; set; } = default!;

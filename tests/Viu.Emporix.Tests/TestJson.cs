@@ -21,4 +21,5 @@ internal sealed class TestProduct
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(TestProduct))]
 [JsonSerializable(typeof(List<TestProduct>))]
+[JsonSerializable(typeof(LocalizedString))]
 internal sealed partial class TestJsonContext : JsonSerializerContext;
