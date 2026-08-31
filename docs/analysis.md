@@ -546,30 +546,49 @@ insight after the third service.
 
 ### Actual coverage (2026-08-31)
 
-All twelve V1 services exist, but they carry the common paths rather than the
-Node SDK's full operation set. Measured by counting `Promise<T>` / `AsyncIterable<T>`
-returns in the Node facades against public operations on the .NET services:
+The twelve V1 services carry the Node SDK's full operation set. Measured by
+counting public `Promise<T>` / `AsyncIterable<T>` returns in the Node facades
+against public operations on the .NET services:
 
-| Service | Node | .NET | Missing on the .NET side |
+| Service | Node | .NET | Note |
 | --- | ---: | ---: | --- |
-| product | 24 | 14 | bulk update, recalculation jobs, templates |
-| category | 28 | 11 | tree rebuild, parents/children, reference-based assignments |
-| brand | 6 | 5 | `PATCH` |
-| label | 6 | 5 | `PATCH` |
-| catalog | 7 | 6 | `PATCH` |
-| cart | 29 | 13 | addresses, merge, batch items, discounts, delivery restrictions |
-| customer | 24 | 11 | social login, token exchange, email change, address tags |
-| price | 32 | 6 | price models, price lists, bulk operations |
-| availability | 9 | 4 | update, bulk operations, multi-product fetch |
-| checkout | 2 | 1 | order from quote |
-| orders | 19 | 3 | cancel, transitions, history, legal-entity orders, calculate, split |
-| media | 12 | 5 | upload, replace, product attachment |
-| **Total** | **198** | **84** | |
+| product | 24 | 23 | one variant listing covers both Node calls |
+| category | 28 | 27 | ditto for the two assignment filters |
+| brand | 6 | 6 | |
+| label | 6 | 6 | |
+| catalog | 7 | 7 | |
+| cart | 28 | 28 | |
+| customer | 24 | 23 | anonymous sessions live in the token provider |
+| price | 31 | 31 | |
+| availability | 9 | 9 | |
+| checkout | 2 | 2 | |
+| orders | 19 | 20 | split into storefront and administrative |
+| media | 12 | 11 | create and update split by blob versus link |
+| **Total** | **196** | **193** | |
 
-Against the whole Node SDK that is **84 of 649 operations across 12 of 48
-services**. The gap is deliberate for the 36 absent services and incidental for
-the twelve present ones — closing the latter costs facade work only, since the
-generated types are already there.
+The remaining differences are shape, not coverage: where Node has two calls
+that differ only in how the result is filtered or paged, the .NET side has one.
+
+Against the whole Node SDK that is **12 of 48 services**. The 36 absent
+services are the deliberate part of the gap; closing them costs facade work
+only, since the generated types are already there.
+
+Four defects surfaced while closing the operation gap, each of them a call
+that could never have worked:
+
+| Defect | Was | Is |
+| --- | --- | --- |
+| Order paths | `/order/{tenant}/salesorders` | `/order-v2/{tenant}/…` |
+| Order status | `PUT …/status/{status}` | `POST …/transitions` |
+| Checkout | `/checkout/{tenant}/order` | `/checkout/{tenant}/checkouts/order` |
+| Coupons | `…/coupons/{code}` | `…/discounts`, code in the body |
+| Customer profile and address | `PUT` | `PATCH` |
+| Category tree | `/categories/{id}/subcategories` | `/category-trees/{rootId}` |
+
+Every one of them compiled and had a passing test, because the test asserted
+the same wrong call the code built. `SpecPathTests` now reads the vendored
+specifications and fails when a service builds a method-and-address pair none
+of them declares.
 
 The generation pipeline downloads and generates **all 43 specifications** from the
 start — only the hand-written facades are staged. A later wave then costs only

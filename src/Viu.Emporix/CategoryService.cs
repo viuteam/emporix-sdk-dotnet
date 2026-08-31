@@ -772,4 +772,34 @@ public sealed class CategoryAssignmentOperations
             },
             cancellationToken);
     }
+
+    /// <summary>Lists what is assigned to a category, of one kind.</summary>
+    /// <param name="categoryId">The category.</param>
+    /// <param name="referenceType">Which kind to keep, for example products or categories.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The referenced ids, in the order Emporix returned them.</returns>
+    /// <remarks>
+    /// A category holds products and subcategories in the same assignment list,
+    /// so «what products are in this category» means reading the list and
+    /// keeping one kind. Only the ids come back: fetching the products
+    /// themselves is a call to another service, and doing it here would tie the
+    /// two together for a convenience.
+    /// </remarks>
+    public async Task<IReadOnlyList<string>> ListAssignedIdsAsync(
+        string categoryId,
+        CategoryAssignmentRefQueryDocumentType referenceType,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<CategoryAssignment> assignments =
+            await ListAsync(categoryId, auth, cancellationToken).ConfigureAwait(false);
+
+        return
+        [
+            .. assignments
+                .Where(a => a.Ref?.Type == referenceType && a.Ref.Id is { Length: > 0 })
+                .Select(a => a.Ref!.Id),
+        ];
+    }
 }

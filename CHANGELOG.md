@@ -11,10 +11,10 @@ exactly that package version.
 
 ## [0.1.0-preview.1]
 
-The first prerelease. The core is complete. Twelve services cover the storefront
-path from browsing to placed order — with the operations that path needs, not the
-full Emporix surface: 84 of roughly 198 operations across 12 of 48 services. The
-gaps are listed in
+The first prerelease. The core is complete, and so are twelve of the 48 Emporix
+services — each with the full set of operations the API offers for it, 193 in
+all. The remaining 36 services have no facade yet; their generated types ship in
+the package. See
 [docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31).
 
 ### Added
@@ -36,20 +36,21 @@ gaps are listed in
   the token endpoints.
 - Pagination with three-tier next-page detection and `IAsyncEnumerable` walking
   through `ListAllAsync`.
-- Twelve services on `EmporixClient`, each covering the common paths:
+- Twelve services on `EmporixClient`:
   - `Products` — reads, search including name search, bulk fetch by id and code
     with automatic chunking, variant listing, and the full write surface.
   - `Categories` — categories, the category tree, and assignments.
   - `Brands`, `Labels`, `Catalogs` — the catalog metadata.
   - `Carts` — carts, items, coupons and validation.
   - `Customers` — sign-up, sign-in, session refresh, profile and addresses.
-  - `Prices` — prices and context-aware matching, splitting long item lists
-    across requests.
+  - `Prices` — prices, context-aware and explicit matching, price models and
+    price lists, with bulk operations throughout.
   - `Availability` — stock per site, with an opt-in reading of «no record» as
     available.
   - `Checkout` — placing an order, deliberately never marked repeatable.
-  - `Orders` — orders, own orders, and status changes.
-  - `Media` — assets, links and downloads.
+  - `Orders` and `SalesOrders` — the shopper's own orders and the
+    administrative collection, kept apart because Emporix does.
+  - `Media` — assets, uploads, links, downloads and product attachment.
 - Native AOT compatibility throughout; serialization is source-generated.
 - A generation pipeline (`tools/Viu.Emporix.SpecSync`) that downloads all 43
   Emporix specifications, repairs known defects, records a sha256 manifest and

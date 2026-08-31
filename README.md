@@ -149,8 +149,9 @@ await client.Products.DeleteAsync("p1", force: true);
 
 ## The other services
 
-Twelve of the Emporix services are covered, with the operations a storefront
-reaches for. Each hangs off the client under a name that says what it owns:
+Twelve of the Emporix services are covered, each with the full set of
+operations the API offers for it. Each hangs off the client under a name that
+says what it owns:
 
 | Property | Covers |
 |---|---|
@@ -161,10 +162,11 @@ reaches for. Each hangs off the client under a name that says what it owns:
 | `client.Catalogs` | catalogs and their categories |
 | `client.Carts` | carts, items, coupons, validation |
 | `client.Customers` | sign-up, sign-in, profile, addresses |
-| `client.Prices` | prices and context-aware price matching |
+| `client.Prices` | prices, price matching, price models and price lists |
 | `client.Availability` | stock per site |
 | `client.Checkout` | turning a cart into an order |
-| `client.Orders` | orders, own orders, status changes |
+| `client.Orders` | a customer's own orders |
+| `client.SalesOrders` | the administrative order collection |
 | `client.Media` | assets, links, downloads |
 
 A storefront flow from browsing to order:
@@ -199,22 +201,10 @@ the request is sent. Carts, checkout and own-orders do the same.
 
 ### What is not here yet
 
-Emporix exposes 48 services; these twelve carry 84 of the roughly 198 operations
-they define. The common paths are covered — the gaps are mostly administrative
-or bulk operations. The larger ones:
-
-| Service | Missing |
-| --- | --- |
-| orders | cancel, transitions, history, legal-entity orders, calculate, split |
-| price | price models, price lists, bulk operations |
-| cart | addresses, merge, batch items, discounts, delivery restrictions |
-| customer | social login, token exchange, email change, address tags |
-| category | tree rebuild, parents/children, reference-based assignments |
-| media | upload, replace, product attachment |
-
-The remaining 36 services — payments, coupons, taxes, shipping, quotes, IAM and
-the rest — have no facade at all yet. Their generated types ship in the package,
-so anything missing is reachable through the underlying `HttpClient`.
+These twelve services carry the operations the Emporix API offers for them.
+What is missing is the other 36 services — payments, coupons, taxes, shipping,
+quotes, IAM and the rest. Their generated types ship in the package, so
+anything missing is reachable through the underlying `HttpClient`.
 
 The full picture is in
 [docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31).
