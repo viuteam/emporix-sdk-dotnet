@@ -144,7 +144,7 @@ public class StorefrontServicesTests
         Assert.False(handler.LastRequest!.Options.TryGetValue(
             EmporixRequestOptions.Idempotent,
             out _));
-        Assert.Equal("/checkout/acme/order", Uri(handler));
+        Assert.Equal("/checkout/acme/checkouts/order", Uri(handler));
     }
 
     [Fact]

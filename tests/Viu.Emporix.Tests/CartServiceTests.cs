@@ -190,14 +190,29 @@ public class CartServiceTests
     // ---------- Coupons ----------
 
     [Fact]
-    public async Task A_coupon_code_is_escaped_into_the_path()
+    public async Task A_coupon_is_applied_as_a_discount()
     {
+        // Emporix has no coupon path. A coupon is a discount carrying a code,
+        // and the code travels in the body rather than the address.
         StubHttpMessageHandler handler = new(HttpStatusCode.OK, string.Empty);
         CartService carts = Create(handler);
 
         await carts.ApplyCouponAsync("c1", "SUMMER 20%", Shopper);
 
-        Assert.Equal("/cart/acme/carts/c1/coupons/SUMMER%2020%25", Uri(handler));
+        Assert.Equal("/cart/acme/carts/c1/discounts", Uri(handler));
+        Assert.Contains("SUMMER 20%", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_coupon_is_removed_by_query_parameter()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, string.Empty);
+        CartService carts = Create(handler);
+
+        await carts.RemoveCouponAsync("c1", "SUMMER 20%", Shopper);
+
+        Assert.Equal(HttpMethod.Delete, handler.RequestMethods[0]);
+        Assert.Equal("/cart/acme/carts/c1/discounts?codes=SUMMER%2020%25", Uri(handler));
     }
 
     [Fact]

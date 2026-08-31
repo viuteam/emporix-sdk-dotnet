@@ -74,6 +74,7 @@ public sealed class CartCreated
 [JsonSerializable(typeof(List<Viu.Emporix.CartModels.CartItemResponse>))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.UpdateCartItem))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.CartValidationResult))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.Discount))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.UpdateCart))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.Search))]
 [JsonSerializable(typeof(List<Viu.Emporix.CartModels.BaseCartItemResponse>))]

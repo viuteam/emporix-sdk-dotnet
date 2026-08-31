@@ -199,7 +199,7 @@ public sealed class CheckoutService
             new EmporixRequest
             {
                 Method = HttpMethod.Post,
-                Path = $"/checkout/{_tenant}/order",
+                Path = $"/checkout/{_tenant}/checkouts/order",
                 Auth = RequireShopper(auth),
                 Content = EmporixJsonContent.Create(
                     checkout,

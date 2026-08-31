@@ -368,10 +368,14 @@ public sealed class CartService
         return _http.SendAsync(
             new EmporixRequest
             {
+                // Emporix has no «coupons» path: a coupon is a discount carrying
+                // a code.
                 Method = HttpMethod.Post,
-                Path = $"{BasePath}/{Uri.EscapeDataString(cartId)}/coupons"
-                    + $"/{Uri.EscapeDataString(couponCode)}",
+                Path = $"{BasePath}/{Uri.EscapeDataString(cartId)}/discounts",
                 Auth = RequireCartAuth(auth),
+                Content = EmporixJsonContent.Create(
+                    new Discount { Code = couponCode },
+                    CartJsonContext.Default.Discount),
             },
             cancellationToken);
     }
@@ -393,10 +397,11 @@ public sealed class CartService
         return _http.SendAsync(
             new EmporixRequest
             {
+                // Removal is by query parameter, not by path segment.
                 Method = HttpMethod.Delete,
-                Path = $"{BasePath}/{Uri.EscapeDataString(cartId)}/coupons"
-                    + $"/{Uri.EscapeDataString(couponCode)}",
+                Path = $"{BasePath}/{Uri.EscapeDataString(cartId)}/discounts",
                 Auth = RequireCartAuth(auth),
+                Query = [new("codes", couponCode)],
             },
             cancellationToken);
     }
