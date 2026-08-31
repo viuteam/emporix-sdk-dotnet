@@ -1,0 +1,1266 @@
+openapi: 3.0.0
+info:
+  title: Vendor Service
+  version: ''
+  description: |
+    The Vendor service allows you to manage vendors and their locations in your system.
+  contact:
+    name: Emporix
+    url: 'https://emporix.com'
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Vendors
+  - name: Locations
+paths:
+  '/vendor/{tenant}/vendors':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Creating a vendor
+      description: |-
+        Creates a new vendor for the tenant. A vendor represents a supplier or a business partner in the system.
+
+      security:
+        - OAuth2:
+            - vendor.vendor_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/vendorCreate'
+            examples:
+              Create a company:
+                value:
+                  name: Vendor Company
+                  type: COMPANY
+                  legalInfo:
+                    legalName: Vendor Company Inc.
+                    registrationDate: '2022-03-31T13:18:02.379Z'
+                    countryOfRegistration: US
+                    taxRegistrationNumber: '1234567890'
+                  contactDetails:
+                    - firstName: John
+                      lastName: Doe
+                      email: john.doe@supplier.com
+                      phone: '+1-555-0123'
+                  locations:
+                    - id: 123e06ecf0452c2d6c0b81390
+      responses:
+        '201':
+          description: The request was successful. The vendor has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+              examples:
+                Vendor created:
+                  value:
+                    id: 53ac81fd0cce8b26b36f3492
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-vendor-mgmt-create-vendor      
+      tags:
+        - Vendors
+    get:
+      summary: Retrieving all vendors
+      description: |-
+        Retrieves all vendors. You can filter, sort and paginate the results with query parameters.
+
+
+      security:
+        - OAuth2:
+            - vendor.vendor_read
+            - vendor.vendor_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+        - $ref: '#/components/parameters/trait_vendor_id_query_param'
+        - $ref: '#/components/parameters/trait_vendor_name_query_param'
+        - $ref: '#/components/parameters/trait_vendor_type_query_param'
+        - $ref: '#/components/parameters/trait_vendor_parentId_query_param'
+        - $ref: '#/components/parameters/trait_vendor_legalName_query_param'
+        - $ref: '#/components/parameters/trait_vendor_registrationDate_query_param'
+        - $ref: '#/components/parameters/trait_vendor_countryOfRegistration_query_param'
+        - $ref: '#/components/parameters/trait_vendor_taxRegistrationNumber_query_param'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetVendors'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-vendor-mgmt-list-vendors
+      tags:
+        - Vendors
+  '/vendor/{tenant}/vendors/search':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Searching with parameters for vendors
+      description: |-
+        Retrieves all vendors that match the provided criteria.
+
+      security:
+      - OAuth2:
+          - vendor.vendor_read
+          - vendor.vendor_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_fields'
+        - $ref: '#/components/parameters/trait_vendor_id_query_param'
+        - $ref: '#/components/parameters/trait_vendor_name_query_param'
+        - $ref: '#/components/parameters/trait_vendor_type_query_param'
+        - $ref: '#/components/parameters/trait_vendor_parentId_query_param'
+        - $ref: '#/components/parameters/trait_vendor_legalName_query_param'
+        - $ref: '#/components/parameters/trait_vendor_registrationDate_query_param'
+        - $ref: '#/components/parameters/trait_vendor_countryOfRegistration_query_param'
+        - $ref: '#/components/parameters/trait_vendor_taxRegistrationNumber_query_param'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: qParam
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: Query param for filtering entities by specified type.
+            examples:
+              Search by type:
+                value:
+                  q: "type:COMPANY"
+              Search by name:
+                value:
+                  q: "name:\"Vendor Company\""
+      responses:
+        '200':
+          $ref: '#/components/responses/GetVendors'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-vendor-mgmt-search-vendors
+      tags:
+        - Vendors
+  '/vendor/{tenant}/vendors/{vendorId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_vendor_id_path'
+    get:
+      summary: Retrieving a vendor
+      parameters:
+        - $ref: '#/components/parameters/trait_fields'
+      description: |-
+        Retrieves a vendor by the specified unique identifier.
+      security:
+        - OAuth2:
+            - vendor.vendor_read
+            - vendor.vendor_manage
+      responses:
+        '200':
+          $ref: '#/components/responses/GetVendor'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-vendor-mgmt-retrieve-vendor
+      tags:
+        - Vendors
+    put:
+      summary: Upserting a vendor
+      description: |-
+        Updates or creates a vendor with a given vendor ID. You can omit the `metadata.version`, but then optimistic locking is not enabled.
+
+      security:
+        - OAuth2:
+            - vendor.vendor_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/vendorUpdate'
+            examples:
+              Update the vendor:
+                value:
+                  name: Updated Vendor Company
+                  type: COMPANY
+                  legalInfo:
+                    legalName: Updated Vendor Company Inc.
+                    registrationDate: '2022-03-31T13:18:02.379Z'
+                    countryOfRegistration: US
+                    taxRegistrationNumber: '1234567890'
+                  contactDetails:
+                    - firstName: John
+                      lastName: Doe
+                      email: john.doe@supplier.com
+                      phone: '+1-555-0123'
+                  locations:
+                    - id: 123e06ecf0452c2d6c0b81390
+                  metadata:
+                    version: 1
+      responses:
+        '201':
+          description: The request was successful. The vendor has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+              examples:
+                Vendor created:
+                  value:
+                    id: 53ac81fd0cce8b26b36f3492
+        '204':
+          description: The vendor has been updated successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest_400_Update'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: PUT-vendor-mgmt-update-vendor
+      tags:
+        - Vendors
+    delete:
+      summary: Delete a vendor
+      description: |-
+        Deletes a vendor.
+
+      security:
+        - OAuth2:
+            - vendor.vendor_manage
+      responses:
+        '204':
+          description: The vendor has been deleted successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest_400_Update'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: DELETE-vendor-mgmt-remove-vendor
+      tags:
+        - Vendors
+  '/vendor/{tenant}/locations':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Creating a location
+      description: |-
+        Creates a new location for the tenant. A location represents address information for a vendor.
+
+      security:
+        - OAuth2:
+            - vendor.vendor_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/locationCreate'
+            examples:
+              Create a location:
+                value:
+                  name: Main HQ
+                  type: HEADQUARTER
+                  contactDetails:
+                    emails:
+                      - jon.doe@example.com
+                      - adam.smith@sample.org
+                    phones:
+                      - '1234567890'
+                      - '123456789'
+                    addressLine1: W Sample St
+                    addressLine2: 3601-3799
+                    city: South Bend
+                    state: Indiana
+                    postcode: '46619'
+                    countryCode: US
+                    tags:
+                      - shipping
+      responses:
+        '201':
+          description: The request was successful. The location has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+              examples:
+                Location created:
+                  value:
+                    id: 53ac81fd0cce8b26b36f1234
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-vendor-mgmt-create-location
+      tags:
+        - Locations
+    get:
+      summary: Retrieving all locations
+      description: |-
+        Retrieves all locations assigned to the tenant. You can filter, sort and paginate the results with query parameters.
+
+      security:
+      - OAuth2:
+          - vendor.vendor_read
+          - vendor.vendor_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+        - $ref: '#/components/parameters/trait_location_name_query_param'
+        - $ref: '#/components/parameters/trait_location_type_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_email_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_phone_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_address_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_city_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_state_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_postcode_query_param'
+        - $ref: '#/components/parameters/trait_location_contactDetails_countryCode_query_param'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetLocations'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-vendor-mgmt-list-all-locations
+      tags:
+        - Locations
+  '/vendor/{tenant}/locations/{locationId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_location_id_path'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/trait_fields'
+      summary: Retrieving a location
+      description: |-
+        Retrieves a location by the specified unique identifier.
+
+      security:
+        - OAuth2:
+            - vendor.vendor_read
+            - vendor.vendor_manage
+      responses:
+        '200':
+          $ref: '#/components/responses/GetLocation'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-vendor-mgmt-retrieve-location
+      tags:
+        - Locations
+    put:
+      summary: Upserting a location
+      description: |-
+        Updates or creates a location with a given location ID. You can omit the `metadata.version`, but then optimistic locking is not enabled.
+
+      security:
+        - OAuth2:
+            - vendor.vendor_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/locationUpdate'
+            examples:
+              Update the location:
+                value:
+                  name: Main Warehouse
+                  type: WAREHOUSE
+                  contactDetails:
+                    emails:
+                      - jon.doe@example.com
+                      - adam.smith@sample.org
+                    phones:
+                      - '1234567890'
+                      - '123456789'
+                    addressLine1: W Sample St
+                    addressLine2: 3601-3799
+                    city: South Bend
+                    state: Indiana
+                    postcode: '46619'
+                    countryCode: US
+                    tags:
+                      - shipping
+                  metadata:
+                    version: 1
+      responses:
+        '201':
+          description: The request was successful. The location has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+              examples:
+                Location created:
+                  value:
+                    id: 53ac81fd0cce8b26b36f3492
+        '204':
+          description: The location has been updated successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest_400_Update'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: PUT-vendor-mgmt-update-location
+      tags:
+        - Locations
+    delete:
+      summary: Delete a location
+      description: |-
+        Deletes a location.
+      security:
+        - OAuth2:
+            - vendor.vendor_manage
+      responses:
+        '204':
+          description: The location has been deleted successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: DELETE-vendor-mgmt-remove-location
+      tags:
+        - Locations
+components:
+  schemas:
+    errorMessage:
+      title: Error
+      description: Schema for API specified errors.
+      type: object
+      properties:
+        code:
+          minimum: 100
+          maximum: 599
+          description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+          type: integer
+        status:
+          description: Original HTTP error name.
+          type: string
+        message:
+          description: Descriptive error message for debugging.
+          type: string
+        resourceId:
+          type: string
+          description: Id of the resource.
+        details:
+          description: List of problems causing this error.
+          type: array
+          items:
+            description: Details for specific error cause.
+            type: string
+      required:
+        - status
+        - code
+    metadataUpdate:
+      type: object
+      properties:
+        version:
+          minimum: 1
+          type: integer
+          description: Version of the document.
+        mixins:
+          type: object
+          description: Links to the mixin schemas. A map where the keys represent mixins set attributes and the values represent url to a schema for a particular set.
+          additionalProperties: true
+    metadata:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/metadataUpdate'
+        - type: object
+          properties:
+            createdAt:
+              description: Date and time when the document was created.
+              type: string
+            modifiedAt:
+              description: Date and time when the document was last modified.
+              type: string
+    resourceId:
+      title: Resource
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of a resource.
+    vendor:
+      title: Vendor
+      type: object
+      properties:
+        id:
+          type: string
+          description: The vendor unique identifier.
+          example: "VND001"
+        name:
+          type: string
+          description: The name of the vendor.
+          example: "Vendor Company"
+        type:
+          type: string
+          enum:
+            - COMPANY
+            - SUBSIDIARY
+          description: The type of the vendor.
+          example: COMPANY
+        parentId:
+          type: string
+          description: The id of the parent vendor.
+          example: "PARENT123"
+        legalInfo:
+          $ref: '#/components/schemas/legalInfo'
+        contactDetails:
+          type: array
+          description: The list of contact details for the vendor.
+          items:
+            $ref: '#/components/schemas/vendorContactDetails'
+        locations:
+          type: array
+          description: The list of locations assigned to the vendor.
+          items:
+            $ref: '#/components/schemas/location'
+          example:
+            - id: "LOC001"
+        metadata:
+          $ref: '#/components/schemas/metadata'
+        mixins:
+          type: object
+          description: Mixins request. A map where a key represent mixins set name and a value represent a map with key-value pairs.
+          additionalProperties: true
+    legalInfo:
+      title: Vendor Legal Information
+      type: object
+      properties:
+        legalName:
+          type: string
+          description: The legal name of the vendor.
+          example: "Vendor Company"
+        registrationDate:
+          type: string
+          description: 'The registration date of the vendor in the ISO 8601 format.'
+          example: "2022-03-31T13:18:02.379Z"
+        countryOfRegistration:
+          type: string
+          description: The country in which the vendor has been registered.
+          example: "US"
+        taxRegistrationNumber:
+          type: string
+          description: The tax registration number of the vendor.
+          example: "US-123456789"
+    vendorContactDetails:
+      title: Contact Details
+      type: object
+      properties:
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+          description: The list of contact emails.
+          example:
+            - "contact@vendor.com"
+        phones:
+          type: array
+          items:
+            type: string
+          description: The list of contact phone numbers.
+          example:
+            - "+1-555-0123"
+        addressLine1:
+          type: string
+          description: The first address line of the contact.
+          example: "123 High Rd"
+        city:
+          type: string
+          description: The city of the contact.
+          example: "South Bend"
+        state:
+          type: string
+          description: The state of the contact.
+          example: "Indiana"
+        postcode:
+          type: string
+          description: The post code of the contact.
+          example: "46619"
+        countryCode:
+          type: string
+          description: The country code of the contact.
+          example: "US"
+      required:
+        - email
+    vendorCreate:
+      title: Vendor create payload
+      type: object
+      properties:
+        id:
+          type: string
+          description: Custom vendor identifier. If not provided, it is automatically generated.
+          minLength: 1
+          maxLength: 66
+          pattern: ^[a-zA-Z0-9_-]+$
+          example: "VND001"
+        name:
+          type: string
+          description: The name of the vendor.
+          example: "Vendor Company"
+        type:
+          type: string
+          enum:
+            - COMPANY
+            - SUBSIDIARY
+          description: 'The type of the vendor. If not provided, the default value is: `COMPANY`.'
+          example: COMPANY
+        parentId:
+          type: string
+          description: The ID of the parent vendor.
+          example: "PARENT123"
+        legalInfo:
+          $ref: '#/components/schemas/legalInfo'
+        contactDetails:
+          type: array
+          description: The list of contact details for the vendor.
+          items:
+            $ref: '#/components/schemas/vendorContactDetails'
+        locations:
+          type: array
+          description: The list of location IDs assigned to the vendor.
+          items:
+            $ref: '#/components/schemas/resourceId'
+          example:
+            - id: "LOC001"
+        mixins:
+          type: object
+          description: Mixins request. A map where a key represent mixins set name and a value represent a map with key-value pairs.
+          additionalProperties: true
+      required:
+        - name
+    vendorUpdate:
+      title: Vendor update payload
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the vendor.
+          example: "Vendor Company"
+        type:
+          type: string
+          enum:
+            - COMPANY
+            - SUBSIDIARY
+          description: The type of the vendor.
+          example: COMPANY
+        parentId:
+          type: string
+          description: The ID of the parent vendor.
+          example: "PARENT123"
+        legalInfo:
+          $ref: '#/components/schemas/legalInfo'
+        contactDetails:
+          type: array
+          description: The list of contact details for the vendor.
+          items:
+            $ref: '#/components/schemas/vendorContactDetails'
+        locations:
+          type: array
+          description: The list of location IDs assigned to the vendor.
+          items:
+            $ref: '#/components/schemas/resourceId'
+          example:
+            - id: "LOC001"
+        metadata:
+          $ref: '#/components/schemas/metadataUpdate'
+        mixins:
+          type: object
+          description: Mixins request. A map where a key represent mixins set name and a value represent a map with key-value pairs.
+          additionalProperties: true
+      required:
+        - name
+        - type
+    location:
+      title: Location
+      type: object
+      properties:
+        id:
+          type: string
+          description: The location unique identifier.
+          example: "LOC001"
+        name:
+          type: string
+          description: The name of the location.
+          example: "Main HQ"
+        type:
+          type: string
+          enum:
+            - HEADQUARTER
+            - WAREHOUSE
+            - OFFICE
+          description: The type of the location.
+          example: HEADQUARTER
+        contactDetails:
+          $ref: '#/components/schemas/contactDetails'
+        metadata:
+          $ref: '#/components/schemas/metadata'
+        mixins:
+          type: object
+          description: Mixins request. A map where a key represent mixins set name and a value represent a map with key-value pairs.
+          additionalProperties: true
+    locationCreate:
+      title: Location create payload
+      type: object
+      properties:
+        id:
+          type: string
+          description: Custom location identifier. If not provided, it is automatically generated.
+          minLength: 1
+          maxLength: 66
+          pattern: ^[a-zA-Z0-9_-]+$
+        name:
+          type: string
+          description: 'The name of the location'
+        type:
+          type: string
+          enum:
+            - HEADQUARTER
+            - WAREHOUSE
+            - OFFICE
+          description: The type of the location.
+        contactDetails:
+          $ref: '#/components/schemas/contactDetails'
+        mixins:
+          type: object
+          description: Mixins request. A map where a key represent mixins set name and a value represent a map with key-value pairs.
+          additionalProperties: true
+      required:
+        - type
+        - contactDetails
+    locationUpdate:
+      title: Location update payload
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the location.
+        type:
+          type: string
+          enum:
+            - HEADQUARTER
+            - WAREHOUSE
+            - OFFICE
+          description: The type of the location.
+        contactDetails:
+          $ref: '#/components/schemas/contactDetails'
+        metadata:
+          $ref: '#/components/schemas/metadataUpdate'
+        mixins:
+          type: object
+          description: Mixins request. A map where a key represent mixins set name and a value represent a map with key-value pairs.
+          additionalProperties: true
+      required:
+        - type
+        - contactDetails
+    contactDetails:
+      title: Contact Details
+      type: object
+      properties:
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+          description: The list of contact emails.
+          example: ["contact@vendorcompany.com"]
+        phones:
+          type: array
+          items:
+            type: string
+          description: The list of contact phone numbers.
+          example: ["+1-555-0123"]
+        addressLine1:
+          type: string
+          description: The first address line of the contact.
+          example: "123 Industrial Rd"
+        city:
+          type: string
+          description: The city of the contact.
+          example: "South Bend"
+        state:
+          type: string
+          description: The state of the contact.
+          example: "Indiana"
+        postcode:
+          type: string
+          description: The post code of the contact.
+          example: "46619"
+        countryCode:
+          type: string
+          description: The country code of the contact.
+          example: "US"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Allows to tag the location.
+  responses:
+    GetVendor:
+      description: The request was successful. The requested vendor is returned.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/vendor'
+          examples:
+            Requested vendor:
+              value:
+                id: 123e06ecf0452c2d6c0b81390
+                name: Vendor Company
+                type: COMPANY
+                legalInfo:
+                  legalName: Vendor Company Inc.
+                  registrationDate: '2022-03-31T13:18:02.379Z'
+                  countryOfRegistration: US
+                  taxRegistrationNumber: '1234567890'
+                contactDetails:
+                  - firstName: John
+                    lastName: Doe
+                    email: john.doe@supplier.com
+                    phone: '+1-555-0123'
+                locations:
+                  - id: 627e06ecf0452c2d6c0b81391
+                    name: Main HQ
+                    type: HEADQUARTER
+                    contactDetails:
+                      emails:
+                        - jon.doe@example.com
+                      phones:
+                        - '1234567890'
+                      addressLine1: W Sample St
+                      city: South Bend
+                      state: Indiana
+                      postcode: '46619'
+                      countryCode: US
+                    metadata:
+                      createdAt: '2022-03-31T13:18:02.379Z'
+                      modifiedAt: '2022-03-31T13:18:02.379Z'
+                      version: 1
+                metadata:
+                  createdAt: '2022-03-31T13:18:02.379Z'
+                  modifiedAt: '2022-03-31T13:18:02.379Z'
+                  version: 1
+    GetVendors:
+      description: The request was successful. A list of vendors is returned.
+      headers:
+        X-Total-Count:
+          description: |-
+            'The total number of entities in the database matching the specified query criteria.
+            Returned if the request X-Total-Count header has been set to true.'
+          schema:
+            type: number
+            example: 69
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/vendor'
+    GetLocation:
+      description: The request was successful. The requested location is returned.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/location'
+    GetLocations:
+      description: The request was successful. A list of locations is returned.
+      headers:
+        X-Total-Count:
+          description: Total amount of locations.
+          schema:
+            type: integer
+            format: int32
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/location'
+    BadRequest_400:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+    BadRequest_400_Update:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+    NotFound_404:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+    Conflict_409:
+      description: Given resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant that the caller is acting upon.
+
+        Please note that this value is always lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        The page number to be retrieved where the size of the pages must be specified by the pageSize parameter.
+        The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      in: query
+      name: sort
+      required: false
+      description: "Fields to sort the response data by following order of the parameters from left to right. Can contain multiple fields in format: field name:sort direction separated by a comma. The colon with sort direction parameter is redundant and descending order is taken only if it is equal to desc or DESC. Ascending order is considered in any other case."
+      schema:
+        type: string
+        example: 'name,metadata.createdAt:desc'
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        The number of documents being retrieved on the page.
+      schema:
+        default: 16
+        minimum: 1
+        type: integer
+    trait_XTotalCount_header:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: 'In order to get information how many entities meet a filter requirements, X-Total-Count header has been introduced. The header is optional and its default value is false. If the header is provided and it is true then total count is returned in the X-Total-Count response header.'
+      schema:
+        default: false
+        type: boolean
+    trait_q_param:
+      in: query
+      name: q
+      required: false
+      description: |
+        Query param for filtering entities by specified type. Examples of query params which are supported:
+
+        | Q Param                                                                            | Description                                                                                                                          |
+        |------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+        | `name:"Exact match"`                                                               | find an entity with `name` field with `Exact match` value                                                                            |
+        | `name:~Supplier`                                                                   | find an entity with `name` field containing `Supplier` value                                                                        |
+        | `type:COMPANY`                                                                     | find an entity with `type` field with `COMPANY` value                                                                               |
+        | `metadata.createdAt:(>"2019-01-06T10:29:30.602Z" AND <"2020-01-07T10:29:30.602Z")` | find an entity with `metadata.createdAt` field with value between `2019-01-06T10:29:30.602Z` and `2020-01-07T10:29:30.602Z`      |
+        | `name:exists`                                                                      | find an entity with existing `name` field                                                                                            |
+        | `name:null`                                                                        | find an entity with non-existing `name` field                                                                                        |
+      schema:
+        type: string
+        example: 'name:~supplier'
+    trait_fields:
+      in: query
+      name: fields
+      required: false
+      description: 'Comma-separated list of fields to return in the response. If not specified, all fields are returned.'
+      schema:
+        type: string
+        example: 'name,type'
+    trait_vendor_id_path:
+      name: vendorId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The vendor unique identifier.
+    trait_vendor_id_query_param:
+      name: id
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Vendor id. When specified, only vendor with the specified id will be returned.
+    trait_vendor_name_query_param:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Vendor name. When specified, only vendors containing the specified name will be returned.
+    trait_vendor_type_query_param:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - COMPANY
+          - SUBSIDIARY
+      description: |
+        Vendor type. When specified, only vendors with the specified type will be returned.
+    trait_vendor_parentId_query_param:
+      name: parentId
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The id of the parent vendor. When specified, only vendors with the specified parent will be returned.
+    trait_vendor_legalName_query_param:
+      name: legalInfo.legalName
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The legal name of the vendor. When specified, only vendors containing the specified name will be returned.
+    trait_vendor_registrationDate_query_param:
+      name: legalInfo.registrationDate
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Vendor registration date. When specified, only vendors registered in the specified date will be returned.
+    trait_vendor_countryOfRegistration_query_param:
+      name: legalInfo.countryOfRegistration
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Vendor registration country. When specified, only vendors containing the specified registration country will be returned.
+    trait_vendor_taxRegistrationNumber_query_param:
+      name: legalInfo.taxRegistrationNumber
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Vendor tax registration number. When specified, only vendors with the specified tax registration number will be returned.
+    trait_location_id_path:
+      name: locationId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The location unique identifier.
+    trait_location_name_query_param:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Location name. When specified, only locations containing the specified name will be returned.
+    trait_location_type_query_param:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - HEADQUARTER
+          - WAREHOUSE
+          - OFFICE
+      description: |
+        The type of the location. When specified, only locations of the specified type will be returned.
+    trait_location_contactDetails_email_query_param:
+      name: contactDetails.email
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The email of the contact details of the location. When specified, only locations with contact details containing the specified email will be returned.
+    trait_location_contactDetails_phone_query_param:
+      name: contactDetails.phone
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The phone number of the contact details of the location.
+    trait_location_contactDetails_address_query_param:
+      name: contactDetails.address
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The address of the contact details of the location.
+    trait_location_contactDetails_city_query_param:
+      name: contactDetails.city
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The city of the contact details of the location.
+    trait_location_contactDetails_state_query_param:
+      name: contactDetails.state
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The state of the contact details of the location.
+    trait_location_contactDetails_postcode_query_param:
+      name: contactDetails.postcode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The postcode of the contact details of the location.
+    trait_location_contactDetails_countryCode_query_param:
+      name: contactDetails.countryCode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        The country code of the contact details of the location.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            vendor.vendor_read: Needed to read vendors and locations
+            vendor.vendor_manage: Needed to manage vendors and locations
+security:
+  - OAuth2:
+      - vendor.vendor_read
+      - vendor.vendor_manage 

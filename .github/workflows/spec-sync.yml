@@ -1,0 +1,102 @@
+name: Emporix specification sync
+
+# Daily check for upstream changes to the Emporix OpenAPI specifications. When
+# the vendored copies drift, regenerate the types, verify they still build and
+# open a single pull request. The full quality gate runs on that PR through
+# ci.yml.
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: spec-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Download the specifications
+        run: dotnet run --project tools/Viu.Emporix.SpecSync -- fetch
+
+      # The fetch step always rewrites the manifest timestamps, so the manifest
+      # cannot signal real drift on its own. Look only at the specifications and
+      # discard the manifest churn when nothing substantive moved.
+      - name: Detect specification changes
+        id: detect
+        run: |
+          changed="$(git status --porcelain -- specs \
+            | awk '{print $2}' \
+            | grep -E '\.yml$' \
+            | sed -E 's#.*/([^/]+)\.yml#\1#' \
+            | sort -u | paste -sd ',' -)"
+
+          if [ -z "$changed" ]; then
+            echo "No content changes — discarding manifest timestamp churn."
+            git checkout -- specs/sync-manifest.json
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changed services: $changed"
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Regenerate the types
+        if: steps.detect.outputs.has_changes == 'true'
+        run: dotnet run --project tools/Viu.Emporix.SpecSync -- generate
+
+      # The smoke gate: a broken generation fails here, so a broken PR is never
+      # opened. The public API file is refreshed because new or removed model
+      # types change the declared surface.
+      - name: Build and test
+        if: steps.detect.outputs.has_changes == 'true'
+        run: |
+          ./scripts/update-public-api.sh
+          dotnet build --configuration Release
+          dotnet test --no-build --configuration Release
+
+      - name: Create or update the pull request
+        if: steps.detect.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/spec-sync
+          base: main
+          delete-branch: false
+          commit-message: 'chore: sync generated types with upstream Emporix specifications'
+          title: 'chore: sync generated types with upstream Emporix specifications'
+          body: |
+            Automated daily sync of the vendored Emporix OpenAPI specifications and
+            the generated types.
+
+            **Updated services:** ${{ steps.detect.outputs.changed }}
+
+            - `specs/*.yml` re-fetched from [`emporix/api-references`](https://github.com/emporix/api-references)
+            - `src/Viu.Emporix/Generated/` regenerated through NSwag
+            - build and tests pass
+
+            Review the generated type diff before merging. Watch the sync log for
+            repairs reported as **stale** — those mean Emporix fixed a defect and
+            the repair can be removed from `tools/Viu.Emporix.SpecSync/SpecPatches.cs`.
+          labels: |
+            automated
+            dependencies
+          add-paths: |
+            specs
+            src/Viu.Emporix/Generated
+            src/Viu.Emporix/PublicAPI.Unshipped.txt

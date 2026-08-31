@@ -1,0 +1,1385 @@
+openapi: 3.0.0
+info:
+  title: Pick-Pack Service
+  contact:
+    email: documentation@emporix.com
+  version: ''
+  description: |-
+    Manage the picking and packing process in-store or in a warehouse.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Orders
+    description: Manage pick-pack orders
+  - name: Order cycles
+    description: Manage pick-pack order cycles
+  - name: Assignees
+    description: Manage pick-pack assignees
+  - name: Recalculations
+    description: Manage pick-pack recalculations
+  - name: Events
+    description: Manage pick-pack events
+paths:
+  '/pick-pack/{tenant}/orders/{orderId}/finish':
+    post:
+      tags:
+        - Orders
+      deprecated: true
+      description: |
+        Finishes a specified order by:
+        * Recalculating the current state
+        * Changing the order status to `packed`
+        * Deleting all assignees
+        * Sending an order confirmation email
+      responses:
+        '200':
+          $ref: '#/components/responses/successResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_saas_token'
+        - $ref: '#/components/parameters/orderId'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: POST-pick-pack-finish-order
+      summary: Finishing an order
+  '/pick-pack/{tenant}/orderCycles':
+    get:
+      tags:
+        - Order cycles
+      deprecated: true
+      description: |
+        Extracts all order delivery dates from the current time onwards.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_site_code'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_view
+      operationId: GET-pick-pack-retrieve-order-cycles
+      summary: Retrieving all order cycles
+      responses:
+        '200':
+          $ref: '#/components/responses/orderCycleResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/pick-pack/{tenant}/orders':
+    get:
+      tags:
+        - Orders
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/ordersResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |
+        Retrieves a packlist for the specified delivery date.
+
+        **Note**: If an order has the `packingStatus` set to `CANCELLED`, it will not be retrieved.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_site_code'
+        - name: deliveryDate
+          in: query
+          required: true
+          schema:
+            pattern: YYYY-MM-DD
+            type: string
+          description: Date after which we want to filter the orders.
+      security:
+        - OAuth2:
+            - pickpack.pickpack_view
+      operationId: GET-pick-pack-retrieve-packlist
+      summary: Retrieving a packlist
+  '/pick-pack/{tenant}/orders/{orderId}':
+    get:
+      tags:
+        - Orders
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/orderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Retrieves a specified order's details.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/orderId'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_view
+      operationId: GET-pick-pack-retrieve-order
+      summary: Retrieving an order
+    patch:
+      tags:
+        - Orders
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusChange'
+            example:
+              packingStatus: IN_PROGRESS
+      description: |
+        Updates a specified order's status.
+
+        **Note**: If the order has the `packingStatus` set to `CANCELLED`, it is not possible to do any further operations on that order.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_saas_token'
+        - $ref: '#/components/parameters/orderId'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: PATCH-pick-pack-update-order-status
+      summary: Updating an order
+  '/pick-pack/{tenant}/orders/{orderId}/assignees':
+    post:
+      tags:
+        - Assignees
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      requestBody:
+        content:
+          application/json:
+            example:
+              id: '123'
+              firstName: John
+              lastName: Smith
+              siteCode: main
+            schema:
+              $ref: '#/components/schemas/Assignee'
+      description: |
+        Adds an assignee to a specified order.
+
+        **Note**: If the order has the `packingStatus` set to `CANCELLED`, it is not possible to modify the assignee for that order.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/orderId'
+        - name: force
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: 'If set to true, the new assignee will replace the old one. If set to false, a bad request will be returned if the order already has an assignee.'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: POST-pick-pack-add-order-assignee
+      summary: Adding an assignee to an order
+  '/pick-pack/{tenant}/orders/{orderId}/assignees/{assigneeId}':
+    delete:
+      tags:
+        - Assignees
+      deprecated: true
+      responses:
+        '204':
+          description: |
+            The request has succeeded.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |
+        Deletes a specified assignee from a specified order.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/orderId'
+        - name: assigneeId
+          in: path
+          required: true
+          schema:
+            pattern: '[a-zA-Z0-9_-]+'
+            minLength: 3
+            maxLength: 16
+            type: string
+          description: assignee which will be removed from order
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: DELETE-pick-pack-remove-order-assignee
+      summary: Deleting an assignee from an order
+  '/pick-pack/{tenant}/orders/{orderId}/packaging':
+    put:
+      tags:
+        - Orders
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PackagingProductsChange'
+      description: |
+        Updates packaging products for a specified order.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_saas_token'
+        - $ref: '#/components/parameters/orderId'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: PUT-pick-pack-update-order-packaging
+      summary: Updating packaging products for an order
+  '/pick-pack/{tenant}/events':
+    post:
+      tags:
+        - Events
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |
+        Creates a new packing event.
+
+        **Note**: If the order has the `packingStatus` set to `CANCELLED`, it is not possible to create any new packing events for that order.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_saas_token'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderEntryEventCreate'
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: POST-pick-pack-create-packing-event
+      summary: Creating a new packing event
+    get:
+      tags:
+        - Events
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/eventsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Retrieves all events after a specified timestamp.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - name: timestamp
+          in: query
+          required: false
+          schema:
+            pattern: 'yyyy-MM-dd''T''HH:mm:ssZ'
+            minLength: 3
+            maxLength: 16
+            type: string
+          description: Date after which we want to filter the events.
+        - name: pageNumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Number of the page.
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 20000
+          description: Size of the page.
+      security:
+        - OAuth2:
+            - pickpack.pickpack_view
+      operationId: GET-pick-pack-retrieve-packing-event
+      summary: Retrieving all events
+  '/pick-pack/{tenant}/jobs/recalculations':
+    post:
+      tags:
+        - Recalculations
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/jobCreationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |
+        Triggers order recalculation for a specified order list.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecalculationJobCreation'
+            example:
+              jobType: MANUAL
+              orderIds:
+                - 03DV9N3R
+                - 5XS34VOB
+                - JGPZWWLA
+                - JGPZWWLA
+                - 09FFWHA2
+                - 1B70WHY7
+      security:
+        - OAuth2:
+            - pickpack.pickpack_manage
+      operationId: POST-pick-pack-start-order-recalculations
+      summary: Triggering an order recalculation
+  '/pick-pack/{tenant}/jobs/recalculations/{jobId}':
+    get:
+      tags:
+        - Recalculations
+      deprecated: true
+      responses:
+        '200':
+          $ref: '#/components/responses/getRecalculationJobResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |
+        Retrieves a specified job.
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            pattern: '[a-zA-Z0-9_-]+'
+            minLength: 3
+            maxLength: 16
+            type: string
+          description: jobId of requested order recalculation job
+      security:
+        - OAuth2:
+            - pickpack.pickpack_view
+      summary: Retrieving a job
+      operationId: GET-pick-pack-retrieve-order-recalculation
+components:
+  schemas:
+    OrderEntryEventResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+          description: The event id
+          example: '123'
+        productId:
+          type: string
+          description: The product id for which the event was created
+          example: '123'
+        deliveryCycle:
+          type: string
+          description: The delivery cycle for which the event was created
+          example: 2023-10-13-11-test
+        orderNumber:
+          type: string
+          description: The order number for which the event was created
+          example: '123'
+        timestamp:
+          type: string
+          description: Timestamp when the event was created
+          example: '2020-09-14T13:35:18.333Z'
+        pickedAmount:
+          description: The picked amount
+          type: integer
+          example: 2
+        packedAmount:
+          description: The packed amount
+          type: integer
+          example: 2
+        canceledAmount:
+          description: The canceled amount
+          type: integer
+          example: 0
+        packedAmountInPc:
+          description: The packed amount calculated into piece
+          type: integer
+          example: 2
+        supplierId:
+          description: The supplier id of the product for which the event was created
+          type: string
+          example: '1234'
+        user:
+          description: The ID of the user which has created the event
+          type: string
+          example: '1234'
+        site:
+          description: The site code for which the event was created
+          type: string
+          example: main
+        unit:
+          description: The unit in which the product is packed
+          type: string
+          example: H87
+        bookProduct:
+          description: The book product flag
+          type: boolean
+          example: true
+    OrderEntryEventCreate:
+      type: object
+      properties:
+        eventId:
+          type: string
+          description: The event id generated by the client
+          example: '123'
+        orderNumber:
+          type: string
+          description: The order number for which the packing event is created
+          example: '123'
+        productId:
+          type: string
+          description: The product id for which the packing event is created
+          example: '123'
+        deliveryCycle:
+          type: string
+          description: The delivery cycle for which the packing event is created
+          example: 2023-10-13-11-test
+        pickedAmount:
+          type: integer
+          description: The amount of picked items
+          example: 1
+        packedAmount:
+          type: integer
+          description: The amount of packed items
+          example: 1
+        canceledAmount:
+          type: integer
+          description: The amount of cancelled items
+          example: 0
+        supplierId:
+          type: string
+          description: The supplier id
+          example: '123'
+        unit:
+          type: string
+          description: The unit of the packed item
+          example: H87
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the packing event in ISO format
+          example: '2020-09-14T13:35:18.333Z'
+        site:
+          type: string
+          example: main
+          description: The site code for which the event is created
+        bookProduct:
+          type: boolean
+          example: true
+      required:
+        - eventId
+        - orderNumber
+        - productId
+        - unit
+        - timestamp
+        - site
+      x-examples:
+        Event creation example:
+          eventId: '123'
+          orderNumber: '123'
+          productId: '123'
+          deliveryCycle: 2023-10-13-11-test
+          pickedAmount: 1
+          packedAmount: 1
+          canceledAmount: 0
+          supplierId: '123'
+          unit: H87
+          timestamp: '2020-09-14T13:35:18.333Z'
+          site: main
+          bookProduct: true
+    OrderStatusChange:
+      type: object
+      properties:
+        packingStatus:
+          type: string
+          enum:
+            - INITIAL
+            - IN_PROGRESS
+            - PRE_PACKED
+            - PACKED
+            - CANCELLED
+          description: The new status of the order
+          example: INITIAL
+      required:
+        - packingStatus
+    PackagingProductsChange:
+      type: object
+      properties:
+        entryId:
+          type: string
+          description: The id of the product that was packed
+          example: '123'
+        packedCount:
+          type: integer
+          description: The amount of packed items
+          example: 1
+      required:
+        - entryId
+        - packedCount
+    Assignee:
+      title: Assignee
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of an assignment
+          example: '123'
+        siteCode:
+          type: string
+          description: Code of a site
+          example: main
+        firstName:
+          type: string
+          description: First name of assignee
+          example: John
+        lastName:
+          type: string
+          description: Last name of assignee
+          example: Smith
+      required:
+        - id
+        - siteCode
+        - firstName
+        - lastName
+    Order:
+      title: Order
+      type: object
+      properties:
+        id:
+          type: string
+          description: The id of the packed order
+          example: '123'
+        siteCode:
+          type: string
+          description: The site code of the packed order
+          example: main
+        orderTotal:
+          type: number
+          format: double
+          description: The order total amount
+          example: 10
+        valueOfGoods:
+          type: number
+          format: double
+          description: The order subtotal
+          example: 9.5
+        deposit:
+          type: number
+          format: double
+          description: The order deposit amount
+          example: 0.5
+        coupons:
+          type: number
+          format: double
+          description: The order coupons amount
+          example: 0
+        currency:
+          type: string
+          description: The order currency
+          example: EUR
+        entries:
+          type: array
+          description: The order entries
+          items:
+            $ref: '#/components/schemas/Entry'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        delivery:
+          $ref: '#/components/schemas/Delivery'
+        payment:
+          $ref: '#/components/schemas/Payment'
+        packingStatus:
+          type: string
+          enum:
+            - INITIAL
+            - IN_PROGRESS
+            - PRE_PACKED
+            - PACKED
+            - CANCELLED
+          description: The current packing status of the order
+          example: INITIAL
+        assignees:
+          type: array
+          minItems: 1
+          description: The user data of the person that is currently packing the order
+          items:
+            $ref: '#/components/schemas/Assignee'
+        packagingProducts:
+          type: array
+          description: The order packaging product
+          items:
+            $ref: '#/components/schemas/Entry'
+        holdingAreaNumber:
+          type: integer
+          description: The order holding area number
+          example: 10
+    Entry:
+      title: Entry
+      type: object
+      properties:
+        entryId:
+          type: string
+          description: The entry id
+          example: '123'
+        productName:
+          type: string
+          description: The product name
+          example: Test product name
+        productId:
+          type: string
+          description: The id of the product
+          example: '123'
+        unitPrice:
+          type: number
+          format: double
+          description: The unit price of the product
+          example: 1
+        totalPrice:
+          type: number
+          format: double
+          description: 'The overall price, which is the sum of the quantities of packed products.'
+          example: 3
+        imageUrl:
+          type: string
+          description: The link to product image
+          example: 'http://sample-image.com'
+        unitPricingMeasure:
+          $ref: '#/components/schemas/PricingMeasure'
+        pricingMeasure:
+          $ref: '#/components/schemas/PricingMeasure'
+        pricingMeasurePrice:
+          type: number
+          format: double
+          example: 2
+        orderUnit:
+          type: string
+          example: H87
+        packedCount:
+          type: integer
+          description: The currently packed count of the product
+          example: 1
+        canceledCount:
+          type: integer
+          description: The currently canceled count of the product
+          example: 0
+        pickedCount:
+          type: integer
+          description: The currently picked count of the product
+          example: 1
+        packedAmountInPc:
+          type: integer
+          description: The currently packed amount of the product packed in pieces
+          example: 1
+        totalCount:
+          type: integer
+          example: 10
+        location:
+          type: array
+          description: The location of the product
+          items:
+            $ref: '#/components/schemas/Location'
+        packingGroup:
+          type: string
+          example: test group
+        packaging:
+          type: string
+          example: sample packaging
+        cutting:
+          type: string
+          example: sample cutting
+        customerComment:
+          type: string
+          example: Sample comment
+        barcodes:
+          type: array
+          items:
+            type: string
+            example: abc123
+        weightDependent:
+          type: boolean
+          example: false
+        basePrice:
+          $ref: '#/components/schemas/BasePrice'
+        mhd:
+          type: string
+    Customer:
+      title: Customer
+      type: object
+      properties:
+        id:
+          type: string
+          example: '123'
+        title:
+          type: string
+          example: Mr
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Smith
+        name:
+          type: string
+          example: sample name
+        companyName:
+          type: string
+          example: sample company name
+        email:
+          type: string
+          example: sample@email.com
+        phoneNumber:
+          type: string
+          example: '123123123'
+    Delivery:
+      title: Delivery
+      type: object
+      properties:
+        deliveryTimeModel:
+          $ref: '#/components/schemas/DeliveryTime'
+        deliveryAddressModel:
+          $ref: '#/components/schemas/DeliveryAddress'
+        deliveryCostModel:
+          $ref: '#/components/schemas/DeliveryCost'
+        deliveryOptionModel:
+          $ref: '#/components/schemas/DeliveryOption'
+        deliveryWindow:
+          $ref: '#/components/schemas/DeliveryWindow'
+      description: ''
+    Payment:
+      title: Payment
+      type: object
+      properties:
+        invoiceNumber:
+          type: string
+          example: GCI191232
+        invoiceAddress:
+          $ref: '#/components/schemas/InvoiceAddress'
+        methods:
+          type: array
+          items:
+            type: string
+            example: paymentByDebit
+    PricingMeasure:
+      title: PricingMeasure
+      type: object
+      properties:
+        unitCode:
+          type: string
+          example: H87
+        value:
+          type: string
+          example: '100'
+    Location:
+      title: Location
+      type: object
+      properties:
+        zone:
+          type: string
+        rack:
+          type: string
+        rackName:
+          type: string
+        shelf:
+          type: string
+        section:
+          type: string
+        bin:
+          type: string
+    BasePrice:
+      title: BasePrice
+      type: object
+      properties:
+        effectiveAmount:
+          type: string
+          example: '10'
+        originalAmount:
+          type: string
+          example: '5'
+        priceFactor:
+          type: string
+          example: '1'
+        basePriceFactor:
+          type: string
+          example: '2'
+        measurementUnit:
+          $ref: '#/components/schemas/MeasurementUnit'
+    DeliveryTime:
+      title: DeliveryTime
+      type: object
+      properties:
+        deliveryDate:
+          type: string
+          format: date
+          example: '2019-05-16'
+        deliveryTimeFrom:
+          type: string
+          format: time
+          example: '12:00:00'
+        deliveryTimeTo:
+          type: string
+          format: time
+          example: '23:00:00'
+        deliveryChargeType:
+          type: string
+    DeliveryAddress:
+      title: DeliveryAddress
+      type: object
+      properties:
+        title:
+          type: string
+          example: MRS
+        contactName:
+          type: string
+          example: John Smith
+        companyName:
+          type: string
+          example: Sample company name
+        street:
+          type: string
+          example: 5th Avenue
+        streetNumber:
+          type: string
+          example: '13'
+        streetAppendix:
+          type: string
+          example: PA
+        zip:
+          type: string
+          example: '11211'
+        city:
+          type: string
+          example: NYC Williamsburg
+        country:
+          type: string
+          example: United States
+    DeliveryCost:
+      title: DeliveryCost
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+          example: 3.9
+        currency:
+          type: string
+          example: EUR
+    DeliveryOption:
+      title: DeliveryOption
+      type: object
+      properties:
+        packaging:
+          type: string
+          example: Paper
+        replacement:
+          type: boolean
+          example: true
+        pickup:
+          type: boolean
+          example: false
+        deliveryNote:
+          type: string
+          example: Sample comment
+      description: ''
+    DeliveryWindow:
+      title: DeliveryWindow
+      type: object
+      description: This object contains attributes that are related to selected delivery window for a given order and allows to group orders by delivery cycle and sort by delivery time for a better and more efficient packing experience
+      properties:
+        deliveryCycle:
+          type: string
+          example: 2023-10-13-11-Test
+          description: The selected delivery cycle for the current order for the given date
+        deliveryCycleName:
+          type: string
+          example: Test
+          description: The selected delivery cycle name
+        deliveryTimeTo:
+          type: string
+          format: date-time
+          example: '1970-01-01T17:00:00.000+0000'
+          description: The delivery time until the order should be delivered
+    InvoiceAddress:
+      title: InvoiceAddress
+      type: object
+      properties:
+        title:
+          type: string
+          example: MRS
+        contactName:
+          type: string
+          example: John Smith
+        companyName:
+          type: string
+          example: Sample company
+        street:
+          type: string
+          example: 5th Avenue
+        streetNumber:
+          type: string
+          example: '12'
+        streetAppendix:
+          type: string
+          example: PA
+        zip:
+          type: string
+          example: '11211'
+        city:
+          type: string
+          example: NYC Williamsburg
+        country:
+          type: string
+          example: United States
+    RecalculationJobOrder:
+      title: RecalculationJobOrder
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: '123'
+        message:
+          type: string
+          example: Order recalculated successfully
+        jobOrderStatus:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILURE
+            - PENDING
+          example: SUCCESS
+      description: ''
+    RecalculationJob:
+      title: RecalculationJob
+      type: object
+      properties:
+        id:
+          type: string
+          example: '123'
+        jobType:
+          type: string
+          enum:
+            - AUTOMATIC
+            - MANUAL
+          example: MANUAL
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecalculationJobOrder'
+        jobStatus:
+          type: string
+          enum:
+            - SUCCESS
+            - FAILURE
+            - IN_PROGRESS
+          example: SUCCESS
+        startedAt:
+          type: string
+          format: date-time
+          example: '2021-03-04T13:45:00.883Z'
+        finishedAt:
+          type: string
+          format: date-time
+          example: '2021-03-04T13:45:00.883Z'
+    RecalculationJobCreation:
+      title: RecalculationJobCreation
+      type: object
+      properties:
+        orderIds:
+          type: array
+          description: The order identifiers requiring recalculation. This attribute is optional. In case the job type is `AUTOMATIC` the orders for recalculation will be selected automatically based on last packing events.
+          items:
+            type: string
+            example: '123'
+        jobType:
+          type: string
+          enum:
+            - AUTOMATIC
+            - MANUAL
+          example: MANUAL
+          description: |-
+            The recalculation job types. Possible values:
+            - `MANUAL` - recalculates all orders provided in the `orderIds` attribute
+            - `AUTOMATIC` - finds orders that need recalculation and triggers recalculation for them
+      required:
+        - jobType
+    errorMessage:
+      title: errorMessage
+      type: object
+      properties:
+        code:
+          minimum: 100
+          maximum: 599
+          description: 'original HTTP error code, should be consistent with the response HTTP code'
+          type: integer
+        message:
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: 'classification of the error type, lower case with underscore eg validation_failure'
+          type: string
+        detailInfo:
+          description: More detailed information about the error
+          type: string
+    MeasurementUnit:
+      title: MeasurementUnit
+      type: object
+      properties:
+        unitCode:
+          type: string
+          description: The unit code of the measured quantity
+          example: H87
+        quantity:
+          type: number
+          format: double
+          description: The measured amount
+          example: 5
+    OrderList:
+      title: OrderList
+      type: object
+      properties:
+        orderId:
+          type: string
+          description: The id of the order
+          example: 01LIWJ40
+        customerName:
+          type: string
+          description: The name of the customer
+          example: John Smith
+        packingStatus:
+          description: The current status of the order
+          type: string
+          enum:
+            - INITIAL
+            - IN_PROGRESS
+            - PRE_PACKED
+            - PACKED
+            - CANCELLED
+          example: INITIAL
+        productsTotal:
+          type: integer
+          example: 3000
+        productsPacked:
+          type: integer
+          example: 2266
+        productsCanceled:
+          type: integer
+          example: 734
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignee'
+        packagingProducts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entry'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entry'
+        holdingAreaNumber:
+          description: The serial number of the location where the packed order awaits transportation
+          type: integer
+          example: 1
+        deliveryWindow:
+          $ref: '#/components/schemas/DeliveryWindow'
+      description: ''
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant name should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_saas_token:
+      name: saas-token
+      in: header
+      required: true
+      description: |
+        Token provided by the Emporix system, used to identify logged in customers. This token has an expiry date and is signed with a passphrase.
+      schema:
+        type: string
+    orderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Order's unique identifier.
+    trait_site_code:
+      name: siteCode
+      in: query
+      required: true
+      schema:
+        pattern: '[a-zA-Z0-9_-]+'
+        minLength: 3
+        maxLength: 16
+        type: string
+      description: site code for the tenant
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            pickpack.pickpack_view: Needed to retrieve information about resources in the service.
+            pickpack.pickpack_manage: Needed to manage resources in the service.
+  responses:
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            UnauthorizedExample:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            AccessTokenExpiredExample:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              code:
+                type: integer
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: string
+          examples:
+            ForbiddenExample:
+              value:
+                code: 403
+                status: Forbidden
+                message: Scope validation failed
+                details:
+                  - 'Missing required scopes ''[pickpack.pickpack_view, saasag.pickpack_view]'''
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            InternalServiceErrorExample:
+              value:
+                code: 500
+                message: A server-side exception occurred that prevented the system from correctly returning the result.
+    Conflict_409:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            ConflictExample:
+              value:
+                code: 409
+                message: Conflict
+    BadRequest_400:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            BadRequestExample:
+              value:
+                code: 400
+                message: Bad Request
+    NotFound_404:
+      description: Resource has not been found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            NotFoundExample:
+              value:
+                code: 404
+                message: Not Found
+    orderCycleResponse:
+      description: Orders delivery dates
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+              format: date
+              example: '2020-11-13'
+    ordersResponse:
+      description: Order list
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/OrderList'
+    orderResponse:
+      description: Order
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Order'
+    eventsResponse:
+      description: Order entry event
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/OrderEntryEventResponse'
+    jobCreationResponse:
+      description: Job creation response
+      content:
+        application/json:
+          schema:
+            properties:
+              jobId:
+                type: string
+    getRecalculationJobResponse:
+      description: Recalculation job response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RecalculationJob'
+    successResponse:
+      description: Event creation response
+      content:
+        application/json:
+          schema:
+            properties:
+              message:
+                type: string
+              code:
+                type: integer
+            example:
+              message: Success
+              code: 200
+security:
+  - OAuth2: []

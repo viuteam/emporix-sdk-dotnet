@@ -1,0 +1,584 @@
+openapi: 3.0.0
+info:
+  title: Label Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |
+    Labels allow to mark details related to a product, for example highlighting that a product has a worldwide shipment possibility.
+servers:
+  - url: 'https://api.emporix.io/label'
+tags:
+  - name: Label
+  - name: Media
+paths:
+  '/labels':
+    get:
+      tags:
+        - Label
+      summary: Retrieving labels
+      description: Retrieves all tenant labels.
+      operationId: GET-label-list-labels
+      parameters:
+        - in: query
+          name: justOverlay
+          schema:
+            type: boolean
+          description: Restricts the labels to just the ones which should be printed on the Products as overlay. If the parameter is true, then only the labels with overlay.position >= 1 will be shown. Otherwise, all the labels will be shown.
+          example: false
+          required: false
+        - in: header
+          name: Accept-Language
+          required: false
+          schema:
+            type: string
+          description: 'The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred.'
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+      responses:
+        '200':
+          description: The request was successful. List of labels is returned.
+          content:
+            application/json:
+              examples:
+                Labels Response Example:
+                  $ref: '#/components/examples/labels'
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/label'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internal_server_error_500'
+      security:
+        - OAuth2: []
+    post:
+      tags:
+        - Label
+      summary: Creating a label
+      description: |
+        Creates a new label.
+      operationId: POST-label-create-label
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Label creation payload:
+                $ref: '#/components/examples/labelCreation'
+            schema:
+              $ref: '#/components/schemas/labelCreation'
+      responses:
+        '201':
+          description: |
+            The label was successfully created.
+          content:
+            application/json:
+              examples:
+                Label response example:
+                  $ref: '#/components/examples/label'
+              schema:
+                $ref: '#/components/schemas/label'
+        '400':
+          $ref: '#/components/responses/bad_request_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/forbidden_403'
+        '409':
+          $ref: '#/components/responses/conflict_409'
+        '500':
+          $ref: '#/components/responses/internal_server_error_500'
+      security:
+        - OAuth2: []
+  '/labels/{labelId}':
+    get:
+      tags:
+        - Label
+      summary: Retrieving a label
+      description: |
+        Retrieves a label with the specified label ID.
+      operationId: GET-label-retrieve-label
+      responses:
+        '200':
+          description: |
+            The label was successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Label response example:
+                  $ref: '#/components/examples/label'
+              schema:
+                $ref: '#/components/schemas/label'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/not_found_404'
+        '500':
+          $ref: '#/components/responses/internal_server_error_500'
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - Label
+      summary: Updating a label
+      description: |
+        Updates a label with the specified label ID.
+      operationId: PUT-label-update-label
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Label update payload:
+                $ref: '#/components/examples/labelUpdate'
+            schema:
+              $ref: '#/components/schemas/labelUpdate'
+      responses:
+        '200':
+          description: |
+            The label was successfully updated.
+          content:
+            application/json:
+              examples:
+                Label response example:
+                  $ref: '#/components/examples/label'
+              schema:
+                $ref: '#/components/schemas/label'
+        '400':
+          $ref: '#/components/responses/bad_request_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/forbidden_403'
+        '404':
+          $ref: '#/components/responses/not_found_404'
+        '500':
+          $ref: '#/components/responses/internal_server_error_500'
+      security:
+        - OAuth2: []
+    patch:
+      tags:
+        - Label
+      summary: Partially updating a label
+      description: |
+        Partially updates a label with the specified label ID.
+      operationId: PATCH-label-update-label
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Label update payload:
+                value:
+                  name: Worldwide Shipment
+                  description: Worldwide Shipment
+            schema:
+              $ref: '#/components/schemas/labelUpdate'
+      responses:
+        '200':
+          description: The label was successfully updated.
+          content:
+            application/json:
+              examples:
+                Label response example:
+                  $ref: '#/components/examples/label'
+              schema:
+                $ref: '#/components/schemas/label'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/forbidden_403'
+        '404':
+          $ref: '#/components/responses/not_found_404'
+        '500':
+          $ref: '#/components/responses/internal_server_error_500'
+      security:
+        - OAuth2: []
+    delete:
+      tags:
+        - Label
+      summary: Deleting a label
+      description: |
+        Deletes a label with the specified label ID.
+      operationId: DELETE-label-remove-label
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: The label was successfully deleted.
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/forbidden_403'
+        '404':
+          $ref: '#/components/responses/not_found_404'
+        '500':
+          $ref: '#/components/responses/internal_server_error_500'
+      security:
+        - OAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/labelId'
+components:
+  examples:
+    label:
+      value:
+        id: 66fe65e83132e30001e6be29
+        name: Worldwide Shipment
+        description: <p>Worldwide Shipment</p>
+        image: https://res.cloudinary.com/saas-ag/image/upload/v1727903960/tenant/labels/54fd0a26-fa47-45b7-ae22-8e54e0bb98d2.jpg
+        cloudinaryUrl: tenant/labels/54fd0a26-fa47-45b7-ae22-8e54e0bb98d2
+        overlay:
+          position: 0
+          isTrue: true
+        metadata:
+          createdAt: 2024-10-03T05:58:08.228Z
+          modifiedAt: 2024-10-03T05:58:08.228Z
+          version: 0
+    labelCreation:
+      value:
+        id: 66fe65e83132e30001e6be29
+        name: Worldwide Shipment
+        description: <p>Worldwide Shipment</p>
+        overlay:
+          position: 0
+          isTrue: true
+    labelUpdate:
+      value:
+        name: Worldwide Shipment
+        description: <p>Worldwide Shipment</p>
+        overlay:
+          position: 0
+          isTrue: true
+    labels:
+      value:
+        - id: 66fe65e83132e30001e6be29
+          name: Worldwide Shipment
+          description: <p>Worldwide Shipment</p>
+          image: https://res.cloudinary.com/saas-ag/image/upload/v1727903960/tenant/labels/54fd0a26-fa47-45b7-ae22-8e54e0bb98d2.jpg
+          cloudinaryUrl: tenant/labels/54fd0a26-fa47-45b7-ae22-8e54e0bb98d2
+          overlay:
+            position: 0
+            isTrue: false
+          metadata:
+            createdAt: 2024-10-03T05:58:08.228Z
+            modifiedAt: 2024-10-03T05:58:08.228Z
+            version: 0
+        - id: 61ge81e13562e22001h6cf456
+          name: Extended Warranty
+          description: <p>Warranty with full coverage</p>
+          image: https://res.cloudinary.com/saas-ag/image/upload/v1727903960/tenant/labels/54fd0a26-fa47-45b7-ae22-8e54e0bb98d2.jpg
+          cloudinaryUrl: tenant/labels/54fd0a26-fa47-45b7-ae22-8e54e0bb98d2
+          overlay:
+            position: 1
+            isTrue: true
+          metadata:
+            createdAt: 2024-10-03T09:30:10.548Z
+            modifiedAt: 2024-10-03T09:30:10.548Z
+            version: 2
+  schemas:
+    labelUpdate:
+      properties:
+        name:
+          type: string
+          description: Name of the label.
+        overlay:
+          $ref: '#/components/schemas/overlay'
+        description:
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties:
+                type: string
+          description: Localized resource description in a form of a map of translations.
+      required:
+        - name
+        - description
+    labelCreation:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique ID of the label. It will be auto-generated if not provided.
+        - $ref: '#/components/schemas/labelUpdate'
+    label:
+      properties:
+        id:
+          type: string
+          description: Unique ID of the label.
+        name:
+          type: string
+          description: Name of the label.
+        mediaId:
+          type: string
+          description: Id of the media.
+        image:
+          type: string
+          description: Image URL.
+        cloudinaryUrl:
+          type: string
+          description: Cludinary path.
+        overlay:
+          $ref: '#/components/schemas/overlay'
+        description:
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties:
+                type: string
+          description: Localized resource description in a form of a map of translations.
+        metadata:
+          $ref: '#/components/schemas/metadata'
+    overlay:
+      description: If present and `isTrue` is actually true the label should be printed on associated products on the described position.
+      properties:
+        isTrue:
+          type: boolean
+        position:
+          type: number
+      required:
+        - position
+    metadata:
+      title: Metadata
+      description: Metadata
+      type: object
+      properties:
+        createdAt:
+          description: The creation date.
+          type: string
+        modifiedAt:
+          description: The modification date.
+          type: string
+        version:
+          description: The document version number.
+          type: integer
+  responses:
+    bad_request_400:
+      description: Request was syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                message:
+                  type: string
+                messageTemplate:
+                  type: string
+                path:
+                  type: string
+            example:
+              - message: may not be null
+                path: LabelsResource.post.arg1.name
+
+    not_found_404:
+      description: Requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+              details:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  moreInfo:
+                    type: string
+          examples:
+            Retrieve:
+              value:
+                status: 404
+                type: application/json
+                message: Label not Found.
+                moreInfo: ""
+                details:
+                  message: Couldn't find a label with id '670308343132e30001e6be2fs'
+                  moreInfo: ""
+            Update:
+              value:
+                status: 404
+                type: application/json
+                message: Label not Updated.
+                moreInfo: ""
+                details:
+                  message: Couldn't find a label with id '670308343132e30001e6be2fs'
+                  moreInfo: ""
+
+    conflict_409:
+      description: Label with given ID already exists.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+              details:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  moreInfo:
+                    type: string
+            example:
+              status: 409
+              type: application/json
+              message: Label already exists.
+              moreInfo: ""
+              details:
+                message: Duplicate label with id 'WorldWideShippingId' on tenant 'myTenant'.
+                moreInfo: ""
+    unauthorized_401:
+      description: Unauthorized. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              fault:
+                faultstring: Invalid Access Token
+                detail:
+                  errorcode: keymanagement.service.invalid_access_token
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+    forbidden_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              fault:
+                faultstring: "Required scope(s): [saasag.label_manage, label.label_manage]"
+                detail:
+                  errorcode: steps.oauth.v2.InsufficientScope
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+    internal_server_error_500:
+      description: Some server side error occurred.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: integer
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+              details:
+                type: object
+            example:
+              status: 500
+              type: internal_service_error
+              message: Something went wrong while processing the request. Please contact the administrator.
+              moreInfo: ""
+  parameters:
+    labelId:
+      name: labelId
+      description: |
+        Unique identifier of the label.
+      in: path
+      required: true
+      schema:
+        type: string
+    qParam:
+      in: query
+      name: q
+      description:  |
+        A standard query parameter is used to search for specific values. 
+
+        See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+      schema:
+        type: string
+    pageSize:
+      schema:
+        type: string
+      in: query
+      name: pageSize
+      description: The number of documents to be retrieved per page.
+    pageNumber:
+      schema:
+        type: string
+      in: query
+      name: pageNumber
+      description: The page number to be retrieved. The size of the pages should be specified by the pageSize parameter.
+    sort:
+      schema:
+        type: string
+      in: query
+      name: sort
+      description: List of properties used to sort the results, separated by colons.
+    fields:
+      schema:
+        type: string
+      in: query
+      name: fields
+      description: Fields to be returned in the response.
+    xTotalCount:
+      schema:
+        type: boolean
+      in: header
+      name: X-Total-Count
+      description: Flag indicating whether the total number of retrieved results should be returned.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            label.label_manage: Needed to manage labels and label medias.
+            label.label_read: Needed to read labels.
+  links: {}
+  callbacks: {}
+security:
+  - OAuth2: []

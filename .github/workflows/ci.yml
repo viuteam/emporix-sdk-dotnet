@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, test and pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # MinVer derives the version from tags; a shallow clone has none.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Restore
+        run: dotnet restore
+
+      # TreatWarningsAsErrors is on, so this step is also the analyzer gate:
+      # a trim or AOT warning fails the build (ADR-0004).
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+      # The real AOT check. The analyzers above catch most of it, but only an
+      # actual native publish proves the promise from ADR-0004.
+      - name: Publish the sample with Native AOT
+        run: dotnet publish samples/Viu.Emporix.Sample --configuration Release
+
+      - name: Pack
+        run: dotnet pack src/Viu.Emporix --no-build --configuration Release --output artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/*
+          retention-days: 7
+
+  public-api:
+    name: Public API surface
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      # PublicApiAnalyzers fails the build when a public symbol is missing from
+      # PublicAPI.Unshipped.txt. This job states plainly what to do about it.
+      - name: Check that the declared public API is complete
+        run: |
+          if ! dotnet build --configuration Release --nologo; then
+            echo "::error::The public API surface has changed. Run scripts/update-public-api.sh and commit the result."
+            exit 1
+          fi

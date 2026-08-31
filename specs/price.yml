@@ -1,0 +1,3942 @@
+openapi: 3.0.0
+info:
+  title: Price Service
+  version: ''
+  description: |
+    Manage price information for products.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/price/{tenant}/prices':
+    post:
+      summary: Creating a new price
+      tags:
+        - Prices
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      responses:
+        '201':
+          description: The request was successful. The price has been created.
+          headers:
+            Location:
+              description: |
+                Location of the newly created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Identifier of a newly created price.
+              examples:
+                Response example:
+                  value:
+                    id: 624c3e7c3406122baacc7e93
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                AmbiguousTenant:
+                  $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Creates a new price for a specified product.
+      operationId: POST-price-create-price
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Tiered/volume price:
+                value:
+                  id: 6245aa0a78a8576e338fa9c4
+                  itemId:
+                    itemType: PRODUCT
+                    id: 5f5a3a365bac380024b93c45
+                  currency: EUR
+                  location:
+                    countryCode: DE
+                  priceModelId: 6245a8f578a8576e338fa9c3
+                  restrictions:
+                    siteCodes:
+                      - '1111'
+                  tierValues:
+                    - priceValue: 15.99
+                    - priceValue: 14.99
+                    - priceValue: 13.99
+              Basic price:
+                value:
+                  id: 6245aa0a78a8576e338fa9c4
+                  itemId:
+                    itemType: PRODUCT
+                    id: 5f5a3a365bac380024b93c45
+                  currency: EUR
+                  location:
+                    countryCode: DE
+                  priceModelId: 6245a8f578a8576e338fa9c3
+                  restrictions:
+                    siteCodes:
+                      - '1111'
+                  tierValues:
+                    - priceValue: 15.99
+            schema:
+              $ref: '#/components/schemas/createPrice'
+        required: false
+      security:
+        - OAuth2:
+            - price.price_manage
+            - price.price_manage_by_vendor
+    get:
+      summary: Retrieving all prices
+      tags:
+        - Prices
+      responses:
+        '200':
+          description: The request was successful. A list of prices is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of retrieved prices.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/prices'
+              examples:
+                List of prices:
+                  $ref: '#/components/examples/RetrievePricesExample'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Retrieves all prices assigned to the tenant. You can filter the results with query parameters.
+
+        **Additional scopes info**
+        No specific scopes are required.
+        The `price.price_read_by_vendor` scope allows to fetch just the prices belonging to the vendor.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/trait_qParam'
+        - $ref: '#/components/parameters/trait_siteCodeAware_siteCode'
+        - $ref: '#/components/parameters/trait_currencyAware_currency'
+        - $ref: '#/components/parameters/trait_effectiveDateAware_effectiveDate'
+        - $ref: '#/components/parameters/trait_sortable_sort'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_principalIdAware_principalId'
+        - $ref: '#/components/parameters/trait_priceModelIdAware_priceModelId'
+        - schema:
+            type: string
+          in: query
+          name: itemId
+          description: |
+            IDs of products for which prices should be retrieved.
+        - schema:
+            type: string
+          in: query
+          name: itemType
+          description: |
+            Item types for which prices should be retrieved. Possible values:
+            * `PRODUCT`
+            * `SKU`
+
+              **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+        - schema:
+            type: string
+          in: query
+          name: country
+          description: |
+            Codes of countries for which prices should be retrieved.
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/query_price_itemName'
+      operationId: GET-price-list-all-prices
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/price/{tenant}/prices/bulk':
+    post:
+      summary: Creating multiple prices
+      tags:
+        - Prices
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      responses:
+        '207':
+          description: Multi-Status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/priceBulkResponseEntry'
+              examples:
+                Multi-Status response example:
+                  $ref: '#/components/examples/prices_bulk_post_responseBody'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Payload size validation example:
+                  $ref: '#/components/examples/prices_bulk_post_put_responseBody_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Creates multiple prices. The maximum batch size is 200.
+
+        Response for a particular price is returned at the same position (index) at which that price is located in the request body.
+      operationId: POST-price-create-multiple-prices
+      requestBody:
+        content:
+          application/json:
+            examples:
+              List of tiered/volume prices:
+                value:
+                  - itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 15.99
+                      - priceValue: 14.99
+                      - priceValue: 13.99
+                  - itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c46
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 20
+                      - priceValue: 18
+                      - priceValue: 16
+              List of basic prices:
+                value:
+                  - itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 15.99
+                  - itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c46
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 12
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/createPrice'
+        required: false
+      security:
+        - OAuth2:
+            - price.price_manage
+            - price.price_manage_by_vendor
+    put:
+      summary: Upserting multiple prices
+      tags:
+        - Prices
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      responses:
+        '207':
+          description: Multi-Status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/priceBulkResponseEntry'
+              examples:
+                Multi-Status response example:
+                  $ref: '#/components/examples/prices_bulk_put_responseBody'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Payload size validation example:
+                  $ref: '#/components/examples/prices_bulk_post_put_responseBody_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Updates or creates multiple prices. The maximum batch size is 200.
+
+        Response for a particular price is returned at the same position (index) at which that price is located in the request body.
+      operationId: PUT-price-update-multiple-prices
+      requestBody:
+        content:
+          application/json:
+            examples:
+              List of tiered/volume prices:
+                value:
+                  - id: 6245aa0a78a8576e338fa9c4
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 15.99
+                      - priceValue: 14.99
+                      - priceValue: 13.99
+                    metadata:
+                      version: 1
+                  - id: 6245aa0a78a8576e338fa9c5
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c46
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 20
+                      - priceValue: 18
+                      - priceValue: 16
+                    metadata:
+                      version: 1
+              List of basic prices:
+                value:
+                  - id: 6245aa0a78a8576e338fa9c4
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 15.99
+                    metadata:
+                      version: 1
+                  - id: 6245aa0a78a8576e338fa9c5
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c46
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 12
+                    metadata:
+                      version: 1
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/updatePrice'
+        required: false
+      security:
+        - OAuth2:
+            - price.price_manage
+            - price.price_manage_by_vendor
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        description: |
+          Your Emporix tenant's name.
+
+          **Note**: The tenant should always be written in lowercase.
+        schema:
+          pattern: '^[a-z][a-z0-9]+$'
+          minLength: 3
+          maxLength: 16
+          type: string
+  '/price/{tenant}/prices/{priceId}':
+    get:
+      summary: Retrieving a price
+      tags:
+        - Prices
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: extendWithPriceModel
+          description: |
+            If set to `true`, the response will also include the price model's details.
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+      responses:
+        '200':
+          description: |
+            The request was successful. Price details are returned.
+          content:
+            application/json:
+              examples:
+                Response example:
+                  value:
+                    id: 62468170bddc000efeb10781
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    priceModelId: 6245a8f578a8576e338fa9c3
+                    restrictions:
+                      siteCodes:
+                        - '1111'
+                    tierValues:
+                      - priceValue: 15.99
+                      - priceValue: 14.99
+                      - priceValue: 13.99
+                    metadata:
+                      version: 1
+                      createdAt: '2022-04-01T04:37:04.301Z'
+                      modifiedAt: '2022-04-01T04:37:04.301Z'
+              schema:
+                $ref: '#/components/schemas/getSinglePrice'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Retrieves a specified price's details by priceId.
+
+        ### Additional scopes info
+        No specific scopes are required.
+
+        The `price.price_read_by_vendor` scope allows to fetch just the prices belonging to the vendor.
+      security:
+        - OAuth2: []
+      operationId: GET-price-retrieve-price
+    put:
+      summary: Upserting a price
+      tags:
+        - Prices
+      parameters:
+        - $ref: '#/components/parameters/trait_partiallyUpdatable_partial'
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created_201'
+        '204':
+          description: |
+            The request was successful. The price has been updated.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Updates a specified price's details by priceId, or creates a new one with if a price with the given ID doesn't exist yet.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updatePrice'
+            examples:
+              Request example:
+                value:
+                  id: 62468170bddc000efeb10781
+                  itemId:
+                    itemType: PRODUCT
+                    id: 5f5a3a365bac380024b93c45
+                  currency: EUR
+                  location:
+                    countryCode: DE
+                  priceModelId: 6245a8f578a8576e338fa9c3
+                  restrictions:
+                    siteCodes:
+                      - '1111'
+                  tierValues:
+                    - priceValue: 15.99
+                    - priceValue: 14.99
+                    - priceValue: 13.99
+                  metadata:
+                    version: 1
+        required: false
+        description: ''
+      security:
+        - OAuth2:
+            - price.price_manage
+            - price.price_manage_by vendor
+      operationId: PUT-price-update-price
+    delete:
+      summary: Deleting a price
+      tags:
+        - Prices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      parameters:
+        - name: priceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Price's unique identifier, generated when the price is created.
+        - $ref: '#/components/parameters/trait_tenant'
+      responses:
+        '204':
+          description: The request was successful. The price has been updated.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Deletes a specified price by priceId.
+      security:
+        - OAuth2:
+            - price.price_manage
+            - price.price_manage_by_vendor
+      operationId: DELETE-price-remove-price
+
+  '/price/{tenant}/match-prices':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Matching prices for specific attributes
+      description: |-
+        Finds the best price based on specified criteria.
+
+        To simplify, the price matching algorithm is made up of the following steps:
+          * All prices that match the specified criteria are fetched.
+          * A unified `originalValue` is calculated for each price.
+          * The price with the lowest `effectiveValue` is returned.
+
+        To use the price matching functionality, you need to define appropriate tax classes in the Tax Service and then assign them to products for which prices are matched through the Product Service.
+
+        Special cases:
+        * If the matched price currency is different than the requested currency, the price is calculated based on exchange rates.
+
+          **Note**: To calculate prices in different currencies, you need to define their exchange rates in the Currency Service.
+        * If the matched price location is different than the requested location, the price is calculated based on tax classes.
+
+          **Note**: To calculate prices for different locations, you need to assign their tax classes to the product for which the price is matched. Tax classes need to be defined in the Tax Service and then assigned to the product through the Product Service.
+
+        The `includesTax` setting, defined at the site or price model level, determines if the algorithm returns net or gross prices. The endpoint returns the best price as a gross or net depending on the following cases:
+        * If requested site's `includesTax` field is specified (through the Site Settings Service):
+          * If the `includesTax` field is set to `true`, the matched price is returned as a gross value.
+          * If the `includesTax` field is set to `false`, the matched price is returned as a net value.
+        * If requested site's `includesTax` field is not specified:
+          * If the `includesTax` field in the price model associated with the price is set to `true`, the matched price is returned as a gross value.
+          * If the `includesTax` field in the price model associated with the price is set to `false`, the matched price is returned as a net value.
+      security:
+        - OAuth2:
+            - price.price_read
+            - price.price_manage
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/matchResponse'
+              examples:
+                Response example:
+                  value:
+                    priceId: 6245aa0a78a8576e338fa9c4
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    site:
+                      code: '1111'
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    originalValue: 13.55
+                    effectiveValue: 13.55
+                    totalValue: 1355
+                    quantity:
+                      quantity: 10
+                      unitCode: kg
+                    includesTax: true
+                    priceModel:
+                      id: 6245a8f578a8576e338fa9c3
+                      name:
+                        en: Tiered in grams
+                      includesTax: true
+                      includesMarkup: true
+                      measurementUnit:
+                        quantity: 0.1
+                        unitCode: kg
+                      tierDefinition:
+                        tierType: TIERED
+                        tiers:
+                          - minQuantity:
+                              quantity: 0
+                              unitCode: kg
+                          - minQuantity:
+                              quantity: 0.5
+                              unitCode: kg
+                          - minQuantity:
+                              quantity: 5
+                              unitCode: kg
+                      metadata:
+                        version: 1
+                        createdAt: '2022-03-31T13:13:25.816Z'
+                        modifiedAt: '2022-03-31T13:13:25.816Z'
+                    tax:
+                      taxClass: STANDARD
+                      taxRate: 20
+                      prices:
+                        originalValue:
+                          netValue: 10.84
+                          grossValue: 13.55
+                          taxValue: 2.71
+                        effectiveValue:
+                          netValue: 10.84
+                          grossValue: 13.55
+                          taxValue: 2.71
+                        totalValue:
+                          netValue: 1084
+                          grossValue: 1355
+                          taxValue: 271
+                    tierValues:
+                      - id: 04e9b68bc1ea4982a42247726239e7be
+                        priceValue: 15.55
+                      - id: 04e9b68bc1ea4982a42247726239e7be
+                        priceValue: 14.55
+                      - id: 04e9b68bc1ea4982a42247726239e7be
+                        priceValue: 13.55
+                    metadata:
+                      version: '1'
+                      createdAt: '2022-03-31T13:18:02.379Z'
+                      modifiedAt: '2022-03-31T13:18:02.379Z'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                AmbiguousTenant:
+                  $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+                ValidationErrorExample:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: 'may not be empty, see details for more info'
+                    details:
+                      - currency may not be empty
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: Not Found
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/match'
+            examples:
+              Request example:
+                value:
+                  targetCurrency: EUR
+                  siteCode: '1111'
+                  targetLocation:
+                    countryCode: DE
+                  items:
+                    - itemId:
+                        itemType: PRODUCT
+                        id: 5f5a3a365bac380024b93c45
+                      quantity:
+                        quantity: 10
+                        unitCode: kg
+        description: ''
+      tags:
+        - Price matching
+      operationId: POST-price-match-prices
+  '/price/{tenant}/match-prices-by-context':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Matching prices for session context
+      description: |-
+        Finds the best price based on information retrieved from the session context.
+
+        The behavior of the logic is the same as of the price/{tenant}/match-prices mechanism. The only exception is that the criteria are created based on the information retrieved from the session details assigned to the access-token in the Session-context Service.
+
+        The list of items is also needed as body parameter (similar to the other endpoint).
+      responses:
+        '200':
+          description: The prices were successfully matched.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/matchResponse'
+              examples:
+                Response example:
+                  value:
+                    priceId: 6245aa0a78a8576e338fa9c4
+                    itemId:
+                      itemType: PRODUCT
+                      id: 5f5a3a365bac380024b93c45
+                    site:
+                      code: '1111'
+                    currency: EUR
+                    location:
+                      countryCode: DE
+                    originalValue: 13.55
+                    effectiveValue: 13.55
+                    totalValue: 1355
+                    quantity:
+                      quantity: 10
+                      unitCode: kg
+                    includesTax: true
+                    priceModel:
+                      id: 6245a8f578a8576e338fa9c3
+                      name:
+                        en: Tiered in grams
+                      includesTax: true
+                      includesMarkup: true
+                      measurementUnit:
+                        quantity: 0.1
+                        unitCode: kg
+                      tierDefinition:
+                        tierType: TIERED
+                        tiers:
+                          - minQuantity:
+                              quantity: 0
+                              unitCode: kg
+                          - minQuantity:
+                              quantity: 0.5
+                              unitCode: kg
+                          - minQuantity:
+                              quantity: 5
+                              unitCode: kg
+                      metadata:
+                        version: 1
+                        createdAt: '2022-03-31T13:13:25.816Z'
+                        modifiedAt: '2022-03-31T13:13:25.816Z'
+                    tax:
+                      taxClass: STANDARD
+                      taxRate: 20
+                      prices:
+                        originalValue:
+                          netValue: 10.84
+                          grossValue: 13.55
+                          taxValue: 2.71
+                        effectiveValue:
+                          netValue: 10.84
+                          grossValue: 13.55
+                          taxValue: 2.71
+                        totalValue:
+                          netValue: 1084
+                          grossValue: 1355
+                          taxValue: 271
+                    tierValues:
+                      - id: 04e9b68bc1ea4982a42247726239e7be
+                        priceValue: 15.55
+                      - id: 04e9b68bc1ea4982a42247726239e7be
+                        priceValue: 14.55
+                      - id: 04e9b68bc1ea4982a42247726239e7be
+                        priceValue: 13.55
+                    metadata:
+                      version: '1'
+                      createdAt: '2022-03-31T13:18:02.379Z'
+                      modifiedAt: '2022-03-31T13:18:02.379Z'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                AmbiguousTenant:
+                  $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+                ValidationErrorExample:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: 'Currency may not be empty, see details for more info'
+                    details:
+                      - Currency may not be empty
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: Not Found
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/matchByContext'
+            examples:
+              Request example:
+                value:
+                  items:
+                    - itemId:
+                        itemType: PRODUCT
+                        id: 5f5a39d95bac380024b93c24
+                      quantity:
+                        quantity: 1
+                        unitCode: kg
+      tags:
+        - Price matching
+      operationId: POST-price-match-prices-by-context
+      security:
+        - CustomerAccessToken: []
+  '/price/{tenant}/prices/search':
+    post:
+      summary: Searching for prices
+      tags:
+        - Prices
+      responses:
+        '200':
+          description: Prices have been successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    itemId:
+                      type: string
+                    prices:
+                      $ref: '#/components/schemas/prices'
+              examples:
+                Search Prices:
+                  value:
+                    - itemId: 62d7d680a07705795f72f314
+                      prices: []
+                    - itemId: 62d7d67da07705795f72f313
+                      prices:
+                        - id: 62d7d67d92eb0f38a72a2a16
+                          itemId:
+                            itemType: PRODUCT
+                            id: 62d7d67da07705795f72f313
+                          itemYrn: 'urn:yaas:saasag:caasproduct:product:testtenant;62d7d67da07705795f72f313'
+                          currency: EUR
+                          location:
+                            countryCode: DE
+                          salePrice:
+                            discountRate: 0
+                          priceModelId: 62d7d67d92eb0f38a72a2a13
+                          restrictions:
+                            principals:
+                              - type: CUSTOMER
+                                id: '18637136'
+                            validity:
+                              from: '2021-08-31T00:07:42.518Z'
+                              to: '2026-08-31T00:07:42.518Z'
+                            siteCodes:
+                              - Berlin
+                          tierValues:
+                            - priceValue: 10
+                          priceModel:
+                            id: 62d7d67d92eb0f38a72a2a13
+                            name:
+                              de: Basic
+                            description:
+                              de: Basic price model
+                            includesTax: false
+                            includesMarkup: true
+                            measurementUnit:
+                              quantity: 1
+                              unitCode: pc
+                            tierDefinition:
+                              tierType: BASIC
+                              tiers:
+                                - minQuantity:
+                                    quantity: 0
+                                    unitCode: pc
+                            metadata:
+                              version: 1
+                              createdAt: '2022-07-20T10:18:37.265Z'
+                              modifiedAt: '2022-07-20T10:18:37.265Z'
+                            default: false
+                          mixins:
+                            test2:
+                              atr1: test
+                              atr2: test2
+                            test1:
+                              atr1: test
+                              atr2: test2
+                          metadata:
+                            version: 1
+                            createdAt: '2022-07-20T10:18:37.984Z'
+                            modifiedAt: '2022-07-20T10:18:37.984Z'
+                            mixins:
+                              test2: url2
+                              test1: url1
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Retrieves prices (or a single price) for a list of products.
+      security:
+        - OAuth2:
+            - price.price_read
+            - price.price_manage
+      operationId: POST-price-search-prices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/searchPrices'
+            examples:
+              Search Prices:
+                value:
+                  itemIds:
+                    - 62d7d67da07705795f72f313
+                    - 62d7d67da07705795f72f314
+                  currency: EUR
+                  siteCode: Berlin
+                  principalId: principalId
+                  effectiveDate: '2022-01-01T00:00:00Z'
+                  includesTax: true
+                  useFallback: false
+                  searchMode: ALL_PRICES
+        required: false
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/query_pricesearch_expand'
+  '/price/{tenant}/priceModels':
+    post:
+      summary: Creating a new price model
+      description: |-
+        Creates a new price model.
+
+        A price model can be defined as a repeatable way to sell products in a market with the intention of making a profit. Price models define basic structures for prices, including whether the prices are expressed as gross or net or the measurement units for which prices are defined.
+
+        Each price model can specify one of three pricing strategies:
+        * Basic pricing, where the price per unit is constant, regardless of the ordered quantity.
+        * Volume pricing, where the price per unit depends on the ordered quantity.
+        * Tiered pricing, where the price per unit depends on the tiers that the ordered quantity falls into.
+
+      security:
+        - OAuth2:
+            - price.pricemodel_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      responses:
+        '201':
+          description: The request was successful. The price model has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/priceModelDefinitionCreationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      tags:
+        - Price models
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/priceModelDefinitionCreation'
+            examples:
+              Basic price model with localized attributes:
+                value:
+                  includesTax: true
+                  includesMarkup: true
+                  name: Piece price model
+                  description: Sample description
+                  tierDefinition:
+                    tierType: BASIC
+                    tiers:
+                      - minQuantity:
+                          quantity: 0
+                          unitCode: pc
+                  measurementUnit:
+                    quantity: 0
+                    unitCode: pc
+              Basic price model with a map of localized attributes:
+                value:
+                  includesTax: true
+                  includesMarkup: true
+                  name:
+                    en: Piece price model
+                    de: Stueck price model
+                  description:
+                    en: Sample description
+                    de: Beispielbeschreibung
+                  tierDefinition:
+                    tierType: BASIC
+                    tiers:
+                      - minQuantity:
+                          quantity: 0
+                          unitCode: pc
+                  measurementUnit:
+                    quantity: 0
+                    unitCode: pc
+              Tiered price model with a map of localized attributes:
+                value:
+                  name:
+                    en: Tiered pricing - per kilogram
+                  description:
+                    en: Tiered price model for goods sold by the kilogram.
+                  includesTax: true
+                  includesMarkup: false
+                  measurementUnit:
+                    quantity: 1
+                    unitCode: kg
+                  tierDefinition:
+                    tierType: TIERED
+                    tiers:
+                      - minQuantity:
+                          quantity: 0
+                          unitCode: kg
+                      - minQuantity:
+                          quantity: 5
+                          unitCode: kg
+                      - minQuantity:
+                          quantity: 10
+                          unitCode: kg
+              Volume price model with a map of localized attributes:
+                value:
+                  name:
+                    en: Volume pricing - per 100 gram
+                  description:
+                    en: Volume price model for goods sold by 100 gram.
+                  includesTax: true
+                  includesMarkup: false
+                  measurementUnit:
+                    quantity: 100
+                    unitCode: g
+                  tierDefinition:
+                    tierType: VOLUME
+                    tiers:
+                      - minQuantity:
+                          quantity: 0
+                          unitCode: g
+                      - minQuantity:
+                          quantity: 500
+                          unitCode: g
+                      - minQuantity:
+                          quantity: 1000
+                          unitCode: g
+      operationId: POST-price-create-price-model
+    get:
+      summary: Retrieving all price models
+      description: |-
+        Retrieves all price models assigned to the tenant. You can filter the results with query parameters.
+
+        A price model can be defined as a repeatable way to sell products in a market with the intention of making a profit. Price models define basic structures for prices.
+      security:
+        - OAuth2:
+            - price.pricemodel_read
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_priceModel_includesTax'
+        - $ref: '#/components/parameters/trait_priceModel_includesMarkup'
+        - $ref: '#/components/parameters/trait_priceModel_tierType'
+        - $ref: '#/components/parameters/trait_priceModel_name'
+        - $ref: '#/components/parameters/trait_priceModel_description'
+        - $ref: '#/components/parameters/trait_priceModel_unitcode'
+      responses:
+        '200':
+          description: The request was successful. A list of price models is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of retrieved price models.
+          content:
+            application/json:
+              examples:
+                Response example:
+                  value:
+                    - id: 6245a8f578a8576e338fa9c2
+                      name: Tiered price model
+                      includesTax: true
+                      includesMarkup: true
+                      default: true
+                      measurementUnit:
+                        quantity: 50
+                        unitCode: g
+                      tierDefinition:
+                        tierType: TIERED
+                        tiers:
+                          - minQuantity:
+                              quantity: 0
+                              unitCode: g
+                          - minQuantity:
+                              quantity: 100
+                              unitCode: g
+                          - minQuantity:
+                              quantity: 500
+                              unitCode: g
+                      metadata:
+                        version: 1
+                        createdAt: '2022-03-31T13:13:25.816Z'
+                        modifiedAt: '2022-03-31T13:13:25.816Z'
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/priceModelDefinitionRetrieval'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/priceModelDefinitionRetrieval'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      tags:
+        - Price models
+      operationId: GET-price-list-price-models
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/price/{tenant}/priceModels/{priceModelId}':
+    get:
+      summary: Retrieving a price model
+      description: |-
+        Retrieves a specified price model's details by priceModelId.
+
+        A price model can be defined as a repeatable way to sell products in a market with the intention of making a profit. Price models define basic structures for prices.
+      security:
+        - OAuth2:
+            - price.pricemodel_read
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+      responses:
+        '200':
+          description: The request was successful. The price model is returned.
+          content:
+            application/json:
+              examples:
+                Response example:
+                  value:
+                    - id: 6245a8f578a8576e338fa9c2
+                      name: Tiered price model
+                      includesTax: true
+                      includesMarkup: true
+                      measurementUnit:
+                        quantity: 50
+                        unitCode: g
+                      tierDefinition:
+                        tierType: TIERED
+                        tiers:
+                          - minQuantity:
+                              quantity: 0
+                              unitCode: g
+                          - minQuantity:
+                              quantity: 100
+                              unitCode: g
+                          - minQuantity:
+                              quantity: 500
+                              unitCode: g
+                      metadata:
+                        version: 1
+                        createdAt: '2022-03-31T13:13:25.816Z'
+                        modifiedAt: '2022-03-31T13:13:25.816Z'
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/priceModelDefinitionRetrieval'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/priceModelDefinitionRetrieval'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+      tags:
+        - Price models
+      operationId: GET-price-retrieve-price-model
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+        description: |
+          Your Emporix tenant's name.
+
+          **Note**: The tenant should always be written in lowercase.
+      - schema:
+          type: string
+        name: priceModelId
+        in: path
+        required: true
+        description: 'Price model''s unique identifier, generated when the price model is created.'
+    put:
+      summary: Upserting a price model
+      description: |
+        Updates a specified price model's details by priceModelId, or creates a new one if a price model with the specified ID doesn't exist yet.
+      operationId: PUT-price-update-price-model
+      security:
+        - OAuth2:
+            - price.pricemodel_manage
+      responses:
+        '201':
+          $ref: '#/components/responses/Created_201'
+        '204':
+          description: |
+            The request was successful. The price has been updated.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+      tags:
+        - Price models
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/priceModelDefinitionCreation'
+            examples:
+              Request example:
+                value:
+                  id: 6245a8f578a8576e338fa9c2
+                  name: Tiered price model
+                  includesTax: true
+                  includesMarkup: true
+                  measurementUnit:
+                    quantity: 50
+                    unitCode: g
+                  tierDefinition:
+                    tierType: TIERED
+                    tiers:
+                      - minQuantity:
+                          quantity: 0
+                          unitCode: g
+                      - minQuantity:
+                          quantity: 100
+                          unitCode: g
+                      - minQuantity:
+                          quantity: 500
+                          unitCode: g
+                  metadata:
+                    version: 1
+        description: ''
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+    delete:
+      summary: Deleting a price model 
+      operationId: DELETE-price-remove-price-model
+      description: |-
+        Deletes a specified price model by priceModel Id.
+
+        **Important**: If you want to delete a price model that has prices assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all prices assigned to the price model are deleted as well, in an asynchronous manner.
+
+        **Additional scopes info**
+        The `price.pricemodel_manage_admin` scope is only required if you want to delete a price model that has prices assigned to it.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      parameters:
+        - schema:
+            type: boolean
+          in: query
+          name: forceDelete
+          description: |-
+            * If set to `true` and the price model has prices assigned to it, both the price model and the prices will be deleted.
+
+              **Important**: To set this parameter to `true`, your access token needs to have the `price.pricemodel_manage_admin` scope granted.
+            * If set to `false` or not specified and the price model has prices assigned to it, the endpoint will respond with a `400` error.
+      security:
+        - OAuth2:
+            - price.pricemodel_manage
+            - price.pricemodel_manage_admin
+      responses:
+        '204':
+          description: The request was successful. The price model has been deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      tags:
+        - Price models
+  '/price/{tenant}/price-lists':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      tags:
+        - Price lists
+      summary: Retrieving all price lists
+      description: |-
+        Retrieves all price lists assigned to the tenant. You can filter the results with query parameters.
+      security:
+        - OAuth2:
+            - price.pricelist_read
+      parameters:
+        - $ref: '#/components/parameters/trait_qParam'
+        - $ref: '#/components/parameters/header_acceptLanguage'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/query_priceLists_name'
+        - $ref: '#/components/parameters/query_priceLists_effectiveDate'
+        - $ref: '#/components/parameters/query_priceLists_currency'
+        - $ref: '#/components/parameters/query_priceLists_country'
+        - $ref: '#/components/parameters/query_priceLists_site'
+        - $ref: '#/components/parameters/query_priceLists_customerGroup'
+        - $ref: '#/components/parameters/query_priceLists_region'
+      responses:
+        '200':
+          description: The request was successful. A list of price lists is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of retrieved price lists.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/priceList'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/priceLists_get_200_responseBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-price-retrieve-price-lists
+    post:
+      tags:
+        - Price lists
+      description: |-
+        Creates a new price list.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+      summary: Creating a new price list
+      operationId: POST-price-create-price-list
+      parameters:
+        - $ref: '#/components/parameters/header_contentLanguage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/priceListCreation'
+            examples:
+              Price list with a customer group:
+                $ref: '#/components/examples/priceLists_post_requestBody' 
+              Price list with a legal entity:
+                $ref: '#/components/examples/priceLists_post_requestBody_legalEntity'
+      responses:
+        '201':
+          description: The request was successful. The price list has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Price list's unique identifier.
+              examples:
+                Price list created:
+                  value:
+                    id: 6245a8f578a8576e338fa9c2
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/price/{tenant}/price-lists/search':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      tags:
+        - Price lists
+      summary: Searching for price lists
+      description: |-
+        Searching for price lists assigned to the tenant.
+      security:
+        - OAuth2:
+            - price.pricelist_read
+      parameters:
+        - $ref: '#/components/parameters/header_acceptLanguage'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+      requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchRequest'
+              examples:
+                search for products:
+                  value:
+                    q: "id:example-id-1"
+      responses:
+        '200':
+          description: The request was successful. A list of price lists is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of retrieved price lists.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/priceList'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/priceLists_get_200_responseBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-price-search-price-lists
+  '/price/{tenant}/price-lists/{priceListId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/path_priceListId'
+    get:
+      tags:
+        - Price lists
+      operationId: GET-price-retrieve-price-list
+      summary: Retrieving a price list
+      description: |-
+        Retrieves a specified price list's details by priceListId.
+      security:
+        - OAuth2:
+            - price.pricelist_read
+      parameters:
+        - $ref: '#/components/parameters/header_acceptLanguage'
+      responses:
+        '200':
+          description: The request was successful. The price list is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/priceList'
+              examples:
+                Price List:
+                  $ref: '#/components/examples/priceLists_priceListId_get_200'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: The requested price list could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Price List Not Found:
+                  $ref: '#/components/examples/priceLists_priceListId_get_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    put:
+      tags:
+        - Price lists
+      operationId: PUT-price-update-price-list
+      summary: Upserting a price list
+      description: |-
+        Updates a specified price list by priceListId, or creates a new one if a price list with the specified ID doesn't exist yet.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+      parameters:
+        - $ref: '#/components/parameters/header_contentLanguage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/priceListUpdate'
+            examples:
+              Update Price List:
+                $ref: '#/components/examples/priceLists_put_requestBody'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created_201'
+        '204':
+          description: |
+            The request was successful. The price has been updated.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: The requested price list could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Price List Not Found:
+                  $ref: '#/components/examples/priceLists_priceListId_put_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    delete:
+      summary: Deleting a price list
+      operationId: DELETE-price-remove-price-list
+      tags:
+        - Price lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: The request was successful. The price list has been deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Deletes a specified price list by priceListId.
+
+        **Important**: All prices assigned to the price list are deleted as well, in an asynchronous manner.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+  '/price/{tenant}/price-lists/{priceListId}/prices':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/path_priceListId'
+    get:
+      tags:
+        - Prices assigned to price lists
+      operationId: GET-price-list-prices-in-price-list
+      summary: Retrieving all prices assigned to a price list
+      description: |-
+        Retrieves all prices assigned to a specified price list. You can filter the results with query parameters.
+      security:
+        - OAuth2:
+            - price.pricelist_read
+      parameters:
+        - $ref: '#/components/parameters/trait_qParam'
+        - $ref: '#/components/parameters/header_acceptLanguage'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/query_priceListPrices_priceModelId'
+        - schema:
+            type: string
+          in: query
+          name: itemId
+          description: |
+            ID of product for which prices should be retrieved.
+        - schema:
+            type: string
+          in: query
+          name: itemType
+          description: |
+            Item types for which prices should be retrieved. Possible values:
+            * `PRODUCT`
+            * `SKU`
+
+              **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+      responses:
+        '200':
+          description: The request was successful. A list of prices is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of retrieved prices.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/priceListPrice'
+              examples:
+                List of price list's prices:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_get_200'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    post:
+      tags:
+        - Prices assigned to price lists
+      description: |-
+        Creates a new price for a specified price list.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+      summary: Adding a new price to a price list
+      operationId: POST-price-create-price-in-price-list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/priceListPriceCreation'
+            examples:
+              Create Price List's Price:
+                $ref: '#/components/examples/priceLists_priceListId_prices_post_requestBody'
+      responses:
+        '201':
+          description: The request was successful. The price has been created and added to the price list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier of the price.
+              examples:
+                Price list created:
+                  value:
+                    id: 6245a8f578a8576e338fa9c2
+        '400':
+          description: The request was incorrect. Details are provided in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Price list does not exist:
+                  value:
+                    code: 400
+                    errorCode: PRICE-LIST-PRICE-CREATION-1
+                    status: Bad Request
+                    message: 'The price list with id: 6245a8f578a8576e338fa9c2 and tenant: testtenant is not existing. Please provide a valid price list id.'
+                Price model does not exist:
+                  value:
+                    code: 400
+                    errorCode: PRICE-LIST-PRICE-CREATION-2
+                    status: Bad Request
+                    message: 'The price model with id: 6245a8f578a8576e338fa9c2 and tenant: testtenant is not existing. Please provide a valid price model id.'
+                Price model is incompliant with the price:
+                  value:
+                    code: 400
+                    errorCode: PRICE-LIST-PRICE-CREATION-3
+                    status: Bad Request
+                    message: 'Tier values not valid with price model: 6245a8f578a8576e338fa9c2 for tenant: testtenant.'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/price/{tenant}/price-lists/{priceListId}/prices/bulk':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/path_priceListId'
+    delete:
+      summary: Deleting multiple prices from a price list
+      operationId: DELETE-price-remove-multiple-prices-from-price-list
+      tags:
+        - Prices assigned to price lists
+      description: |-
+        Deletes multiple prices from a specified price list. The maximum batch size is 200.
+
+        To indicate which prices should be deleted from the price list, you need to put their IDs in an array of strings and send it through the request body. The request body should look like this: `["exampleID1", "exampleID2"]`
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+            examples:
+              Example:
+                value:
+                  - "exampleID1"
+                  - "exampleID2"
+        required: true
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+      responses:
+        '204':
+          description: Price list's prices have successfully been deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    post:
+      summary: Creating multiple prices for a price list
+      operationId: POST-price-create-multiple-prices-for-price-list
+      tags:
+        - Prices assigned to price lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/priceListPriceCreation'
+            examples:
+              Create Price List's Prices:
+                $ref: '#/components/examples/priceLists_priceListId_prices_bulk_post_requestBody'
+      responses:
+        '207':
+          description: Multiple status response. The details are provided in a form of a list of responses within the body.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/priceBulkResponseEntry'
+              examples:
+                Multiple Update Responses:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_bulk_post_responseBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Creates multiple prices for a specified price list. The maximum batch size is 200.
+
+        Response for a particular price is returned at the same position (index) at which that price is located in the request body.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+    put:
+      summary: Upserting multiple prices in a price list
+      operationId: PUT-price-update-multiple-prices-in-price-list
+      tags:
+        - Prices assigned to price lists
+      description: |-
+        Updates or creates multiple prices in a specified price list. The maximum batch size is 200.
+
+        Response for a particular price is returned at the same position (index) at which that price is located in the request body.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/priceListPriceUpdate'
+            examples:
+              Update Price List's Prices:
+                $ref: '#/components/examples/priceLists_priceListId_prices_bulk_put_requestBody'
+      responses:
+        '207':
+          description: Multiple status response. The details are provided in a form of a list of responses within the body.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/priceBulkResponseEntry'
+              examples:
+                Multiple Update Responses:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_bulk_put_responseBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/price/{tenant}/price-lists/{priceListId}/prices/search':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/path_priceListId'
+    post:
+      tags:
+        - Prices assigned to price lists
+      summary: Searching for prices assigned to a price list
+      description: |-
+        Searches for prices assigned to a specified price list.
+      security:
+        - OAuth2:
+            - price.pricelist_read
+      parameters:
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+      requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchRequest'
+              examples:
+                search for prices:
+                  value:
+                    q: "itemId.id:53a358901b2e9dd2718b5c4e"
+      responses:
+        '200':
+          description: The request was successful. A list of prices is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of retrieved prices.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/priceListPrice'
+              examples:
+                List of price list's prices:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_get_200'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-price-search-prices-in-price-list
+  '/price/{tenant}/price-lists/{priceListId}/prices/{priceId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/path_priceListId'
+      - $ref: '#/components/parameters/path_priceListPriceId'
+    get:
+      tags:
+        - Prices assigned to price lists
+      operationId: GET-price-retrieve-prices-from-price-list
+      summary: Retrieving a price list's price details
+      description: |-
+        Retrieves details for a specified price that belongs to a price list.
+      security:
+        - OAuth2:
+            - price.pricelist_read
+      parameters:
+        - $ref: '#/components/parameters/header_acceptLanguage'
+      responses:
+        '200':
+          description: The request was successful. The price list's price is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/priceListPrice'
+              examples:
+                Price List's Price:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_priceListPriceId_get_200'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: The requested price list's price could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Price List Not Found:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_priceListPriceId_get_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    put:
+      tags:
+        - Prices assigned to price lists
+      operationId: PUT-price-update-price-in-price-list
+      summary: Upserting a price in a price list
+      description: |-
+        Updates a specified price list's price, or creates a new price in a price list if a price with the specified ID doesn't exist yet.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+      parameters:
+        - $ref: '#/components/parameters/header_contentLanguage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/priceListPriceUpdate'
+            examples:
+              Update Price List's Price:
+                $ref: '#/components/examples/priceLists_prices_priceListPriceId_put_requestBody'
+      responses:
+        '201':
+          $ref: '#/components/responses/Created_201'
+        '204':
+          description: |
+            The request was successful. The price has been updated.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: The requested price list's price could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Price List Not Found:
+                  $ref: '#/components/examples/priceLists_priceListId_prices_priceListPriceId_put_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    delete:
+      summary: Deleting a price from a price list
+      operationId: DELETE-price-remove-price-from-price-list
+      tags:
+        - Prices assigned to price lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: The request was successful. The price has been deleted from the price list.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      description: |-
+        Deletes a specified price list's price.
+      security:
+        - OAuth2:
+            - price.pricelist_manage
+components:
+  schemas:
+    createPrice:
+      type: object
+      title: Price
+      properties:
+        id:
+          type: string
+          description: 'Custom price identifier. If not provided, it is automatically generated.'
+        itemId:
+          type: object
+          description: Item for which the price is defined.
+          required:
+            - itemType
+            - id
+          properties:
+            itemType:
+              type: string
+              description: |
+                Type of the referenced item. Possible values:
+                * `PRODUCT`
+                * `SKU`
+
+                  **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+            id:
+              type: string
+              description: |
+                Product's unique identifier - ID or SKU.
+
+                **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+        itemYrn:
+          description: Product's uniform resource name.
+          type: string
+        currency:
+          allOf:
+            - $ref: '#/components/schemas/currency'
+        location:
+          allOf:
+            - $ref: '#/components/schemas/location'
+        salePrice:
+          allOf:
+            - $ref: '#/components/schemas/salePrice'
+        restrictions:
+          allOf:
+            - $ref: '#/components/schemas/restrictions'
+        priceModelId:
+          type: string
+          description: ID of the price model to which the price should assigned. If the ID is not provided, the default price model is used.
+        tierValues:
+          type: array
+          description: |
+            Prices for tiers specified in the price model. The prices will be assigned to tiers based on the entered order (the first value will be assigned to the first tier, the second value to second tier).
+
+            **Note**: If this field does not contain values for all tiers defined in the price model, the endpoint responds with an error.
+          items:
+            allOf:
+              - $ref: '#/components/schemas/tierValueCreation'
+        mixins:
+          type: object
+          description: |-
+            Map of custom price attributes.
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            mixins:
+              type: object
+              description: |-
+                Schemas for custom price attributes.
+              additionalProperties: true
+      required:
+        - itemId
+        - currency
+        - location
+        - tierValues
+    getPrice:
+      type: object
+      title: Price
+      properties:
+        id:
+          type: string
+          description: A price identifier.
+        itemId:
+          type: object
+          description: Item for which the price is defined.
+          properties:
+            itemType:
+              type: string
+              description: |
+                Type of the referenced item. Possible values:
+                * `PRODUCT`
+                * `SKU`
+
+                  **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+            id:
+              type: string
+              description: |
+                Product's unique identifier, generated when the product is created through the Product Service.
+        itemYrn:
+          description: Product's uniform resource name.
+          type: string
+        currency:
+          description: 'Currency code, as defined in the Currency Service.'
+          type: string
+        location:
+          allOf:
+            - $ref: '#/components/schemas/location'
+        salePrice:
+          allOf:
+            - $ref: '#/components/schemas/salePrice'
+        priceModelId:
+          type: string
+          description: ID of the price model to which the price is assigned. If the ID is not provided, the default price model is used.
+        restrictions:
+          $ref: '#/components/schemas/restrictions'
+        tierValues:
+          type: array
+          items:
+            $ref: '#/components/schemas/tierValueRetrieval'
+        vendorId:
+          type: string
+          description: Id of a vendor to which the price belongs.
+        mixins:
+          type: object
+          description: |-
+            Custom price attributes.
+          additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/priceMetadata'
+    errorMessage:
+      type: object
+      title: error
+      description: Schema for API-specific errors.
+      properties:
+        code:
+          minimum: 100
+          maximum: 599
+          description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+          type: integer
+        status:
+          description: Original HTTP error reason.
+          type: string
+        message:
+          description: Descriptive error message for debugging
+          type: string
+        details:
+          description: List of problems causing this error.
+          type: array
+          items:
+            title: errorDetail
+            description: schema for specific error cause
+            type: string
+        errorCode:
+          type: string
+          description: Additional error code.
+    prices:
+      type: array
+      items:
+        $ref: '#/components/schemas/getPrice'
+      title: List of prices
+    metadata:
+      type: object
+      properties:
+        createdAt:
+          description: Date and time when the price was created.
+          type: string
+        modifiedAt:
+          description: Date and time when the price was last modified.
+          type: string
+        version:
+          minimum: 1
+          type: integer
+          description: Version of the price object. If provided optimistic locking will be enabled and it has to match version in the database
+    measurementUnit:
+      type: object
+      description: Measurement unit for which the price is defined.
+      properties:
+        quantity:
+          minimum: 0
+          description: Quantity of the measurement unit.
+          type: number
+        unitCode:
+          description: 'Code of the measurement unit, as defined in the Unit Handling Service.'
+          type: string
+      required:
+        - quantity
+        - unitCode
+      title: ''
+    matchMeasurementUnit:
+      type: object
+      description: Measurement unit for which the price is defined.
+      title: ''
+      properties:
+        quantity:
+          minimum: 0
+          description: Quantity of the measurement unit.
+          type: number
+        unitCode:
+          description: 'Code of the measurement unit, as defined in the Unit Handling Service. This attribute is optional, if not provided the price model unit will be used.'
+          type: string
+      required:
+        - quantity
+    salePrice:
+      type: object
+      properties:
+        discountAmount:
+          minimum: 0
+          description: Discount expressed as a fixed amount.
+          type: number
+        discountRate:
+          minimum: 0
+          maximum: 100
+          description: Discount expressed as a percentage of the original price.
+          type: number
+        description:
+          description: Additional information about the discount.
+          type: string
+    currency:
+      type: string
+      title: currency
+      pattern: '[A-Z]{3}'
+      description: 'Currency code, compliant with the ISO 4217 standard.'
+    matchByContext:
+      title: Price matching (by session context) request body
+      type: object
+      properties:
+        items:
+          type: array
+          description: List of items (products or prices) for which the prices should be matched.
+          items:
+            type: object
+            properties:
+              itemId:
+                type: object
+                description: Product or price for which a price should be matched.
+                properties:
+                  itemType:
+                    type: string
+                    description: |-
+                      Type of the referenced item. Possible values:
+                      * `PRODUCT`
+                      * `PRICE`
+                      * `SKU`
+
+                        **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+                  id:
+                    type: string
+                    description: 'Item''s unique identifier, generated when the item is created.'
+              quantity:
+                $ref: '#/components/schemas/matchMeasurementUnit'
+    match:
+      title: Price matching (by criteria) request body
+      type: object
+      properties:
+        targetCurrency:
+          type: string
+          description: |-
+            Code of the currency in which the prices should be matched, as defined in the Currency Service.
+
+            **Note**: If the matched price is defined in another currency, a currency exchange algorithm will be used, but only if exchange rates between the two currencies have been defined.
+        siteCode:
+          type: string
+          description: Code of the site to which the matched prices should apply.
+        targetLocation:
+          type: object
+          required:
+            - countryCode
+          properties:
+            countryCode:
+              type: string
+              description: |-
+                Code of the country for which the prices should be matched, as defined in the Country Service.
+
+                **Note**: If the matched price is defined for another country, a tax calculation algorithm will be used, but only if tax classes for the two countries have been defined for relevant products.
+        items:
+          type: array
+          description: List of items (products or prices) for which the prices should be matched.
+          items:
+            type: object
+            properties:
+              itemId:
+                type: object
+                description: Product or price for which a price should be matched.
+                properties:
+                  itemType:
+                    type: string
+                    description: |-
+                      Type of the referenced item. Possible values:
+                      * `PRODUCT`
+                      * `PRICE`
+                      * `SKU`
+
+                        **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+                  id:
+                    type: string
+                    description: 'Item''s unique identifier, generated when the item is created.'
+                required:
+                  - itemType
+                  - id
+              quantity:
+                type: object
+                description: Quantity of the product for which a matched price should be calculated.
+                required:
+                  - quantity
+                properties:
+                  quantity:
+                    type: number
+                    description: 'Quantity of the product, expressed as a number.'
+                  unitCode:
+                    type: string
+                    description: 'Code of the measurement unit, as defined in the Unit Handling Service. This atribute is optional, if not provided the price model unit will be used.'
+            required:
+              - quantity
+        principal:
+          type: object
+          description: Customer or customer group for whom the matched prices should be valid.
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the customer or customer group.
+            type:
+              type: string
+              description: |-
+                Customer or customer group for whom the matched should be valid. Possible values:
+                * `CUSTOMER`
+                * `GROUP`
+
+                  **The `GROUP` value is in preview mode** - the system does not fully operate on the customer groups concept yet.
+        useFallback:
+          type: boolean
+          description: |-
+            If no price that matches the criteria is found for the specified site, the price matching functionality will try to find the best price for the `main` site. To enable this option, this field needs to be set to `true`.
+
+            **Note**: Using the fallback mechanism may impact the performance as the price matching has to run a second time. If the fallback mechanism is used, the response's `siteCode` field will be set to `main`.
+        legalEntityId:
+          type: string
+          description: |-
+            Legal entity for which price lists are included in the price match.
+            **Note**: Price lists for the entity's parent legal entities are also included.
+      required:
+        - targetCurrency
+        - siteCode
+        - targetLocation
+        - items
+    dateValidity:
+      type: object
+      description: Date range in which the object is valid.
+      properties:
+        from:
+          type: string
+          description: 'Date from which the object is valid, compliant with the ISO 8601 standard.'
+        to:
+          type: string
+          description: 'Date to which the object is valid, compliant with the ISO 8601 standard.'
+    priceModelRetrieval:
+      description: |
+        Price model holds additional attributes that are extending price. For example it's possible to define a price which will be specific for a given customer or customer group.
+      type: object
+      properties:
+        id:
+          type: string
+          description: |
+            Price model's unique identifier, generated when the price model is created.
+        name:
+          oneOf:
+            - type: object
+            - type: string
+        description:
+          oneOf:
+            - type: object
+            - type: string
+        includesTax:
+          type: boolean
+          description: |
+            Flag indicating whether prices assigned to the price model are expressed as net or gross.
+
+            | Value | Description |
+            | --- | --- |
+            | `true` | Prices are expressed as gross values. |
+            | `false` | Prices are expressed as net values. |
+        includesMarkup:
+          type: boolean
+          description: |
+            Flag indicating whether prices assigned to the price model include markup.
+
+            **The `includesMarkup` field is in preview mode** - some of the features may not be fully operational yet.
+        measurementUnit:
+          $ref: '#/components/schemas/measurementUnit'
+        tierDefinition:
+          type: object
+          properties:
+            tierType:
+              type: string
+              description: |-
+                If the price is created based on a price model (the `priceModelId` is provided, the field should stay null. Otherwise the provided value will override a value from price model.
+
+                Possible values:
+                * `BASIC`
+                * `VOLUME`
+                * `TIERED`
+
+                `BASIC`: Used to offer the same price per unit, regardless of the ordered quantity.
+
+                  **Note**: When using basic pricing, you need to define a single tier and set its `minQuantity` field to `0`.
+
+                `VOLUME`: Used to offer a lower price per unit depending on the total ordered quantity.
+
+                `TIERED`: Used to offer a lower price per unit based on the tiers that the total ordered quantity falls into.
+
+                  **Example**: You defined three tiers, starting at 5, 10, and 15 pieces respectively. A customer orders 16 pieces. In this pricing model, the first 5 pieces will be priced according to the first tier, the next 5 according to the second tier, and the 16th piece will be priced according to the third tier.
+            tiers:
+              type: array
+              items:
+                type: object
+                properties:
+                  minQuantity:
+                    $ref: '#/components/schemas/measurementUnit'
+                  id:
+                    type: string
+                    description: Identifier of a given tier.
+        isDefault:
+          type: boolean
+          description: Indicates if the price model is a default price model.
+        metadata:
+          $ref: '#/components/schemas/metadata'
+    principal:
+      description: Customers or customer groups for whom the price is valid.
+      type: object
+      properties:
+        type:
+          type: string
+          description: |-
+            Customer or customer group for whom the price is valid. Possible values:
+            * `CUSTOMER`
+            * `GROUP`
+
+              **The `GROUP` value is in preview mode** - the system does not fully operate on the customer groups concept yet.
+        id:
+          type: string
+          description: Unique identifier of the customer or customer group.
+      required:
+        - type
+        - id
+    restrictions:
+      type: object
+      description: |
+        Restrictions that limit the validity of the price model and prices assigned to it.
+      properties:
+        principals:
+          type: array
+          description: |-
+            List of customers and customer groups for whom the price is valid.
+
+            **The `GROUP` principals are in preview mode** - the system does not fully operate on the customer groups concept yet.
+          items:
+            allOf:
+              - $ref: '#/components/schemas/principal'
+        validity:
+          allOf:
+            - $ref: '#/components/schemas/dateValidity'
+        siteCodes:
+          type: array
+          description: Codes of sites to which the price applies.
+          items:
+            type: string
+        priceListId:
+          type: string
+          description: |-
+            Unique identifier of the price list to which the price should be assigned.
+
+            **The `priceListId` field is in preview mode** - some of the features may not be fully operational yet.
+      required:
+        - siteCodes
+    tierValueCreation:
+      description: ''
+      type: object
+      properties:
+        id:
+          type: string
+          description: An identifier of a tier. The ID is required only if the priceModelId is provided. If the price model is the default, the tier value is automatically assigned according to the default price model.
+        priceValue:
+          type: number
+          description: |-
+            Gross price (if the `includesTax` field is set to `true`) or net price (if the `includesTax` field is set to `false`).
+
+            This field should contain by a number where the cent part is separated by a dot sign - such as `12.99`.
+
+            **Note**: The cent part of the price is not limited to two digits. You can specify the price with any precision.
+      required:
+        - priceValue
+    tierValueRetrieval:
+      description: ''
+      type: object
+      properties:
+        id:
+          type: string
+          description: An identifier of a tier. The ID is required only if the `priceModelId` is provided. If the price model is the default, the tier value is automatically assigned according to the default price model.
+        priceValue:
+          type: number
+          description: Gross price (if the `includesTax` field is set to `true`) or net price (if the `includesTax` field is set to `false`).
+      required:
+        - priceValue
+    priceModelDefinitionCreation:
+      title: priceModelDefinitionCreation
+      type: object
+      description: A price model can be defined as a repeatable way to sell products in a market with the intention of making a profit. Price models define basic structures for prices.
+      properties:
+        id:
+          type: string
+          description: 'Custom price model identifier. If not provided, it is automatically generated.'
+        includesTax:
+          type: boolean
+          description: |
+            Flag indicating whether prices assigned to the price model will be expressed as net or gross.
+
+            | Value | Description |
+            | --- | --- |
+            | `true` | Prices will be expressed as gross values. |
+            | `false` | Prices will be expressed as net values. |
+        includesMarkup:
+          type: boolean
+          description: |-
+            Flag indicating whether prices assigned to the price model include markup.
+
+            **The `includesMarkup` field is in preview mode** - some of the features may not be fully operational yet.
+        default:
+          type: boolean
+          description: Indicates whether the price model is default one or not.
+        name:
+          description: |-
+            Price model name. It should be a brief, human-readable name that describes purposes of the model.
+
+            * If the `Content-Language` header is set to `*`, then the name should be provided as a map of translations, where each key is a language code and the value is the name in its respective language.
+            * If the `Content-Language` header is set to a specific language, the name should be provided as a string.
+            * If the `Content-Language` header is empty, the endpoint will asume that the name is provided in the default language defined in the Configuration Service.
+
+            **Note**: You can provide the names only in languages defined in the Configuration Service. In case the name is provided in a language that is not defined in the Configuration Service, the request will be rejected.
+          oneOf:
+            - type: object
+            - type: string
+        description:
+          description: |-
+            Price model description. It can contain details about the price model.
+
+            * If the `Content-Language` header is set to `*`, then the description should be provided as a map of translations, where each key is a language code and the value is the description in its respective language.
+            * If the `Content-Language` header is set to a specific language, the description should be provided as a string.
+            * If the `Content-Language` header is empty, the endpoint will asume that the description is provided in the default language defined in the Configuration Service.
+
+            **Note**: You can provide the descriptions only in languages defined in the Configuration Service. In case the description is provided in a language that is not defined in the Configuration Service, the request will be rejected.
+          oneOf:
+            - type: object
+            - type: string
+        tierDefinition:
+          allOf:
+            - $ref: '#/components/schemas/tierDefinitionCreation'
+            - type: object
+              description: Definition of pricing tiers.
+        measurementUnit:
+          allOf:
+            - $ref: '#/components/schemas/measurementUnit'
+            - type: object
+              description: |
+                Measurement unit and quantity for which the price is defined.
+
+                For example, if a product is sold by the piece, the field should contain `1 pc`. If products relevant to this price model are sold per kilogram, this field should contain `1 kg`.
+      required:
+        - includesTax
+        - name
+        - tierDefinition
+        - measurementUnit
+    priceModelDefinitionRetrieval:
+      title: priceModelDefinitionRetrieval
+      type: object
+      description: A price model can be defined as a repeatable way to sell products in a market with the intention of making a profit. Price models define basic structures for prices.
+      properties:
+        id:
+          type: string
+          description: 'Price model''s unique identifier, generated when the price model is created.'
+        includesTax:
+          type: boolean
+          description: |
+            Flag indicating whether prices assigned to the price model are expressed as net or gross.
+
+            | Value | Description |
+            | --- | --- |
+            | `true` | Prices are expressed as gross values. |
+            | `false` | Prices are expressed as net values. |
+        includesMarkup:
+          type: boolean
+          description: |
+            Flag indicating whether prices assigned to the price model include markup.
+
+            **The `includesMarkup` field is in preview mode** - some of the features may not be fully operational yet.
+        default:
+          type: boolean
+          description: Indicates whether the price model is default one or not.
+        name:
+          description: Price model name.
+          oneOf:
+            - type: object
+            - type: string
+        description:
+          description: Price model description.
+          oneOf:
+            - type: object
+            - type: string
+        tierDefinition:
+          allOf:
+            - $ref: '#/components/schemas/tierDefinitionCreation'
+            - type: object
+              description: Definition of pricing tiers.
+        measurementUnit:
+          allOf:
+            - $ref: '#/components/schemas/measurementUnit'
+            - type: object
+              description: |
+                Measurement unit and quantity for which the price is defined.
+
+                For example, if a product is sold by the piece, the field should contain `1 pc`. If products for this price model are sold per kilogram, this field should contain `1kg`.
+    priceModelDefinitionCreationResponse:
+      title: priceModelDefinitionCreationResponse
+      type: object
+      description: ''
+      properties:
+        id:
+          type: string
+          description: Price model's unique identifier.
+    tierDefinitionCreation:
+      type: object
+      properties:
+        tierType:
+          type: string
+          description: |-
+            Possible values:
+            * `BASIC`
+            * `VOLUME`
+            * `TIERED`
+
+            `BASIC`: Used to offer the same price per unit, regardless of the ordered quantity.
+
+              **Note**: When using basic pricing, you need to define a single tier and set its `minQuantity` field to `0`.
+
+            `VOLUME`: Used to offer a lower price per unit depending on the total ordered quantity.
+
+            `TIERED`: Used to offer a lower price per unit based on the tiers that the total ordered quantity falls into.
+
+              **Example**: You defined three tiers, starting at 5, 10, and 15 pieces respectively. A customer orders 16 pieces. In this pricing model, the first 5 pieces will be priced according to the first tier, the next 5 according to the second tier, and the 16th piece will be priced according to the third tier.
+        tiers:
+          type: array
+          description: |-
+            Tier quantities.
+
+            Each tier contains information about the minimum quantity from which it (and its price) is valid.
+
+            **Example**: For two tiers with the following `minQuantity` values: 0 pieces and 10 pieces, the effective ranges will be `<0, 9)` and `<10, infinity)`.
+
+            **Note**: When defining tiers, be aware of the following restrictions to the `PriceModel` object:
+            * For `BASIC` tier type:
+              * Only one tier should be defined. If the tier is not defined, it will be automatically generated.
+              * The tier's `minQuantity.quantity` should be set to `0`.
+            * For `VOLUME` and `TIERED` type:
+              * Each `minQuantity.quantity` field must contain a unique value.
+              * The tiers must be defined in an ascending order based on their `quantity` value.
+              * The `quantity` field in the first tier must be set to `0`.
+              * All `unitCode` fields must contain the same value.
+          items:
+            allOf:
+              - $ref: '#/components/schemas/tierDetailsDefinitionCreation'
+      required:
+        - tierType
+    tierDetailsDefinitionCreation:
+      type: object
+      description: |
+        Quantity that indicates the tier's range:
+        * The `minQuantity` of the tier defines the left side of the range (inclusive).
+        * The `minQuantity` of the next tier defines the right side of the range (exclusive).
+      properties:
+        id:
+          type: string
+          description: 'An identifier of the tier. If the value is not provided then it is automatically generated. The id is used during an update operation for recognizing whether a particular tier has been changed, removed or added. '
+        minQuantity:
+          allOf:
+            - $ref: '#/components/schemas/measurementUnit'
+            - type: object
+              description: Minimum quantity of the product from which the tier applies.
+      required:
+        - minQuantity
+    matchResponse:
+      title: matchResponse
+      type: object
+      properties:
+        priceId:
+          type: string
+          description: |
+            Price's unique identifier, generated when the price is created.
+        priceListId:
+          type: string
+          description: |
+            Price list's unique identifier. The property is populated only in case when the return price belongs to any price list.
+        itemRef:
+          type: object
+          description: Item (product or price) for which the price was matched.
+          properties:
+            itemType:
+              type: string
+              description: |-
+                Type of the retrieved item. Possible values:
+                * `PRODUCT`
+                * `SKU`
+
+                  **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+            id:
+              type: string
+              description: |
+                Item's unique identifier, generated when the item is created.
+        site:
+          type: object
+          description: Site to which the matched price applies.
+          properties:
+            code:
+              type: string
+              description: Code of the site to which the matched price applies.
+            includesTax:
+              type: boolean
+              description: |-
+                Flag indicating whether prices assigned to the site are expressed as net or gross.
+
+                | Value | Description |
+                | --- | --- |
+                | `true` | Prices are expressed as gross values. |
+                | `false` | Prices are expressed as net values. |
+
+                **Note**: If not specified, the retrieved price is net or gross depending on the `includesTax` field in the price's model.
+        currency:
+          type: string
+          description: Currency related to the price.
+        location:
+          type: object
+          description: Location for which the matched price is defined.
+          properties:
+            countryCode:
+              type: string
+              description: Code of the country to which the matched price applies.
+        originalValue:
+          type: number
+          description: |-
+            Represents an original value without any discounts for a single unit of the requested item (PRODUCT or SKU). The value is a gross price (if includesTax is true) or net price (if includesTax is false).
+
+            It's worth to mention that the cent part is not limited just to two digits. For example, if the price is for one piece of screw, it could look like this: 0.0000317
+        effectiveValue:
+          type: number
+          description: |-
+            Represents a value with a discount (if applicable) for a single unit of the requested item (PRODUCT or SKU). The value is a gross price (if includesTax is true) or net price (if includesTax is false).
+
+            It's worth to mention that the cent part is not limited just to two digits. For example, if the price is for one piece of screw, it could look like this: 0.0000317
+        totalValue:
+          type: number
+          description: |-
+            Represents a total value with a discount (if applicable) for all units of the requested item (PRODUCT or SKU). The value is a gross price (if includesTax is true) or net price (if includesTax is false).
+
+            It's worth to mention that the cent part is not limited just to two digits. For example, if the price is for one piece of screw, it could look like this: 0.0000317
+        quantity:
+          $ref: '#/components/schemas/measurementUnit'
+        salePrice:
+          $ref: '#/components/schemas/salePrice'
+        includesTax:
+          type: boolean
+          description: |-
+            Flag indicating whether prices assigned to the price model are expressed as net or gross.
+
+            | Value | Description |
+            | --- | --- |
+            | `true` | Prices are expressed as gross values. |
+            | `false` | Prices are expressed as net values. |
+        priceModel:
+          $ref: '#/components/schemas/priceModelRetrieval'
+        tax:
+          type: object
+          description: Sales tax applicable to the product.
+          properties:
+            taxClass:
+              type: string
+              description: |
+                Tax class's code, as defined in the Tax Service.
+            taxRate:
+              type: number
+              description: Tax rate expressed as a number.
+            prices:
+              type: object
+              description: Tax details containing all prices with tax.
+              properties:
+                originalValue:
+                  type: object
+                  description: Original price with taxes.
+                  properties:
+                    netValue:
+                      type: number
+                    grossValue:
+                      type: number
+                    taxValue:
+                      type: number
+                effectiveValue:
+                  type: object
+                  description: Effective price with taxes.
+                  properties:
+                    netValue:
+                      type: number
+                    grossValue:
+                      type: number
+                    taxValue:
+                      type: number
+                totalValue:
+                  type: object
+                  description: Total price with taxes.
+                  properties:
+                    netValue:
+                      type: number
+                    grossValue:
+                      type: number
+                    taxValue:
+                      type: number
+        mixins:
+          type: object
+          description: |-
+            Custom price attributes.
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            version:
+              type: string
+              description: Version of the price object.
+            createdAt:
+              type: string
+              description: Date and time when the matched price was created.
+            modifiedAt:
+              type: string
+              description: Date and time when the matched price was last modified.
+        tierValues:
+          type: array
+          description: A price tiers values for a matched price
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Identifier of a tier
+              priceValue:
+                type: number
+                description: A price value for a particular tier
+    location:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          description: 'Code of the country to which the price applies, as defined in the Country Service.'
+      required:
+        - countryCode
+    priceListCore:
+      title: priceListCore
+      type: object
+      properties:
+        currency:
+          allOf:
+            - $ref: '#/components/schemas/currency'
+        countries:
+          description: |-
+            Codes of countries to which the price list applies, as defined in the Country Service.
+
+            **Note** If not specified, the price list will be applicable to users from all locations.
+          type: array
+          items:
+            type: string
+        regions:
+          description: |-
+            List of the regions to which the price list applies.
+
+            **Note** If not specified, the price list will be applicable to users from all locations.
+          type: array
+          items:
+            type: string
+        customerGroups:
+          description: |-
+            List of customer groups IDs for which the price list is valid. If not specified, the price list is applicable to all customer groups.
+
+            **Note**: Customer groups cannot be provided if there is a legal entity specified for the price list.
+
+            **The `customerGroups` field is in preview mode** - the system does not fully operate on the customer groups concept yet.
+          type: array
+          items:
+            allOf:
+              - {}
+            type: string
+        legalEntityId:
+          description: |-
+            ID of the legal entity to which the price list applies.
+            **Note**: Price list assigned to legal entity is also applicable for all the subsidiaries.
+          type: string
+        siteCode:
+          description: Code of the site to which the price list applies.
+          type: string
+        validity:
+          allOf:
+            - $ref: '#/components/schemas/dateValidity'
+        mixins:
+          type: object
+          description: |
+            Map of custom price lists attributes.
+          additionalProperties: true
+    priceListCreation:
+      title: priceListCreation
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: 'Custom price list identifier. If not provided, it is automatically generated.'
+            name:
+              type: object
+              description: |-
+                Price list name. It should be a brief, human-readable name that describes the purpose of the price list, specified in a form of a map of translations.
+
+                * If the `Content-Language` header is set to `*`, then the name should be provided as a map of translations, where each key is a language code and the value is the name in its respective language.
+                * If the `Content-Language` header is set to a specific language, then the name should be provided as a map of single translation, where the key is a language code and the value is the name in its respective language.
+                * If the `Content-Language` header is empty, then the name should be provided as a map of single translation, where the key is a language code and the value is the name in its respective language. The endpoint will asume that the name is provided in the default language defined in the Configuration Service.
+
+                **Note**: You can provide the names only in languages defined in the Configuration Service. In case the name is provided in a language that is not defined in the Configuration Service, the request will be rejected.
+        - $ref: '#/components/schemas/priceListCore'
+        - type: object
+          properties:
+            metadata:
+              properties:
+                mixins:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Mixins schemas
+      required:
+        - siteCode
+        - name
+    priceListUpdate:
+      title: priceListUpdate
+      allOf:
+        - $ref: '#/components/schemas/priceListCreation'
+        - type: object
+          properties:
+            metadata:
+              properties:
+                version:
+                  type: number
+                  description: Current version of the object.
+                mixins:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Mixins schemas.
+    priceList:
+      title: priceList
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: 'Unique identifier of the price that belongs to a price list, generated when the price is created and added to the price list.'
+            name:
+              type: object
+              description: 'Price list''s name, expressed as a map of translations.'
+        - $ref: '#/components/schemas/priceListCore'
+        - type: object
+          properties:
+            metadata:
+              allOf:
+                - $ref: '#/components/schemas/metadata'
+                - type: object
+                  properties:
+                    mixins:
+                      type: object
+                      additionalProperties:
+                        type: string
+                      description: Mixins schemas
+    priceListPriceCore:
+      title: priceListPriceCore
+      properties:
+        itemId:
+          type: object
+          description: Item for which the price is defined.
+          properties:
+            itemType:
+              type: string
+              description: |
+                Type of the referenced item. Possible values:
+                * `PRODUCT`
+                * `SKU`
+
+                  **The `SKU` value is in preview mode** - the system does not fully operate on the SKU concept yet.
+            id:
+              type: string
+              description: |
+                Product's unique identifier, generated when the product is created through the Product Service.
+        priceModelId:
+          type: string
+          description: ID of the price model to which the price is assigned. If the ID is not provided, the default price model is used.
+        tierValues:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/tierValueCreation'
+              - type: object
+                properties:
+                  priceValue:
+                    type: number
+                    description: |-
+                      This field should contain a net price given by a number where the cent part is separated by a dot sign - such as `12.99`.
+
+                      **Note**: The cent part of the price is not limited to two digits. You can specify the price with any precision.
+    priceListPriceCreation:
+      title: priceListPriceCreation
+      allOf:
+        - $ref: '#/components/schemas/priceListPriceCore'
+        - type: object
+          properties:
+              id:
+                type: string
+                description: 'Custom price identifier. If not provided, it is automatically generated.'
+              itemId:
+                type: object
+                required:
+                  - id
+                  - itemType
+      required:
+        - itemId
+        - priceModelId
+        - tierValues
+    priceListPriceUpdate:
+      title: priceListPriceUpdate
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: 'Unique identifier of the price that belongs to a price list, generated when the price is created and added to the price list.'
+        - $ref: '#/components/schemas/priceListPriceCore'
+          required:
+            - itemId
+            - priceModelId
+            - tierValues
+        - type: object
+          properties:
+            metadata:
+              properties:
+                version:
+                  type: number
+                  description: Current version of the object.
+              required:
+                - version
+      required:
+        - metadata
+        - id
+    priceListPrice:
+      title: priceListPrice
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: 'Unique identifier of the price that belongs to a price list, generated when the price is created and added to the price list.'
+        - $ref: '#/components/schemas/priceListPriceCore'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/metadata'
+    priceBulkResponseEntry:
+      allOf:
+        - type: object
+          properties:
+            index:
+              type: integer
+            id:
+              type: string
+        - $ref: '#/components/schemas/errorMessage'
+    searchPrices:
+      type: object
+      description: ''
+      properties:
+        itemIds:
+          type: array
+          description: List of item IDs for which the prices should be retrieved.
+          maxItems: 100
+          minItems: 1
+          items:
+            description: Identifier of the item.
+            type: string
+        currency:
+          type: string
+          pattern: '[A-Z]{3}'
+          description: 'Currency in which the prices should be retrieved, as defined in the Currency Service.'
+        siteCode:
+          description: Code of the site for which the prices should be retrieved.
+          type: string
+        siteCodes:
+          description: List of site codes for which the prices should be retrieved. If siteCode is specified, this field is ignored.
+          type: array
+          items:
+            type: string
+        principalId:
+          description: IDs of customers for whom the retrieved prices should be valid.
+          type: string
+        effectiveDate:
+          description: |-
+            Date on which retrieved prices should be valid, compliant with the ISO 8601 standard.
+
+            Format:
+            ```date-fullyear "-" date-month "-" date-mday "T" partial-time time-offset```
+          type: string
+        includesTax:
+          description: Flag indicating whether the prices should be retrieved as net or a gross values.
+          type: boolean
+        useFallback:
+          type: boolean
+          description: |
+            If no price that matches the criteria is found for the specified site, the price searching functionality will try to find the best price for the `main` site. To enable this option, this field needs to be set to `true`.
+
+            **Note**: Using the fallback mechanism may impact the performance as the price searching has to run a second time. If the fallback mechanism is used, the response's `siteCode` field will be set to `main`.
+          default: false
+        searchMode:
+          type: string
+          description: |
+            Search mode indicating which prices should be taken into account regarding their principal-related restrictions.
+
+            Possible values:
+            * `ALL_PRICES`  - all prices should be taken into account regardless of their principal restrictions.
+            * `COMMON_PRICES` -  only the prices with no principal restrictions should be taken into account.
+            * `USER_SPECIFIC_PRICES` - only the prices applicable for a given `principalId` should be taken into account.
+          enum:
+            - ALL_PRICES
+            - COMMON_PRICES
+            - USER_SPECIFIC_PRICES
+          default: ALL_PRICES
+      required:
+        - itemIds
+    searchRequest:
+      type: object
+      properties:
+        q:
+          type: string
+          description:  |
+            A standard query parameter is used to search for specific values. 
+
+            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+    priceMetadata:
+      allOf:
+        - $ref: '#/components/schemas/metadata'
+        - type: object
+          properties:
+            mixins:
+              type: object
+              description: Mixins schemas
+              additionalProperties: true
+    priceModelExpand:
+      allOf:
+        - $ref: '#/components/schemas/priceModelRetrieval'
+        - type: object
+          description: |-
+            Price model to which the price is assigned.
+
+            **Note**: This field is only returned if the `extendWithPriceModel` query param is set to `true` when retrieving a price by ID.
+    getSinglePrice:
+      allOf:
+        - $ref: '#/components/schemas/getPrice'
+        - type: object
+          properties:
+            priceModel:
+              $ref: '#/components/schemas/priceModelExpand'
+    updatePrice:
+      allOf:
+        - $ref: '#/components/schemas/getSinglePrice'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/priceMetadata'
+  responses:
+    Created_201:
+      description: The resource has been created.
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+            id:
+             type: string
+             description: Identifier of a newly created item.
+          examples:
+            CreatedExample:
+              value:
+                id: '12345678-1234-1234-1234-123456789012'
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match the scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Insufficient permissions:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details are provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    InternalServiceError_500:
+      description: Some server-side error occurred. Details are provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Internal service error:
+              value:
+                code: 500
+                status: Internal Server Error
+                message: A server-side exception occurred that prevented the system from correctly returning the result.
+    Conflict_409:
+      description: The request could not be completed due to a conflict with the current state of the target resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            ConflictExample:
+              value:
+                code: 409
+                message: The object that you are trying to update has already changed. Please refresh and try again!
+                status: Conflict
+    BadRequest_400:
+      description: |
+        Request was syntactically incorrect. Details are provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+    NotFound_404:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            NotFoundExample:
+              $ref: '#/components/examples/NotFound404_PriceNotFound'
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant's name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_partiallyUpdatable_partial:
+      name: partial
+      in: query
+      required: true
+      description: |-
+        | Value | Description |
+        | --- | --- |
+        | `true` | A partial update will be performed. |
+        | `false` | A full product replacement will be performed. |
+      schema:
+        type: boolean
+    trait_sortable_sort:
+      name: sort
+      in: query
+      description: |-
+        List of properties used to sort the results, separated by colons. The order of properties indicates their priority in sorting.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        If the sorting direction is not specified, the fields are sorted in ascending order.
+      schema:
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+
+        **Note:** If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        Number of items to be retrieved per page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_qParam:
+      in: query
+      name: q
+      description:  |
+        A standard query parameter is used to search for specific values. 
+
+        See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+      schema:
+        type: string
+    trait_currencyAware_currency:
+      name: currency
+      in: query
+      description: Codes of currencies in which prices should be retrieved.
+      schema:
+        type: string
+    trait_effectiveDateAware_effectiveDate:
+      name: effectiveDate
+      in: query
+      description: 'Date on which retrieved prices should be valid, compliant with the ISO 8601 standard. Format:```date-fullyear "-" date-month "-" date-mday "T" partial-time time-offset```'
+      schema:
+        type: string
+        default: '2022-01-01T00:00:00Z'
+    trait_siteCodeAware_siteCode:
+      name: siteCode
+      in: query
+      description: Codes of sites for which prices should be retrieved.
+      schema:
+        default: main
+        type: string
+    trait_principalIdAware_principalId:
+      name: principalId
+      in: query
+      description: |
+        IDs of customers for whom the retrieved prices should be valid.
+      schema:
+        type: string
+    trait_priceModelIdAware_priceModelId:
+      name: priceModelId
+      in: query
+      description: |
+        ID of the price model to which the retrieved prices should be assigned.
+      schema:
+        type: string
+    trait_XTotalCount_header:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: Flag indicating whether the total count of retrieved items should be returned.
+      schema:
+        default: false
+        type: boolean
+    trait_priceModel_includesTax:
+      name: includesTax
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: |
+        Flag indicating whether prices assigned to the price model are expressed as net or gross.
+
+        | Value | Description |
+        | --- | --- |
+        | `true` | Prices are expressed as gross values. |
+        | `false` | Prices are expressed as net values. |
+    trait_priceModel_includesMarkup:
+      name: includesMarkup
+      in: query
+      required: false
+      schema:
+        type: boolean
+      description: |
+        Flag indicating whether prices assigned to the price model include markup.
+
+        **The `includesMarkup` field is in preview mode** - some of the features may not be fully operational yet.
+    trait_priceModel_tierType:
+      name: tierType
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Pricing strategy applicable to the price model. Possible values:
+        * `BASIC`
+        * `VOLUME`
+        * `TIERED`
+    trait_priceModel_name:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Price model's name.
+    trait_priceModel_description:
+      name: description
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Price model's description.
+    trait_sort:
+      in: query
+      name: sort
+      required: false
+      description: |-
+        List of properties used to sort the results, separated by colons. The order of properties indicates their priority in sorting.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        If the sorting direction is not specified, the fields are sorted in ascending order.
+      schema:
+        type: string
+        example: 'name,code:desc'
+    trait_contentLanguage_header:
+      name: Content-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of languages in which localized fields in the request body are provided.
+
+        * If the `Content-Language` header is set to `*`, the localized fields should be provided as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the `Content-Language` header is set to a specific language, the localized fields should be provided as strings.
+        * If the `Content-Language` header is empty, the endpoint will asume that the localized fields are provided in the default language defined in the Configuration Service.
+
+        **Note**: You can provide the localized fields only in languages defined in the Configuration Service. In case the fields are provided in languages that are not defined in the Configuration Service, the request will be rejected.
+    trait_acceptLanguage_header:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields.
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    trait_priceModel_unitcode:
+      name: unitcode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Filter price models by unit code
+    header_contentLanguage:
+      name: Content-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of languages in which localized fields in the request body are provided.
+
+        * If the `Content-Language` header is set to `*`, the localized fields should be provided as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the `Content-Language` header is set to a specific language, then the localized fields should be provided as a map of single translation, where the key is a language code and the value is in a respective language.
+        * If the `Content-Language` header is empty, then the localized fields should be provided as maps of single translation, where the key is a language code and the value is in a respective language. The endpoint will asume that the localized fields are provided in the default language defined in the Configuration Service.
+
+        **Note**: You can provide the localized fields only in languages defined in the Configuration Service. In case the fields are provided in languages that are not defined in the Configuration Service, the request will be rejected.
+    header_acceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields.
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as a map of single translation, where the key is a language code and the value is in a respective language.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved as maps of single translation, where the key is a language code and the value is in a respective language. The endpoint will asume that the localized fields are provided in the default language defined in the Configuration Service.
+    path_priceListId:
+      name: priceListId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: 'Price list''s unique identifier, generated when the price list is created.'
+    path_priceListPriceId:
+      name: priceId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: 'Price list price''s unique identifier, generated when the price list''s price is created.'
+    query_priceLists_effectiveDate:
+      name: effectiveDate
+      in: query
+      required: false
+      schema:
+        type: string
+        example: '2022-01-01T00:00:00Z'
+      description: 'Date on which retrieved prices should be valid, compliant with the ISO 8601 standard. Format:```date-fullyear "-" date-month "-" date-mday "T" partial-time time-offset```'
+    query_priceLists_country:
+      name: country
+      in: query
+      required: false
+      schema:
+        type: string
+      description: 'Code of the country to which the price list applies, as defined in the Country Service.'
+    query_priceLists_site:
+      name: siteCode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Code of the site to which the price list applies.
+    query_priceLists_customerGroup:
+      name: customerGroups
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Comma separated list of IDs of the customer groups to which the price list applies.
+    query_priceLists_currency:
+      name: currency
+      in: query
+      required: false
+      schema:
+        type: string
+      description: 'Code of the currency in which the prices are expressed, as defined in the Currency Service.'
+    query_priceLists_name:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Price list's name.
+    query_priceListPrices_priceModelId:
+      name: priceModelId
+      in: query
+      description: |
+        ID of the price model to which the retrieved prices should be assigned.
+      schema:
+        type: string
+    query_pricesearch_expand:
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Fields that should be expanded with additional information in the response body. Expressed as strings separated by commas.
+
+        Possible values:
+          * `priceModel`
+    query_price_itemName:
+      name: itemName
+      in: query
+      required: false
+      schema:
+        type: string
+      description: A product or SKU name.
+    query_priceLists_region:
+      name: region
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Code of the region to which the price list applies.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            price.price_manage: Needed to manage prices.
+            price.price_read: Needed to retrieve prices.
+            price.price_own: Needed to calculate product prices (legacy).
+            price.prod_price_calculate: Needed to calculate prices and synchronize sale prices (legacy).
+            price.price_delete_all: Needed to delete all prices at once (legacy).
+            price.price_match_own: Needed to use the price matching functionality based on information from the session context.
+            price.pricemodel_manage: Needed to manage price models.
+            price.pricemodel_read: Needed to retrieve price models.
+            price.price_manage_by_vendor: Needed to manage prices belonging to the vendor.
+    CustomerAccessToken:
+      type: http
+      scheme: bearer
+  examples:
+    RetrievePricesExample:
+      value:
+        - id: 6245aa0a78a8576e338fa9c4
+          itemId:
+            itemType: PRODUCT
+            id: 5f5a3a365bac380024b93c45
+          currency: EUR
+          location:
+            countryCode: DE
+          priceModelId: 6245a8f578a8576e338fa9c3
+          restrictions:
+            siteCodes:
+              - '1111'
+          tierValues:
+            - priceValue: 15.99
+            - priceValue: 14.99
+            - priceValue: 13.99
+          metadata:
+            version: 1
+            createdAt: '2022-03-31T13:18:02.379Z'
+            modifiedAt: '2022-03-31T13:18:02.379Z'
+            mixins:
+              customAttributes: 'https://customAttributes.json'
+    BadRequest400_AmbiguousTenant:
+      value:
+        code: 400
+        status: Bad Request
+        message: Tenant in the header is not matching with the one provided in the URI.
+    NotFound404_PriceNotFound:
+      value:
+        code: 404
+        status: Not Found
+        message: 'No custom attribute were found with this key : RandomCustomAttribute'
+    priceLists_get_200_responseBody:
+      value:
+        - id: example-id-1
+          name:
+            en: Example Price List 1
+          currency: EUR
+          countries:
+            - PL
+          customerGroups:
+            - customer-group-1
+            - customer-group-2
+          siteCode: example-site-1
+          validity:
+            from: '2022-05-01T00:00:00.000Z'
+            to: '2025-05-01T00:00:00.000Z'
+          metadata:
+            version: 1
+            createdAt: '2022-03-31T13:18:02.379Z'
+            modifiedAt: '2022-03-31T13:18:02.379Z'
+        - id: example-id-2
+          name:
+            en: Example Price List 2
+          currency: EUR
+          regions:
+            - DACH
+          customerGroups:
+            - customer-group-1
+          siteCode: example-site-2
+          metadata:
+            version: 1
+            createdAt: '2022-03-31T13:18:02.379Z'
+            modifiedAt: '2022-03-31T13:18:02.379Z'
+    priceLists_post_requestBody:
+      value:
+        name:
+          en: Example Price List 1
+        currency: EUR
+        countries:
+          - PL
+        customerGroups:
+          - customer-group-1
+          - customer-group-2
+        siteCode: example-site-1
+        validity:
+          from: '2022-05-01T00:00:00.000Z'
+          to: '2025-05-01T00:00:00.000Z'
+    priceLists_post_requestBody_legalEntity:
+      value:
+        name:
+          en: Example Price List 1
+        currency: EUR
+        legalEntityId: legal-entity-1
+        siteCode: example-site-1
+        validity:
+          from: '2022-05-01T00:00:00.000Z'
+          to: '2025-05-01T00:00:00.000Z'
+    priceLists_put_requestBody:
+      value:
+        name:
+          en: Example Price List 1
+        currency: EUR
+        countries:
+          - DE
+        customerGroups:
+          - customer-group-3
+        siteCode: example-site-1
+        validity:
+          from: '2022-05-01T00:00:00.000Z'
+          to: '2025-05-01T00:00:00.000Z'
+        metadata:
+          version: 1
+    priceLists_priceListId_get_200:
+      value:
+        id: example-id-1
+        name:
+          en: Example Price List 1
+        currency: EUR
+        countries:
+          - PL
+        customerGroups:
+          - customer-group-1
+          - customer-group-2
+        siteCode: example-site-1
+        validity:
+          from: '2022-05-01T00:00:00.000Z'
+          to: '2025-05-01T00:00:00.000Z'
+        metadata:
+          version: 1
+          createdAt: '2022-03-31T13:18:02.379Z'
+          modifiedAt: '2022-03-31T13:18:02.379Z'
+    priceLists_priceListId_get_404:
+      value:
+        priceListId: example-id-1
+        code: 404
+        status: Not Found
+        message: Price list with id example-id-1 has not been found.
+    priceLists_priceListId_put_404:
+      value:
+        priceListId: example-id-1
+        code: 404
+        status: Not Found
+        message: 'Cannot find the price list with an id: example-id-1 and version: 1. It is possible to update a price list with the latest version only. Fetch the price list to get the latest version.'
+    priceLists_priceListId_prices_priceListPriceId_get_404:
+      value:
+        priceId: example-priceListPrice-id-1
+        code: 404
+        status: Not Found
+        message: Price list with id 'example-priceListPrice-id-1' has not been found.
+    priceLists_priceListId_prices_priceListPriceId_put_404:
+      value:
+        priceId: example-priceListPrice-id-1
+        code: 404
+        status: Not Found
+        message: 'Cannot find the price list''s price with an id: example-priceListPrice-id-1 and version: 1. It is possible to update a price list''s price with the latest version only. Fetch the price list''s price to get the latest version.'
+    priceLists_priceListId_prices_get_200:
+      value:
+        - id: example-priceListPrice-id-1
+          itemId:
+            itemType: PRODUCT
+            id: 53a358901b2e9dd2718b5c4e
+          priceModelId: 6245a8f578a8576e338fa9c3
+          tierValues:
+            - priceValue: 15.99
+            - priceValue: 14.99
+            - priceValue: 13.99
+          metadata:
+            version: 1
+            createdAt: '2022-03-31T13:18:02.379Z'
+            modifiedAt: '2022-03-31T13:18:02.379Z'
+        - id: example-priceListPrice-id-2
+          itemId:
+            itemType: PRODUCT
+            id: 53a358901b2e9dd2718b5c4f
+          priceModelId: 6245a8f578a8576e338fa9c4
+          tierValues:
+            - priceValue: 20.99
+            - priceValue: 12.99
+          metadata:
+            version: 1
+            createdAt: '2022-03-31T13:18:02.379Z'
+            modifiedAt: '2022-03-31T13:18:02.379Z'
+    priceLists_priceListId_prices_post_requestBody:
+      value:
+        itemId:
+          itemType: PRODUCT
+          id: 53a358901b2e9dd2718b5c4e
+        priceModelId: 6245a8f578a8576e338fa9c3
+        tierValues:
+          - priceValue: 15.99
+          - priceValue: 14.99
+          - priceValue: 13.99
+    priceLists_priceListId_prices_priceListPriceId_get_200:
+      value:
+        id: example-priceListPrice-id-1
+        itemId:
+          itemType: PRODUCT
+          id: 53a358901b2e9dd2718b5c4e
+        priceModelId: 6245a8f578a8576e338fa9c3
+        tierValues:
+          - priceValue: 15.99
+          - priceValue: 14.99
+          - priceValue: 13.99
+        metadata:
+          version: 1
+          createdAt: '2022-03-31T13:18:02.379Z'
+          modifiedAt: '2022-03-31T13:18:02.379Z'
+    priceLists_prices_priceListPriceId_put_requestBody:
+      value:
+        id: example-priceListPrice-id-1
+        itemId:
+          itemType: PRODUCT
+          id: 53a358901b2e9dd2718b5c4e
+        priceModelId: 6245a8f578a8576e338fa9c3
+        tierValues:
+          - priceValue: 25.99
+          - priceValue: 24.99
+          - priceValue: 23.99
+        metadata:
+          version: 1
+    prices_bulk_post_responseBody:
+      value:
+        - index: 0
+          id: 62d65a15088ed94ebf093d7d
+          code: 201
+          status: CREATED
+        - index: 1
+          id: 62d65a15088ed94ebf093d8d
+          code: 201
+          status: CREATED
+    prices_bulk_put_responseBody:
+      value:
+        - index: 0
+          id: 62d65a15088ed94ebf093d7d
+          code: 204
+          status: NO_CONTENT
+        - index: 1
+          id: 62d65a15088ed94ebf093d8d
+          code: 400
+          status: BAD_REQUEST
+          message: 'The site(s) with code(s):[abcd] do(es) not exist on tenant:tenantname. Please provide valid site codes'
+    prices_bulk_post_put_responseBody_400:
+      value:
+        code: 400
+        status: BAD_REQUEST
+        message: There is a validation error. Please check the details.
+        details:
+          - Maximum size of the payload array is 200.
+    priceLists_priceListId_prices_bulk_post_requestBody:
+      value:
+        - itemId:
+            itemType: PRODUCT
+            id: 53a358901b2e9dd2718b5c4e
+          priceModelId: 6245a8f578a8576e338fa9c3
+          tierValues:
+            - priceValue: 15.99
+            - priceValue: 14.99
+            - priceValue: 13.99
+        - itemId:
+            itemType: PRODUCT
+            id: 53a358901b2e9dd2718b5c4f
+          priceModelId: 6245a8f578a8576e338fa9c3
+          tierValues:
+            - priceValue: 20.99
+            - priceValue: 18.99
+            - priceValue: 16.99
+    priceLists_priceListId_prices_bulk_post_responseBody:
+      value:
+        - index: 0
+          id: 62d65a15088ed94ebf093d7d
+          code: 201
+          status: Created
+        - index: 1
+          id: 62d65a15088ed94ebf093d8d
+          code: 201
+          status: Created
+    priceLists_priceListId_prices_bulk_put_requestBody:
+      value:
+        - id: example-priceListPrice-id-1
+          itemId:
+            itemType: PRODUCT
+            id: 53a358901b2e9dd2718b5c4e
+          priceModelId: 6245a8f578a8576e338fa9c3
+          tierValues:
+            - priceValue: 15.99
+            - priceValue: 14.99
+            - priceValue: 13.99
+          metadata:
+            version: 1
+        - id: example-priceListPrice-id-2
+          itemId:
+            itemType: PRODUCT
+            id: 53a358901b2e9dd2718b5c4f
+          priceModelId: 6245a8f578a8576e338fa9c3
+          tierValues:
+            - priceValue: 20.99
+            - priceValue: 18.99
+            - priceValue: 16.99
+          metadata:
+            version: 1
+    priceLists_priceListId_prices_bulk_put_responseBody:
+      value:
+        - index: 0
+          id: 62d65a15088ed94ebf093d7d
+          code: 204
+          status: No Content
+        - index: 1
+          id: 62d65a15088ed94ebf093d8d
+          code: 204
+          status: No Content
+  requestBodies: {}
+tags:
+  - name: Price lists
+  - name: Price matching
+  - name: Price models
+  - name: Prices
+  - name: Prices assigned to price lists

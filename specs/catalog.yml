@@ -1,0 +1,1052 @@
+openapi: 3.0.0
+info:
+  title: Catalog Management
+  description: The Catalog Management API gives you the tools required to structure your product offering the way it suits you best. 
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+  version: 1.0.0
+servers:
+  - url: https://api.emporix.io
+security:
+  - OAuth2: []
+tags:
+  - name: Catalog management
+    description: Retrieve lists of catalogs and manage catalog details.
+paths:
+  '/catalog/{tenant}/catalogs':
+    post:
+      tags:
+        - Catalog management
+      summary: Creating a catalog
+      description: |
+        Creates a new catalog based on the provided request payload, for the specified tenant.
+      operationId: POST-catalog-create-catalog
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: Content-Language
+          in: header
+          description: |
+            The Content-Language request HTTP header defines language(s) that can be used in the payload. Request body may contain only translations that are matching the languages specified in the header. Possible values:
+            * `*` - request body may contain translations for all languages specified in tenant configuration. This is also the default behaviour if the header is not set.
+            * `en`, `en,de`, `fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5` - request body may contain only translations for languages specified in the header (if they are available in tenant configuration).
+
+            **Note**: For catalog requests, localized fields (such as `name`, `description`) must always be provided as maps of language codes to values, regardless of the Content-Language header value.
+          schema:
+            type: string
+            example: '`*`, `en`, `en,de,fr`, `en-EN`, `fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7`'
+            default: '*'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatalog'
+        required: true
+      responses:
+        "201":
+          description: The catalog has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCatalogResponse'
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "403":
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: Permission denied due to insufficient rights
+        "409":
+          description: Given resource already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 409
+                    status: Conflict
+                    message: Given resource already exists.
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2:
+            - catalog.catalog_manage
+    get:
+      tags:
+        - Catalog management
+      summary: Retrieving the filtered and sorted list of catalogs
+      description: |
+        Get the filtered list of catalogs for the specified tenant. Also, sorting and paging options are available.
+        If none are given, default values are used.
+      operationId: GET-catalog-list-catalogs
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: name
+          in: query
+          description: |
+            Search by the name of the catalog.
+            If you want to search for the name in a specific locale, you can just append the `.<locale>`, for example use `name.de`.
+          schema:
+            type: string
+            example: name
+        - name: description
+          in: query
+          description: |
+            Search by description of the catalog.
+            If you want to search for the name in a specific locale, you can just append the `.<locale>`, for example use `description.de`.
+          schema:
+            type: string
+            example: description
+        - name: publishedSite
+          in: query
+          description: |
+            Search by a site name. The `equal` operator is used here, therefore the site name must match.
+          schema:
+            type: string
+        - name: visibilityFrom
+          in: query
+          description: |
+            Search by start date of the visibility of the catalog. It must follow the pattern yyyy-MM-dd.
+          schema:
+            type: string
+            example: 2022-01-28
+            format: date
+        - name: visibilityTo
+          in: query
+          description: |
+            Search by end date of the visibility of the catalog. It must follow the pattern yyyy-MM-dd.
+          schema:
+            type: string
+            example: 2022-01-28
+            format: date
+        - name: metadataUpdatedAt
+          in: query
+          description: |
+            Search by last update date of the catalog. It must follow the pattern yyyy-MM-dd.
+          schema:
+            type: string
+            format: date
+            example: 2022-01-28
+        - name: pageNumber
+          in: query
+          description: |
+            Page number to be retrieved. The number of the first page is 1.
+            **Note**: If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          description: |
+            Number of catalogs to be retrieved per page.
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+            default: 60
+        - name: sort
+          in: query
+          description: |
+            Fields to sort the response data by following order of the parameters from left to right.
+            Can contain multiple fields in format: `field name`:`sort direction` separated by a comma.
+            The colon with `sort direction` parameter is redundant and descending order is taken only
+            if it is equal to `desc` or `DESC`.
+            Ascending order is considered in any other case.
+            Sorting by `name` parameter works properly only if the `Accept-Language` header is set to
+            a specific language or is empty with default language specified in the configuration service.
+          schema:
+            type: string
+            example: "name,description:asc"
+        - name: X-Total-Count
+          in: header
+          description: |
+            This flag specifies if the API client should receive a X-Total-Count header with the total number of elements that match the search filter.
+          schema:
+            type: boolean
+            default: false
+        - name: Accept-Language
+          in: header
+          description: |
+            List of properties used to sort the results, separated by commas.
+            Possible values:
+            * `*` - each internationalized field is returned as a map containing all available translations
+            * `en`, `en,de` - each internationalized field is returned as a map containing translation specified by a header value. If translation is not supported by tenant configuration then exception is thrown. First language is the one with highest priority.
+            * `fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5` - each internationalized field is returned as a map containing translation specified by a header value. If translation is not available exception is thrown. This list must contains any possible extension for internationalized fields included in sort param.
+          schema:
+            type: string
+            example: "*, 'en', 'en,de,fr', 'en-EN', 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5'"
+            default: '*'
+      responses:
+        "200":
+          description: The search was successful.
+          headers:
+            X-Total-Count:
+              description: Total amount of catalogs for given criteria.
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Catalog'
+              examples:
+                Catalog example:
+                  value: 
+                    - id: "3456454"
+                      name:
+                        en: This is a catalog
+                      description:
+                        en: This catalog is used as an example
+                      status: visible
+                      visibility:
+                        visible: true
+                        from: 2022-02-24T20:44:43.169Z
+                        to: 2023-07-24T20:44:43.169Z
+                      publishedSites:
+                        - Main
+                      categoryIds:
+                        - "3249485"
+                      metadata:
+                        version: 1
+                        updatedAt: 2022-02-24T20:44:43.169Z
+                        createdAt: 2022-02-24T20:44:43.169Z
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2: [] 
+  '/catalog/{tenant}/catalogs/categories/{categoryId}':
+    get:
+      tags:
+        - Catalog management
+      summary: Retrieving all catalogs for category
+      description: |
+        Get all catalogs with the specified category that belong to the tenant.
+      operationId: GET-catalog-list-catalogs-for-category
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: categoryId
+          in: path
+          description: |
+            The unique id of the category, that will be matched with the category identifiers stored on catalogs.
+          required: true
+          deprecated: false
+          allowEmptyValue: false
+          allowReserved: false
+          schema:
+            type: string
+            example: "787323"
+          example: ""
+        - name: pageNumber
+          in: query
+          description: |
+            Page number to be retrieved. The number of the first page is 1.
+            **Note**: If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          description: |
+            Number of catalogs to be retrieved per page.
+          schema:
+            minimum: 1
+            type: integer
+            format: int32
+            default: 60
+        - name: sort
+          in: query
+          description: |
+            Fields to sort the response data by following order of the parameters from left to right.
+            Can contain multiple fields in format: `field name`:`sort direction` separated by a comma.
+            The colon with `sort direction` parameter is redundant and descending order is taken only
+            if it is equal to `desc` or `DESC`.
+            Ascending order is considered in any other case.
+            Sorting by `name` parameter works properly only if the `Accept-Language` header is set to
+            a specific language or is empty with default language specified in the configuration service.
+          schema:
+            type: string
+            example: "name,description:asc"
+        - name: X-Total-Count
+          in: header
+          description: |
+            This flag specifies if the API client should receive a X-Total-Count header with the total number of elements that match the search filter.
+          schema:
+            type: boolean
+            default: false
+        - name: Accept-Language
+          in: header
+          description: |
+            List of properties used to sort the results, separated by commas.
+            Possible values:
+            * `*` - each internationalized field is returned as a map containing all available translations
+            * `en`, `en,de` - each internationalized field is returned as a map containing translation specified by a header value. If translation is not supported by tenant configuration then exception is thrown. First language is the one with highest priority.
+            * `fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5` - each internationalized field is returned as a map containing translation specified by a header value. If translation is not available exception is thrown. This list must contains any possible extension for internationalized fields included in sort param.
+          schema:
+            type: string
+            example: "*, 'en', 'en,de,fr', 'en-EN', 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5'"
+            default: '*'
+      responses:
+        "200":
+          description: The search was successful.
+          headers:
+            X-Total-Count:
+              description: Total amount of catalogs for given criteria.
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Catalog'
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2: []
+  '/catalog/{tenant}/catalogs/{catalogId}':
+    get:
+      tags:
+        - Catalog management
+      summary: Retrieving a catalog by id
+      description: |
+        Get the catalog with the specified unique id that belongs to the tenant.
+      operationId: GET-catalog-retrieve-catalog
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: catalogId
+          in: path
+          description: |
+            The unique id of the catalog.
+          required: true
+          deprecated: false
+          allowEmptyValue: false
+          allowReserved: false
+          schema:
+            type: string
+            example: "787323"
+          example: ""
+        - name: Accept-Language
+          in: header
+          description: |
+            List of language codes acceptable for the response.
+            Possible values:
+            * `*` - each internationalized field is returned as a map containing all available translations
+            * `en`, `en,de` - each internationalized field is returned as a map containing translation specified by a header value. If translation is not supported by tenant configuration then exception is thrown. First language is the one with highest priority.
+            * `fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5` - each internationalized field is returned as a map containing translation specified by a header value. If translation is not available exception is thrown.
+          schema:
+            type: string
+            example: "*, 'en', 'en,de,fr', 'en-EN', 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5'"
+            default: '*'
+      responses:
+        "200":
+          description: Catalog was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "404":
+          $ref: '#/components/responses/response_NotFound_404'
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - Catalog management
+      summary: Upserting a catalog
+      description: |
+        Update or create the specified catalog.
+      operationId: PUT-catalog-update-catalog
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: catalogId
+          in: path
+          description: |
+            The unique id of the catalog.
+          required: true
+          deprecated: false
+          allowEmptyValue: false
+          allowReserved: false
+          schema:
+            type: string
+            example: "787323"
+          example: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCatalog'
+      responses:
+        "201":
+          description: The catalog has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCatalogResponse'
+              examples:
+                example:
+                  value:
+                    id: "4239475"
+        "204":
+          description: The catalog has been successfully updated.
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "403":
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: Permission denied due to insufficient rights
+        "404":
+          $ref: '#/components/responses/response_NotFound_404'
+        "409":
+          $ref: '#/components/responses/response_Conflict_409'
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2:
+            - catalog.catalog_manage
+    delete:
+      tags:
+        - Catalog management
+      summary: Removing catalog
+      description: |
+        Remove the specified catalog.
+      operationId: DELETE-catalog-remove-catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: catalogId
+          in: path
+          description: |
+            The unique id of the catalog.
+          required: true
+          deprecated: false
+          allowEmptyValue: false
+          allowReserved: false
+          schema:
+            type: string
+            example: "787323"
+          example: ""
+      responses:
+        "204":
+          description: The catalog has been successfully removed.
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "403":
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: Permission denied due to insufficient rights
+        "404":
+          $ref: '#/components/responses/response_NotFound_404'
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2:
+            - catalog.catalog_manage
+    patch:
+      tags:
+        - Catalog management
+      summary: Partially updating a catalog
+      description: |
+        Update the specified catalog, even partially.
+      operationId: PATCH-catalog-update-catalog-properties
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant's name.
+            **Note**: The tenant should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: catalogId
+          in: path
+          description: |
+            The unique id of the catalog.
+          required: true
+          deprecated: false
+          allowEmptyValue: false
+          allowReserved: false
+          schema:
+            type: string
+            example: "787323"
+          example: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCatalogProperties'
+      responses:
+        "204":
+          description: The catalog has been successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Object'
+        "400":
+          description: Request was syntactically incorrect. Details will be provided
+            in the response payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: "Unsupported locale format. Please provide one of: 'fr-CH,\
+                      \ fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5 or en-EN or en'"
+        "403":
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: Permission denied due to insufficient rights
+        "500":
+          description: An unexpected error prevented the server from fulfilling the
+            request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 500
+                    status: Internal Server Error
+                    message: An unexpected error prevented the server from fulfilling
+                      the request.
+      security:
+        - OAuth2:
+            - catalog.catalog_manage
+components:
+  schemas:
+    Catalog:
+      required:
+        - id
+        - metadata
+      type: object
+      properties:
+        id:
+          type: string
+          description: "Catalog's unique identifier, generated when the catalog is created."
+        name:
+          allOf:
+            - $ref: '#/components/schemas/Object'
+            - description: "Name of the catalog. Depending on the use of the Accept-Language header, it can be either a String or a Map<Locale, String>"
+        description:
+          allOf:
+            - $ref: '#/components/schemas/Object'
+            - description: Description of the catalog must be a string if the Accept-Language
+                header is specified on the request or a map of translations if the header
+                is missing.
+        status:
+          allOf:
+            - $ref: '#/components/schemas/Status'
+            - description: "Visibility status of the catalog, computed at this moment."
+        visibility:
+          $ref: '#/components/schemas/VisibilityInformation'
+        publishedSites:
+          type: array
+          description: List of site identifiers on which the catalog is published.
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        categoryIds:
+          type: array
+          description: List of root category identifiers that are assigned to the
+            catalog.
+          items:
+            type: string
+      description: Definition of a catalog
+    CreateCatalog:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          type: string
+          description: Custom catalog identifier. If not provided, it is automatically generated.
+          minLength: 1
+          maxLength: 66
+          pattern: ^[a-zA-Z0-9_-]$
+        name:
+          $ref: '#/components/schemas/Object'
+          description: Name of the catalog. Must be provided as a map of language codes to translations.
+        description:
+          $ref: '#/components/schemas/Object'
+          description: Description of the catalog. Must be provided as a map of language codes to translations.
+        visibility:
+          $ref: '#/components/schemas/VisibilityInformation'
+        publishedSites:
+          type: array
+          description: List of site identifiers on which the catalog is published.
+          items:
+            type: string
+        categoryIds:
+          type: array
+          description: List of root category identifiers that are assigned to the
+            catalog.
+          items:
+            type: string
+      description: Payload for creating a new catalog
+      example:
+        name:
+          en: This is a catalog
+        description:
+          en: This catalog is used as an example
+        visibility:
+          visible: true
+          from: 2022-02-24T20:44:43.169Z
+          to: 2023-07-24T20:44:43.169Z
+        publishedSites:
+          - Main
+        categoryIds:
+          - "3249485"
+    CreateCatalogResponse:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+      description: Response for create catalog requests
+    ErrorResponse:
+      required:
+        - code
+        - message
+        - status
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        details:
+          nullable: true
+          type: array
+          items:
+            type: string
+    UpdateMetadata:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: Catalog version, if provided optimistic locking will be used.
+          format: int32
+    Metadata:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: Catalog version
+          format: int32
+        updatedAt:
+          type: string
+          description: Timestamp indicating when the catalog was last modified compliant with the ISO 8601 standard.
+          format: date-time
+        createdAt:
+          type: string
+          description: Timestamp indicating when the catalog was created compliant with the ISO 8601 standard.
+          format: date-time
+    Object:
+      type: object
+      description: Localized field that must be provided as a map of language codes to translations.
+      oneOf:
+        - type: string
+        - type: object
+          additionalProperties:
+            type: string
+    Status:
+      type: string
+      description: "Visibility status of the catalog in this moment. This value is\
+        \ based on configured visibility properties, and is computed for the moment\
+        \ the request is handled. It answers the question 'Is the catalog visible\
+        \ now?'"
+      enum:
+        - not_visible
+        - visible
+    UpdateCatalog:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/Object'
+          description: Name of the catalog. Must be provided as a map of language codes to translations.
+        description:
+          $ref: '#/components/schemas/Object'
+          description: Description of the catalog. Must be provided as a map of language codes to translations.
+        visibility:
+          $ref: '#/components/schemas/VisibilityInformation'
+        publishedSites:
+          type: array
+          description: List of site identifiers on which the catalog is published.
+          items:
+            type: string
+        categoryIds:
+          type: array
+          description: List of root category identifiers that are assigned to the
+            catalog.
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/UpdateMetadata'
+      description: Payload for updating a catalog.
+      example:
+        name:
+          en: This is the same catalog
+        description:
+          en: This catalog has been updated
+        visibility:
+          visible: true
+          from: 2022-02-24T20:44:43.169Z
+          to: 2023-07-24T20:44:43.169Z
+        publishedSites:
+          - Main
+        categoryIds:
+          - "3249485"
+        metadata:
+          version: 1
+    UpdateCatalogProperties:
+      required:
+        - metadata
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/Object'
+          description: Name of the catalog. Must be provided as a map of language codes to translations.
+        description:
+          $ref: '#/components/schemas/Object'
+          description: Description of the catalog. Must be provided as a map of language codes to translations.
+        visibility:
+          $ref: '#/components/schemas/VisibilityInformation'
+        publishedSites:
+          type: array
+          description: List of site identifiers on which the catalog is published.
+          items:
+            type: string
+        categoryIds:
+          type: array
+          description: List of root category identifiers that are assigned to the
+            catalog.
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+      description: Payload for partially updating a catalog.
+      example:
+        name:
+          en: This is the same catalog
+        description:
+          en: This catalog has been updated
+        visibility:
+          visible: true
+          from: 2022-02-24T20:44:43.169Z
+          to: 2023-07-24T20:44:43.169Z
+        publishedSites:
+          - Main
+        categoryIds:
+          - "3249485"
+        metadata:
+          version: 1
+    VisibilityInformation:
+      type: object
+      properties:
+        visible:
+          type: boolean
+          description: "Flag indicating if the catalog is visible or not, set by the\
+            \ user. "
+          default: false
+        from:
+          type: string
+          description: Date and time from which the catalog is visible compliant with the ISO 8601 standard.
+        to:
+          type: string
+          description: Data and time from which the catalog is visible compliant with the ISO 8601 standard.
+      description: Visibility configuration for a catalog
+  responses:
+    response_NotFound_404:
+      description: 'Resource cannot be found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Bad request:
+              value:
+                code: 404
+                status: Not Found
+                message: "Catalog with id '123456789' not found."
+    response_Conflict_409:
+      description: 'Resource conflict'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Conflict:
+              value:
+                code: 409
+                status: Conflict
+                message: "Cannot find the entity with an id: 6516dd55b7d1f739873604d9 and version: 2. It is possible to update an entity with the latest version only. Fetch the entity to get the latest version."
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.emporix.io/oauth/token
+          scopes:
+            catalog.catalog_manage: Manage catalog
+            catalog.catalog_view: View catalog

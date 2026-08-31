@@ -1,0 +1,1325 @@
+openapi: 3.0.0
+info:
+  title: Site Settings Service
+  version: ''
+  description: |-
+    Sites are used as virtual entities within a tenant. They can represent a web store, a physical store, a branded store or a store for a specific market.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/site/{tenant}/sites':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving sites
+      tags:
+        - Site settings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SiteDto'
+              examples:
+                Response example:
+                  value:
+                    - code: main
+                      name: United States
+                      active: true
+                      defaultLanguage: en
+                      languages:
+                        - ar
+                        - en
+                        - fr
+                        - de
+                      currency: USD
+                      availableCurrencies:
+                        - EUR
+                        - GBP
+                        - USD
+                        - THB
+                        - RUB
+                        - SAR
+                      homeBase:
+                        address:
+                          street: Broadway
+                          streetNumber: '1500'
+                          zipCode: '10036'
+                          city: New York
+                          country: US
+                          state: NY
+                        location:
+                          latitude: 40.7568658044745
+                          longitude: -73.9858713458565
+                        timezone: America/New_York
+                      shipToCountries:
+                        - US
+                      assistedBuying:
+                        storefrontUrl: ''
+                      metadata:
+                        mixins:
+                          productSettings: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productSettingsSiteMixIn.v1'
+                          generalShopSettings: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/generalShopSettingsSiteMixIn.v10'
+                          customerSettings: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/customerSettingsSiteMixIn.v3'
+                          orderProcessSettings: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/orderProcessSettingsSiteMixIn.v7'
+                          couponSettings: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponSettingsSiteMixIn.v4'
+                          feeService: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/siteFeeService.json'
+                          imageSize: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/imageSize.v6'
+                          merchantInfo: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/merchantAddressMixin.v10'
+                        version: 14
+                      default: true
+          headers:
+            X-Count:
+              schema:
+                type: integer
+              description: Total number of sites that fulfill the criteria.
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+      operationId: GET-site-settings-list-site-configurations
+      description: |-
+        Retrieves a list of site configurations.
+        ***
+
+        ### Additional scopes info
+        * The `site.site_manage` scope is only required if you want to retrieve inactive sites.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/totalCount'
+        - $ref: '#/components/parameters/includeInactiveSites'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/q_parameter'
+        - $ref: '#/components/parameters/expand'
+    post:
+      summary: Creating a site
+      operationId: POST-site-settings-create-site
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              example:
+                Response example:
+                  value:
+                    id: mixin
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+      security:
+        - OAuth2:
+            - site.site_manage
+      description: |-
+        Creates a new site configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteDto'
+            examples:
+              Create site:
+                value:
+                  code: uk-store
+                  name: United Kingdom
+                  active: false
+                  default: false
+                  defaultLanguage: en
+                  languages:
+                    - en
+                  currency: GBP
+                  homeBase:
+                    address:
+                      country: GB
+                      zipCode: '12345'
+                    timezone: Europe/London
+                  shipToCountries:
+                    - GB
+                  mixins: {}
+                  metadata: {}
+        description: ''
+      parameters: []
+      tags:
+        - Site settings
+  '/site/{tenant}/sites/{siteCode}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/siteCode'
+    get:
+      summary: Retrieving a site
+      tags:
+        - Site settings
+      responses:
+        '200':
+          $ref: '#/components/responses/200_get_site'
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_siteNotFound'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      operationId: GET-site-settings-retrieve-site-config
+      description: |-
+        Retrieves a specified site configuration.
+          **Note:** The `site.site_manage` scope is only required if you want to retrieve an inactive site.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/expand'
+    put:
+      summary: Fully updating a site
+      operationId: PUT-site-settings-update-site-config
+      responses:
+        '200':
+          description: The request was successful. The services configuration has been updated.
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_siteNotFound'
+        '409':
+          description: Conflict
+        '500':
+          description: Internal Server Error
+      description: |-
+        Fully updates a specified site configuration.
+
+        You can also use this endpoint to update the configuration of the following services:
+        * `payment`
+        * `shipping`
+        * `tax`
+
+        **Note**: To update an inactive service configuration, you need to use the `expand` query parameter.
+      security:
+        - OAuth2:
+            - site.site_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteDto'
+            examples:
+              Update site:
+                value:
+                  name: test
+                  active: true
+                  default: false
+                  defaultLanguage: de
+                  languages:
+                    - en
+                    - de
+                  currency: EUR
+                  homeBase:
+                    address:
+                      country: GB
+                      zipCode: '12345'
+                    timezone: Europe/London
+                  shipToCountries:
+                    - GB
+                  mixins: {}
+                  metadata: {}
+        description: ''
+      parameters:
+        - $ref: '#/components/parameters/expand'
+      tags:
+        - Site settings
+    delete:
+      summary: Deleting a site
+      operationId: DELETE-site-settings-remove-site
+      responses:
+        '204':
+          description: The request was successful. The site has been deleted.
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_siteNotFound'
+        '500':
+          description: Internal Server Error
+      description: |-
+        Deletes a specified site.
+
+        **Important**: You cannot delete a site for which the `default` property is set to `true`.
+      security:
+        - OAuth2:
+            - site.site_manage
+      tags:
+        - Site settings
+    patch:
+      summary: Partially updating a site
+      operationId: PATCH-site-settings-update-site
+      responses:
+        '200':
+          description: The request was successful. The site has been updated.
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_siteNotFound'
+        '409':
+          description: Conflict
+        '500':
+          description: Internal Server Error
+      description: |-
+        Partially updates a specified site configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteDto'
+            examples:
+              Patch Site:
+                value:
+                  defaultLanguage: en
+              Adding and modifying mixin:
+                value:
+                  metadata:
+                    mixins:
+                      exampleMixin: 'https://res.cloudinary.com/saas-ag/raw/upload/v1764338354/emporix-docs/test3_v1.json'
+                  mixins:
+                    exampleMixin:
+                      field3: value3
+      security:
+        - OAuth2:
+            - site.site_manage
+      tags:
+        - Site settings
+  '/site/{tenant}/siteslist':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving site codes
+      tags:
+        - Site settings
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Count:
+              schema:
+                type: string
+              description: Total number of sites that fulfill the criteria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                Response example:
+                  value:
+                    - UK
+                    - FR
+                    - main
+                    - DE
+                    - US
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+      operationId: GET-site-settings-list-site-codes
+      parameters:
+        - $ref: '#/components/parameters/includeInactiveSites'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/q_parameter'
+        - $ref: '#/components/parameters/totalCount'
+        - $ref: '#/components/parameters/expandWithMixins'
+      description: |-
+        Retrieves a list of site codes.
+        ***
+
+        ### Additional scopes info
+        * The `site.site_manage` scope is only required if you want to retrieve inactive sites.
+      security:
+        - OAuth2:
+            - site.site_read
+            - site.site_manage
+  '/site/{tenant}/sites/{siteCode}/mixins':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/siteCode'
+    get:
+      summary: Retrieving site mixins
+      tags:
+        - Mixins
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mixins'
+              examples:
+                Response example:
+                  value:
+                    couponSettings:
+                      rewardpoints:
+                        codePrefix: T
+                        orderValueToRewardPointsFactor: 1
+                        enabled: true
+                        validityInMonths: 2
+                      codePrefix: ED
+                      length: 3
+                      referral:
+                        codePrefix: E
+                        redemptionCodeValue: 8
+                        value: 8
+                        orderValueToRewardPointsFactor: 1
+                      sendReferralCoupon: true
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponSettingsSiteMixIn.v4'
+                    merchantInfo:
+                      merchantName: Emporix
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/merchantAddressMixin.v10'
+                    customerSettings:
+                      regExSettings:
+                        mail: '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+                        phone: '^[0-9\+][0-9]{7,}$'
+                        password: '.{6,}'
+                        bic: '^((.{8})|(.{11}))$'
+                        accountOwner: '^[a-zA-Z0-9'':?,()\-. +/ÄäÜüÖöß&]{0,70}$'
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/customerSettingsSiteMixIn.v3'
+                    imageSize:
+                      productTileSizes:
+                        default: 214x160
+                      productDetailSizes:
+                        mobile: 347x261
+                        tablet: 290x218
+                        desktop: 490x367
+                      basketLineItemImage:
+                        mobile: 40x30
+                        tablet: 47x35
+                        desktop: 60x45
+                        default: 60x45
+                      imageSlider:
+                        desktop: 1473x491
+                        tablet: 960x320
+                        mobile: 379x133
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/imageSize.v6'
+                    feeService:
+                      serviceUrl: 'https://api.emporix.io/fee'
+                      active: true
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/siteFeeService.json'
+                    orderProcessSettings:
+                      checkoutSettings:
+                        minimumOrderValue: 20
+                        lastPossibleOrderTime: 8
+                        lastPossibleOrderTimeDateShift: -1
+                        minOrderAge: 18
+                        maxOrderAge: 100
+                        minDeliveryTimeSpan: 2
+                        cutOffTimeValidationEnabled: false
+                        checkoutElements:
+                          onPickup:
+                            showPackingOptions: false
+                          onDelivery:
+                            showPackingOptions: true
+                      deliveryTimeToMethodSettings:
+                        '1': 1-2_hours_timeframe
+                        '3': 3_hours_timeframe
+                        '4': 4-more_hours_timeframe
+                        '10': 4-more_hours_timeframe
+                      paymentSettings:
+                        paymentByInvoice: true
+                        paymentByDebit: false
+                        paymentByCash: true
+                        paymentByCredit: false
+                      pickup: false
+                      pickupTimeToMethodSettings:
+                        '1': pickup
+                      paymentSettingsB2B:
+                        paymentByInvoice: true
+                        paymentByDebit: true
+                        paymentByCash: false
+                        paymentByCredit: false
+                      paymentSettingsB2C:
+                        paymentByInvoice: true
+                        paymentByDebit: true
+                        paymentByCash: false
+                        paymentByCredit: false
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/orderProcessSettingsSiteMixIn.v7'
+                    generalShopSettings:
+                      footerLogoUrl: saas-storefront/images/tenant/tenant_logo.png
+                      confirmationPageImageUrl: saas-storefront/images/misc/Example_neutral_700.png
+                      placeholderLogo: saas-storefront/images/example/example_placeholder.png
+                      baseStyleUrl: 'https://example.com/saas-storefront'
+                      duzen: true
+                      primaryColor: '#fff'
+                      shopCountry:
+                        code: DE
+                      brandName: Example Demo
+                      facebookUrl: 'https://www.facebook.com/'
+                      backgroundColor: '#fff'
+                      logoUrl: 'https://res.cloudinary.com/saas-ag/image/upload/v1528267395/example/example_logo.png'
+                      clientGroup: example
+                      trustedShopCode: none
+                      regionName: Stuttgart
+                      zoneId: Europe/Berlin
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/generalShopSettingsSiteMixIn.v10'
+                    productSettings:
+                      serviceOptionsConfiguration:
+                        cuttingOptions:
+                          - id: small
+                            displayText: Dünn geschnitten
+                          - id: medium
+                            displayText: Mittel geschnitten
+                          - id: thick
+                            displayText: Dick geschnitten
+                          - id: atAStretch
+                            displayText: Am Stück
+                          - id: sliced
+                            displayText: Geschnitten
+                          - id: slice_100GRM
+                            displayText: Scheibe (ca. 100 g)
+                          - id: slice_120GRM
+                            displayText: Scheibe (ca. 120 g)
+                          - id: slice_140GRM
+                            displayText: Scheibe (ca. 140 g)
+                          - id: slice_160GRM
+                            displayText: Scheibe (ca. 160 g)
+                          - id: slice_180GRM
+                            displayText: Scheibe (ca. 180 g)
+                          - id: slice_200GRM
+                            displayText: Scheibe (ca. 200 g)
+                          - id: slice_220GRM
+                            displayText: Scheibe (ca. 220 g)
+                          - id: slice_240GRM
+                            displayText: Scheibe (ca. 240 g)
+                          - id: slice_260GRM
+                            displayText: Scheibe (ca. 260 g)
+                          - id: flimsy
+                            displayText: Hauchdünn
+                          - id: cubed
+                            displayText: Würfel
+                          - id: stripCutted
+                            displayText: Geschnezelt
+                          - id: slice_50MMT
+                            displayText: 'Scheibe (ca. 0,5 cm)'
+                          - id: slice_1CMT
+                            displayText: Scheibe (ca. 1 cm)
+                          - id: slice_2CMT
+                            displayText: Scheibe (ca. 2 cm)
+                          - id: slice_3CMT
+                            displayText: Scheibe (ca. 3 cm)
+                          - id: unseasoned
+                            displayText: Ungewürzt
+                          - id: seasoned
+                            displayText: Gewürzt
+                          - id: bbqSeasoned
+                            displayText: Grillgewürz
+                          - id: winemakerSeasoned
+                            displayText: Weinbauerngewürz
+                          - id: marinadeAvignon
+                            displayText: Marinade Avignon
+                          - id: marinadeBBQ
+                            displayText: Marinade Barbecue
+                          - id: marinadeWildGarlic
+                            displayText: Marinade Bärlauch
+                          - id: marinadeCafeParis
+                            displayText: Marinade Café de Paris
+                          - id: marinadeClassic
+                            displayText: Marinade Classic
+                          - id: marinadeCurry
+                            displayText: Marinade Curry
+                          - id: marinadeHotChili
+                            displayText: Marinade Hot Chili
+                          - id: marinadeItalia
+                            displayText: Marinade Italia
+                          - id: marinadeCaribbean
+                            displayText: Marinade Karibik
+                          - id: marinadeLasVegas
+                            displayText: Marinade Las Vegas
+                          - id: marinadeTexas
+                            displayText: Marinade Texas
+                          - id: marinadePaprika
+                            displayText: Marinade Paprika
+                          - id: marinadeAnanas
+                            displayText: Marinade Ananas
+                            editing: false
+                          - id: loafWhole
+                            displayText: Ganzer Laib
+                          - id: loafHalf
+                            displayText: Halber Laib
+                          - id: loafQuarter
+                            displayText: Viertel Laib
+                          - id: grated
+                            displayText: Gerieben
+                          - id: Grinded
+                            displayText: Gemahlen
+                          - displayText: Gemahlt
+                            id: Ground
+                        servicePackagingOptions:
+                          - id: paper
+                            displayText: Papier
+                          - id: vacuum
+                            displayText: Vakuumiert
+                          - displayText: lose
+                            id: loose
+                      metadata:
+                        schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productSettingsSiteMixIn.v1'
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+      operationId: GET-site-settings-list-site-mixins
+      security:
+        - OAuth2:
+            - site.site_manage
+      parameters: []
+      description: |-
+        Retrieves all mixins for a specified site.
+    post:
+      summary: Creating a site mixin
+      operationId: POST-site-settings-create-site-mixin
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Example 1:
+                  value:
+                    id: test
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              example:
+                No matching schema found:
+                  value:
+                    type: validation_violation
+                    status: 400
+                    message: The request violates validation constraints.
+                    details:
+                      - field: 'mixins.{mixinName}'
+                        type: invalid_field
+                        message: 'mixins.{mixinName} No matching schema found'
+                        moreInfo: ''
+                Invalid tenant:
+                  value:
+                    type: bad_request
+                    status: 400
+                    message: The tenant information provided with the request is not valid.
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+              example:
+                Response example:
+                  value:
+                    type: conflict_resource
+                    status: 409
+                    message: 'Mixin {mixinName} already exists for site {siteCode}'
+      security:
+        - OAuth2:
+            - site.site_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mixin'
+            examples:
+              Create mixin:
+                value:
+                  testMixin:
+                    active: true
+                    metadata:
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695388d813fd4242de135807_testMixin_v1.json'
+              Create general shop settings mixin:
+                value:
+                  generalShopSettings:
+                    logoUrl: 'https://sample_logo_url.png'
+        description: ''
+      description: |-
+        Creates a mixin for a specified site.
+      tags:
+        - Mixins
+  '/site/{tenant}/sites/{siteCode}/mixins/{mixinName}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/siteCode'
+      - schema:
+          type: string
+        name: mixinName
+        in: path
+        required: true
+        description: 'Mixin name, defined when the mixin is created.'
+    get:
+      summary: Retrieving a site mixin
+      tags:
+        - Mixins
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mixin'
+              example:
+                Response example:
+                  value:
+                    regExSettings:
+                      mail: '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'
+                      phone: '^[0-9\\+][0-9]{7,}$'
+                      password: '.{6,}'
+                      bic: '^((.{8})|(.{11}))$'
+                      accountOwner: '^[a-zA-Z0-9'':?,()\\-. +/ÄäÜüÖöß&]{0,70}$'
+                    metadata:
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/customerSettingsSiteMixIn.v3'
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_mixinNotFound'
+      operationId: GET-site-settings-retrieve-site-mixin
+      description: |-
+        Retrieves a specified site mixin.
+      security:
+        - OAuth2:
+            - site.site_manage
+    delete:
+      summary: Deleting a site mixin
+      operationId: DELETE-site-settings-remove-site-mixin
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_mixinNotFound'
+      description: |-
+        Deletes a specified site mixin.
+      security:
+        - OAuth2:
+            - site.site_manage
+      tags:
+        - Mixins
+    put:
+      summary: Fully updating a site mixin
+      operationId: PUT-site-settings-update-site-mixin
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+        '404':
+          $ref: '#/components/responses/404_mixinNotFound'
+      description: |-
+        Fully updates a specified site mixin.
+      security:
+        - OAuth2:
+            - site.site_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mixin'
+            examples:
+              Update mixin:
+                value:
+                  testMixin:
+                    active: true
+                    metadata:
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695388d813fd4242de135807_testMixin_v1.json'
+      tags:
+        - Mixins
+    patch:
+      summary: Partially updating a site mixin
+      operationId: PATCH-site-settings-update-site-mixin
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/400_invalid_tenant'
+        '401':
+          $ref: '#/components/responses/401_invalidToken'
+        '403':
+          $ref: '#/components/responses/403_insufficient_permissions'
+      description: |-
+        Partially updates a specified site mixin.
+      security:
+        - OAuth2:
+            - site.site_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Mixin'
+            examples:
+              Patch mixin:
+                value:
+                  active: true
+      tags:
+        - Mixins
+components:
+  schemas:
+    AddressDto:
+      title: Address
+      type: object
+      required:
+        - country
+        - zipCode
+      properties:
+        street:
+          type: string
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        state:
+          type: string
+      description: Site address.
+    CurrencyDto:
+      type: string
+      description: 'Currency used by the site, compliant with the ISO 4217 standard.'
+      minLength: 3
+      maxLength: 3
+      pattern: '^[A-Z]{3}'
+    DefaultDtoMetadata:
+      title: Metadata
+      type: object
+      properties:
+        mixins:
+          type: object
+          description: Mixin schema URLs.
+          additionalProperties: true
+        version:
+          type: integer
+    HomeBaseDto:
+      title: HomeBase
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          $ref: '#/components/schemas/AddressDto'
+        location:
+          $ref: '#/components/schemas/LocationDto'
+        timezone:
+          type: string
+          description: |
+            The timezone of the site home base location. Must be a valid IANA timezone identifier.
+
+            If not specified, no timezone will be set. When specified, the value must be a valid timezone ID as defined in the IANA Time Zone Database.
+
+            Examples of valid timezones:
+            - Europe/Paris
+            - America/New_York 
+            - Asia/Tokyo
+            - UTC
+
+            Invalid timezone values (e.g., "Europe/Xp") will result in a 400 Bad Request response.
+          example: "Europe/Paris"
+      description: Site location.
+    LocationDto:
+      title: Location
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+      description: Site geographical location.
+    SiteDto:
+      title: Site
+      type: object
+      description: Information about the site.
+      required:
+        - code
+        - name
+        - defaultLanguage
+        - languages
+        - currency
+        - homeBase
+        - shipToCountries
+        - taxDeterminationBasedOn
+      properties:
+        code:
+          type: string
+          pattern: ^[^\s#]+$
+          description: Site unique identifier.
+        name:
+          type: string
+          description: Site name.
+        active:
+          type: boolean
+          description: Flag indicating whether the site is active.
+        default:
+          type: boolean
+          description: Flag indicating whether the site is the  tenant default site.
+        includesTax:
+          type: boolean
+          description: 'Indicates whether prices for the site should be returned in gross (when includesTax=true) or net (when includesTax=false). '
+        defaultLanguage:
+          type: string
+          description: 'Site''s default language, compliant with the ISO 639-1 standard.'
+          minLength: 2
+          maxLength: 2
+          pattern: '^[a-z]{2}'
+        languages:
+          type: array
+          description: |-
+            Languages supported by the site.
+
+            **Note**: The languages must be compliant with the ISO 639-1 standard.
+          items:
+            type: string
+            minLength: 2
+            maxLength: 2
+            pattern: '^[a-z]{2}'
+        currency:
+          $ref: '#/components/schemas/CurrencyDto'
+        availableCurrencies:
+          type: array
+          description: List of the currencies supported by the site
+          items:
+            $ref: '#/components/schemas/CurrencyDto'
+        homeBase:
+          $ref: '#/components/schemas/HomeBaseDto'
+        shipToCountries:
+          type: array
+          description: |-
+            Codes of countries to which the site ships products.
+
+            **Note**: The country codes must be compliant with the ISO 3166-1 alpha-2 standard.
+          items:
+            type: string
+            minLength: 2
+            maxLength: 2
+            pattern: '^[A-Z]{2}'
+        shipping:
+          type: array
+          description: Shipping service configurations.
+          items:
+            $ref: '#/components/schemas/ServiceConfigurationDto'
+        payment:
+          type: array
+          description: Payment service configurations.
+          items:
+            $ref: '#/components/schemas/ServiceConfigurationDto'
+        tax:
+          type: array
+          description: |-
+            Tax service configurations.
+
+            **The `tax` field is in preview mode** - some of the features may not be fully operational yet.
+          items:
+            $ref: '#/components/schemas/ServiceConfigurationDto'
+        assistedBuying:
+          $ref: '#/components/schemas/AssistedBuying'
+        metadata:
+          $ref: '#/components/schemas/DefaultDtoMetadata'
+        taxDeterminationBasedOn:
+          $ref: '#/components/schemas/taxDeterminationBasedOn'
+        mixins:
+          type: object
+          description: Site additional properties.
+          additionalProperties: true
+        cartCalculationScale:
+          type: integer
+          description: Number of decimal points used in the cart calculation. Must be zero or a positive value.
+          default: 2
+          minimum: 0
+    ServiceConfigurationDto:
+      title: Service Configuration
+      type: object
+      properties:
+        id:
+          type: string
+          description: Service configuration's unique identifier.
+        name:
+          type: string
+          description: Service configuration's name.
+        serviceType:
+          type: string
+        serviceUrl:
+          type: string
+        active:
+          type: boolean
+          default: true
+          description: Flag indicating whether the service is active.
+        configuration:
+          $ref: '#/components/schemas/ServiceSettingsDto'
+    ServiceSettingsDto:
+      title: Service Settings
+      type: object
+      properties:
+        public:
+          type: object
+        restricted:
+          type: object
+    ResourceLocation:
+      title: ResourceLocation
+      type: object
+      properties:
+        id:
+          type: string
+          description: Resource identifier.
+      description: ''
+    ErrorMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          description: |-
+            Classification of the error type.
+
+            **Note**: The error type should be written in lowercase and include underscores, for example validation_failure.
+        status:
+          type: number
+          minimum: 100
+          maximum: 599
+          description: Original HTTP error code. It should be consistent with the HTTP response code.
+        message:
+          type: string
+          description: Descriptive error message for debugging purposes.
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+    Mixin:
+      title: Mixin
+      type: object
+      description: 'Represents a single mixin. The payload is represented as a map with a single key and value, where key represents a mixin group name and value represents a map with keys and values.'
+      additionalProperties: true
+    Mixins:
+      title: Mixins
+      type: object
+      description: 'Represents mixins. The object is represented as a map with keys and values, where key represents a mixin group name and value represents a map with keys and values.'
+      additionalProperties: true
+    AssistedBuying:
+      title: AssistedBuying
+      type: object
+      properties:
+        storefrontUrl:
+          type: string
+          description: 'Storefront URL, where an employee should be redirected when the assisted buying mechanism is used.'
+    taxDeterminationBasedOn:
+      type: string
+      enum: [BILLING_ADDRESS, SHIPPING_ADDRESS]
+      description: Specifies whether tax calculation is based on customer billing address or shipping address. Default value is `BILLING_ADDRESS`.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          refreshUrl: ''
+          scopes:
+            site.site_read: Needed to retrieve information about sites.
+            site.site_manage: Needed to manage sites.
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+  parameters:
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      schema:
+        type: string
+      description: |
+        Your Emporix  tenant name.
+
+        **Note:** The tenant name should always be provided in lowercase.
+    siteCode:
+      name: siteCode
+      in: path
+      required: true
+      schema:
+        type: string
+      description: 'Site code, defined when a site is created.'
+    includeInactiveSites:
+      name: includeInactive
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: |
+        | Option  | Description |
+        |---|---|
+        | `true` | Retrieves both the active and inactive sites. |
+        | `false` | Retrieves only the active sites. |
+    sort:
+      name: sort
+      in: query
+      description: |
+        List of properties used to sort the results, separated by colons.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        By default, the fields are sorted in ascending order.
+      schema:
+        type: string
+    pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+
+        **Note:** If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    pageSize:
+      name: pageSize
+      in: query
+      description: |
+        Number of products to be retrieved per page.
+      schema:
+        default: 16
+        minimum: 1
+        type: integer
+    totalCount:
+      name: totalCount
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: 'If set to `true`, a total number of sites is returned in a response header.'
+    q_parameter:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'name:{productName}'
+      description: A standard query parameter used to search for specific values.
+    expand:
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'payment:all,shipping:active,tax:none,mixin:*'
+      description: |
+        Used to expand the following site settings:
+        * `payment`
+        * `shipping`
+        * `tax`
+        * `mixin`
+
+        Each of the settings (except `mixin`) can be set to one of the following values:
+        * `all`
+        * `active`
+        * `none`
+
+        For retrieving `mixin`, use the following value: `*`
+    expandWithMixins:
+      name: expand
+      description: |
+        Used to expand specific site settings.
+        | Setting | Possible values |
+        | --- | --- |
+        | `payment` <br> `shipping` <br> `tax` | `all` <br> `active` <br> `none` |
+        | `mixins` | `{mixinName}` <br> `*` |
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'payment:all,shipping:active,tax:none,mixin:customerSettings'
+  responses:
+    403_insufficient_permissions:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            '403':
+              value:
+                type: Forbidden
+                status: 403
+                message: User not authorized
+                details:
+                  - message: 'Missing required scopes [site.site_manage]'
+    400_invalid_tenant:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            '400':
+              value:
+                status: 400
+                type: bad_request
+                message: The tenant information provided with the request is not valid.
+    404_siteNotFound:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Site not found:
+              status: 404
+              type: application/json
+              message: Site not Found
+              moreInfo: ''
+              details:
+                - message: 'Couldn''t find a site with code ''{siteCode}'''
+                  moreInfo: ''
+    401_invalidToken:
+      description: ''
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                    minLength: 1
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+                        minLength: 1
+          examples:
+            Invalid Token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+    404_mixinNotFound:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            '404':
+              value:
+                type: resource_not_found
+                status: 404
+                message: Mixin with name 'example' could not be found
+    200_get_site:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SiteDto'
+          examples:
+            Get site:
+              value:
+                code: uk-store
+                name: United Kingdom
+                active: false
+                defaultLanguage: en
+                languages:
+                  - en
+                currency: GBP
+                homeBase:
+                  address:
+                    zipCode: '12345'
+                    country: GB
+                  timezone: Europe/London
+                shipToCountries:
+                  - GB
+                metadata:
+                  mixins: {}
+                  version: 0
+                default: true
+security:
+  - OAuth2: []
+tags:
+  - name: Mixins
+  - name: Site settings

@@ -1,0 +1,617 @@
+openapi: 3.0.0
+info:
+  title: Country Service
+  version: ''
+  description: |-
+    Holds a localized list of countries and regions to which the business may sell.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/country/{tenant}/countries':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving all countries
+      description: 'Retrieves all countries assigned to the tenant. You can filter, sort and paginate the results with query parameters.'
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_country_name_query_param'
+        - $ref: '#/components/parameters/trait_country_code_query_param'
+        - $ref: '#/components/parameters/trait_country_active_query_param'
+        - $ref: '#/components/parameters/trait_country_regions_query_param'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetCountries'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-country-list-all-countries
+      tags:
+        - Countries
+  '/country/{tenant}/countries/{countryCode}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_country_code_path'
+    get:
+      summary: Retrieving a country
+      description: Retrieves a country by the specified code.
+      security:
+        - OAuth2: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetCountry'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-country-retrieve-country
+      tags:
+        - Countries
+      parameters:
+        - $ref: '#/components/parameters/Price-api_Trait_acceptLanguage_header'
+    patch:
+      summary: Updating a country
+      description: |-
+        Updates a country. It is possible to update `active` field only. The field indicates whether the given country is active for the tenant or not. Only active countries are visible in the system.
+      security:
+        - OAuth2:
+            - country.country_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/countryUpdate'
+            examples:
+              Activate the country:
+                value:
+                  active: true
+                  metadata:
+                    version: 1
+              Deactivate the country:
+                value:
+                  active: false
+                  metadata:
+                    version: 1
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: PATCH-country-update-country
+      tags:
+        - Countries
+  '/country/{tenant}/regions':
+    get:
+      summary: Get all regions
+      description: 'Get the filtered list of regions. The endpoint fully supports paging, sorting and filtering mechanism.  '
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_region_name_query_param'
+        - $ref: '#/components/parameters/trait_region_code_query_param'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetRegions'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-country-list-all-regions
+      tags:
+        - Regions
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/country/{tenant}/regions/{regionCode}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_region_code_path'
+    get:
+      summary: Retrieving a region
+      description: Retrieves a region by the specified code.
+      security:
+        - OAuth2: []
+      responses:
+        '200':
+          $ref: '#/components/responses/GetRegion'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-country-retrieve-region
+      tags:
+        - Regions
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+components:
+  schemas:
+    errorMessage:
+      title: Error
+      description: Schema for API specified errors.
+      type: object
+      properties:
+        status:
+          description: Original HTTP error reason.
+          type: string
+        code:
+          description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+          type: integer
+        message:
+          description: Descriptive error message for debugging.
+          type: string
+        details:
+          description: List of problems causing this error.
+          type: array
+          items:
+            title: Error Detail
+            description: Schema for specific error cause.
+            type: string
+      required:
+        - status
+        - code
+    metadata:
+      type: object
+      properties:
+        createdAt:
+          description: Date and time when the document was created.
+          type: string
+        modifiedAt:
+          description: Date and time when the document was last modified.
+          type: string
+        version:
+          minimum: 1
+          type: integer
+          description: Version of the document.
+      required:
+        - createdAt
+        - modifiedAt
+        - version
+    country:
+      title: Country
+      type: object
+      properties:
+        code:
+          type: string
+          description: The country code which consists of two capital letters and is compliant with ISO-3166-1 specification.
+        name:
+          description: Localized name of the country. The value is returned as a map where the key is a language code and the value is a translation for the given language.
+          type: object
+          additionalProperties:
+            type: string
+        regions:
+          type: array
+          description: A list of regions to which the given country belongs to.
+          items:
+            type: string
+        active:
+          type: boolean
+          description: The field indicating whether the given country is active for the tenant or not. Only active countries are visible in the system.
+        metadata:
+          $ref: '#/components/schemas/metadata'
+    region:
+      title: Region
+      type: object
+      properties:
+        code:
+          type: string
+          description: The region code.
+        name:
+          description: The localized name of the region. The value is returned as a map where the key is a language code and the value is a translation for the given language.
+          type: object
+          additionalProperties:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/metadata'
+    countryUpdate:
+      title: Country update
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: The field indicates whether the given country is active for the tenant or not. Only active countries are visible in the system.
+        metadata:
+          type: object
+          properties:
+            version:
+              type: number
+              description: Version of the document. The version is used for optimistic locking mechanism during the update request.
+          required:
+            - version
+      required:
+        - metadata
+  responses:
+    GetCountry:
+      description: The request was successful. The requested country is returned.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/country'
+          examples:
+            Requested country:
+              value:
+                code: PL
+                name:
+                  en: Poland
+                  pl: Polska
+                regions:
+                  - Europe
+                metadata:
+                  createdAt: '2022-03-31T13:18:02.379Z'
+                  modifiedAt: '2022-03-31T13:18:02.379Z'
+                  version: 1
+    GetCountries:
+      description: The request was successful. A list of countries is returned.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/country'
+          examples:
+            List of countries:
+              value:
+                - code: PL
+                  name:
+                    en: Poland
+                    pl: Polska
+                  regions:
+                    - Europe
+                  metadata:
+                    createdAt: '2022-03-31T13:18:02.379Z'
+                    modifiedAt: '2022-03-31T13:18:02.379Z'
+                    version: 1
+    GetRegion:
+      description: The request was successful. The requested region is returned.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/region'
+          examples:
+            Requested regions:
+              value:
+                code: Europe
+                name:
+                  en: Europe
+                  pl: Europa
+                metadata:
+                  createdAt: '2022-03-31T13:18:02.379Z'
+                  modifiedAt: '2022-03-31T13:18:02.379Z'
+                  version: 1
+    GetRegions:
+      description: The request was successful. A list of regions is returned.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/region'
+          examples:
+            List of regions:
+              value:
+                - code: Europe
+                  name:
+                    en: Europe
+                    pl: Europa
+                  metadata:
+                    createdAt: '2022-03-31T13:18:02.379Z'
+                    modifiedAt: '2022-03-31T13:18:02.379Z'
+                    version: 1
+    BadRequest_400:
+      description: Request was syntactically incorrect. Details are provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Ambiguous tenant:
+              $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details are provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Access to resource is forbidden:
+              $ref: '#/components/examples/Forbidden403_Example'
+    NotFound_404:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Country not found:
+              $ref: '#/components/examples/NotFound404_CountryNotFound'
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Internal service error:
+              $ref: '#/components/examples/InternalServiceError500_Example'
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant that the caller is acting upon.
+
+        Please note that this value is always lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        The page number to be retrieved where the size of the pages must be specified by the pageSize parameter.
+        The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      in: query
+      name: sort
+      required: false
+      description: |
+        Fields to sort the response data by, following the order of the parameters from left to right.
+
+        * Can contain multiple fields in the format: `fieldName:sortDirection`, separated by commas.
+
+        * The colon with the sort direction parameter is optional.
+
+        * Descending order is used only if the sort direction equals `desc` or `DESC`.
+
+        * Ascending order is assumed in all other cases.
+
+        While sorting by a localized field, the following rules apply:
+
+        * If a localized field includes a language code, that language is used.  
+          Example: `name.en:ASC` → English (`en`) is used for sorting the `name` property.  
+          The language suffix takes precedence over the `Accept-Language` header.
+
+        * If a localized field does not include a language code, the `Accept-Language` header is used.  
+          Example: `name:ASC` with `Accept-Language: de` → German (`de`) is used for sorting.
+
+        * If a localized field has no language code and the `Accept-Language` header contains `*`,  
+          the default language from the configuration service is used.  
+          Example: `name:ASC`, `Accept-Language: *`, default language = `pl` → Polish (`pl`) is used.
+
+        * If a localized field has no language code and there is no `Accept-Language` header,  
+          the default language from the configuration service is used.
+      schema:
+        type: string
+        example: 'name,code:desc'
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        The number of documents being retrieved on the page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_acceptLanguage_header:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields.
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as maps with the first matched language only.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    trait_XTotalCount_header:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: 'In order to get information how many entities meet a filter requirements, X-Total-Count header has been introduced. The header is optional and its default value is false. It the header is provided and it is true then total count is returned in the X-Total-Count response header. In both cases (X-Total-Count true, false or not provided), the response body has the same format (array of entities). In other words, the information about total count is returned on demand, depending of an existence of X-Total-Count header in a request. Therefore, the X-Total-Count header is not returned if an API consumer didn’t ask for it.'
+      schema:
+        default: false
+        type: boolean
+    trait_country_code_path:
+      name: countryCode
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Two-letter country code.
+    trait_region_code_path:
+      name: regionCode
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The region code.
+    trait_country_code_query_param:
+      name: code
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Country codes. When specified, only countries containing the specified code are returned.
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-insensitive.
+    trait_country_name_query_param:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Country names. When specified, only countries containing the specified names are returned.
+
+        **Important**: See how the `Accept-Language` header influences this parameter:
+          * If The `Accept-Language` header is set to `*`, you need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `*` and you want to find English names containing the word "Isle", this parameter should be set to "name.en=Isle"
+
+          * If the `Accept-Language` header is set to a particular language or not specified, you do not need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `en` and you want to find names containing the word "Isle", this parameter should be set to "name=Isle"
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-insensitive.
+    trait_region_name_query_param:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Region names. When specified, only regions containing the specified names are returned.
+
+        **Important**: See how the `Accept-Language` header influences this parameter:
+          * If The `Accept-Language` header is set to `*`, you need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `*` and you want to find English names containing the word "America", this parameter should be set to "name.en=America"
+
+          * If the `Accept-Language` header is set to a particular language or not specified, you do not need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `en` and you want to find names containing the word "America", this parameter should be set to "name=America"
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-insensitive.
+    trait_country_active_query_param:
+      name: active
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Country active status, expressed as `true` or `false`. When specified, only countries with the active status are returned.
+
+        **Note**: When filtering the results with this field, the `equals` operator is used.
+    trait_country_regions_query_param:
+      name: regions
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Country region codes. When specified, only countries containing the specified region codes are returned.
+
+        **Note**: When filtering the results with this field, the `contains` operator is used.
+    trait_region_code_query_param:
+      name: code
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Region codes. When specified, only regions containing the specified codes are returned.
+
+        **Note**: When filtering the results with this field, the `contains` operator is used.
+    Price-api_Trait_acceptLanguage_header:
+      in: header
+      name: Accept-Language
+      required: false
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields.
+
+        **Note**: If not specified, localized fields are retrieved in English.
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            country.country_read: Needed to read countries
+            country.country_manage: Needed to manage countries
+            country.region_read: Needed to read regions
+  examples:
+    BadRequest400_AmbiguousTenant:
+      value:
+        status: Bad Request
+        code: 400
+        message: Tenant in the header is not matching with the one provided in the URI.
+    Forbidden403_Example:
+      value:
+        status: Forbidden
+        code: 403
+        message: The access to the given resource is forbidden.
+    NotFound404_CountryNotFound:
+      value:
+        entityId: DE
+        code: 404
+        status: Not Found
+        message: The country with the requested code does not exist.
+    InternalServiceError500_Example:
+      value:
+        code: 500
+        status: Internal Server Error
+        message: A server-side exception occurred that prevented the system from correctly returning the result.
+  requestBodies: {}
+security:
+  - OAuth2:
+      - country.country_manage
+tags:
+  - name: Countries
+  - name: Regions

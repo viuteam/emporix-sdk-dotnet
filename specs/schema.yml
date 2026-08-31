@@ -1,0 +1,3034 @@
+openapi: 3.0.1
+info:
+  title: Schema Service
+  description: |
+    Manage the mixins schemas for miscellaneous types.
+  contact:
+    email: documentation@emporix.com
+  version: ''
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/schema/{tenant}/schemas':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      tags:
+        - Schema
+      summary: Creating a schema
+      description: |
+        Creates a schema entity and generates json-schema representation which is then uploaded to cloudinary repository.
+
+      operationId: POST-schema-create-schema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaCreation'
+            examples:
+              Schema:
+                value:
+                  name:
+                    en: Product Custom Attributes
+                  types:
+                    - PRODUCT
+                  attributes:
+                    - key: weight
+                      name:
+                        en: Weight of a product
+                      description:
+                        en: The exact weight of a product in grams.
+                      type: TEXT
+                      metadata:
+                        readOnly: true
+                        required: true
+                    - key: size
+                      name:
+                        en: Size of a product
+                      description:
+                        en: The exact size of a product. Possible values are S, M, L.
+                      type: ENUM
+                      metadata:
+                        readOnly: true
+                        required: true
+                      values:
+                        - value: S
+                        - value: M
+                        - value: L
+                    - key: advertisement
+                      name:
+                        en: Advertisement of a product
+                      description:
+                        en: A localized advertisement of a product.
+                      type: TEXT
+                      metadata:
+                        localized: true
+                        required: true
+              Schema Array:
+                value:
+                  name:
+                    en: Product Custom Attributes
+                  types:
+                    - PRODUCT
+                  attributes:
+                    - key: arrDecimal
+                      name:
+                        en: Array Decimal
+                      type: ARRAY
+                      arrayType:
+                        type: DECIMAL
+                      metadata: {}
+                    - key: arrText
+                      name:
+                        en: Array Text
+                      type: ARRAY
+                      arrayType:
+                        type: TEXT
+                        localized: true
+                      metadata: {}
+                    - key: arrDateTime
+                      name:
+                        en: Array Date Time
+                      type: ARRAY
+                      arrayType:
+                        type: DATE_TIME
+                      metadata: {}
+                    - key: arrEnum
+                      name:
+                        en: Array Enum
+                      type: ARRAY
+                      arrayType:
+                        type: ENUM
+                        values:
+                          - value: S
+                          - value: M
+                          - value: L
+                      metadata: {}
+              Schema Object:
+                value:
+                  name:
+                    en: Product Custom Attributes
+                  types:
+                    - PRODUCT
+                  attributes:
+                    - key: person
+                      name:
+                        en: Person
+                      type: OBJECT
+                      metadata: {}
+                      attributes:
+                        - key: name
+                          name:
+                            en: Name
+                          type: TEXT
+                          metadata: {}
+                        - key: age
+                          name:
+                            en: Age
+                          type: NUMBER
+                          metadata: {}
+                        - key: address
+                          name:
+                            en: Address
+                          type: OBJECT
+                          metadata: {}
+                          attributes:
+                            - key: street
+                              name:
+                                en: Street
+                              metadata: {}
+                              type: TEXT
+                            - key: city
+                              name:
+                                en: City
+                              type: TEXT
+                              metadata: {}
+                            - key: zipcode
+                              name:
+                                en: Zip Code
+                              type: TEXT
+                              metadata: {}
+
+        description: ''
+      responses:
+        '201':
+          description: The request was successful. The Schema has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Schema created:
+                  value:
+                    id: e241dc9e-a3f6-4573-bb01-a8ae21d2d4ae
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.schema_manage'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - schema.schema_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+    get:
+      summary: Retrieving all schemas
+      description: |-
+        Retrieves all schemas. You can filter the results with query parameters.
+      tags:
+        - Schema
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Total-Count:
+              description: Total amount of schemas for given criteria.
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemasResponse'
+              examples:
+                Schemas:
+                  $ref: '#/components/examples/SchemasResponse'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: GET-schema-retrieve-schemas
+      parameters:
+        - $ref: '#/components/parameters/trail_xTotalCount_header'
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+        - name: type
+          in: query
+          description: |
+            Filters schemas by type. Possible types to specify, AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, MEDIA. When the newest version of the schema is of different type than the previous one and the previous one matches the type specified in this query param, then the previous version is returned.
+          # DEV NOTE: If you add another type, the tutorial and MD guides have to be updated as well.
+          schema:
+            type: string
+  '/schema/{tenant}/schemas/{id}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/trait_schemaVersion'
+    get:
+      summary: Retrieving a schema
+      description: |-
+        Retrieves a single schema.
+      tags:
+        - Schema
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaResponse'
+              examples:
+                Schema:
+                  $ref: '#/components/examples/SchemaResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      operationId: GET-schema-retrieve-schema
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+    delete:
+      summary: Deleting a schema
+      description: |-
+        Deletes a single schema. It deletes just a database entry. The cloudinary reference file remains untouched.
+      tags:
+        - Schema
+      responses:
+        '204':
+          description: 'No content'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: DELETE-schema-remove-schema
+      security:
+        - OAuth2:
+            - schema.schema_manage
+    put:
+      summary: Updating a schema
+      description: |-
+        Updates a single schema. Each update releases a new version of json schema file.
+
+      tags:
+        - Schema
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaUpdate'
+            examples:
+              Schema:
+                value:
+                  name:
+                    en: Product Custom Attributes
+                  types:
+                    - PRODUCT
+                  attributes:
+                    - key: weight
+                      name:
+                        en: Weight of a product
+                      description:
+                        en: The exact weight of a product in grams.
+                      type: TEXT
+                      metadata:
+                        readOnly: true
+                        required: true
+                    - key: size
+                      name:
+                        en: Size of a product
+                      description:
+                        en: The exact size of a product. Possible values are S, M, L.
+                      type: ENUM
+                      metadata:
+                        readOnly: true
+                        required: true
+                      values:
+                        - value: S
+                        - value: M
+                        - value: L
+                    - key: advertisement
+                      name:
+                        en: Advertisement of a product
+                      description:
+                        en: A localized advertisement of a product.
+                      type: TEXT
+                      metadata:
+                        localized: true
+                        required: true
+                  metadata:
+                    version: 1
+        description: ''
+      responses:
+        '204':
+          description: 'No content'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      operationId: PUT-schema-update-schema
+      security:
+        - OAuth2:
+            - schema.schema_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+  '/schema/{tenant}/schemas/{id}/types':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/version'
+      - $ref: '#/components/parameters/trait_mode'
+    put:
+      summary: Updating types of a schema
+      description: |-
+        Updates assigned types to the schema. It's allowed to change the assigned types to the newest schema as well as to the previous versions of the schema. This operation does not generate a new version of the schema.
+
+      tags:
+        - Type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaTypes'
+            examples:
+              SchemaTypes:
+                value:
+                  - PRODUCT
+                  - ORDER
+                  - AVAILABILITY
+        description: ''
+      responses:
+        '204':
+          description: 'No content'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      operationId: PUT-schema-update-schema-types
+      security:
+        - OAuth2:
+            - schema.schema_manage
+  '/schema/{tenant}/schemas/file':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      tags:
+        - Schema
+      summary: Providing a file
+      description: |
+        Validates and parses provided json schema file. When the file is valid, it returns a json which can be used either to create a new schema via POST operation or to update an existing one via PUT operation when all the missing fields are provided. It doesn't create any file and it doesn't crease a database entity.
+      operationId: POST-schema-parse-schema-file
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+                  format: json
+                  description: Content of the file.
+                id:
+                  type: string
+                  description: Id of the existing schema. Should be null when there is no existing schema.
+              required:
+                - file
+        description: ''
+      responses:
+        '200':
+          description: The request was successful. The file was validated and parsed correctly.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaFileResponse'
+              examples:
+                Schemas:
+                  $ref: '#/components/examples/SchemaFileResponse'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.schema_manage'
+  '/schema/{tenant}/types':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving types
+      description: |-
+        Retrieves types which have at least one schema assigned.
+      tags:
+        - Type
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesResponse'
+              examples:
+                Types:
+                  value:
+                    - AVAILABILITY
+                    - LOCATION
+                    - ORDER
+                    - PRODUCT
+                    - QUOTE
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: GET-schema-retrieve-schema-types
+  '/schema/{tenant}/references':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      tags:
+        - Reference
+      summary: Creating a reference
+      description: |
+        Creates a reference entity and uploads provided file to the cloudinary repository.
+
+      operationId: POST-schema-create-reference
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+                  format: json
+                  description: Content of the file.
+                body:
+                  $ref: '#/components/schemas/ReferenceCreation'
+              required:
+                - file
+                - body
+            examples:
+              Reference:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/653a30c0951b2b0665884f89_v1.json'
+                  body:
+                    name:
+                      en: Product Custom Attributes
+                    types:
+                      - PRODUCT
+        description: ''
+      responses:
+        '201':
+          description: The request was successful. The Reference has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Reference created:
+                  value:
+                    id: e241dc9e-a3f6-4573-bb01-a8ae21d2d4ae
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.schema_manage'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - schema.schema_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+    get:
+      summary: Retrieving all references
+      description: |-
+        Retrieves all references. You can filter the results with query parameters.
+      tags:
+        - Reference
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Total-Count:
+              description: Total amount of references for given criteria.
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferencesResponse'
+              examples:
+                References:
+                  $ref: '#/components/examples/ReferencesResponse'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: GET-schema-retrieve-references
+      parameters:
+        - $ref: '#/components/parameters/trail_xTotalCount_header'
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+        - name: type
+          in: query
+          description: |
+            Filters references by type. Possible types to specify, AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, MEDIA. When the newer version of a reference is of different type than the previous one and the previous one matches the type specified in this query param, then the previous version is returned.
+          schema:
+            type: string
+  '/schema/{tenant}/references/{id}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/id'
+      - $ref: '#/components/parameters/trait_schemaVersion'
+    get:
+      summary: Retrieving a reference
+      description: |-
+        Retrieves a single reference.
+      tags:
+        - Reference
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferenceResponse'
+              examples:
+                Reference:
+                  $ref: '#/components/examples/ReferenceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      operationId: GET-schema-retrieve-reference
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+    delete:
+      summary: Deleting a reference
+      description: |-
+        Deletes a single reference. It deletes just a database entry. The cloudinary reference file remains untouched.
+
+      tags:
+        - Reference
+      responses:
+        '204':
+          description: 'No content'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: DELETE-schema-remove-reference
+      security:
+        - OAuth2:
+            - schema.schema_manage
+    put:
+      summary: Updating a reference
+      description: |-
+        Updates a single reference.
+
+      tags:
+        - Reference
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: object
+                  format: json
+                  description: Content of the file.
+                body:
+                  $ref: '#/components/schemas/ReferenceUpdate'
+              required:
+                - file
+                - body
+            examples:
+              Reference:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/653a30c0951b2b0665884f89_v1.json'
+                  body:
+                    name:
+                      en: Product Custom Attributes
+                    types:
+                      - PRODUCT
+                    metadata:
+                      version: 1
+        description: ''
+      responses:
+        '204':
+          description: 'No content'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      operationId: PUT-schema-update-reference
+      security:
+        - OAuth2:
+            - schema.schema_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+  '/schema/{tenant}/custom-entities':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      tags:
+        - Custom Schema Type
+      summary: Creating a custom schema type
+      description: |
+        Creates a custom type entity that can be later used for creating custom instances.
+
+        **Note**: When a custom entity type is created, a set of custom scopes is created, which allow managing custom instances of that type.
+
+        Reserved built-in type IDs cannot be used as custom schema type IDs. This includes AVAILABILITY and LOCATION.
+
+      operationId: POST-schema-create-custom-schema-type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomSchemaTypeCreation'
+            example:
+              id: CUSTOM_PRODUCT
+              name:
+                en: Custom Product Type
+      responses:
+        '201':
+          description: The request was successful. Custom schema type has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                id: CUSTOM_PRODUCT
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.schema_manage'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - schema.schema_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+    get:
+      summary: Retrieving all custom schema types
+      description: |-
+        Retrieves all custom schema types.
+      tags:
+        - Custom Schema Type
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Total-Count:
+              description: Total amount of custom types for given criteria.
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomSchemaTypesResponse'
+              example:
+                - id: CUSTOM_PRODUCT
+                  name:
+                    en: Custom Product Type
+                  metadata:
+                    createdAt: "2023-08-09T09:21:42.693Z"
+                    modifiedAt: "2023-08-09T09:21:42.693Z"
+                    version: 1
+                - id: DOCUMENT
+                  name:
+                    en: Documents
+                  metadata:
+                    createdAt: "2023-08-10T10:15:30.123Z"
+                    modifiedAt: "2023-08-19T10:15:30.123Z"
+                    version: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: GET-schema-retrieve-custom-schema-types
+      parameters:
+        - $ref: '#/components/parameters/trail_xTotalCount_header'
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+        - $ref: '#/components/parameters/trait_expand_schemas'
+  '/schema/{tenant}/custom-entities/{id}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique id of the custom type.
+    get:
+      summary: Retrieving a custom schema type
+      description: |-
+        Retrieves a single custom schema type by id.
+      tags:
+        - Custom Schema Type
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomSchemaTypeResponse'
+              examples:
+                CustomType:
+                  $ref: '#/components/examples/CustomSchemaTypeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      operationId: GET-schema-retrieve-custom-schema-type
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_expand_schemas'
+    delete:
+      summary: Deleting a custom schema type
+      description: |-
+        Deletes a single custom type. This operation will fail if there are schemas or custom instances assigned to this custom type.
+
+        **Note**: Removing a custom entity type does not remove the custom scopes that were created when the type was added. Those scopes remain in the system until you remove them manually, if needed.
+
+      tags:
+        - Custom Schema Type
+      responses:
+        '204':
+          description: 'Custom schema type was succefully removed'
+        '400':
+          description: Bad request. This may happen when there are schemas or custom instances associated with this custom type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                SchemasAssigned:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Cannot delete custom schema type='CUSTOM_DOCUMENT' because there are custom entities associated with this type.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: DELETE-schema-remove-custom-schema-type
+      security:
+        - OAuth2:
+            - schema.schema_manage
+    put:
+      summary: Upserting a custom schema type
+      description: |-
+        Performs the `UPSERT` operation. If a custom schema type with specified ID exists in the system, then it is updated. If it doesn't exist, a new type is created.
+
+        **Note**: When a custom entity type is created, a set of custom scopes is created, which allow managing custom instances of that type.
+
+      tags:
+        - Custom Schema Type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomSchemaTypeUpdate'
+            example:
+              name:
+                en: Updated Custom Type
+              metadata:
+                version: 1
+        description: ''
+      responses:
+        '201':
+          description: Custom schema type was successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                id: CUSTOM_PRODUCT
+        '204':
+          description: 'Custom schema type was successfully updated.'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          description: Version validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: 409
+                status: Conflict
+                message: 'Cannot find the entity with an id: CUSTOM_ORDER and version: 2. It is possible to update an entity with the latest version only. Fetch the entity to get the latest version.'
+      operationId: PUT-schema-upsert-custom-schema-type
+      security:
+        - OAuth2:
+            - schema.schema_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+
+  '/schema/{tenant}/custom-entities/{type}/instances':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/type'
+    post:
+      tags:
+        - Custom Instance
+      summary: Creating a custom instance
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+        - $ref: '#/components/parameters/trait_validateReferences'
+      description: |
+        Creates a custom instance entity associated with given custom schema type.
+
+      operationId: POST-schema-create-custom-instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomInstanceCreation'
+            examples:
+              Basic custom instance:
+                value:
+                  id: '123'
+                  name:
+                    en: Report
+                  mixins:
+                    productCustomAttributes:
+                      inStock: true
+                      popularity: 1
+                  metadata:
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+              Custom instance with reference:
+                value:
+                  name:
+                    en: Report
+                  mixins:
+                    order_reference:
+                      order:
+                        emporixReferenceType: ORDER
+                        id: EON1007
+                  metadata:
+                    mixins:
+                      order_reference: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/order_reference_v1.json'
+              Custom instance with customer owner:
+                value:
+                  id: '124'
+                  name:
+                    en: Report
+                  owner:
+                    type: CUSTOMER
+                    userId: '71742661'
+                    legalEntityId: '6848b31e779f645dc9fe42f7'
+              Custom instance with employee owner:
+                value:
+                  id: '125'
+                  name:
+                    en: Report
+                  owner:
+                    type: EMPLOYEE
+                    userId: '4f2c1a0e-2d1d-4c8b-a5fa-9a8b71234abc'
+      responses:
+        '201':
+          description: Custom instance was successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                id: '123'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_mixins'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.custominstance_manage'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+    get:
+      summary: Retrieving all custom instances
+      description: |-
+        Retrieves all custom instances associated with a specific custom schema type.
+
+        Supports offset pagination (`pageNumber`, `pageSize`) and cursor pagination (`next`, `prev`). Cursor pagination is active when `next` or `prev` is provided.
+
+        In cursor mode:
+        - `next` and `prev` cannot be used together and return `400`.
+        - `pageNumber` is ignored.
+        - the `X-Total-Count` request header is ignored and the `X-Total-Count` response header is not returned.
+
+        If no sort is provided, results are returned in `_id:ASC` order. If a sort is provided, `_id:ASC` is appended as a tie-breaker when `_id` is not already part of the sort.
+
+      tags:
+        - Custom Instance
+      responses:
+        '200':
+          description: ''
+          headers:
+            X-Total-Count:
+              description: Total amount of custom instances for given criteria. Returned only for offset pagination when requested with the `X-Total-Count` header.
+              schema:
+                type: integer
+                format: int32
+            X-Next-Cursor:
+              description: Opaque cursor for retrieving the next page. Returned on non-empty responses when a next page exists.
+              schema:
+                type: string
+            X-Prev-Cursor:
+              description: Opaque cursor for retrieving the previous page. Returned on non-empty responses when a previous page exists.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomInstancesResponse'
+              examples:
+                Basic response:
+                  value:
+                    - id: '123'
+                      name:
+                        en: Report
+                      type: CUSTOM_DOCUMENT
+                      owner:
+                        type: EMPLOYEE
+                        userId: 00u4ukqvzlEP31sCk417
+                      mixins:
+                        productCustomAttributes:
+                          inStock: true
+                          populatirty: 1
+                      media:
+                        - media_id_1
+                        - media_id_2
+                      metadata:
+                        mixins:
+                          productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        createdAt: '2025-04-17T13:00:00.000Z'
+                        modifiedAt: '2025-05-14T13:00:00.000Z'
+                        version: 3
+                    - id: '456'
+                      name:
+                        en: Manual
+                      type: CUSTOM_DOCUMENT
+                      owner:
+                        type: CUSTOMER
+                        userId: '79474954'
+                        legalEntityId: 0149b1314144a01491314z128
+                      media:
+                        - media_id_3
+                      metadata:
+                        createdAt: '2025-04-17T13:00:00.000Z'
+                        modifiedAt: '2025-04-17T13:00:00.000Z'
+                        version: 1
+                Response with expanded references:
+                  value:
+                    - id: '68fe97bb616cd70336cde7ee'
+                      name:
+                        en: Report
+                      type: CUSTOM_DOCUMENT
+                      owner:
+                        type: SERVICE
+                        userId: RFPZOxRGUWeWGXMBymGhpIXdBVsXUt6QxTOPukecuSt1h8F3
+                      mixins:
+                        customAttributes:
+                          references:
+                            product_reference:
+                              emporixReferenceType: PRODUCT
+                              id: '68fe97af4e412504678a4fd7'
+                              yrn: 'urn:yaas:saasag:caasproduct:product:tenant;68fe97af4e412504678a4fd7'
+                              code: hammer1
+                              name:
+                                en: Hammer
+                              productType: BASIC
+                              published: true
+                              metadata:
+                                version: 1
+                                createdAt: '2025-10-26T21:50:39.097Z'
+                                modifiedAt: '2025-10-26T21:50:39.097Z'
+                              expandStatus: SUCCESS
+                            customers_array:
+                              - emporixReferenceType: CUSTOMER
+                                id: '79474954'
+                                title: MR
+                                firstName: John
+                                lastName: Doe
+                                preferredCurrency: EUR
+                                type: CUSTOMER
+                                metadata:
+                                  version: 0
+                                customerNumber: '79474954'
+                                contactEmail: john.doe@email.com
+                                active: true
+                                onHold: false
+                                metadataCreatedAt: '2025-10-26T21:49:41.440Z'
+                                businessModel: B2C
+                                expandStatus: SUCCESS
+                              - emporixReferenceType: CUSTOMER
+                                id: '16229890'
+                                expandStatus: FAILURE
+                                error:
+                                  message: Entity not found
+                                  details:
+                                    - "Entity with id: '16229890' was not found for type: 'CUSTOMER'"
+                      media:
+                        - media_id_1
+                        - media_id_2
+                      metadata:
+                        version: 2
+                        createdAt: '2025-10-26T21:50:51.702Z'
+                        modifiedAt: '2025-10-26T21:51:16.434Z'
+                        mixins:
+                          customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/customAttributes_v2.json'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: GET-schema-retrieve-custom-instances
+      security:
+        - OAuth2:
+            - schema.custominstance_read
+            - 'custom.{lowerCaseType}_read'
+            - 'custom.{lowerCaseType}_read_own'
+      parameters:
+        - $ref: '#/components/parameters/trail_xTotalCount_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_expand_references'
+        - $ref: '#/components/parameters/trait_cursor_next'
+        - $ref: '#/components/parameters/trait_cursor_prev'
+
+  '/schema/{tenant}/custom-entities/{type}/instances/{id}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/type'
+      - $ref: '#/components/parameters/id'
+    get:
+      summary: Retrieving a custom instance
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_expand_references'
+      description: |-
+        Retrieves a single custom instance by id.
+
+      tags:
+        - Custom Instance
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomInstanceResponse'
+              examples:
+                Basic response:
+                  value:
+                    id: "123"
+                    name:
+                      en: Report
+                    type: CUSTOM_DOCUMENT
+                    owner:
+                      type: EMPLOYEE
+                      userId: 00u4ukqvzlEP31sCk417
+                    mixins:
+                      productCustomAttributes:
+                        inStock: true
+                        populatirty: 1
+                    media:
+                      - media_id_1
+                      - media_id_2
+                    metadata:
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      createdAt: '2025-04-17T13:00:00.000Z'
+                      modifiedAt: '2025-05-14T13:00:00.000Z'
+                      version: 3
+                Response with expanded references:
+                  value:
+                    id: '68fe97bb616cd70336cde7ee'
+                    name:
+                      en: Report
+                    type: CUSTOM_DOCUMENT
+                    owner:
+                      type: CUSTOMER
+                      userId: '79474954'
+                      legalEntityId: 0149b1314144a01491314z128
+                    mixins:
+                      customAttributes:
+                        references:
+                          product_reference:
+                            emporixReferenceType: PRODUCT
+                            id: '68fe97af4e412504678a4fd7'
+                            yrn: 'urn:yaas:saasag:caasproduct:product:tenant;68fe97af4e412504678a4fd7'
+                            code: hammer1
+                            name:
+                              en: Hammer
+                            productType: BASIC
+                            published: true
+                            metadata:
+                              version: 1
+                              createdAt: '2025-10-26T21:50:39.097Z'
+                              modifiedAt: '2025-10-26T21:50:39.097Z'
+                            expandStatus: SUCCESS
+                          customers_array:
+                            - emporixReferenceType: CUSTOMER
+                              id: '79474954'
+                              title: MR
+                              firstName: John
+                              lastName: Doe
+                              preferredCurrency: EUR
+                              type: CUSTOMER
+                              metadata:
+                                version: 0
+                              customerNumber: '79474954'
+                              contactEmail: john.doe@email.com
+                              active: true
+                              onHold: false
+                              metadataCreatedAt: '2025-10-26T21:49:41.440Z'
+                              businessModel: B2C
+                              expandStatus: SUCCESS
+                            - emporixReferenceType: CUSTOMER
+                              id: '16229890'
+                              expandStatus: FAILURE
+                              error:
+                                message: Entity not found
+                                details:
+                                  - "Entity with id: '16229890' was not found for type: 'CUSTOMER'"
+                    media:
+                      - media_id_1
+                      - media_id_2
+                    metadata:
+                      version: 2
+                      createdAt: '2025-10-26T21:50:51.702Z'
+                      modifiedAt: '2025-10-26T21:51:16.434Z'
+                      mixins:
+                        customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/customAttributes_v2.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      operationId: GET-schema-retrieve-custom-instance
+      security:
+        - OAuth2:
+            - schema.custominstance_read
+            - 'custom.{lowerCaseType}_read'
+            - 'custom.{lowerCaseType}_read_own'
+    delete:
+      summary: Deleting a custom instance
+      description: |-
+        Deletes a custom instance.
+
+      tags:
+        - Custom Instance
+      responses:
+        '204':
+          description: 'No content'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: DELETE-schema-remove-custom-instance
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+    put:
+      summary: Upserting a custom instance
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+        - $ref: '#/components/parameters/trait_validateReferences'
+      description: |-
+        Performs the `UPSERT` operation. If a custom instance with specified ID exists in the system, then it is updated. If it doesn't exist, a new custom instance is created.
+
+      tags:
+        - Custom Instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomInstanceUpdate'
+            example:
+              name: {
+                "en": "Report"
+              }
+              mixins: {
+                productCustomAttributes: {
+                  inStock: false,
+                  popularity: 2
+                }
+              }
+              metadata: {
+                mixins: {
+                  "productCustomAttributes": 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                },
+                version: 1
+              }
+        description: ''
+      responses:
+        '201':
+          description: Custom instance was successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                id: '123'
+        '204':
+          description: 'Custom instance was successfully updated'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_mixins'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: 409
+                status: Conflict
+                message: 'Cannot find the entity with an id: 123 and version: 2. It is possible to update an entity with the latest version only. Fetch the entity to get the latest version.'
+      operationId: PUT-schema-upsert-custom-instance
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+    patch:
+      summary: Patching a custom instance
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+        - $ref: '#/components/parameters/trait_validateReferences'
+      description: |-
+        Partially updates a custom instance. The patch request consists of a set of operations that should be defined according to the [RFC-6902](https://datatracker.ietf.org/doc/html/rfc6902) standard.
+
+        To append a row to an array mixin field, use `add` with a path ending in `/-`. See the **Append to an array mixin field** example.
+
+      tags:
+        - Custom Instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchOperation'
+            examples:
+              Update a name:
+                value:
+                  - op: replace
+                    path: /name
+                    value:
+                      en: New name
+              Remove mixins:
+                value:
+                  - op: remove
+                    path: /mixins/productCustomAttributes
+              Add a mixin:
+                value:
+                  - op: add
+                    path: /mixins/productCustomAttributes/pricingMeasurePrice
+                    value: 15
+              Append to an array mixin field:
+                value:
+                  - op: add
+                    path: /mixins/productCustomAttributes/careInstructions/-
+                    value:
+                      step: 3
+                      instruction: Lay flat to air dry away from direct sunlight
+        description: ''
+      responses:
+        '204':
+          description: 'Custom instance was successfully patched'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_mixins'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      operationId: PATCH-schema-patch-custom-instance
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+
+  '/schema/{tenant}/custom-entities/{type}/instances/search':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/type'
+    post:
+      summary: Searching for custom instances
+      description: |-
+        Returns all custom instances for provided type that match specified criteria.
+
+        Supports offset pagination (`pageNumber`, `pageSize`) and cursor pagination (`next`, `prev`). Cursor pagination is active when `next` or `prev` is provided.
+
+        In cursor mode:
+        - `next` and `prev` cannot be used together and return `400`.
+        - `pageNumber` is ignored.
+        - the `X-Total-Count` request header is ignored and the `X-Total-Count` response header is not returned.
+
+        If no sort is provided, results are returned in `_id:ASC` order. If a sort is provided, `_id:ASC` is appended as a tie-breaker when `_id` is not already part of the sort.
+
+      tags:
+        - Custom Instance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description: A standard query parameter used to search for specific values.
+            example:
+              q: mixins.productCustomAttributes.inStock:true
+      responses:
+        '200':
+          description: 'Custom instances succesfully retrieved'
+          headers:
+            X-Total-Count:
+              description: Total amount of custom instances for given criteria. Returned only for offset pagination when requested with the `X-Total-Count` header.
+              schema:
+                type: integer
+                format: int32
+            X-Next-Cursor:
+              description: Opaque cursor for retrieving the next page. Returned on non-empty responses when a next page exists.
+              schema:
+                type: string
+            X-Prev-Cursor:
+              description: Opaque cursor for retrieving the previous page. Returned on non-empty responses when a previous page exists.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomInstancesResponse'
+              examples:
+                Basic response:
+                  value:
+                    - id: '123'
+                      name:
+                        en: Report
+                      type: CUSTOM_DOCUMENT
+                      owner:
+                        type: EMPLOYEE
+                        userId: 00u4ukqvzlEP31sCk417
+                      mixins:
+                        productCustomAttributes:
+                          inStock: true
+                          populatirty: 1
+                      media:
+                        - media_id_1
+                        - media_id_2
+                      metadata:
+                        mixins:
+                          productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        createdAt: '2025-04-17T13:00:00.000Z'
+                        modifiedAt: '2025-05-14T13:00:00.000Z'
+                        version: 3
+                Response with expanded references:
+                  value:
+                    - id: '68fe97bb616cd70336cde7ee'
+                      name:
+                        en: Report
+                      type: CUSTOM_DOCUMENT
+                      owner:
+                        type: SERVICE
+                        userId: RFPZOxRGUWeWGXMBymGhpIXdBVsXUt6QxTOPukecuSt1h8F3
+                      mixins:
+                        customAttributes:
+                          references:
+                            product_reference:
+                              emporixReferenceType: PRODUCT
+                              id: '68fe97af4e412504678a4fd7'
+                              yrn: 'urn:yaas:saasag:caasproduct:product:tenant;68fe97af4e412504678a4fd7'
+                              code: hammer1
+                              name:
+                                en: Hammer
+                              productType: BASIC
+                              published: true
+                              metadata:
+                                version: 1
+                                createdAt: '2025-10-26T21:50:39.097Z'
+                                modifiedAt: '2025-10-26T21:50:39.097Z'
+                              expandStatus: SUCCESS
+                            customers_array:
+                              - emporixReferenceType: CUSTOMER
+                                id: '79474954'
+                                title: MR
+                                firstName: John
+                                lastName: Doe
+                                preferredCurrency: EUR
+                                type: CUSTOMER
+                                metadata:
+                                  version: 0
+                                customerNumber: '79474954'
+                                contactEmail: john.doe@email.com
+                                active: true
+                                onHold: false
+                                metadataCreatedAt: '2025-10-26T21:49:41.440Z'
+                                businessModel: B2C
+                                expandStatus: SUCCESS
+                              - emporixReferenceType: CUSTOMER
+                                id: '16229890'
+                                expandStatus: FAILURE
+                                error:
+                                  message: Entity not found
+                                  details:
+                                    - "Entity with id: '16229890' was not found for type: 'CUSTOMER'"
+                      media:
+                        - media_id_1
+                        - media_id_2
+                      metadata:
+                        version: 2
+                        createdAt: '2025-10-26T21:50:51.702Z'
+                        modifiedAt: '2025-10-26T21:51:16.434Z'
+                        mixins:
+                          customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/customAttributes_v2.json'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: POST-schema-search-custom-instances
+      security:
+        - OAuth2:
+            - schema.custominstance_read
+            - 'custom.{lowerCaseType}_read'
+            - 'custom.{lowerCaseType}_read_own'
+      parameters:
+        - $ref: '#/components/parameters/trail_xTotalCount_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_fields'
+        - $ref: '#/components/parameters/trait_expand_references'
+        - $ref: '#/components/parameters/trait_cursor_next'
+        - $ref: '#/components/parameters/trait_cursor_prev'
+  '/schema/{tenant}/custom-entities/{type}/instances/bulk':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/type'
+    patch:
+      summary: Patching custom instances in bulk
+      description: |-
+        Partially updates multiple custom instances in a single request. Each item must contain the custom instance `id` and a list of patch operations.
+
+        The maximum batch size is 200.
+      tags:
+        - Custom Instance
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+        - $ref: '#/components/parameters/trait_validateReferences'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BulkPatchCustomInstanceRequest'
+            example:
+              - id: Ford
+                data:
+                  - op: REPLACE
+                    path: /name/en
+                    value: Ford bulk patched
+              - id: Aston_Martin
+                data:
+                  - op: REPLACE
+                    path: /mixins/productCustomAttributes/minOrderQuantity
+                    value: 10
+      responses:
+        '207':
+          description: Bulk patch was processed. Each item contains its own result status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResponse'
+              example:
+                - index: 0
+                  id: Ford
+                  code: 204
+                  status: No Content
+                - index: 1
+                  code: 404
+                  status: Not Found
+        '400':
+          $ref: '#/components/responses/Bad_request_400_mixins'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: PATCH-schema-bulk-patch-custom-instances
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+    post:
+      summary: Creating custom instances in bulk
+      description: |-
+        Creates multiple custom instances. The maximum batch size is 200.
+
+      tags:
+        - Custom Instance
+      parameters:
+        - $ref: '#/components/parameters/trait_validateReferences_bulk'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomInstanceCreation'
+            example:
+              - id: '123'
+                name: {
+                  "en": "Report"
+                }
+                mixins: {
+                  productCustomAttributes: {
+                    inStock: true,
+                    popularity: 1
+                  }
+                }
+                metadata: {
+                  mixins: {
+                    "productCustomAttributes": 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                  }
+                }
+              - id: '456'
+                name: {
+                  "en": "Manual"
+                }
+      responses:
+        '207':
+          description: 'Bulk operation was successful'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResponse'
+              example:
+                - index: 0
+                  code: 201
+                  status: Created
+                - index: 1
+                  code: 409
+                  status: Conflict
+                  message: Custom instance with id='456' already exists for type='CUSTOM'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: POST-schema-create-custom-instances-bulk
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+    put:
+      summary: Upserting custom instances in bulk
+      description: |-
+        Upserts multiple custom instances. The maximum batch size is 200.
+
+      tags:
+        - Custom Instance
+      parameters:
+        - $ref: '#/components/parameters/trait_validateReferences_bulk'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Custom instance id
+                    required:
+                      - id
+                  - $ref: '#/components/schemas/CustomInstanceUpdate'
+            example:
+              - id: '123'
+                name: {
+                  "en": "Report"
+                }
+                mixins: {
+                  productCustomAttributes: {
+                    inStock: true,
+                    popularity: 1
+                  }
+                }
+                metadata: {
+                  mixins: {
+                    "productCustomAttributes": 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                  }
+                }
+              - id: '456'
+                name: {
+                  "en": "Manual"
+                }
+      responses:
+        '207':
+          description: 'Bulk operation was successful'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResponse'
+              example:
+                - index: 0
+                  code: 201
+                  status: Created
+                - index: 1
+                  code: 204
+                  status: No Content
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: PUT-schema-create-custom-instances-bulk
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+    delete:
+      summary: Deleting custom instances in bulk
+      description: |-
+        Removes multiple custom instances.
+
+        **Note**:
+        The IDs of items should be defined in the request body as an array of strings.
+
+        **Example**: `["firstId", "secondId", "thirdId"]`
+
+      tags:
+        - Custom Instance
+      responses:
+        '207':
+          description: 'Bulk operation was successful'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkResponse'
+              example:
+                - index: 0
+                  code: 204
+                  status: No Content
+                - index: 1
+                  code: 204
+                  status: No Content
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      operationId: DELETE-schema-create-custom-instances-bulk
+      security:
+        - OAuth2:
+            - schema.custominstance_manage
+            - 'custom.{lowerCaseType}_manage'
+            - 'custom.{lowerCaseType}_manage_own'
+  '/schema/{tenant}/custom-entities/export':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      tags:
+        - Export / Import
+      summary: Exporting Custom Entities
+      description: |
+        Exports custom entities with corresponding schemas.
+      operationId: POST-schema-export-custom-entities
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+            example:
+              - CUSTOM_PRODUCT
+              - MANUFACTURER
+              - CAR
+      responses:
+        '200':
+          description: The request was successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportImportResponse'
+              example:
+                exportedAt: "2026-04-29T07:05:18.857291343Z"
+                data: MQUlOVF9BR0VOVF9DT05URVhUIl19XX1dfQ==
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.schema_manage'
+      security:
+        - OAuth2:
+            - schema.schema_manage
+  '/schema/{tenant}/custom-entities/import':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      tags:
+        - Export / Import
+      summary: Importing Custom Entities
+      description: |
+        Imports custom entities with corresponding schemas.
+
+
+        **Note**: If given `Custom Entity Type` or `Schema` already exists then it will be created with `_COPY` suffix. For example, `CUSTOM_PRODUCT` will be created as `CUSTOM_PRODUCT_COPY`.
+      operationId: POST-schema-import-custom-entites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportImportRequest'
+            example:
+              data: MQUlOVF9BR0VOVF9DT05URVhUIl19XX1dfQ==
+      responses:
+        '204':
+          description: 'No content'
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need to choose the required scope to complete this action.
+                    details:
+                      - message: 'Required scope(s): schema.schema_manage'
+      security:
+        - OAuth2:
+            - schema.schema_manage
+components:
+  examples:
+    SchemaFileResponse:
+      value:
+        id: 64d35aa7fa54121ca47db657
+        name:
+          en: Product Custom Attributes
+        attributes:
+          - key: weight
+            type: NUMBER
+            metadata:
+              readOnly: true
+              localized: false
+              required: true
+        metadata:
+          version: 1
+    SchemaResponse:
+      value:
+        id: 64d35aa7fa54121ca47db657
+        name:
+          en: Product Custom Attributes
+        attributes:
+          - key: weight
+            name:
+              en: Weight of a product
+            description:
+              en: The exact weight of a product in grams.
+            type: NUMBER
+            metadata:
+              readOnly: true
+              localized: false
+              required: true
+        types:
+          - PRODUCT
+        metadata:
+          version: 1
+          createdAt: "2023-08-09T09:21:42.693Z"
+          modifiedAt: "2023-08-09T09:21:42.693Z"
+          url: "https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/64d35aa7fa54121ca47db657_v1.json"
+    SchemasResponse:
+      value:
+        - id: 64d35aa7fa54121ca47db657
+          name:
+            en: Product Custom Attributes
+          attributes:
+            - key: weight
+              name:
+                en: Weight of a product
+              description:
+                en: The exact weight of a product in grams.
+              type: NUMBER
+              metadata:
+                readOnly: true
+                localized: false
+                required: true
+          types:
+            - PRODUCT
+          metadata:
+            version: 1
+            createdAt: "2023-08-09T09:21:42.693Z"
+            modifiedAt: "2023-08-09T09:21:42.693Z"
+            url: "https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/64d35aa7fa54121ca47db657_v1.json"
+    ReferenceResponse:
+      value:
+        id: 64d35aa7fa54121ca47db657
+        name:
+          en: Product Custom Attributes
+        types:
+          - PRODUCT
+        metadata:
+          version: 1
+          createdAt: "2023-08-09T09:21:42.693Z"
+          modifiedAt: "2023-08-09T09:21:42.693Z"
+          url: "https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/64d35aa7fa54121ca47db657_v1.json"
+    ReferencesResponse:
+      value:
+        - id: 64d35aa7fa54121ca47db657
+          name:
+            en: Product Custom Attributes
+          types:
+            - PRODUCT
+          metadata:
+            version: 1
+            createdAt: "2023-08-09T09:21:42.693Z"
+            modifiedAt: "2023-08-09T09:21:42.693Z"
+            url: "https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/64d35aa7fa54121ca47db657_v1.json"
+    TypesResponse:
+      value:
+        - AVAILABILITY
+        - LOCATION
+        - ORDER
+        - PRODUCT
+        - QUOTE
+    CustomSchemaTypeResponse:
+      value:
+        id: CUSTOM_PRODUCT
+        name:
+          en: Custom Product Type
+        metadata:
+          createdAt: "2023-08-09T09:21:42.693Z"
+          modifiedAt: "2023-08-09T09:21:42.693Z"
+          version: 1
+    CustomSchemaTypesResponse:
+      value:
+        - id: CUSTOM_PRODUCT
+          name:
+            en: Custom Product Type
+          description:
+            en: A custom type for specialized product schemas
+          metadata:
+            createdAt: "2023-08-09T09:21:42.693Z"
+            modifiedAt: "2023-08-09T09:21:42.693Z"
+        - id: CUSTOM_ORDER
+          name:
+            en: Custom Order Type
+          description:
+            en: A custom type for specialized order schemas
+          metadata:
+            createdAt: "2023-08-10T10:15:30.123Z"
+            modifiedAt: "2023-08-10T10:15:30.123Z"
+  schemas:
+    ExportImportRequest:
+      type: object
+      properties:
+        data:
+          type: string
+          format: byte
+          description: Base64 representation of custom entities with corresponding schemas.
+      required:
+        - data
+    ExportImportResponse:
+      allOf:
+        - $ref: '#/components/schemas/ExportImportRequest'
+      type: object
+      properties:
+        exportedAt:
+          type: string
+          description: 'Date and time when the object was created, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+      required:
+        - data
+    ErrorResponse:
+      required:
+        - code
+        - message
+        - status
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        errorCode:
+          type: string
+          nullable: true
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+    IdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the generated document.
+      example:
+        id: e343dc9e-a3f6-4573-bb01-a8ae21d2d4ae
+      description: Id of the created schema.
+    SchemaType:
+      type: string
+      description: Type which the schema should be assigned to. Can be one of the predefined values or any custom schema type id.
+      enum: [AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, MEDIA]
+    SchemaTypes:
+      type: array
+      description: List of types to which assign the schema.
+      items:
+        $ref: '#/components/schemas/SchemaType'
+    SchemaAttributeType:
+      type: string
+      description: |
+        Type of the attribute.
+
+        **Note**: The `REFERENCE` type is only available for custom schema types.
+      enum: [TEXT, NUMBER, DECIMAL, BOOLEAN, DATE, TIME, DATE_TIME, ENUM, ARRAY, OBJECT, REFERENCE]
+    Localized:
+      type: boolean
+      description: Whether the attribute is localized or not. Only attributes of 'TEXT' type can be localized.
+    SchemaAttributeMetadata:
+      type: object
+      description: Metadata of the schema attribute.
+      properties:
+        readOnly:
+          type: boolean
+          description: Whether the attribute is read-only or not.
+        localized:
+          $ref: '#/components/schemas/Localized'
+        required:
+          type: boolean
+          description: Whether the attribute is required or not. Attributes of 'BOOLEAN' type cannot be required.
+        nullable:
+          type: boolean
+          description: Whether the attribute could accept null or not.
+    SchemaAttributeValue:
+      type: object
+      description: |
+        Value of the attribute. Valid for `ENUM` and `REFERENCE` types.
+
+        For `ENUM` type, the value represents one of the allowed enum values.
+
+        For `REFERENCE` type, the value represents the reference type (e.g., `PRODUCT`, `ORDER`, `ORDER_ENTRY`, `CART`, `CART_ITEM`, `PRICE`, `CUSTOMER`, `COMPANY`, `MEDIA`, `PRICE_LIST`, `CUSTOMER_SEGMENT`, `CATEGORY`, or any custom schema type).
+      properties:
+        value:
+          type: string
+      required:
+        - value
+    SchemaFileAttributeResponse:
+      type: object
+      description: Schema attribute.
+      properties:
+        key:
+          type: string
+          description: Unique key of the attribute.
+        metadata:
+          $ref: '#/components/schemas/SchemaAttributeMetadata'
+        values:
+          type: array
+          description: List of available values for the attribute. Only valid for `ENUM` and `REFERENCE` types.
+          items:
+            $ref: '#/components/schemas/SchemaAttributeValue'
+    SchemaAttribute:
+      type: object
+      description: Schema attribute.
+      properties:
+        key:
+          type: string
+          description: Unique key of the attribute.
+        name:
+          type: object
+          description: Localized schema name in a form of a map of translations.
+        description:
+          type: object
+          description: Localized schema description in a form of a map of translations.
+        type:
+          $ref: '#/components/schemas/SchemaAttributeType'
+        precision:
+          type: number
+          description: |
+            Decimal precision for attributes of `DECIMAL` type. Defines the allowed decimal step for attribute values
+            (for example `0.1`, `0.01`, `0.001`).
+            Allowed values:
+            * `-1` – no precision constraint
+            * a positive decimal step of the form `0.1`, `0.01`, `0.001`, and so on (`10^-n` where `n >= 1`)
+            This property can only be provided when `type` is `DECIMAL` (or, for arrays, when `arrayType.type` is `DECIMAL`).
+            If omitted for a `DECIMAL` attribute, the default precision `0.01` is applied.
+          default: 0.01
+          example: 0.01
+        metadata:
+          $ref: '#/components/schemas/SchemaAttributeMetadata'
+        values:
+          type: array
+          description: List of available values for the attribute. Only valid for `ENUM` and `REFERENCE` type.
+          items:
+            $ref: '#/components/schemas/SchemaAttributeValue'
+        attributes:
+          type: array
+          description: Object's properties. It can only be provided for attribute of `OBJECT` type.
+          items:
+            $ref: '#/components/schemas/SchemaAttribute'
+        arrayType:
+          type: object
+          description: Contains information about the type used inside an array. It can only be provided for attribute of `ARRAY` type.
+          properties:
+            type:
+              $ref: '#/components/schemas/SchemaAttributeType'
+            values:
+              type: array
+              description: List of available values for the attribute. Only valid for `ENUM` and `REFERENCE` type.
+              items:
+                $ref: '#/components/schemas/SchemaAttributeValue'
+            localized:
+              $ref: '#/components/schemas/Localized'
+          required:
+            - type
+      required:
+        - key
+        - name
+        - type
+        - metadata
+    AbstractSchemaRequest:
+      type: object
+      properties:
+        name:
+          type: object
+          description: Localized schema name in a form of a map of translations.
+        types:
+          type: array
+          description: List of types which schema should be assigned to.
+          items:
+            $ref: '#/components/schemas/SchemaType'
+      required:
+        - name
+        - types
+    SchemaRequest:
+      allOf:
+        - $ref: '#/components/schemas/AbstractSchemaRequest'
+      type: object
+      properties:
+        attributes:
+          type: array
+          description: List of attributes related to the schema.
+          items:
+            $ref: '#/components/schemas/SchemaAttribute'
+      required:
+        - attributes
+    SchemaCreation:
+      allOf:
+        - $ref: '#/components/schemas/SchemaRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Identifier of the schema.
+    SchemaUpdate:
+      allOf:
+        - $ref: '#/components/schemas/SchemaRequest'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/SchemaMetadataUpdate'
+    ReferenceCreation:
+      allOf:
+        - $ref: '#/components/schemas/AbstractSchemaRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Identifier of the schema.
+    ReferenceUpdate:
+      allOf:
+        - $ref: '#/components/schemas/AbstractSchemaRequest'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/SchemaMetadataUpdate'
+    SchemaMetadataUpdate:
+      type: object
+      properties:
+        version:
+          type: number
+          description: Version of the object. The value is required during update operation.
+    SchemaMetadata:
+      allOf:
+        - $ref: '#/components/schemas/SchemaMetadataUpdate'
+        - type: object
+          description: Metadata of schema.
+          properties:
+            url:
+              type: string
+              description: Schema url of the attributes.
+            createdAt:
+              type: string
+              description: 'Date and time when the object was created, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+            modifiedAt:
+              type: string
+              description: 'Date and time when the object was last modified, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+    SchemaFileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the schema.
+        attributes:
+          type: array
+          description: List of attributes related to the schema.
+          items:
+            $ref: '#/components/schemas/SchemaFileAttributeResponse'
+        metadata:
+          allOf:
+            - $ref: '#/components/schemas/SchemaMetadataUpdate'
+    AbstractSchemaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the schema.
+        name:
+          type: object
+          description: Localized schema name in a form of a map of translations.
+        types:
+          type: array
+          description: List of types to which schema should be assigned.
+          items:
+            $ref: '#/components/schemas/SchemaType'
+        metadata:
+          allOf:
+            - $ref: '#/components/schemas/SchemaMetadata'
+    SchemaResponse:
+      allOf:
+        - $ref: '#/components/schemas/AbstractSchemaResponse'
+        - type: object
+          properties:
+            attributes:
+              type: array
+              description: List of attributes related to the schema.
+              items:
+                $ref: '#/components/schemas/SchemaAttribute'
+    SchemasResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/SchemaResponse'
+    ReferenceResponse:
+      allOf:
+        - $ref: '#/components/schemas/AbstractSchemaResponse'
+    ReferencesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ReferenceResponse'
+    TypesResponse:
+      type: array
+      items:
+        type: string
+    CustomSchemaTypeCreation:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique code for the custom type. Can contain uppercase letters, digits, and underscores. The first character must be a letter.
+        name:
+          type: object
+          description: Localized custom type name in a form of a map of translations.
+      required:
+        - id
+        - name
+    CustomSchemaTypeUpdate:
+      type: object
+      properties:
+        name:
+          type: object
+          description: Localized custom type name in a form of a map of translations.
+        metadata:
+          type: object
+          properties:
+            version:
+              type: integer
+              description: Version of the custom schema type. If provided, it will be validated against the current entity version.
+      required:
+        - name
+    CustomSchemaTypeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique id of the custom schema type.
+        name:
+          type: object
+          description: Localized custom type name in a form of a map of translations.
+        schemas:
+          type: object
+          description: Information about associated schemas. This field is only included if `expandSchemas` is set to `true`
+        metadata:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              description: 'Date and time when the object was created, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+            modifiedAt:
+              type: string
+              description: 'Date and time when the object was last modified, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+            version:
+              type: integer
+    CustomSchemaTypesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CustomSchemaTypeResponse'
+    CustomInstanceCreation:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of the custom instance.
+        name:
+          type: object
+          description: Localized custom type name in a form of a map of translations.
+        owner:
+          $ref: '#/components/schemas/CustomInstanceOwnerRequest'
+        mixins:
+          type: string
+          description: A key-value map of additional attributes.
+        metadata:
+          type: object
+          properties:
+            mixins:
+              type: object
+              description: A key-value map, where key is a mixin name and value is a link to the mixin schema.
+    CustomInstanceUpdate:
+      type: object
+      properties:
+        name:
+          type: object
+          description: Localized custom type name in a form of a map of translations.
+        owner:
+          $ref: '#/components/schemas/CustomInstanceOwnerRequest'
+        mixins:
+          type: string
+          description: A key-value map of additional attributes.
+        metadata:
+          type: object
+          properties:
+            version:
+              type: integer
+              description: Version of the custom instance.  If provided, it will be validated against the current entity version.
+            mixins:
+              type: object
+              description: A key-value map, where key is a mixin name and value is a link to the mixin schema.
+    CustomInstanceOwner:
+      type: object
+      description: |
+        Ownership of the custom instance. It can be assigned explicitly during creation by users with a `manage` scope, or populated automatically based on who created the custom instance. Once set, the owner is immutable and cannot be modified.
+
+        The `legalEntityId` field is only present when `type` is `CUSTOMER`.
+      properties:
+        type:
+          type: string
+          description: Type of the owner.
+          enum:
+            - EMPLOYEE
+            - CUSTOMER
+            - SERVICE
+        userId:
+          type: string
+          description: Identifier of the employee, customer, or service principal associated with the owner.
+        legalEntityId:
+          type: string
+          nullable: true
+          description: Legal entity identifier. Only set when `type` is `CUSTOMER`.
+      required:
+        - type
+        - userId
+    CustomInstanceOwnerRequest:
+      type: object
+      description: |
+        Ownership of the custom instance that can be provided when creating a custom instance.
+        The `owner` field can be set explicitly only by users with a `manage` scope, when the request is authorized with a `manage_own` scope, this field is ignored and ownership is set automatically to the user who created the custom instance.
+        When the user has a `manage` scope but this field is not provided, ownership is set automatically to the user who created the custom instance.
+      properties:
+        type:
+          type: string
+          description: Type of the owner.
+          enum:
+            - EMPLOYEE
+            - CUSTOMER
+        userId:
+          type: string
+          description: Identifier of the employee or customer associated with the owner.
+        legalEntityId:
+          type: string
+          description: Legal entity identifier. Can be provided only when `type` is `CUSTOMER`.
+      required:
+        - type
+        - userId
+    CustomInstanceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the custom instance.
+        name:
+          type: object
+          description: Localized custom type name in a form of a map of translations.
+        type:
+          type: string
+          description: Custom schema type to which custom instance is related.
+        owner:
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/CustomInstanceOwner'
+        mixins:
+          type: string
+          description: A key-value map of additional attributes.
+        media:
+          type: array
+          description: List of media IDs assigned to the custom instance.
+          items:
+            type: string
+        metadata:
+          allOf:
+            - $ref: '#/components/schemas/CustomInstanceMetadata'
+    CustomInstancesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CustomInstanceResponse'
+    BulkResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          index:
+            type: integer
+            description: Index of the processed item, matching the item position in request body.
+          code:
+            type: integer
+            description: HTTP Status Code.
+          status:
+            type: string
+            description: HTTP Status description
+          message:
+            type: string
+            description: Error message.
+          details:
+            type: array
+            items:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Error details.
+    BulkPatchCustomInstanceRequest:
+      type: object
+      required:
+        - id
+        - data
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the custom instance to patch.
+        data:
+          type: array
+          description: List of patch operations to apply to the custom instance.
+          items:
+            $ref: '#/components/schemas/PatchOperation'
+    CustomInstanceMetadata:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          description: 'Date and time when the object was created, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+        modifiedAt:
+          type: string
+          description: 'Date and time when the object was last modified, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+        version:
+          type: integer
+          description: Version of the custom instance.
+        mixins:
+          type: object
+          description: A key-value map, where key is a mixin name and value is a link to the mixin schema.
+    PatchOperation:
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+            - add
+            - remove
+            - replace
+          description: 'Indicates an operation which should be done on a return. Available operations: `add` `remove` and `replace`'
+        path:
+          type: string
+          description: |-
+            Path to the field to update.
+
+            Examples: `/name`, `/mixins/additionalAttributes/externalId`, `/mixins/additionalAttributes/careInstructions/1`.
+
+            To append an item to an array mixin field (for example, a table row), use `add` with a path ending in `/-`. The `-` means append after the last element.
+        value:
+          oneOf:
+            - type: object
+            - type: string
+            - type: number
+          description: 'Indicates a value that should be changed or added. The value can be of a primitive type, like string, number, boolean or it can be an object or an array.'
+      required:
+        - op
+        - path
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            schema.schema_manage: Required for managing schemas.
+            schema.schema_read: Required for reading schemas.
+            schema.custominstance_read: Read custom instances of any custom schema type.
+            schema.custominstance_manage: Manage custom instances of any custom schema type.
+            'custom.{lowerCaseType}_manage': Manage custom instances of a given type. For example, for type `DOCUMENT` → `custom.document_manage`.
+            'custom.{lowerCaseType}_manage_own': Allows to manage only your own custom instances of a given type. For example, for type `DOCUMENT` → `custom.document_manage_own`.
+            'custom.{lowerCaseType}_read': Read custom instances of a given type. For example, for type `DOCUMENT` → `custom.document_read`.
+            'custom.{lowerCaseType}_read_own': Allows to read only your own custom instances of a given type. For example, for type `DOCUMENT` → `custom.document_read_own`.
+  parameters:
+    trait_validateReferences:
+      name: validateReferences
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
+      description: |
+        When set to true, references are validated if the provided resources exist. If set to false, validation is skipped.
+    trait_validateReferences_bulk:
+      name: validateReferences
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: |
+        When set to true, references are validated if the provided resources exist. If set to false, validation is skipped.
+    type:
+      name: type
+      in: path
+      required: true
+      description: |
+        Custom schema type to which the custom instance is associated.
+
+      schema:
+        example: CUSTOM_DOCUMENT
+        type: string
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: Always write the tenant name in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of the entity.
+    version:
+      name: version
+      in: query
+      required: true
+      schema:
+        type: integer
+      description: Version of the entity.
+    trait_schemaVersion:
+      name: version
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: Version of the entity.
+      example: 1
+    trait_mode:
+      name: mode
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [REPLACE, ADD, REMOVE]
+        default: REPLACE
+      description: Defines how types assigned to given schema should be resolved. REPLACE is a default value. REPLACE takes provided types and replaces the existing ones with it. ADD adds provided types to the existing ones. REMOVE removes provided types from the existing ones.
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      name: sort
+      in: query
+      description: |-
+        List of properties used to sort the results, separated by colons. The order of properties indicates their priority in sorting.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        If the sorting direction is not specified, the fields are sorted in ascending order.
+      schema:
+        type: string
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        Number of items to be retrieved per page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_cursor_next:
+      name: next
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 4096
+      description: |
+        Opaque cursor from the `X-Next-Cursor` response header. Use it to retrieve the next set of results.
+        Cannot be combined with `prev` in the same request; sending both returns `400 Bad Request`.
+        When provided, cursor pagination is active: `pageNumber` is ignored and the `X-Total-Count` request header is ignored (the `X-Total-Count` response header is not returned).
+    trait_cursor_prev:
+      name: prev
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 4096
+      description: |
+        Opaque cursor from the `X-Prev-Cursor` response header. Use it to retrieve the previous set of results. Cannot be combined with `next` in the same request; sending both returns `400 Bad Request`. When provided, cursor pagination is active and `pageNumber` is ignored.
+    trait_fields:
+      name: fields
+      in: query
+      description: |
+        Fields to be included in the response.
+      schema:
+        type: string
+    trait_expand_schemas:
+      name: expandSchemas
+      in: query
+      description: |
+        Determines whether the response will include information about associated schemas.
+      schema:
+        default: false
+        type: boolean
+    trait_expand_references:
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Fetches data about expanded references. You can provide full path to the reference, use wildcard character `*`, or provide a specific index (starting with 0) in array of references. Multiple paths can be specified by separating them with commas.
+
+        **Examples:**
+        * `customAttributes.references.product_reference` - expands a specific reference
+        * `*` - expands all references
+        * `customAttributes.*` - expands all references within customAttributes
+        * `customAttributes.references.customers_array.0` - expands the first element in an array of references
+    trait_q_param:
+      name: q
+      in: query
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        * Searching for items by string-based properties:
+          * By a field value: `q=siteCode:main`, where `siteCode` is the field name, and `main` is its desired value.
+          * By a localized field value: `q=items.product.name.en:apple_lobo`, where `name` is the field name of product, `en` is the language code, and `apple_lobo` is the field value expressed in the specified language. **Note**: This query works only for localized fields, which are stored in a map format, where `key` is the language code and `value` is the translation to particular language.
+        * Searching for items by a number-based property:
+          * With a specific value: `q=items.quantity.quantity:20`
+          * With a value greater than: `q=items.quantity.quantity:>20`
+          * With a value lower than: `q=items.quantity.quantity:<20`
+          * With a value greater than or equal to: `q=items.quantity.quantity:>=20`
+          * With a value lower than or equal to: `q=items.quantity.quantity:<=20`
+          * With a value within a range of values: `q=items.quantity.quantity:(>=10 AND <=20)`\
+           where `items.quantity.quantity` is the name of the number-based field, and `20` is its querying value.
+        * Searching for items by a date-based property: All number-based property queries are also valid for dates. In that case, the date should be placed within double quotes: `q=metadataCreatedAt:(>="2021-05-18T07:27:27.455Z" AND <"2021-05-20T07:27:27.455Z")`
+        * Searching for items by a boolean-based property: `q=description.multiLanguage:true`, where `description.multiLanguage` is the boolean field name, and `true` is its desired value.
+        * Searching for items with a nonexistent or empty property: `q=description.en:null`, where `description.en` is the field that has its value set to `null`.
+        * Searching for items with an existing property: `q=mixins.mixinName:exists`, where the specific mixin named `mixinName` exists in the database.
+        * Searching for items by multiple specific values: `q=id:(5c3325baa9812100098ff48f,5c3325d1a9812100098ff494)`, where `id` is the field name, and strings within the bracket are the desired values.
+        * Searching for items by multiple fields: `q=id:5c3325baa9812100098ff48f siteCode:main` where `id` and `siteCode` are field names. All objects that contain the specified values are returned. Multiple fields (separated by space) can be specified. Multiple values for each field can also be specified in the format presented earlier.
+        * Searching for items with string-based properties conforming to a regex: `q=siteCode:~ain` or `q=code:(~U PL)` - in case of searching for strings with space, where `siteCode` is the name of the field, and `ain` or `U PL` is its querying regex.
+        * Searching for items with a localized string-based property conforming to a regex: `items.product.name.en:~(Yoghurt im)` - where `name` is the product field name, `en` is the desired language, and `Joghurt im` is the search term.
+      schema:
+        type: string
+        example: 'siteCode:{main}'
+    trait_contentLanguage_header:
+      in: header
+      name: Content-Language
+      description: The Content-Language request HTTP header defines language(s) of the payload.
+      schema:
+        type: string
+        example: de
+    trait_acceptLanguage_header:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields. If a value is specified, then it must be present in the tenant configuration.
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    trail_xTotalCount_header:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+        example: true
+        default: false
+      description: |
+        Flag indicating whether the total number of retrieved items should be returned.
+  responses:
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. It usually means that the tenant from the token does not match tenant from path.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid Access Token:
+              value:
+                fault:
+                  faultstring: Invalid Access Token
+                  detail:
+                    errorcode: keymanagement.service.invalid_access_token
+            Unauthorized:
+              value: {}
+    Bad_request_400:
+      description: Unsupported language provided.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              status:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    type:
+                      type: string
+                    message:
+                      type: string
+                    moreInfo:
+                      type: string
+          examples:
+            Unsupported language:
+              value:
+                code: 400
+                status: Bad Request
+                message: Language header validation failed.
+                details:
+                  - message: 'Following languages are not supported: ''ru'''
+    Bad_request_400_mixins:
+      description: Mixins validation failed.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              status:
+                type: string
+              message:
+                type: string
+              errorCode:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    type:
+                      type: string
+                    message:
+                      type: string
+                    moreInfo:
+                      type: string
+          examples:
+            Bad request:
+              value:
+                code: 400
+                status: Bad Request
+                message: There is a validation error. Please check the details..
+                details:
+                  - message: 'null: instance type (boolean) does not match any allowed primitive type (allowed: ["integer","number"]): [mixins:productCustomAttributes:popularity]'
+    Bad_request_400_cl:
+      description: Unsupported content language provided.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              status:
+                type: string
+              message:
+                type: string
+              errorCode:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    type:
+                      type: string
+                    message:
+                      type: string
+                    moreInfo:
+                      type: string
+          examples:
+            Bad request:
+              value:
+                code: 400
+                status: Bad Request
+                message: Language header validation failed.
+                details:
+                  - message: 'Following languages are not supported: ''ru'''
+    Unathorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. It usually means that tenant from the token does not match tenant from path.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid Access Token:
+              value:
+                fault:
+                  faultstring: Invalid Access Token
+                  detail:
+                    errorcode: keymanagement.service.invalid_access_token
+            Unauthorized:
+              value: {}
+    Forbidden_403:
+      description: Permission denied due to insufficient rights. This may happen when the request does not contain sufficient scopes for the given query values.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: You need to choose the required scope to complete this action.
+                details:
+                  - message: 'Required scope(s): schema.schema_manage'
+    Conflict_409:
+      description: Conflict.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 409
+            status: Conflict
+            message: Duplicated key.
+    Not_Found_404:
+      description: Given resource cannot be found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Schema does not exists:
+              value:
+                resourceId: 084bcag6-66b8-4ddd-9489-65c5f6449e94
+                code: 404
+                status: Not Found
+                message: Error while getting resource.
+                details:
+                  - message: Resource with id '084bcaf6-66b8-4ddd-9489-65c5f6449e94' not found
+security:
+  - OAuth2: []
+tags:
+  - name: Schema
+  - name: Type
+  - name: Reference
+  - name: Custom Schema Type
+  - name: Custom Instance
+  - name: Export / Import

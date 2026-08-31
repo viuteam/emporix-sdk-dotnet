@@ -1,0 +1,2468 @@
+openapi: 3.0.0
+info:
+  title: Import Service
+  version: ''
+  description: |-
+    The Emporix Import Service imports external master data into Emporix. A configuration groups one or more
+    streams; each stream extracts from a source connection, maps fields to an Emporix target type, and
+    upserts idempotently. Imports run asynchronously and stream per-stream progress over Server-Sent Events.
+
+    {% hint style="danger" %}
+    This functionality is in preview mode - some of the features may not be fully operational yet.
+    {% endhint %}
+
+    This reference covers the operational surface available with the `importtool.import_trigger` scope:
+    triggering, scheduling, monitoring, and cancelling import runs, reading configurations, streams,
+    schedules, runs, and imported data, and reading the import analytics that summarise them.
+    Administrative operations (creating and changing configurations, connections, streams, and mappings)
+    require the `importtool.import_manage` scope.
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+tags:
+  - name: Configurations
+    description: Read import configurations.
+  - name: Streams
+    description: Read the streams of a configuration.
+  - name: Schedules
+    description: Read and set a configuration's run schedule.
+  - name: Runs
+    description: Trigger, monitor, and cancel import runs.
+  - name: Data
+    description: Read imported records.
+  - name: Analytics
+    description: Read aggregated import statistics, health, and the settings behind them.
+  - name: License
+    description: Read the tenant's import limits.
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/importtool/{tenant}/configs':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving all import configurations
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves all import configurations defined for the tenant.
+
+      operationId: GET-importtool-list-configs
+      tags:
+        - Configurations
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The configurations are returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportConfig'
+              examples:
+                Configurations response:
+                  $ref: '#/components/examples/ImportConfigs_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/configs/{id}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_id'
+    get:
+      summary: Retrieving an import configuration
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves a single import configuration by its identifier.
+
+      operationId: GET-importtool-get-config
+      tags:
+        - Configurations
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The configuration is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportConfig'
+              examples:
+                Configuration response:
+                  $ref: '#/components/examples/ImportConfig_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/configs/{configId}/streams':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_configId'
+    get:
+      summary: Retrieving all streams of a configuration
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the streams belonging to a configuration, ordered by sequence.
+
+      operationId: GET-importtool-list-streams
+      tags:
+        - Streams
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The streams are returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportStream'
+              examples:
+                Streams response:
+                  $ref: '#/components/examples/ImportStreams_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/streams/{id}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_id'
+    get:
+      summary: Retrieving a stream
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves a single stream by its identifier, including its resolved target types.
+
+      operationId: GET-importtool-get-stream
+      tags:
+        - Streams
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The stream is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportStream'
+              examples:
+                Stream response:
+                  $ref: '#/components/examples/ImportStream_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/configs/{configId}/schedule':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_configId'
+    get:
+      summary: Retrieving a schedule
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the cron schedule for a configuration.
+
+      operationId: GET-importtool-get-schedule
+      tags:
+        - Schedules
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The schedule is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+              examples:
+                Schedule response:
+                  $ref: '#/components/examples/Schedule_Example'
+        '204':
+          description: No schedule is configured for the configuration.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    put:
+      summary: Scheduling an import job
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Creates or updates the cron schedule (cron expression, time zone, and enabled flag) that runs a configuration automatically.
+
+      operationId: PUT-importtool-schedule-job
+      tags:
+        - Schedules
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+            examples:
+              Every day at 02:00 Berlin time:
+                value:
+                  cron: '0 0 2 * * *'
+                  timezone: Europe/Berlin
+                  enabled: true
+      responses:
+        '200':
+          description: The request was successful. The schedule has been saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+              examples:
+                Schedule response:
+                  $ref: '#/components/examples/Schedule_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/configs/{configId}/runs':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_configId'
+    post:
+      summary: Triggering an import run
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Starts an import run for the configuration and returns immediately with the run in a running state;
+        progress is streamed over Server-Sent Events. At most one run is active per configuration.
+      operationId: POST-importtool-trigger-run
+      tags:
+        - Runs
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum:
+                    - FULL
+                    - DELTA
+                  description: The run mode. When omitted, defaults to `DELTA`.
+                  example: DELTA
+                dryRun:
+                  type: boolean
+                  description: When `true`, the run maps and validates but performs no remote writes.
+                  example: false
+                force:
+                  type: boolean
+                  description: >-
+                    When `true`, every extracted record is rewritten, even if unchanged. It bypasses the idempotency `skip-if-unchanged` check. Use it to force target IDs and values to be rewritten.
+                  example: false
+            examples:
+              Full run:
+                value:
+                  mode: FULL
+              Delta dry run:
+                value:
+                  mode: DELTA
+                  dryRun: true
+      responses:
+        '200':
+          description: The request was successful. The run has been started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportRun'
+              examples:
+                Run response:
+                  $ref: '#/components/examples/ImportRun_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    get:
+      summary: Retrieving run history
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the run history for a configuration, most recent first.
+
+      operationId: GET-importtool-list-runs
+      tags:
+        - Runs
+      parameters:
+        - $ref: '#/components/parameters/trait_page'
+        - $ref: '#/components/parameters/trait_size'
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The run history is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportRunPage'
+              examples:
+                Run history response:
+                  $ref: '#/components/examples/ImportRunPage_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    get:
+      summary: Retrieving a run
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves a run's status together with its per-stream progress.
+
+      operationId: GET-importtool-get-run
+      tags:
+        - Runs
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The run and its streams are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunDetail'
+              examples:
+                Run detail response:
+                  $ref: '#/components/examples/RunDetail_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}/events':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    get:
+      summary: Streaming run progress
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Streams a run's progress as Server-Sent Events: an initial `snapshot` (run and streams), then a
+        `stream` event per processed batch, and a final `run` event when the run finishes.
+      operationId: GET-importtool-stream-run-events
+      tags:
+        - Runs
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The event stream was opened.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |-
+                  event: snapshot
+                  data: {"run":{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"RUNNING"},"streams":[{"streamName":"Products","status":"RUNNING","recordsRead":120}]}
+
+                  event: stream
+                  data: {"streamName":"Products","status":"RUNNING","recordsRead":240,"created":20,"updated":210,"failed":2}
+
+                  event: run
+                  data: {"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"SUCCEEDED","recordsRead":1250}
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}/cancel':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    post:
+      summary: Cancelling a run
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Requests cancellation of an active run. By default the cancellation is cooperative; with
+        `force=true` the run is stopped immediately and its configuration is unblocked.
+      operationId: POST-importtool-cancel-run
+      tags:
+        - Runs
+      parameters:
+        - name: force
+          in: query
+          required: false
+          description: When `true`, hard-stops the run immediately.
+          schema:
+            type: boolean
+            default: false
+            example: false
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '202':
+          description: The cancellation was accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelResult'
+              examples:
+                Cancellation response:
+                  $ref: '#/components/examples/CancelResult_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}/errors':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    get:
+      summary: Retrieving run errors
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the errors recorded during a run, paginated.
+
+      operationId: GET-importtool-list-run-errors
+      tags:
+        - Runs
+      parameters:
+        - $ref: '#/components/parameters/trait_page'
+        - $ref: '#/components/parameters/trait_size'
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The errors are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRecordPage'
+              examples:
+                Errors response:
+                  $ref: '#/components/examples/ErrorRecordPage_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/data/types':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving imported data types
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the distinct target types that currently hold imported records.
+
+      operationId: GET-importtool-list-data-types
+      tags:
+        - Data
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The types are returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: product
+              examples:
+                Data types response:
+                  $ref: '#/components/examples/DataTypes_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/data/records':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Searching imported records
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Searches imported records of a given type with an optional `search` filter on the natural key, paginated.
+
+      operationId: GET-importtool-search-data-records
+      tags:
+        - Data
+      parameters:
+        - name: type
+          in: query
+          required: true
+          description: The target type to search.
+          schema:
+            type: string
+            example: product
+        - name: search
+          in: query
+          required: false
+          description: >-
+            Optional free-text filter. This is a case-insensitive substring match on the record's
+            natural key only — it is NOT the Emporix query language, so field selectors and operators
+            (e.g. `field:value`, comparisons, boolean logic) are not supported.
+          schema:
+            type: string
+            default: ''
+            example: SKU-1001
+        - name: outcome
+          in: query
+          required: false
+          description: >-
+            Optional filter by import outcome. Omit to return records of all outcomes. `UPSERTED`
+            (created or updated), `DELETED` (removed at the source), `DELETED_TARGET` (removed in
+            Emporix), `FAILED`, `DRY_RUN` (produced by a dry run).
+          schema:
+            type: string
+            enum: [UPSERTED, DELETED, DELETED_TARGET, FAILED, DRY_RUN]
+        - $ref: '#/components/parameters/trait_page'
+        - $ref: '#/components/parameters/trait_size'
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The records are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportedRecordPage'
+              examples:
+                Imported records response:
+                  $ref: '#/components/examples/ImportedRecordPage_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/data/streams/{streamId}/records':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_streamId'
+    get:
+      summary: Searching a stream's imported records
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Searches the imported records produced by a specific stream with an optional `search` filter on the natural key, paginated.
+
+      operationId: GET-importtool-search-stream-records
+      tags:
+        - Data
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: >-
+            Optional free-text filter. This is a case-insensitive substring match on the record's
+            natural key only — it is NOT the Emporix query language, so field selectors and operators
+            (e.g. `field:value`, comparisons, boolean logic) are not supported.
+          schema:
+            type: string
+            default: ''
+            example: SKU-1001
+        - name: outcome
+          in: query
+          required: false
+          description: >-
+            Optional filter by import outcome. Omit to return records of all outcomes. `UPSERTED`
+            (created or updated), `DELETED` (removed at the source), `DELETED_TARGET` (removed in
+            Emporix), `FAILED`, `DRY_RUN` (produced by a dry run).
+          schema:
+            type: string
+            enum: [UPSERTED, DELETED, DELETED_TARGET, FAILED, DRY_RUN]
+        - $ref: '#/components/parameters/trait_page'
+        - $ref: '#/components/parameters/trait_size'
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The records are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportedRecordPage'
+              examples:
+                Stream records response:
+                  $ref: '#/components/examples/ImportedRecordPage_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/stats':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving import statistics
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves aggregated import metrics for a time window: headline counters and rates, a time series
+        bucketed by day, week, or month, per-stream health, the top failing streams, an error breakdown,
+        and how many streams were added or removed.
+
+        To narrow the scope, use:
+        - `configId` for one configuration
+        - `configIds` for several configurations
+        - `streamId` for one stream
+
+        When none of them are given, the whole tenant is summarised. Use `sections` to fetch only the parts
+        you need — an unrequested section is returned as `null`.
+      operationId: GET-importtool-stats
+      tags:
+        - Analytics
+      parameters:
+        - name: configId
+          in: query
+          required: false
+          description: Restricts the statistics to a single configuration.
+          schema:
+            type: string
+            format: uuid
+            example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        - name: configIds
+          in: query
+          required: false
+          description: >-
+            Restricts the statistics to several configurations, as a comma-separated list of identifiers.
+            Ignored when `configId` is given.
+          schema:
+            type: string
+            example: '7c9e6679-7425-40de-944b-e07fc1f90ae7,550e8400-e29b-41d4-a716-446655440000'
+        - name: streamId
+          in: query
+          required: false
+          description: Restricts the statistics to a single stream. Takes precedence over the configuration filters.
+          schema:
+            type: string
+            format: uuid
+            example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        - name: from
+          in: query
+          required: false
+          description: The start of the window, as an ISO-8601 instant. When omitted, defaults to 30 days ago.
+          schema:
+            type: string
+            format: date-time
+            example: '2024-05-01T00:00:00Z'
+        - name: to
+          in: query
+          required: false
+          description: The end of the window, as an ISO-8601 instant. Exclusive. When omitted, defaults to now.
+          schema:
+            type: string
+            format: date-time
+            example: '2024-05-31T00:00:00Z'
+        - name: granularity
+          in: query
+          required: false
+          description: The bucket size of the returned time series.
+          schema:
+            type: string
+            enum:
+              - DAY
+              - WEEK
+              - MONTH
+            default: DAY
+            example: DAY
+        - name: sections
+          in: query
+          required: false
+          description: >-
+            A comma-separated list of the sections to compute: `TOTALS`, `STREAMS`, `ERRORS`, `CHANGES`.
+            When omitted, defaults to all sections. A section not requested through the `sections` parameter
+            is returned as `null`.
+          schema:
+            type: string
+            example: 'TOTALS,ERRORS'
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The statistics are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportStats'
+              examples:
+                Import statistics response:
+                  $ref: '#/components/examples/ImportStats_Example'
+        '400':
+          description: The window or a filter value is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/dashboard/job-groups':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving job groups
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the tenant's job groups. A job group is a named set of import configurations, used to
+        scope the analytics to the imports that matter to you. Groups are stored per tenant and shared by
+        everyone working on it.
+
+        Creating, changing, and deleting groups requires the `importtool.import_manage` scope.
+      operationId: GET-importtool-list-job-groups
+      tags:
+        - Analytics
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The job groups are returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobGroup'
+              examples:
+                Job groups response:
+                  $ref: '#/components/examples/JobGroups_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/settings/health-thresholds':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving the tenant's health thresholds
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the tenant-wide thresholds that decide whether a stream is reported as `GREEN`, `AMBER`,
+        or `RED` in the import statistics, together with the built-in defaults they fall back to.
+
+        Thresholds resolve field by field, from the most specific level to the least specific: stream,
+        configuration, tenant, then the built-in default. An unset field falls back to the value at the
+        next less-specific level.
+
+        Changing the tenant-wide thresholds requires the `importtool.import_manage` scope.
+      operationId: GET-importtool-health-thresholds
+      tags:
+        - Analytics
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The thresholds are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthSettings'
+              examples:
+                Health thresholds response:
+                  $ref: '#/components/examples/HealthSettings_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/license':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving import limits
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the tenant's import limits. If an import exceeds `maxRecordsPerEntity`, excess records
+        are skipped and the run finishes with the `PARTIAL` status. If `maxConcurrentImports` runs are
+        already active, additional run requests are rejected with a `429 Too Many Requests` response.
+
+        Contact [Emporix Support](mailto:support@emporix.com) to have a limit raised.
+      operationId: GET-importtool-license
+      tags:
+        - License
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The limits are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportLicense'
+              examples:
+                Import license response:
+                  $ref: '#/components/examples/ImportLicense_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}/retry':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    post:
+      summary: Retrying the failed records of a run
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Starts a new run that reprocesses only the records that failed in the given run, instead of the
+        whole source. The new run is returned immediately and reports its own progress; the original run is
+        left untouched and keeps its counters.
+
+        As with any run, at most one run can be active per configuration.
+      operationId: POST-importtool-retry-run
+      tags:
+        - Runs
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The retry run was started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportRun'
+              examples:
+                Import run response:
+                  $ref: '#/components/examples/ImportRun_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+components:
+  schemas:
+    errorMessage:
+      title: Error
+      description: Schema for specific API errors.
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code.
+          minimum: 100
+          maximum: 599
+        status:
+          description: HTTP status.
+          type: string
+        message:
+          description: Descriptive error message for debugging.
+          type: string
+        details:
+          description: List of problems causing this error.
+          type: array
+          items:
+            title: Error Detail
+            description: Error details.
+            type: string
+      required:
+        - status
+        - code
+        - message
+    ImportConfig:
+      title: Import configuration
+      type: object
+      description: An import configuration grouping one or more streams.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The configuration identifier.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        tenant:
+          type: string
+          description: The owning tenant.
+          example: mytenant
+        name:
+          type: string
+          description: The configuration name.
+          example: ERP product master import
+        description:
+          type: string
+          description: A free-text description.
+          example: Nightly import of product master data from the ERP system.
+        sourceConnId:
+          type: string
+          format: uuid
+          description: The default source connection for the configuration's streams.
+          example: 550e8400-e29b-41d4-a716-446655440000
+        aiEnabled:
+          type: boolean
+          description: Whether AI-assisted mapping suggestions are enabled for the configuration.
+          example: false
+        enabled:
+          type: boolean
+          description: Whether the configuration is active.
+          example: true
+        version:
+          type: integer
+          description: Incremented on every change to the configuration.
+          example: 3
+        healthThresholds:
+          $ref: '#/components/schemas/HealthThresholds'
+        createdBy:
+          type: string
+          description: The identifier of the user who created the configuration.
+          example: user@example.com
+        createdAt:
+          type: string
+          format: date-time
+          description: When the configuration was created.
+          example: '2026-07-01T10:15:30.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the configuration was last updated.
+          example: '2026-07-20T08:00:00.000Z'
+    ImportStream:
+      title: Stream
+      type: object
+      description: A stream that extracts from a source, maps fields, and upserts into an Emporix target type.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The stream identifier.
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        configId:
+          type: string
+          format: uuid
+          description: The parent configuration.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        name:
+          type: string
+          description: The stream name.
+          example: Products
+        sourceEntity:
+          type: string
+          description: The logical source entity or record.
+          example: PRODUCT
+        targetWriter:
+          type: string
+          description: The target writer code, for example `emporix.customEntity`.
+          example: emporix.customEntity
+        targetType:
+          type: string
+          description: The default target type (custom-entity type identifier).
+          example: product
+        mode:
+          type: string
+          enum:
+            - STANDALONE
+            - COMPOSITE_CHILD
+            - COMPOSITE_MERGE
+          description: How the stream contributes to the target.
+          example: STANDALONE
+        deltaField:
+          type: string
+          description: >-
+            The source field whose value is tracked as the delta watermark. A delta run extracts only the
+            records whose value is newer than the last run's.
+          example: LASTCHANGEDATE
+        deltaFieldFormat:
+          type: string
+          enum:
+            - DATE
+            - UNIX_SECONDS
+            - UNIX_MILLIS
+          description: How the delta field's values are formatted, so they can be compared correctly.
+          example: DATE
+        compositeParent:
+          type: string
+          description: For a composite child stream, the name of the stream it contributes to.
+          example: invoices
+        linkingField:
+          type: string
+          description: For a composite child stream, the source field holding its parent's key.
+          example: INVOICE_ID
+        embedAttribute:
+          type: string
+          description: For a composite child stream, the parent attribute its records are embedded into.
+          example: lineItems
+        childStrategy:
+          type: string
+          enum:
+            - EMBED
+            - PATCH
+          description: How a composite child's records reach the parent object.
+          example: EMBED
+        writeStrategy:
+          type: string
+          enum:
+            - PATCH
+            - MERGE_PUT
+            - REPLACE_PUT
+          description: >-
+            How an existing target object is updated. `PATCH` changes only the mapped fields and preserves
+            everything else; `REPLACE_PUT` replaces the whole object, so fields this import does not manage
+            are cleared.
+          example: PATCH
+        discriminatorField:
+          type: string
+          description: >-
+            A source field whose value routes each record to a different target type, as defined by
+            `discriminatorMap`.
+          example: DOCUMENT_TYPE
+        discriminatorMap:
+          type: object
+          additionalProperties:
+            type: string
+          description: Maps a discriminator value to the target type that receives those records.
+          example:
+            PO Invoice: PO_INVOICE
+            Non PO Invoice: NON_PO_INVOICE
+        targetDeleteSubscriptionEnabled:
+          type: boolean
+          description: Whether the stream reacts to its target objects being deleted outside the import.
+          example: false
+        onTargetReappear:
+          type: string
+          enum:
+            - IGNORE
+            - READD
+          description: What happens when a record deleted in the target is seen in the source again.
+          example: IGNORE
+        healthThresholds:
+          $ref: '#/components/schemas/HealthThresholds'
+        createdAt:
+          type: string
+          format: date-time
+          description: When the stream was created.
+          example: '2024-05-01T09:00:00.000Z'
+        enabled:
+          type: boolean
+          description: Whether the stream is active.
+          example: true
+    Schedule:
+      title: Schedule
+      type: object
+      description: A cron schedule for a configuration.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The schedule identifier.
+          example: a3bb189e-8bf9-3888-9912-ace4e6543002
+        configId:
+          type: string
+          format: uuid
+          description: The scheduled configuration.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        cron:
+          type: string
+          description: A Spring cron expression with six fields.
+          example: '0 0 2 * * *'
+        timezone:
+          type: string
+          description: The IANA time zone the cron is evaluated in.
+          example: Europe/Berlin
+        enabled:
+          type: boolean
+          description: Whether the schedule is active.
+          example: true
+        nextFireAt:
+          type: string
+          format: date-time
+          description: The next fire time.
+          example: '2026-07-28T00:00:00.000Z'
+      required:
+        - cron
+    ImportRun:
+      title: Run
+      type: object
+      description: An import run and its reconciled counters.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The run identifier.
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        configId:
+          type: string
+          format: uuid
+          description: The configuration the run belongs to.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        tenant:
+          type: string
+          description: The owning tenant.
+          example: mytenant
+        trigger:
+          type: string
+          enum:
+            - MANUAL
+            - SCHEDULED
+          description: What triggered the run.
+          example: MANUAL
+        status:
+          type: string
+          enum:
+            - QUEUED
+            - RUNNING
+            - SUCCEEDED
+            - PARTIAL
+            - FAILED
+            - CANCELLED
+          description: The run status.
+          example: SUCCEEDED
+        mode:
+          type: string
+          enum:
+            - FULL
+            - DELTA
+          description: The run mode.
+          example: DELTA
+        startedAt:
+          type: string
+          format: date-time
+          description: When the run started.
+          example: '2026-07-27T02:00:00.000Z'
+        finishedAt:
+          type: string
+          format: date-time
+          description: When the run finished.
+          example: '2026-07-27T02:04:12.000Z'
+        recordsRead:
+          type: integer
+          description: Records read (created + updated + skipped + deleted + failed).
+          example: 1250
+        created:
+          type: integer
+          description: Records created.
+          example: 40
+        updated:
+          type: integer
+          description: Records updated.
+          example: 1180
+        skipped:
+          type: integer
+          description: Records skipped because they were unchanged.
+          example: 25
+        failed:
+          type: integer
+          description: Records that failed.
+          example: 5
+        deleted:
+          type: integer
+          description: Records deleted.
+          example: 0
+        duplicateKeys:
+          type: integer
+          description: >-
+            Source rows that repeat a key already imported in this run. The import keeps the last
+            row of each repeated key and discards earlier rows. Duplicate keys do not fail the run;
+            they mean the source feed is not unique on the key the stream imports by.
+          example: 25907
+        unresolvedParents:
+          type: integer
+          description: >-
+            Child records that were not imported because their parent could not be found.
+            Counted separately from `skipped`, which counts records that were already up to date.
+          example: 25370
+        message:
+          type: string
+          description: A terminal status message, typically set on failure.
+          example: Import completed with 5 record failures.
+        retryOfRunId:
+          type: string
+          format: uuid
+          description: When the run retries another run's failed records, the identifier of that original run.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        force:
+          type: boolean
+          description: Whether the run rewrote every record, bypassing the skip-if-unchanged check.
+          example: false
+        dryRun:
+          type: boolean
+          description: >-
+            Whether the run only extracted, mapped, and validated, writing nothing to the target. A dry run
+            legitimately reports zero for every counter, so this distinguishes it from a run that wrote
+            nothing because it failed.
+          example: false
+        cancelRequested:
+          type: boolean
+          description: Whether cancellation has been requested for a run that is still finishing.
+          example: false
+        dryRunSampleSize:
+          type: integer
+          description: For a dry run, how many mapped records were kept as a sample.
+          example: 10
+    ImportRunStream:
+      title: Run stream progress
+      type: object
+      description: The per-stream progress within a run.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The run-stream identifier.
+          example: c56a4180-65aa-42ec-a945-5fd21dec0538
+        runId:
+          type: string
+          format: uuid
+          description: The run this progress belongs to.
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        streamId:
+          type: string
+          format: uuid
+          description: The stream this progress belongs to.
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        streamName:
+          type: string
+          description: The stream name.
+          example: Products
+        status:
+          type: string
+          enum:
+            - QUEUED
+            - RUNNING
+            - SUCCEEDED
+            - PARTIAL
+            - FAILED
+            - SKIPPED
+          description: The stream's status within the run.
+          example: PARTIAL
+        recordsRead:
+          type: integer
+          description: Records read for this stream.
+          example: 1250
+        created:
+          type: integer
+          description: Records created.
+          example: 40
+        updated:
+          type: integer
+          description: Records updated.
+          example: 1180
+        skipped:
+          type: integer
+          description: Records skipped.
+          example: 25
+        failed:
+          type: integer
+          description: Records that failed.
+          example: 5
+        deleted:
+          type: integer
+          description: Records deleted.
+          example: 0
+        duplicateKeys:
+          type: integer
+          description: >-
+            Source rows that repeat a key already imported in this run. The import keeps the last
+            row of each repeated key and discards earlier rows. Duplicate keys do not fail the run;
+            they mean the source feed is not unique on the key the stream imports by.
+          example: 25907
+        unresolvedParents:
+          type: integer
+          description: >-
+            Child records that were not imported because their parent could not be found.
+            Counted separately from `skipped`, which counts records that were already up to date.
+          example: 25370
+        message:
+          type: string
+          description: A per-stream status message.
+          example: 5 records failed validation.
+    RunDetail:
+      title: Run detail
+      type: object
+      description: A run together with its per-stream progress.
+      properties:
+        run:
+          $ref: '#/components/schemas/ImportRun'
+        streams:
+          type: array
+          description: The per-stream progress.
+          items:
+            $ref: '#/components/schemas/ImportRunStream'
+    CancelResult:
+      title: Cancellation result
+      type: object
+      description: The outcome of a cancellation request.
+      properties:
+        runId:
+          type: string
+          format: uuid
+          description: The run the cancellation targeted.
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        force:
+          type: boolean
+          description: Whether a hard stop was requested.
+          example: false
+        accepted:
+          type: boolean
+          description: Whether the cancellation was accepted. `false` when the run is unknown or already finished.
+          example: true
+    ErrorRecord:
+      title: Error record
+      type: object
+      description: A single error recorded during a run.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The error identifier.
+          example: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+        runId:
+          type: string
+          format: uuid
+          description: The run the error occurred in.
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        streamId:
+          type: string
+          format: uuid
+          description: The stream the error occurred in.
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        naturalKey:
+          type: string
+          description: The source natural key of the offending record.
+          example: SKU-1001
+        targetEntity:
+          type: string
+          description: The target writer the record was bound for.
+          example: emporix.customEntity
+        stage:
+          type: string
+          description: The pipeline stage the error occurred in.
+          example: MAPPING
+        errorCode:
+          type: string
+          description: A machine-readable error code.
+          example: REQUIRED_FIELD_MISSING
+        message:
+          type: string
+          description: A human-readable error message.
+          example: Required field 'name' is missing for natural key SKU-1001.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the error was recorded.
+          example: '2026-07-27T02:03:41.000Z'
+    ImportedRecord:
+      title: Imported record
+      type: object
+      description: A record that was imported. Holds keys and outcome; for composite parents it also holds the embedded child arrays.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The imported-record identifier.
+          example: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
+        configId:
+          type: string
+          format: uuid
+          description: The configuration the record belongs to.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        streamId:
+          type: string
+          format: uuid
+          description: The stream that produced the record.
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        runId:
+          type: string
+          format: uuid
+          description: The run that last touched the record.
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        targetEntity:
+          type: string
+          description: The target writer code.
+          example: emporix.customEntity
+        targetType:
+          type: string
+          description: The target type.
+          example: product
+        naturalKey:
+          type: string
+          description: The source natural key.
+          example: SKU-1001
+        targetId:
+          type: string
+          description: >-
+            The deterministic Emporix instance ID the record was written under. It's derived from the natural
+            key and allows the record to be located in the target.
+          example: id-sku-1001
+        fields:
+          type: object
+          description: The stored fields.
+          example:
+            name: Pipe cutter
+            sku: SKU-1001
+            active: true
+        outcome:
+          type: string
+          description: The last outcome, one of `UPSERTED`, `DELETED`, `DELETED_TARGET`, `FAILED`, or `DRY_RUN`.
+          example: UPDATED
+        importedAt:
+          type: string
+          format: date-time
+          description: When the record was last imported.
+          example: '2026-07-27T02:03:55.000Z'
+    Page:
+      title: Page
+      type: object
+      description: Pagination metadata for a page of results.
+      properties:
+        totalElements:
+          type: integer
+          description: The total number of elements across all pages.
+          example: 1250
+        totalPages:
+          type: integer
+          description: The total number of pages.
+          example: 63
+        number:
+          type: integer
+          description: The current zero-based page number.
+          example: 0
+        size:
+          type: integer
+          description: The page size.
+          example: 20
+    ImportRunPage:
+      title: Run page
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          properties:
+            content:
+              type: array
+              description: The runs on this page.
+              items:
+                $ref: '#/components/schemas/ImportRun'
+    ErrorRecordPage:
+      title: Error record page
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          properties:
+            content:
+              type: array
+              description: The error records on this page.
+              items:
+                $ref: '#/components/schemas/ErrorRecord'
+    ImportedRecordPage:
+      title: Imported record page
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          properties:
+            content:
+              type: array
+              description: The imported records on this page.
+              items:
+                $ref: '#/components/schemas/ImportedRecord'
+    HealthThresholds:
+      title: Health thresholds
+      type: object
+      description: >-
+        The limits that decide whether a stream is reported as `GREEN`, `AMBER`, or `RED`. Each field is
+        optional and resolves independently. An unset field falls back through the hierarchy, from the most
+        specific level to the least specific: stream, configuration, tenant, then the built-in default.
+      properties:
+        failureRatioAmber:
+          type: number
+          format: double
+          description: The share of failed records (0..1) at or above which the stream is `AMBER`.
+          example: 0.01
+        failureRatioRed:
+          type: number
+          format: double
+          description: The share of failed records (0..1) at or above which the stream is `RED`.
+          example: 0.1
+        staleAmberHours:
+          type: integer
+          description: The age threshold, in hours, for the stream's newest data. The stream is `AMBER` when the data's age reaches or exceeds this threshold.
+          example: 48
+        staleRedHours:
+          type: integer
+          description: The age threshold, in hours, for the stream's newest data. The stream is `RED` when the data's age reaches or exceeds this threshold.
+          example: 168
+        failedRunIsRed:
+          type: boolean
+          description: Whether a failed most-recent run makes the stream `RED` regardless of the other limits.
+          example: true
+    HealthSettings:
+      title: Tenant health thresholds
+      type: object
+      description: The tenant-wide thresholds, together with the built-in defaults they fall back to.
+      properties:
+        thresholds:
+          $ref: '#/components/schemas/HealthThresholds'
+        builtInDefaults:
+          $ref: '#/components/schemas/HealthThresholds'
+    JobGroup:
+      title: Job group
+      type: object
+      description: A named set of import configurations, used to scope the import statistics.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The job group identifier.
+          example: 9f8c7b6a-5d4e-3f2a-1b0c-9d8e7f6a5b4c
+        name:
+          type: string
+          description: The job group name. Unique within the tenant.
+          example: Nightly master data
+        configIds:
+          type: array
+          description: The configurations in the group.
+          items:
+            type: string
+            format: uuid
+            example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        createdAt:
+          type: string
+          format: date-time
+          description: When the group was created.
+          example: '2024-05-01T09:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the group was last changed.
+          example: '2024-05-02T11:30:00.000Z'
+    ImportLicense:
+      title: Import limits
+      type: object
+      description: The import limits that apply to the tenant.
+      properties:
+        maxRecordsPerEntity:
+          type: integer
+          description: >-
+            The maximum number of records a single run may write per target type. Records beyond the limit
+            are skipped and the run finishes as `PARTIAL`.
+          example: 10000
+        maxConcurrentImports:
+          type: integer
+          description: >-
+            The maximum number of runs that may be active at once for the tenant. A run requested beyond
+            this limit is rejected with `429`.
+          example: 2
+        batchSize:
+          type: integer
+          description: The number of records written to the target per request.
+          example: 100
+        workers:
+          type: integer
+          description: The number of target writes performed in parallel.
+          example: 1
+    ImportStatsSummary:
+      title: Statistics summary
+      type: object
+      description: Headline totals for the window. Rates are fractions between 0 and 1.
+      properties:
+        totalRuns:
+          type: integer
+          description: The number of runs started in the window.
+          example: 42
+        succeeded:
+          type: integer
+          description: The number of runs that finished successfully.
+          example: 38
+        partial:
+          type: integer
+          description: The number of runs that finished with some records failing.
+          example: 3
+        failed:
+          type: integer
+          description: The number of runs that failed.
+          example: 1
+        cancelled:
+          type: integer
+          description: The number of runs that were cancelled.
+          example: 0
+        recordsRead:
+          type: integer
+          description: The number of source records read.
+          example: 125000
+        created:
+          type: integer
+          description: The number of target objects created.
+          example: 4300
+        updated:
+          type: integer
+          description: The number of target objects updated.
+          example: 98000
+        skipped:
+          type: integer
+          description: The number of records skipped because nothing had changed.
+          example: 22000
+        deleted:
+          type: integer
+          description: The number of target objects deleted.
+          example: 700
+        failedRecords:
+          type: integer
+          description: The number of records that could not be imported.
+          example: 130
+        successRate:
+          type: number
+          format: double
+          description: The share of runs that finished successfully.
+          example: 0.905
+        failureRate:
+          type: number
+          format: double
+          description: The share of records that failed.
+          example: 0.001
+        deletionRate:
+          type: number
+          format: double
+          description: The share of processed records that resulted in a deletion.
+          example: 0.006
+        skipRate:
+          type: number
+          format: double
+          description: The share of records skipped as unchanged.
+          example: 0.176
+        avgRunDurationSec:
+          type: number
+          format: double
+          description: The mean duration of a finished run, in seconds.
+          example: 184.5
+        avgCreatedPerRun:
+          type: number
+          format: double
+          description: The mean number of objects created per run.
+          example: 102.4
+        avgUpdatedPerRun:
+          type: number
+          format: double
+          description: The mean number of objects updated per run.
+          example: 2333.3
+        distinctEntities:
+          type: integer
+          description: The number of distinct target objects currently held by the imports in scope.
+          example: 87000
+        activeRuns:
+          type: integer
+          description: The number of runs currently in progress.
+          example: 1
+    ImportStatsPoint:
+      title: Statistics time bucket
+      type: object
+      description: One bucket of the time series, in UTC.
+      properties:
+        bucket:
+          type: string
+          format: date-time
+          description: The start of the bucket.
+          example: '2024-05-14T00:00:00.000Z'
+        runs:
+          type: integer
+          example: 3
+        succeeded:
+          type: integer
+          example: 3
+        failed:
+          type: integer
+          example: 0
+        recordsRead:
+          type: integer
+          example: 4200
+        created:
+          type: integer
+          example: 120
+        updated:
+          type: integer
+          example: 3900
+        deleted:
+          type: integer
+          example: 10
+        skipped:
+          type: integer
+          example: 170
+        failedRecords:
+          type: integer
+          example: 0
+    ImportStreamHealth:
+      title: Stream health
+      type: object
+      description: The health of one stream over the window, and the thresholds the verdict used.
+      properties:
+        streamId:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        configId:
+          type: string
+          format: uuid
+          description: The configuration the stream belongs to.
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        name:
+          type: string
+          example: products
+        targetType:
+          type: string
+          description: The target type the stream writes to.
+          example: product
+        lastRunStatus:
+          type: string
+          description: The status of the stream's most recent run.
+          example: SUCCEEDED
+        lastRunAt:
+          type: string
+          format: date-time
+          example: '2024-05-14T02:00:00.000Z'
+        watermarkAgeSeconds:
+          type: integer
+          description: The number of seconds since the stream last detected new data.
+          example: 7200
+        failureRatio:
+          type: number
+          format: double
+          description: The share of the stream's records that failed in the window.
+          example: 0.002
+        health:
+          type: string
+          enum:
+            - GREEN
+            - AMBER
+            - RED
+          description: The stream's health verdict.
+          example: GREEN
+        thresholds:
+          $ref: '#/components/schemas/ImportEffectiveThresholds'
+    ImportEffectiveThresholds:
+      title: Effective thresholds
+      type: object
+      description: The threshold values the verdict was actually computed with, after resolving every level.
+      properties:
+        failureRatioAmber:
+          type: number
+          format: double
+          example: 0.01
+        failureRatioRed:
+          type: number
+          format: double
+          example: 0.1
+        staleAmberHours:
+          type: integer
+          example: 48
+        staleRedHours:
+          type: integer
+          example: 168
+        failedRunIsRed:
+          type: boolean
+          example: true
+        customised:
+          type: boolean
+          description: Whether any level overrides the built-in defaults.
+          example: false
+    ImportStatsNamedCount:
+      title: Named count
+      type: object
+      properties:
+        streamId:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        name:
+          type: string
+          example: products
+        count:
+          type: integer
+          example: 87
+    ImportStatsErrorBucket:
+      title: Error bucket
+      type: object
+      description: A count of errors sharing the same stage and code.
+      properties:
+        stage:
+          type: string
+          description: The pipeline stage the error occurred in.
+          example: UPSERT
+        errorCode:
+          type: string
+          example: VALIDATION
+        count:
+          type: integer
+          example: 54
+    ImportStreamChanges:
+      title: Stream changes
+      type: object
+      description: The counts of streams added and removed during the time window.
+      properties:
+        added:
+          type: integer
+          example: 2
+        removed:
+          type: integer
+          example: 1
+        trackingSince:
+          type: string
+          format: date-time
+          description: >-
+            When stream tracking began for the tenant. Streams created before this point are not counted,
+            so a window reaching further back is not comparable.
+          example: '2024-03-11T08:00:00.000Z'
+        series:
+          type: array
+          items:
+            type: object
+            properties:
+              bucket:
+                type: string
+                format: date-time
+                example: '2024-05-14T00:00:00.000Z'
+              added:
+                type: integer
+                example: 1
+              removed:
+                type: integer
+                example: 0
+    ImportStats:
+      title: Import statistics
+      type: object
+      description: >-
+        Aggregated import metrics for the requested window and scope. A section that was not requested via
+        the `sections` parameter is returned as `null`.
+      properties:
+        summary:
+          $ref: '#/components/schemas/ImportStatsSummary'
+        series:
+          type: array
+          description: Activity per time bucket, ordered oldest first and gap-free.
+          items:
+            $ref: '#/components/schemas/ImportStatsPoint'
+        streamHealth:
+          type: array
+          description: The health of each stream in scope.
+          items:
+            $ref: '#/components/schemas/ImportStreamHealth'
+        topFailingStreams:
+          type: array
+          description: The streams with the most errors during the time window, ordered by error count in descending order.
+          items:
+            $ref: '#/components/schemas/ImportStatsNamedCount'
+        errorBreakdown:
+          type: array
+          description: The most common errors in the window, grouped by stage and code.
+          items:
+            $ref: '#/components/schemas/ImportStatsErrorBucket'
+        streamChanges:
+          $ref: '#/components/schemas/ImportStreamChanges'
+        sourceIssues:
+          type: array
+          description: >-
+            The source data does not match what the import process expects during the specified time window.
+            These issues are not failures: the runs succeed, so they do not appear in pass/fail counters.
+          items:
+            $ref: '#/components/schemas/ImportSourceIssue'
+    ImportSourceIssue:
+      type: object
+      properties:
+        streamId:
+          type: string
+          format: uuid
+          description: The stream the problem was observed on.
+        configId:
+          type: string
+          format: uuid
+          description: The configuration that owns the stream.
+        name:
+          type: string
+          description: The stream name.
+          example: vendor
+        duplicateKeys:
+          type: integer
+          description: >-
+            Source rows that repeat a key already imported in the same run. The import
+            keeps the last row of each repeated key and discards earlier rows.
+          example: 25907
+        unresolvedParents:
+          type: integer
+          description: >-
+            Child records that were not imported because their parent could not be found.
+          example: 25370
+  responses:
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Access to resource is forbidden:
+              $ref: '#/components/examples/Forbidden403_Example'
+    NotFound_404:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Resource not found:
+              $ref: '#/components/examples/NotFound404_Example'
+    Conflict_409:
+      description: The request conflicts with the current state of the resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Run already active:
+              $ref: '#/components/examples/Conflict409_Example'
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Internal service error:
+              $ref: '#/components/examples/InternalServiceError500_Example'
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant you want to access.
+      schema:
+        type: string
+        example: mytenant
+    trait_id:
+      name: id
+      in: path
+      required: true
+      description: The resource identifier.
+      schema:
+        type: string
+        format: uuid
+        example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+    trait_configId:
+      name: configId
+      in: path
+      required: true
+      description: The configuration identifier.
+      schema:
+        type: string
+        format: uuid
+        example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+    trait_streamId:
+      name: streamId
+      in: path
+      required: true
+      description: The stream identifier.
+      schema:
+        type: string
+        format: uuid
+        example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+    trait_runId:
+      name: runId
+      in: path
+      required: true
+      description: The run identifier.
+      schema:
+        type: string
+        format: uuid
+        example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+    trait_page:
+      name: page
+      in: query
+      required: false
+      description: The zero-based page number.
+      schema:
+        type: integer
+        default: 0
+        example: 0
+    trait_size:
+      name: size
+      in: query
+      required: false
+      description: The page size.
+      schema:
+        type: integer
+        example: 20
+  examples:
+    Forbidden403_Example:
+      value:
+        status: forbidden
+        code: 403
+        message: The access to the requested resource has been forbidden.
+        details:
+          - Missing required scopes
+    NotFound404_Example:
+      value:
+        status: element_resource_non_existing
+        code: 404
+        message: The requested resource does not exist.
+    Conflict409_Example:
+      value:
+        status: conflict
+        code: 409
+        message: An import run is already active for this configuration.
+    InternalServiceError500_Example:
+      value:
+        status: internal_service_error
+        code: 500
+        message: A server-side exception occurred that prevented the system from correctly returning the result.
+        details:
+          - 'https://pattern.yaas.io/errortypes.html'
+    ImportConfig_Example:
+      value:
+        id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        tenant: mytenant
+        name: ERP product master import
+        description: Nightly import of product master data from the ERP system.
+        sourceConnId: 550e8400-e29b-41d4-a716-446655440000
+        aiEnabled: false
+        enabled: true
+        createdAt: '2026-07-01T10:15:30.000Z'
+        updatedAt: '2026-07-20T08:00:00.000Z'
+    ImportConfigs_Example:
+      value:
+        - id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          tenant: mytenant
+          name: ERP product master import
+          description: Nightly import of product master data from the ERP system.
+          sourceConnId: 550e8400-e29b-41d4-a716-446655440000
+          aiEnabled: false
+          enabled: true
+          createdAt: '2026-07-01T10:15:30.000Z'
+          updatedAt: '2026-07-20T08:00:00.000Z'
+    ImportStream_Example:
+      value:
+        id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        name: Products
+        sourceEntity: PRODUCT
+        targetWriter: emporix.customEntity
+        targetType: product
+        mode: STANDALONE
+        enabled: true
+    ImportStreams_Example:
+      value:
+        - id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          name: Products
+          sourceEntity: PRODUCT
+          targetWriter: emporix.customEntity
+          targetType: product
+          mode: STANDALONE
+          enabled: true
+    Schedule_Example:
+      value:
+        id: a3bb189e-8bf9-3888-9912-ace4e6543002
+        configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        cron: '0 0 2 * * *'
+        timezone: Europe/Berlin
+        enabled: true
+        nextFireAt: '2026-07-28T00:00:00.000Z'
+    ImportRun_Example:
+      value:
+        id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        tenant: mytenant
+        trigger: MANUAL
+        status: RUNNING
+        mode: FULL
+        startedAt: '2026-07-27T02:00:00.000Z'
+        finishedAt: null
+        recordsRead: 120
+        created: 10
+        updated: 100
+        skipped: 8
+        failed: 2
+        deleted: 0
+        message: null
+    ImportRunPage_Example:
+      value:
+        totalElements: 3
+        totalPages: 1
+        number: 0
+        size: 20
+        content:
+          - id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+            configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            tenant: mytenant
+            trigger: MANUAL
+            status: SUCCEEDED
+            mode: DELTA
+            startedAt: '2026-07-27T02:00:00.000Z'
+            finishedAt: '2026-07-27T02:04:12.000Z'
+            recordsRead: 1250
+            created: 40
+            updated: 1180
+            skipped: 25
+            failed: 5
+            deleted: 0
+            message: Import completed with 5 record failures.
+    RunDetail_Example:
+      value:
+        run:
+          id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+          configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          tenant: mytenant
+          trigger: MANUAL
+          status: SUCCEEDED
+          mode: DELTA
+          startedAt: '2026-07-27T02:00:00.000Z'
+          finishedAt: '2026-07-27T02:04:12.000Z'
+          recordsRead: 1250
+          created: 40
+          updated: 1180
+          skipped: 25
+          failed: 5
+          deleted: 0
+          message: Import completed with 5 record failures.
+        streams:
+          - id: c56a4180-65aa-42ec-a945-5fd21dec0538
+            runId: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+            streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            streamName: Products
+            status: PARTIAL
+            recordsRead: 1250
+            created: 40
+            updated: 1180
+            skipped: 25
+            failed: 5
+            deleted: 0
+            message: 5 records failed validation.
+    CancelResult_Example:
+      value:
+        runId: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        force: false
+        accepted: true
+    ErrorRecordPage_Example:
+      value:
+        totalElements: 5
+        totalPages: 1
+        number: 0
+        size: 50
+        content:
+          - id: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+            runId: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+            streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            naturalKey: SKU-1001
+            targetEntity: emporix.customEntity
+            stage: MAPPING
+            errorCode: REQUIRED_FIELD_MISSING
+            message: Required field 'name' is missing for natural key SKU-1001.
+            createdAt: '2026-07-27T02:03:41.000Z'
+    DataTypes_Example:
+      value:
+        - product
+        - category
+    ImportedRecordPage_Example:
+      value:
+        totalElements: 1250
+        totalPages: 63
+        number: 0
+        size: 20
+        content:
+          - id: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
+            configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            runId: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+            targetEntity: emporix.customEntity
+            targetType: product
+            naturalKey: SKU-1001
+            fields:
+              name: Pipe cutter
+              sku: SKU-1001
+              active: true
+            outcome: UPDATED
+            importedAt: '2026-07-27T02:03:55.000Z'
+    ImportStats_Example:
+      value:
+        summary:
+          totalRuns: 42
+          succeeded: 38
+          partial: 3
+          failed: 1
+          cancelled: 0
+          recordsRead: 125000
+          created: 4300
+          updated: 98000
+          skipped: 22000
+          deleted: 700
+          failedRecords: 130
+          successRate: 0.905
+          failureRate: 0.001
+          deletionRate: 0.006
+          skipRate: 0.176
+          avgRunDurationSec: 184.5
+          avgCreatedPerRun: 102.4
+          avgUpdatedPerRun: 2333.3
+          distinctEntities: 87000
+          activeRuns: 1
+        series:
+          - bucket: '2026-07-19T00:00:00.000Z'
+            runs: 3
+            succeeded: 3
+            failed: 0
+            recordsRead: 4200
+            created: 120
+            updated: 3900
+            deleted: 10
+            skipped: 170
+            failedRecords: 0
+        streamHealth:
+          - streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            name: Products
+            targetType: product
+            lastRunStatus: SUCCEEDED
+            lastRunAt: '2026-07-20T02:00:00.000Z'
+            watermarkAgeSeconds: 7200
+            failureRatio: 0.002
+            health: GREEN
+            thresholds:
+              failureRatioAmber: 0.01
+              failureRatioRed: 0.1
+              staleAmberHours: 48
+              staleRedHours: 168
+              failedRunIsRed: true
+              customised: false
+        topFailingStreams:
+          - streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            name: Products
+            count: 87
+        errorBreakdown:
+          - stage: UPSERT
+            errorCode: VALIDATION
+            count: 54
+        streamChanges:
+          added: 2
+          removed: 1
+          trackingSince: '2026-06-11T08:00:00.000Z'
+          series:
+            - bucket: '2026-07-19T00:00:00.000Z'
+              added: 1
+              removed: 0
+    JobGroups_Example:
+      value:
+        - id: 9f8c7b6a-5d4e-3f2a-1b0c-9d8e7f6a5b4c
+          name: Nightly master data
+          configIds:
+            - 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          createdAt: '2026-07-01T10:15:30.000Z'
+          updatedAt: '2026-07-20T08:00:00.000Z'
+    HealthSettings_Example:
+      value:
+        thresholds:
+          failureRatioAmber: 0.05
+          staleRedHours: 72
+        builtInDefaults:
+          failureRatioAmber: 0.01
+          failureRatioRed: 0.1
+          staleAmberHours: 48
+          staleRedHours: 168
+          failedRunIsRed: true
+    ImportLicense_Example:
+      value:
+        maxRecordsPerEntity: 10000
+        maxConcurrentImports: 2
+        batchSize: 100
+        workers: 1
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            importtool.import_trigger: Needed to trigger, schedule, monitor, and cancel import runs and to read configurations, streams, schedules, runs, and imported data.
+security:
+  - OAuth2:
+      - importtool.import_trigger

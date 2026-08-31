@@ -1,0 +1,889 @@
+openapi: 3.0.0
+info:
+  title: Currency Service
+  version: ''
+  description: |-
+    Hold and manage a list of currencies available for the tenant.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Currencies
+  - name: Currency exchange
+paths:
+  '/currency/{tenant}/currencies':
+    post:
+      summary: Creating a new currency
+      description: |-
+        Creates a new currency. 
+
+        The currency consists of a code compliant with the ISO-4217 standard (https://www.iso.org/iso-4217-currency-codes.html) and a currency name. The `name` field is localized.
+
+        If the `Content-Language` is set to `*`, the request body payload should contain localized fields as a map in the `key:value` pairs format, where `key` is the language code, and `value` is the translation.
+      tags:
+        - Currencies
+      security:
+        - OAuth2:
+            - currency.currency_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+        - $ref: '#/components/parameters/trait_tenant'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/currencyCreation'
+            examples:
+              Currency with name as a string:
+                value:
+                  code: USD
+                  name: Dollar
+              Currency with name as a map:
+                value:
+                  code: USD
+                  name:
+                    en: Dollar
+                    pl: Dolar
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/currencyCreationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-currency-create-currency
+    get:
+      summary: Retrieving all currencies
+      description: |-
+        Retrieves all currencies. You can filter and sort the results by the base currency parameters, for example `code` and `name`.
+        * If the `Accept-Language` is set to `*`, each internationalized field will be returned as a map that contains all translations in a format of `key:value` pairs, where `key` is the language code, and `value` is the translation.
+        * If the `Accept-Language` contains a single language, the translation will be returned as a string value.
+        * If the `Accept-Language` header is empty, the translation will be returned in the language defined in the `Configuration service` as default.
+      tags:
+        - Currencies
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_code'
+        - $ref: '#/components/parameters/trait_name'
+        - $ref: '#/components/parameters/trait_params'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              examples:
+                Currencies for specific language:
+                  value:
+                    - code: USD
+                      name: Dollar
+                    - code: EUR
+                      name: Euro
+                Currencies for all languages:
+                  value:
+                    - code: USD
+                      name:
+                        en: Dollar
+                        pl: Dolar
+                    - code: EUR
+                      name:
+                        en: Euro
+                        pl: Euro
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/currencyRetrieval'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-currency-retrieve-currencies
+  '/currency/{tenant}/currencies/{currencyCode}':
+    get:
+      summary: Retrieving a currency by code
+      description: |-
+        Retrieves a currency by the currency code.
+        * If the `Accept-Language` is set to `*`, each internationalized field will be returned as a map that contains all translations in a format of `key:value` pairs, where `key` is the language code and `value` is the translation.
+        * If the `Accept-Language` header contains a single language, the translation will be returned as a string value. 
+        * If the `Accept-Language` header is empty, the translation will be returned in the language defined in the `Configuration service` as default.
+      tags:
+        - Currencies
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+      responses:
+        '200':
+          description: The currency has been retrieved successfully
+          content:
+            application/json:
+              examples:
+                Currency with specific language:
+                  value:
+                    code: USD
+                    name: Dollar
+                Currency with all languages:
+                  value:
+                    code: USD
+                    name:
+                      en: Dollar
+                      pl: Dolar
+              schema:
+                $ref: '#/components/schemas/currencyRetrieval'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-currency-retrieve-currency
+    put:
+      summary: Updating a currency by code
+      description: |-
+        Updates an existing currency. 
+
+        The currency code is immutable, so it cannot be changed in this request. For the `name` field, the following rules are applicable:
+        * If the `Content-Language` is set to `*`, the `name` field should be represented as a map in the`key:value` format, where `key` is the language code, and `value` is the translation.
+        * If the `Content-Language` is set to a specific language, the `name` parameter should be passed as a string.
+      tags:
+        - Currencies
+      security:
+        - OAuth2:
+            - currency.currency_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/currencyUpdate'
+            examples:
+              Currency with name as a string:
+                value:
+                  name: Dollar
+                  metadata:
+                    version: 1
+              Currency with name as a map:
+                value:
+                  name:
+                    en: Dollar
+                    pl: Dolar
+                  metadata:
+                    version: 2
+      responses:
+        '204':
+          description: Currency updated
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: PUT-currency-update-currency
+    delete:
+      summary: Deleting a currency
+      description: |-
+        Deletes the currency by provided code. If given currency does not exist in the system, the http code `204` will be returned.
+
+        ```
+        Warning
+        Deleting a currency removes all exchange rates and prices related to the currency. Price removal is an asynchronous operation.
+        ````
+      tags:
+        - Currencies
+      security:
+        - OAuth2:
+            - currency.currency_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_force_delete'
+      responses:
+        '204':
+          description: Currency deleted
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: DELETE-currency-remove-currency
+    parameters:
+      - $ref: '#/components/parameters/trait_code_path'
+      - $ref: '#/components/parameters/trait_tenant'
+  '/currency/{tenant}/exchanges':
+    post:
+      summary: Creating a new exchange rate
+      description: |-
+        Creates a new exchange rate between two currencies. 
+
+        **Note:** Both the source and target currency codes must be compliant with the ISO-4217 standard (https://www.iso.org/iso-4217-currency-codes.html) and must be defined in the system. 
+      security:
+        - OAuth2:
+            - currency.currency_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/exchangeRateCreationRequest'
+            examples:
+              Exchange rate creation request:
+                value:
+                  sourceCurrency: USD
+                  targetCurrency: EUR
+                  rate: '0.91'
+        description: ''
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/exchangeRateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Currency exchange
+      operationId: POST-currency-create-exchange-rate
+    get:
+      summary: Retrieving all exchange rates
+      description: |-
+        Retrieves all exchange rates. You can filter and sort the results by the fields, for example `source` or `target currency`.
+      security:
+        - OAuth2:
+            - currency.currency_read
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_exchange_source_currency'
+        - $ref: '#/components/parameters/trait_exchange_target_currency'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              examples:
+                Exchange rates:
+                  value:
+                    - code: PLN_EUR
+                      sourceCurrency: PLN
+                      targetCurrency: EUR
+                      rate: '0.21'
+                    - code: PLN_USD
+                      sourceCurrency: PLN
+                      targetCurrency: USD
+                      rate: '0.23'
+                    - code: EUR_USD
+                      sourceCurrency: EUR
+                      targetCurrency: USD
+                      rate: '1.1'
+                    - code: USD_EUR
+                      sourceCurrency: USD
+                      targetCurrency: EUR
+                      rate: '0.91'
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/exchangeRateRetrieval'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Currency exchange
+      operationId: GET-currency-retrieve-exchange-rates
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/currency/{tenant}/exchanges/{code}':
+    get:
+      summary: Retrieving an exchange rate by code
+      description: |-
+        Retrieves a currency exchange rate definition by code.
+      security:
+        - OAuth2:
+            - currency.currency_read
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      responses:
+        '200':
+          description: Exchange rate returned
+          content:
+            application/json:
+              examples:
+                Exchange rate:
+                  value:
+                    code: USD_EUR
+                    sourceCurrency: USD
+                    targetCurrency: EUR
+                    rate: '0.91'
+              schema:
+                $ref: '#/components/schemas/exchangeRateRetrieval'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Currency exchange
+      operationId: GET-currency-retrieve-exchange-rate
+    put:
+      summary: Updating an exchange rate by code
+      description: |-
+        Updates an existing exchange rate by code. 
+
+        **Note:** The exchange rate code, source, and target currencies are immutable, so they cannot be changed in this request. Only the `rate` field can be changed.
+      security:
+        - OAuth2:
+            - currency.currency_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/exchangeRateUpdateRequest'
+            examples:
+              Update exchange rate:
+                value:
+                  rate: '0.91'
+                  metadata:
+                    version: 1
+      responses:
+        '204':
+          description: Exchange rate updated
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Currency exchange
+      operationId: PUT-currency-update-exchange-rate
+    delete:
+      summary: Deleting an exchange rate
+      description: |
+        Deletes the exchange rate definition by the provided code. If given definition does not exist in the system, the http code `204` will be returned.
+      security:
+        - OAuth2:
+            - currency.currency_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      responses:
+        '204':
+          description: Exchange rate deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Currency exchange
+      operationId: DELETE-currency-remove-exchange-rate
+    parameters:
+      - name: code
+        in: path
+        required: true
+        description: 'Identifier of the exchange rate definition. The identifier consists of source currency, underscore, and a target currency.'
+        schema:
+          type: string
+components:
+  schemas:
+    errorMessage:
+      title: error
+      description: Schema for API-specific errors.
+      type: object
+      properties:
+        currencyCode:
+          type: string
+        code:
+          description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+          type: integer
+        status:
+          description: 'classification of the error type, lower case with underscore eg validation_failure'
+          type: string
+        message:
+          description: Descriptive error message for debugging.
+          type: string
+        details:
+          description: list of problems causing this error
+          type: array
+          items:
+            title: errorDetail
+            description: schema for specific error cause
+            type: string
+        errorCode:
+          type: string
+      required:
+        - status
+        - code
+    metadata:
+      type: object
+      properties:
+        createdAt:
+          description: Time of document creation.
+          type: string
+          format: date-time
+        modifiedAt:
+          description: Time of document modification.
+          type: string
+          format: date-time
+        version:
+          minimum: 1
+          type: integer
+          description: Document version.
+    updateMetadata:
+      type: object
+      properties:
+        version:
+          minimum: 1
+          type: integer
+          description: Current version of the updated document.
+      required:
+        - version
+    currencyCreation:
+      type: object
+      title: currencyCreation
+      description: 'Represents a single currency creation. The currency consists of a code compliant with the ISO-4217 standard (https://www.iso.org/iso-4217-currency-codes.html) and a currency name. The `name` field is localized.'
+      properties:
+        code:
+          type: string
+          description: |
+            Currency code. The currency symbol must consist of three capital letters and must be a valid ISO-4217 code (https://www.iso.org/iso-4217-currency-codes.html).
+        name:
+          oneOf:
+            - type: string
+              description: Currency name in the specified language.
+              example: Euro
+            - type: object
+              description: |-
+                Map of translations in the `key:value` pairs format, where `key` is the language code, and `value` is the translation.
+                Both the source and target currency codes must be compliant with the ISO-4217 standard (https://www.iso.org/iso-4217-currency-codes.html) and must be defined in the system.
+              example:
+                en: Euro
+              additionalProperties:
+                type: string
+          description: |-
+            Currency name. If the `Content-Language` is set to `*`, the field should be provided as a map that contains all translations in the `key:value` pairs format, where `key` is the language code and `value` is the translation. If the `Content-Language` contains a single language, the translation should be passed as a string value. If the `Accept-Language` header is empty, the translation will be returned in the language defined in the `Configuration service` as default.
+
+            **Note:** Only the languages defined in the system are allowed to be used here. If a language code not defined in the system is provided, the request will be rejected.
+      required:
+        - code
+        - name
+    currencyUpdate:
+      title: currencyUpdate
+      type: object
+      description: Represents a single currency update.
+      properties:
+        name:
+          oneOf:
+            - type: string
+              description: Currency name in the specified language.
+              example: Euro
+            - type: object
+              description: |-
+                Map of translations in the `key:value` pairs format, where `key` is the language code and `value` is the translation.
+                Both the source and target currency codes must be compliant with the ISO-4217 standard (see https://www.iso.org/iso-4217-currency-codes.html).
+              example:
+                en: Euro
+              additionalProperties:
+                type: string
+          description: |-
+            The currency name. If the `Content-Language` is set to `*`, the field should be provided as a map that contains all translations in the format of `key:value` pairs, where `key` is the language code and `value` is the translation. If the `Content-Language` contains a single language, the translation should be passed as a string value. If the `Content-Language` header is empty, the default language defined in the `Configuration service` is taken.
+
+            Only the languages defined in the system are allowed to be used here. If a language code not defined in the system is provided, the request will be rejected.
+        metadata:
+          $ref: '#/components/schemas/updateMetadata'
+      required:
+        - name
+        - metadata
+    currencyCreationResponse:
+      title: currencyCreationResponse
+      type: object
+      description: Represents the response after a successful currency creation.
+      properties:
+        code:
+          type: string
+          description: |
+            Code of the newly created currency.
+    exchangeRateResponse:
+      title: exchangeRateResponse
+      type: object
+      description: Represents the response after a successful exchange rate creation.
+      properties:
+        code:
+          type: string
+          description: |
+            Code of the newly created exchange rate in the following format: `sourceCurrency_targetCurrency`.
+    currencyRetrieval:
+      title: currencyRetrieval
+      type: object
+      description: 'Represents a single currency. The currency consists of a code compliant with ISO-4217 (https://www.iso.org/iso-4217-currency-codes.html) and a currency name. The name field is localized.'
+      properties:
+        code:
+          type: string
+          description: |
+            Currency code. The currency symbol consists of three capital letters and is a valid ISO-4217 code (https://www.iso.org/iso-4217-currency-codes.html).
+        name:
+          oneOf:
+            - type: string
+              description: Currency name in the specified language.
+              example: Euro
+            - type: object
+              description: |-
+                Map of translations in the form of `key:value` pairs, where `key` is the language code and `value` is the translation.
+                Both the source and target currency codes must be compliant with the ISO-4217 standard (see https://www.iso.org/iso-4217-currency-codes.html).
+              example:
+                en: Euro
+              additionalProperties:
+                type: string
+          description: |-
+            The currency name.
+            If the `Accept-Language` is set to `*`, each internationalized field is returned as a map that contains all translations in the format of `key:value` pairs, where `key` is the language code and `value` is the translation.
+            The `Accept-Language` can contain the priority list of languages which should be returned. Always one language is returned as a single string field. Example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+            If the `Accept-Language` header is empty, the translation will be returned in the language defined in the `Configuration service` as default.
+        metadata:
+          $ref: '#/components/schemas/metadata'
+    exchangeRateUpdateRequest:
+      title: exchangeRateUpdateRequest
+      type: object
+      properties:
+        rate:
+          type: string
+          description: |-
+            Represents the exchange rate.
+
+            The value of the field is represented by a number where the cent part is separated by a comma. For example, `1.09`. The cent part is not limited just to two digits. A rate with any precision can be returned. For example: `1.09193421`
+        metadata:
+          $ref: '#/components/schemas/updateMetadata'
+      required:
+        - rate
+        - metadata
+    exchangeRateCreationRequest:
+      title: exchangeRate
+      type: object
+      properties:
+        sourceCurrency:
+          type: string
+          description: 'The source currency code. The currency symbol must consist of three capital letters and must be a valid ISO-4217 code (https://www.iso.org/iso-4217-currency-codes.html) defined in the system.'
+        targetCurrency:
+          type: string
+          description: 'The target currency code. The currency symbol must consist of three capital letters and must be a valid ISO-4217 code (https://www.iso.org/iso-4217-currency-codes.html) defined in the system.'
+        rate:
+          type: string
+          description: |-
+            Represents the exchange rate.
+
+            The value of the field is represented by a number where the cent part is separated by a comma. For example `1.09`. The cent part is not limited just to two digits. A rate with any precision can be returned. For example: `1.091934212`
+      required:
+        - sourceCurrency
+        - targetCurrency
+        - rate
+    exchangeRateRetrieval:
+      title: exchangeRateRetrieval
+      type: object
+      properties:
+        code:
+          type: string
+          description: Identifier of the exchange rate. The identifier consists of the source currency and the target currency separated by an underscore.
+        sourceCurrency:
+          type: string
+          description: 'Source currency code. The currency symbol must consist of three capital letters and must be a valid ISO-4217 code (https://www.iso.org/iso-4217-currency-codes.html) defined in the system.'
+        targetCurrency:
+          type: string
+          description: 'Target currency code. The currency symbol must consist of three capital letters and must be a valid ISO-4217 code (https://www.iso.org/iso-4217-currency-codes.html) defined in the system.'
+        rate:
+          type: string
+          description: |-
+            Represents the exchange rate.
+
+            The value of the field is represented by a number where the cent part is separated by a dot. For example `1.09`. The cent part is not limited just to two digits. A rate with any precision can be returned. For example: `1.091934212`
+        metadata:
+          $ref: '#/components/schemas/metadata'
+  responses:
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            ForbiddenExample:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            UnauthorizedExample:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            AccessTokenExpiredExample:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            InternalServiceErrorExample:
+              value:
+                code: 500
+                status: Internal Service Error
+                message: A server-side exception occurred that prevented the system from correctly returning the result.
+    Conflict_409:
+      description: Conflict.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            ConflictExample:
+              value:
+                code: 409
+                status: Conflict
+                message: The object that you are trying to update has already changed. Please refresh and try again!
+    BadRequest_400:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            AmbigousTenant:
+              $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+    NotFound_404:
+      description: Resource has not been found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            NotFoundExample:
+              $ref: '#/components/examples/NotFound404_CurrencyNotFound'
+  parameters:
+    trait_force_delete:
+      name: forceDelete
+      in: query
+      required: false
+      schema:
+        type: boolean
+        example: true
+        default: false
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant that the caller is acting upon.
+
+        **Note:** This value must always be provided in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        The page number to be retrieved where the size of the pages is specified by the `pageSize` parameter.
+        The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      in: query
+      name: sort
+      required: false
+      description: "Fields to sort the response data by following order of the parameters from left to right. Can contain multiple fields in the following format: field name:sort direction separated by a comma. The colon with sort direction parameter is redundant and descending order is taken only if it is equal to desc or DESC. Ascending order is considered in any other case. Sorting by name parameter works properly only if the Accept-Language header is set to a specific language or is empty with default language specified in the configuration service."
+      schema:
+        type: string
+        example: 'name,code:desc'
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        The number of documents being retrieved on one page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_contentLanguage_header:
+      in: header
+      name: Content-Language
+      description: The Content-Language request HTTP header defines language(s) of the payload.
+      schema:
+        type: string
+        example: de
+    trait_acceptLanguage_header:
+      in: header
+      name: Accept-Language
+      required: false
+      description: 'The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If the header value is empty, the language defined in `Configuration service` is returned. It can be a priority list working as a fallback mechanism.'
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+    trait_XTotalCount_header:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: The flag indicates if the total count of items should be returned. The total count will be returned as a value of the `X-Total-Count` header.
+      schema:
+        default: false
+        type: boolean
+    trait_code:
+      name: code
+      in: query
+      required: false
+      schema:
+        type: string
+        example: BD
+      description: 'Returns all currencies which contain the value. For example, for filter value: `code=BD` the following currencies might be returned: `BBD`, `BDT`, `SBD`, `XBD`'
+    trait_name:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: "Filtering by localized fields without language key is possible only when `Accept-Language` header with correct language is provided or when it is not set at all (in that case default language is taken). For example, when `Accept-Language` is set to `en` and the `name` parameter is equal to name=Doll, then Dollar should be returned. When Accept-Language header is set to `*` filtering by localized fields is possible only when the fields contain a language key. For example, when `Accept-Language` is set to `*` and `name` parameter is equal to name.en=Doll then Dollar should be returned. "
+    trait_code_path:
+      name: currencyCode
+      in: path
+      required: true
+      schema:
+        type: string
+      description: 'Three letter currency code, compliant with the ISO 4217 standard. '
+    trait_exchange_source_currency:
+      name: sourceCurrency
+      in: query
+      required: false
+      schema:
+        type: string
+      description: 'Returns all exchange definitions for which the source currency matches the pattern. The `contains` operation is used for the parameter. '
+    trait_exchange_target_currency:
+      name: targetCurrency
+      in: query
+      required: false
+      schema:
+        type: string
+      description: 'Returns all exchange definitions for which the target currency matches the pattern. The `contains` operation is used for the parameter. '
+    trait_params:
+      in: query
+      name: params
+      required: false
+      description: |-
+        ### Note: params is not a name of query param. Any localized value field can be taken as an additional filtering parameter.
+
+        Additional filtering can be done by each localized field available in API. Filtering by multiple fields is also allowed. In that case, fields are aggregated with the `AND` logic operator.
+        In the case of string values, the `contains` approach is taken (filtering by substrings). In the case of boolean and number fields, the `equals` approach is taken.
+
+        Filtering query params example:
+        * `name.de=Eur` - all currencies with `name` in language `de` containing `Eur` are returned.
+
+        * When `Accept-Language` header is set to `*`, filtering by localized fields is possible only when fields contains a language key.
+        For example, when `Accept-Language` is set to '*', the request with parameter `name.en=Eur` returns all currencies with `name.en` containing `Eur` in English.
+      schema:
+        type: object
+        additionalProperties: true
+        example:
+          name.en: Eur
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            currency.currency_manage: 'The scope allows you to create, update, and delete currencies and currency exchanges'
+            currency.currency_read: The scope allows you to retrieve currencies and currency exchanges.
+  examples:
+    BadRequest400_AmbiguousTenant:
+      value:
+        code: 400
+        status: Bad Request
+        message: Tenant in the header is not matching with the one provided in the URI.
+    NotFound404_CurrencyNotFound:
+      value:
+        code: 404
+        status: Not Found
+        message: The currency was not found for this code
+  requestBodies: {}
+security:
+  - OAuth2:
+      - currency.currency_manage
+      - currency.currency_read

@@ -1,0 +1,761 @@
+openapi: 3.0.0
+info:
+  title: Sequential ID Service
+  contact:
+    name: Emporix
+    url: 'https://emporix.com'
+    email: documentation@emporix.com
+  version: ''
+  description: |-
+    Create sequentially unique IDs for orders, invoices, customers or similar.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Sequential IDs management
+paths:
+  '/sequential-id/{tenant}/schemas':
+    get:
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              example:
+                - name: Schema
+                  schemaType: orderNoSequence
+                  active: true
+                  preText: EC-__region__-__year__-__month__-
+                  postText: '-D'
+                  startValue: 1
+                  maxValue: 999999999
+                  numberOfDigits: 9
+                  counter: 45684
+                  placeholders:
+                    __year__:
+                      required: true
+                    __month__:
+                      required: true
+                    __region__:
+                      required: true
+                      sitePath: mixins.customConfig.region
+                - name: customer_number
+                  startValue: 1
+                  schemaType: orderNoSequence
+                  preText: C-
+                  minValue: 100
+                  maxValue: 999999999
+                  numberOfDigits: 9
+                  counter: 109
+              schema:
+                $ref: '#/components/schemas/SequenceSchemas'
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+      summary: Retrieving all sequence schemas
+      description: |-
+        Gets all sequence schemas.
+      operationId: GET-sequential-id-retrieve-tenant-schemas
+      security:
+        - OAuth2:
+            - sequentialid.schema_view
+      tags:
+        - Sequential IDs management
+    post:
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              example:
+                id: 6915e2eb3b4c2e6c7c80711b
+              schema:
+                type: string
+                description: ID of the created sequence schema.
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+      summary: Creating a sequence schema
+      description: |-
+        Creates a new sequence schema.
+
+        Placeholder names must start and end with `__`, for example `__year__` or `__region__`.
+
+        Built-in placeholders that Sequential ID can resolve  when `siteCode` is provided:
+        * `__year__`, `__month__`, `__day__`, `__hour__`, `__minute__`, `__second__` — based on `homeBase.timezone`. Default timezone is `UTC`.
+        * `__country__` — based on `homeBase.address.country`. Default country is `DE`.
+
+        Custom placeholders must declare `sitePath`.
+        Paths that start with `mixins.` are resolved from [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) and are format-validated only at creation.
+        Other paths are resolved from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode) and must match the Site schema, for example `homeBase.address.country`. Paths that target `metadata` or the bare `mixins` root are rejected.
+
+        For array values, `arrayLimit` (default `3`) and `delimiter` (default `-`) control how elements are joined. Both are ignored for scalar values. Resolved values longer than 100 characters are truncated.
+        To access array elements, use the `sitePath` with the index, for example `mixins.customConfig.regions.2` or `mixins.customConfig.regions.2.name`. Array index starts at `0`.
+        Omit the array index to access all elements, which will then be joined with the `delimiter` and limited to `arrayLimit` elements. Joining of object array elements is not supported.
+      operationId: POST-sequential-id-create-tenant-schema
+      requestBody:
+        content:
+          application/json:
+            example:
+              name: Schema
+              schemaType: orderNoSequence
+              preText: EC-__region__-__year__-__month__-
+              postText: '-D'
+              maxValue: 999999999
+              numberOfDigits: 9
+              startValue: 3
+              placeholders:
+                __year__:
+                  required: true
+                __month__:
+                  required: true
+                __region__:
+                  required: true
+                  sitePath: mixins.customConfig.region
+            schema:
+              $ref: '#/components/schemas/SequenceSchemaCreate'
+        required: true
+      security:
+        - OAuth2:
+            - sequentialid.schema_manage
+      tags:
+        - Sequential IDs management
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        schema:
+          pattern: '[a-zA-Z0-9_-]+'
+          minLength: 3
+          maxLength: 16
+          type: string
+        description: |
+          The name of your tenant.
+
+          **Note**: The tenant name should always be provided in lowercase.
+  '/sequential-id/{tenant}/schemas/{schemaId}':
+    get:
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              example:
+                name: Schema
+                schemaType: orderNoSequence
+                active: true
+                preText: EC-__region__-__year__-__month__-
+                postText: '-D'
+                startValue: 1
+                maxValue: 999999999
+                numberOfDigits: 9
+                counter: 45684
+                placeholders:
+                  __year__:
+                    required: true
+                  __month__:
+                    required: true
+                  __region__:
+                    required: true
+                    sitePath: mixins.customConfig.region
+              schema:
+                $ref: '#/components/schemas/SequenceSchema'
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+      summary: Retrieving a sequence schema
+      description: |-
+        Gets a sequence schema by its ID.
+      operationId: GET-sequential-id-retrieve-schema
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      security:
+        - OAuth2:
+            - sequentialid.schema_view
+      tags:
+        - Sequential IDs management
+    delete:
+      responses:
+        '204':
+          description: 'Successful schema removal'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      summary: Deleting a sequence schema
+      description: |-
+        Deletes a sequence schema by its ID.
+      operationId: DELETE-sequential-id-remove-schema
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      security:
+        - OAuth2:
+            - sequentialid.schema_manage
+      tags:
+        - Sequential IDs management
+    parameters:
+      - name: schemaId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the schema.
+  '/sequential-id/{tenant}/schemas/{schemaId}/setActive':
+    post:
+      responses:
+        '200':
+          description: Schema set to active
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+        '404':
+          $ref: '#/components/responses/trait_yaasAware_404'
+      summary: Activating a sequence schema
+      description: |-
+        Sets the schema as active in the system.
+      operationId: POST-sequential-id-activate-schema
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+      security:
+        - OAuth2:
+            - sequentialid.schema_manage
+      tags:
+        - Sequential IDs management
+    parameters:
+      - name: schemaId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the schema to activate.
+  '/sequential-id/{tenant}/schemas/types/{schemaType}':
+    get:
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              example:
+                - name: Schema
+                  schemaType: orderNoSequence
+                  active: true
+                  preText: EC-__region__-__year__-__month__-
+                  postText: '-D'
+                  startValue: 1
+                  maxValue: 999999999
+                  numberOfDigits: 9
+                  counter: 45684
+                  placeholders:
+                    __year__:
+                      required: true
+                    __month__:
+                      required: true
+                    __region__:
+                      required: true
+                      sitePath: mixins.customConfig.region
+                - name: customer_number
+                  startValue: 1
+                  schemaType: orderNoSequence
+                  preText: C-
+                  minValue: 100
+                  maxValue: 999999999
+                  numberOfDigits: 9
+                  counter: 109
+              schema:
+                $ref: '#/components/schemas/SequenceSchemas'
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+      summary: Retrieving all sequence schema types
+      description: |-
+        Gets all sequence schemas.
+      operationId: GET-sequential-id-retrieve-schema-types
+      security:
+        - OAuth2:
+            - sequentialid.schema_view
+      tags:
+        - Sequential IDs management
+    parameters:
+      - name: schemaType
+        in: path
+        required: true
+        schema:
+          type: string
+        description: |
+          The schema type corresponding to the entity it is used for. Possible values are:
+          - `orderNoSequence`
+          - `invoiceNoSequence`
+          - `quoteNoSequence`
+          - `pickPackNoSequence`
+          - `orderHoldingAreaNoSequence`
+      - name: tenant
+        in: path
+        required: true
+        schema:
+          pattern: '[a-zA-Z0-9_-]+'
+          minLength: 3
+          maxLength: 16
+          type: string
+        description: |
+          The name of your tenant.
+
+          **Note**: The tenant name should always be provided in lowercase.
+  '/sequential-id/{tenant}/schemas/types/{schemaType}/nextId':
+    post:
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              example:
+                id: B7012562
+              schema:
+                $ref: '#/components/schemas/NextIdResponse'
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+        '404':
+          $ref: '#/components/responses/trait_yaasAware_404'
+      summary: Creating a nextId for a sequence schema type
+      description: |-
+        Creates and returns the `nextId` according to the specified sequence.
+        If you specify the `sequenceKey` in request body, the `nextId` number is generated for this sequence, otherwise default pool is used.
+
+        When `siteCode` is provided and a placeholder value is missing from the request body, Sequential ID resolves it from site data:
+        * Built-in placeholders `__year__`, `__month__`, `__day__`, `__hour__`, `__minute__`, `__second__` use `homeBase.timezone`. Default timezone is `UTC`.
+        * Built-in `__country__` uses `homeBase.address.country` from site data.
+        * Custom placeholders with `sitePath` are resolved from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode), or from [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) when the path starts with `mixins.`.
+
+        Values supplied in the request body take precedence over site resolution.
+        Arrays of scalars are joined using `delimiter` (default `-`), limited to `arrayLimit` elements (default `3`).
+        Paths that resolve to an object, an empty array, or a missing value do not populate the placeholder. Required placeholders then fail with `400 Bad Request`.
+        `siteCode` is required when a required `sitePath` placeholder is not supplied in the request body.
+        Placeholders that resolve to a value longer than 100 characters are truncated.
+      operationId: POST-sequential-id-create-schema-type-nextId
+      requestBody:
+        content:
+          application/json:
+            example:
+              sequenceKey: 2025-05
+              placeholders:
+                __year__: '2025'
+                __month__: '05'
+            schema:
+              $ref: '#/components/schemas/NextIdCommandRequest'
+        required: true
+      security:
+        - OAuth2:
+            - sequentialid.schema_view
+      tags:
+        - Sequential IDs management
+    parameters:
+      - name: schemaType
+        in: path
+        required: true
+        description: |
+          The schema type corresponding to the entity it is used for. Possible values are:
+            - `orderNoSequence`
+            - `invoiceNoSequence`
+            - `quoteNoSequence`
+            - `pickPackNoSequence`
+            - `orderHoldingAreaNoSequence`
+        schema:
+          type: string
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_siteCode'
+  '/sequential-id/sequenceSchemaBatch/nextIds':
+    post:
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              example:
+                Schema:
+                  ids:
+                    - C-2025-05-0000000045-D
+                    - C-2025-05-0000000045-D
+              schema:
+                $ref: '#/components/schemas/SchemaBatchNextIdResponse'
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+      summary: Creating nextIds for sequence schema types
+      description: |-
+        Creates and returns multiple `nextIds` for the specified sequence schemas.
+        If you specify the `sequenceKey` in request body, the `nextIds` numbers are generated for this sequence, otherwise default pool is used.
+
+        When `siteCode` is provided and a placeholder value is missing from the request body, Sequential ID resolves it from site data:
+        * Built-in placeholders `__year__`, `__month__`, `__day__`, `__hour__`, `__minute__`, `__second__` use `homeBase.timezone`. Default timezone is `UTC`.
+        * Built-in `__country__` uses `homeBase.address.country` from site data.
+        * Custom placeholders with `sitePath` are resolved from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode), or from [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) when the path starts with `mixins.`.
+
+        Values supplied in the request body take precedence over site resolution.
+        Arrays of scalars are joined using `delimiter` (default `-`), limited to `arrayLimit` elements (default `3`).
+        Paths that resolve to an object, an empty array, or a missing value do not populate the placeholder. Required placeholders then fail with `400 Bad Request`.
+        `siteCode` is required when a required `sitePath` placeholder is not supplied in the request body.
+        Placeholders that resolve to a value longer than 100 characters are truncated.
+      parameters:
+        - $ref: '#/components/parameters/trait_siteCode'
+      operationId: POST-sequential-id-create-schema-types-nextIds
+      requestBody:
+        content:
+          application/json:
+            example:
+              Schema:
+                sequenceKey: 2025-05
+                placeholders:
+                  __year__: '2025'
+                  __month__: '05'
+              Schema2:
+                numberOfIds: 2
+                placeholders:
+                  '--prefix--': C-
+            schema:
+              $ref: '#/components/schemas/SchemaBatchNextIdRequest'
+        required: true
+      security:
+        - OAuth2:
+            - sequentialid.schema_view
+      tags:
+        - Sequential IDs management
+components:
+  schemas:
+    SequenceSchema:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/SequenceSchemaCreate'
+        - properties:
+            active:
+              type: boolean
+              description: Flag indicating whether the schema is active.
+            id:
+              type: string
+              description: ID of the sequence schema.
+            counter:
+              type: number
+              description: Number of created IDs based on the selected schema.
+            metadata:
+              type: object
+              properties:
+                createdAt:
+                  type: string
+                  format: date
+                  description: Date of creation.
+                modifiedAt:
+                  type: string
+                  format: date
+                  description: Date of last modification.
+                version:
+                  type: number
+                  description: The version number.
+    SequenceSchemas:
+      type: array
+      items:
+        $ref: '#/components/schemas/SequenceSchema'
+    Placeholders:
+      type: object
+      description: Placeholder definitions used in `preText` and `postText`. Names must start and end with `__`.
+      additionalProperties:
+        type: object
+        description: Properties used as placeholders.
+        properties:
+          required:
+            type: boolean
+            description: Flag indicating whether the placeholder must be resolved when generating an ID.
+          default:
+            type: string
+            description: Replacement used when the placeholder is not set in the request. Used only when `required` is `false`.
+          sitePath:
+            type: string
+            description: Dotted path into the site or site mixins response. Resolved when `siteCode` is provided.
+          arrayLimit:
+            type: integer
+            minimum: 1
+            description: Maximum array elements to include. Defaults to `3`. Ignored for scalars.
+          delimiter:
+            type: string
+            description: Separator for joined array elements. Defaults to `-`. Ignored for scalars.
+        required:
+          - required
+    SequenceSchemaCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the sequence schema.
+        schemaType:
+          type: string
+          pattern: '^[a-zA-Z0-9]*$'
+          description: |
+            The schema type corresponding to the entity it is used for. Possible values are:
+            - `orderNoSequence`
+            - `invoiceNoSequence`
+            - `quoteNoSequence`
+            - `pickPackNoSequence`
+            - `orderHoldingAreaNoSequence`
+        preText:
+          type: string
+          description: |
+            The prefix of the ID. It can contain placeholders, which are replaced with their values.
+            Placeholders are defined in the `placeholders` property.
+        postText:
+          type: string
+          description: |
+            The suffix of the ID. It can contain placeholders, which are replaced with their values.
+            Placeholders are defined in the `placeholders` property.
+        startValue:
+          type: number
+          description: |
+            The starting value of the sequence. It is used to generate the first ID.
+            The starting value is incremented for each subsequent ID.
+        maxValue:
+          type: number
+          description: |
+            The maximum value of the sequence. It is used to limit the range of generated IDs.
+            If the maximum value is reached, the sequence will not generate any more IDs.
+        numberOfDigits:
+          type: number
+          description: |
+            The number of digits in the generated ID. It is used to format the ID.
+            If the number of digits is less than the maximum value, leading zeros are added.
+        placeholders:
+          $ref: '#/components/schemas/Placeholders'
+      required:
+        - name
+        - startValue
+        - maxValue
+        - numberOfDigits
+    NextIdCommandRequest:
+      type: object
+      properties:
+        sequenceKey:
+          type: string
+          description: The pattern to follow for the nextID.
+        placeholders:
+          additionalProperties:
+            type: string
+            description: Additional property used as a placeholder.
+          description: The filler text for values based on certain properties or settings in the system.
+    NextIdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The created nextID according to the selected schema.
+    SchemaBatchNextIdRequest:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          numberOfIds:
+            type: number
+            minimum: 1
+            description: The number of IDs to create sequentially in one request.
+          sequenceKey:
+            type: string
+            description: The pattern to follow for the nextID.
+          placeholders:
+            additionalProperties:
+              type: string
+              description: Additional property used as a placeholder.
+            description: The filler text for values based on certain properties or settings in the system.
+    SchemaBatchNextIdResponse:
+      type: object
+      additionalProperties:
+        type: object
+        description: Properties used as placeholders.
+        properties:
+          ids:
+            type: array
+            items:
+              type: string
+            description: The sequence ID(s) created according to the selected schema.
+    error:
+      description: Schema for API specified errors.
+      type: object
+      properties:
+        status:
+          minimum: 100
+          maximum: 599
+          description: 'original HTTP error code, should be consistent with the response HTTP code'
+          type: integer
+        type:
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: 'classification of the error type, lower case with underscore eg validation_failure'
+          type: string
+        message:
+          description: descriptive error message for debugging
+          type: string
+        error:
+          type: string
+        timestamp:
+          type: string
+          format: date
+        errorDetails:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+              field:
+                type: string
+    coreError:
+      type: object
+      properties:
+        status:
+          type: string
+          description: HTTP Status.
+        message:
+          type: string
+          description: Error message.
+  responses:
+    trait_yaasAware_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            Bad Request:
+              value:
+                status: 400
+                message: 'There are validation problems, see details section for more information'
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    trait_yaasAware_403:
+      description: |
+        Given authorization scopes are not sufficient and do not match required scopes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            Forbidden:
+              value:
+                status: 403
+                message: Given request does not have required scopes. It is not authorized to perform this operation.
+                type: insufficient_permissions
+    trait_yaasAware_404:
+      description: |
+        Resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            Not Found:
+              value:
+                status: 404
+                message: Resource does not exist.
+    common_response_InternalServerError_500:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreError'
+          examples:
+            Internal Server Error:
+              value:
+                status: 500
+                message: Problem encountered while trying to connect to the database.
+  parameters:
+    trait_siteCode:
+      name: siteCode
+      in: query
+      required: false
+      description: |
+        Site code used to resolve placeholders from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode) and [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins).
+
+        Placeholders such as **  year__**, **  month__**, **  day__**, **  hour__**, **  minute__**, **  second__**, and **  country__**, 
+        which are defined in the schema, can have default values computed when their counterparts are missing in the request body.
+
+        The default values are derived from the `site`. Specifically:
+        - All date-related placeholders are computed based on the `site.homeBase.timezone` field.
+        - The **__country__** placeholder is replaced with the value of `site.homeBase.address.country`.
+
+        If these values are missing in `site`, the following defaults are used:
+        - `UTC` for `timezone`
+        - `DE` for `country`
+      schema:
+        type: string
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The name of your tenant.
+
+        **Note**: The tenant name should always be provided in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+  examples: {}
+  requestBodies: {}
+  headers: {}
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            sequentialid.schema_view: schema_view
+            sequentialid.schema_manage: schema_manage
+  links: {}
+  callbacks: {}
+security:
+  - OAuth2: []

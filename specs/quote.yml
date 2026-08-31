@@ -1,0 +1,2665 @@
+openapi: 3.0.1
+info:
+  title: Quote Service
+  description: |
+    Manage the customers' quotes before going to checkout.
+  contact:
+    email: documentation@emporix.com
+  version: ''
+tags:
+  - name: Quote management
+  - name: Quote history
+  - name: Quote pdf
+  - name: Quote reason
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/quote/{tenant}/quotes':
+    get:
+      tags:
+        - Quote management
+      summary: Retrieving quotes
+      description: |-
+        Retrieves quotes. The response includes either all quotes or a subset of quotes based on the assigned access token scopes.
+        ***
+
+        ### **Additional scope information**
+        One of the scopes is required.
+
+          * The `quote.quote_read` scope is required to employees to retrieve all tenant quotes.
+          * The `quote.quote_read_own` is assigned to customers to enable them to retrieve only the quotes that they created themselves or that were created on their behalf.
+        ***
+      operationId: GET-quote-list-quotes
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/X-Total-Count'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+      responses:
+        '200':
+          description: The request was successful. Quote's details are returned.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuoteResponse'
+              examples:
+                Quotes Example:
+                  value:
+                    - id: 5b3188dc-9a5c-4163-8756-4f228c295a59
+                      businessModel: B2B
+                      customer:
+                        customerId: '72318750'
+                        firstName: Stefan
+                        lastName: Muller
+                        contactEmail: s.muller@emporix.com
+                      employee:
+                        employeeId: 00u6fo3yzjE8Q7X0d417
+                        firstName: John
+                        lastName: Smith
+                      cartId: 63ee5168e55c231c327220d3
+                      company:
+                        name: ABC
+                      siteCode: main
+                      orderId: B7025189
+                      currency: USD
+                      status:
+                        value: ACCEPTED
+                        comment: comment example
+                        quoteReason:
+                          id: 29817428df374918f236951
+                          code: PRICE_TOO_HIGH
+                          type: CHANGE
+                          message:
+                            en: The price is too high
+                            de: Der Preis ist zu hoch
+                      validTo: '2023-03-25T09:36:55.974Z'
+                      totalPrice:
+                        netValue: 205
+                        grossValue: 225.5
+                        taxValue: 20.5
+                      subtotalPrice:
+                        netValue: 205
+                        grossValue: 225.5
+                        taxValue: 20.5
+                      taxAggregate:
+                        lines:
+                          - name: STANDARD
+                            amount: 20.5
+                            rate: 10
+                            taxable: 225.5
+                      shipping:
+                        value: 10
+                        grossValue: 12
+                        methodId: fedex-2dayground
+                        zoneId: 63440460ceeaa26d794fcbbb
+                        methodName:
+                          en: FedEx 2Day
+                          pl: FedEx 2Dni
+                        shippingTaxCode: STANDARD
+                      comment:
+                        employeeComment: Employee comment
+                      customerReference: PO-12345
+                      customerComment: Please deliver before Friday
+                      billingAddress:
+                        id: 63440460cee2826d794fcb8a
+                        name: ABC
+                        addressLine1: Street
+                        addressLine2: 27a
+                        city: London
+                        countryCode: GB
+                        postcode: '32131'
+                        state: London
+                      shippingAddress:
+                        id: 63440460cee2826d794fcb8a
+                        name: ABC
+                        addressLine1: Street
+                        addressLine2: 27a
+                        city: London
+                        countryCode: GB
+                        postcode: '32131'
+                        state: London
+                      items:
+                        - id: 0972ef39-9a4a-4867-b3c1-f8c00f66ee0a
+                          quantity:
+                            quantity: 1
+                            unitCode: piece
+                          price:
+                            priceId: 63ec99a2457e8f7548685fe5
+                            unitPrice: 34
+                            newUnitPrice: 34
+                            discount: 0
+                            totalNetValue: 34
+                            tax:
+                              taxClass: STANDARD
+                              taxRate: 10
+                              prices:
+                                grossValue: 37.4
+                                netValue: 34
+                          product:
+                            productId: BC10033--BC10033-35
+                            name:
+                              de: 'Hohe Sicherheitsschuhe Reptile RS S3 SRC, schwarz'
+                              ar: حذاء الجريمة المحافظ المرتفع RS S3 SRC ، NERE
+                              ru: 'Safety shoes high Reptile RS S3 SRC, black'
+                              th: 'Safety shoes high Reptile RS S3 SRC, black'
+                              en: 'Safety shoes high Reptile RS S3 SRC, black'
+                              it: 'Scarpe antinfortunistiche alte Reptile RS S3 SRC, nere'
+                              fr: 'Chaussures de sécurité hautes Reptile RS S3 SRC, noir'
+                              en-gb: 'Safety shoes high Reptile RS S3 SRC, black'
+                              es: 'Zapatos de seguridad altos Reptile RS S3 SRC, negros'
+                            media:
+                              id: '82c30154-dcf7-4bb9-b210-d960fec6c9fd'
+                              contentType: image/jpg
+                              url: 'https://res.cloudinary.com/saas-ag/image/upload/emporix-docs/82c30154-dcf7-4bb9-b210-d960fec6c9fd.jpg'
+                            taxClasses:
+                              DE: STANDARD
+                              PL: ZERO
+                        - id: ac16dd14-baa4-4ccb-bad3-756b36b89235
+                          quantity:
+                            quantity: 3
+                            unitCode: piece
+                          price:
+                            priceId: 63ec9ad0457e8f75486861cf
+                            unitPrice: 57
+                            newUnitPrice: 57
+                            totalNetValue: 171
+                            tax:
+                              taxClass: STANDARD
+                              taxRate: 10
+                              prices:
+                                grossValue: 188.1
+                                netValue: 171
+                          product:
+                            productId: '0601394000'
+                            name:
+                              de: GWS 750 - Kabelgebundener Winkelschleifer 750 W 115 mm
+                              ar: GWS 750 - 750 W 115 مم طاحونة الزاوية
+                              ru: GWS 750 - Corded angle grinder 750 W 115 mm
+                              th: GWS 750 - Corded angle grinder 750 W 115 mm
+                              en: GWS 750 - Corded angle grinder 750 W 115 mm
+                              it: GWS 750 - Smerigliatrice angolare a filo 750 W 115 mm
+                              fr: GWS 750 - Meuleuse d'angle filaire 750 W 115 mm
+                              en-gb: GWS 750 - Corded angle grinder 750 W 115 mm
+                              es: GWS 750 - Amoladora angular con cable 750 W 115 mm
+                            media:
+                              contentType: image/jpg
+                              url: 'https://res.cloudinary.com/saas-ag/image/upload/emporix-docs/937b1491-e099-46f2-b31a-f7c2f7945f7a.jpg'
+                            taxClasses:
+                              DE: STANDARD
+                              PL: ZERO
+                      restriction: main
+                      mixins:
+                        customAttributes:
+                          attribute:
+                            value: 1
+                            unit: kg
+                      metadata:
+                        mixins:
+                          customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+                        version: 1
+                        createdAt: '2023-02-23T09:36:55.929Z'
+                        modifiedAt: '2023-02-23T09:38:49.196Z'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_read'
+      security:
+        - OAuth2:
+            - quote.quote_read
+            - quote.quote_read_own
+    post:
+      tags:
+        - Quote management
+      summary: Creating a quote
+      description: |
+        Generates a new quote, which can be created either manually using a complete quote definition that includes items, or by copying the details from cart.
+
+        ***
+
+        ### **Additional scope information**
+        One of the scopes is required.
+
+        * The `quote.quote_manage_own` scope is required for customers to create a quote from cart.
+        * The additional `cart.cart_manage_external_prices` scope is required for managing external prices.
+
+        ***
+      operationId: POST-quote-create-quote
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/QuoteCreateRequest'
+                - $ref: '#/components/schemas/QuoteCreateFromCartRequest'
+            examples:
+              Full quote creation definition.:
+                value:
+                  customerId: 9tt954309b06d46d3cf19fe
+                  employeeId: 9tt954309b06d46d3cf19fa
+                  billingAddressId: 64672a8f9939d331699cbe6e
+                  shippingAddressId: 64672a8f9939d331699cbe6e
+                  companyName: ABC
+                  siteCode: main
+                  currency: USD
+                  validTo: '2022-04-01T04:37:04.301Z'
+                  shipping:
+                    value: 10
+                    methodId: fedex-2dayground
+                    zoneId: 63440460ceeaa26d794fcbbb
+                    shippingTaxCode: STANDARD
+                  items:
+                    - quantity:
+                        quantity: 1
+                        unitCode: piece
+                      price:
+                        type: 'INTERNAL'
+                        priceId: 6245aa0a78a8576e338fa9c4
+                        unitPrice: 13
+                        totalNetValue: 13
+                        tax:
+                          taxClass: STANDARD
+                          taxRate: 20
+                      product:
+                        type: 'INTERNAL'
+                        productId: 7i98542309b06d46d3cf19fe
+                        mixins:
+                          customAttributes:
+                            attribute:
+                              value: 3
+                              unit: kg
+                        metadata:
+                          mixins:
+                            customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+                      mixins:
+                        customAttributes:
+                          attribute:
+                            value: 2
+                            unit: kg
+                      metadata:
+                        mixins:
+                          customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+                  restriction: US
+                  mixins:
+                    customAttributes:
+                      attribute:
+                        value: 1
+                        unit: kg
+                  metadata:
+                    mixins:
+                      customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+              Create quote from cart:
+                value:
+                  cartId: 4472v8d2309b06d46d3cf19fe
+                  billingAddressId: 4472v8d2309b06d46d3cf19dd
+                  shippingAddressId: 4472v8d2309b06d46d3cf19dd
+                  customerReference: PO-12345
+                  customerComment: Please deliver before Friday
+                  shipping:
+                    value: 10
+                    methodId: fedex-2dayground
+                    zoneId: 63440460ceeaa26d794fcbbb
+                    shippingTaxCode: STANDARD
+        required: true
+        description: ''
+      responses:
+        '201':
+          description: The request was successful. The Quote has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteIdResponse'
+              examples:
+                Quote created:
+                  value:
+                    id: e241dc9e-a3f6-4573-bb01-a8ae21d2d4ae
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_manage, quote.quote_manage_own'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - quote.quote_manage
+            - quote.quote_manage_own
+  '/quote/{tenant}/quotes/{quoteId}/pdf':
+    post:
+      tags:
+        - Quote pdf
+      summary: Creating a quote PDF
+      description: |
+        Generates a pdf for a given quote and returns its contents. 
+      operationId: POST-quote-generate-quote-pdf
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: quoteId
+          in: path
+          description: |
+            Quote unique identifier generated when the quote is created.
+          required: true
+          schema:
+            type: string
+            example: 084bcaf5-66b8-4ddd-9489-65c5f6449e94
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+      responses:
+        '200':
+          description: The request was successful. Generated pdf is returned.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_manage'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      security:
+        - OAuth2:
+            - quote.quote_manage
+            - quote.quote_manage_own
+  '/quote/{tenant}/quotes/{quoteId}/history':
+    get:
+      tags:
+        - Quote history
+      summary: Retrieving quote history
+      description: |
+        Retrieves changes related to a quote with a given ID. 
+      operationId: GET-quote-retrieve-quote-history
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: quoteId
+          in: path
+          description: |
+            Quote unique identifier generated when the quote is created.
+          required: true
+          schema:
+            type: string
+            example: 084bcaf5-66b8-4ddd-9489-65c5f6449e94
+        - $ref: '#/components/parameters/X-Total-Count'
+      responses:
+        '200':
+          description: The request was successful. Quote details are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteHistory'
+              examples:
+                Quote history:
+                  value:
+                    - id: 6447b45cac0475131f3a6261
+                      op: ADD
+                      path: /items
+                      newValue:
+                        itemId: 2298854309b06d4c6d3cf1zfe
+                        quantity:
+                          quantity: 1
+                          unitCode: H87
+                        price:
+                          priceId: 14551d2309b06sd46d3cf19bq
+                          unitPrice: 13
+                          totalNetValue: 13
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 20
+                          product:
+                            productId: 74698542309b06dc46d3cf19fe
+                      userId: 7777i52309521897214
+                      userFirstName: Robin
+                      userLastName: Fritz
+                      restriction: main
+                      userType: EMPLOYEE
+                      modifiedAt: '2024-04-02T13:06:15.280Z'
+                    - id: 6447b45cac0475131f3a6262
+                      op: REPLACE
+                      path: /status
+                      newValue:
+                        value: OPEN
+                      previousValue:
+                        value: AWAITING
+                      userId: 612ji52309521897214
+                      userFirstName: Robin
+                      userLastName: Fritz
+                      userType: EMPLOYEE
+                      modifiedAt: '2024-04-02T13:06:15.280Z'
+                    - id: 6447b45cac0475131f3a6263
+                      op: REPLACE
+                      path: /validTo
+                      newValue: '2025-04-02T13:06:15.280Z'
+                      previousValue: '2023-04-02T13:06:15.280Z'
+                      userId: 612ji52309521897214
+                      userFirstName: Stefan
+                      userLastName: Muller
+                      userType: EMPLOYEE
+                      modifiedAt: '2024-04-02T13:06:15.280Z'
+                    - id: 6447b45cac0475131f3a6264
+                      op: REPLACE
+                      path: /items/2298854309b06d46d3cf19fe
+                      previousValue:
+                        itemId: 2298854309b06d4c6d3cf1zfe
+                        quantity:
+                          quantity: 1
+                          unitCode: H87
+                        price:
+                          priceId: 14551d2309b06sd46d3cf19bq
+                          unitPrice: 13
+                          totalNetValue: 13
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 20
+                          product:
+                            productId: 74698542309b06dc46d3cf19fe
+                      newValue:
+                        itemId: 2298854309b06d4c6d3cf1zfe
+                        quantity:
+                          quantity: 2
+                          unitCode: H87
+                        price:
+                          priceId: 14551d2309b06sd46d3cf19bq
+                          unitPrice: 14
+                          totalNetValue: 14
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 21
+                          product:
+                            productId: 74698542309b06dc46d3cf1fff
+                      userId: 5577i52309521897214
+                      userFirstName: Mark
+                      userLastName: Schmidt
+                      userType: EMPLOYEE
+                      modifiedAt: '2024-04-02T13:06:15.280Z'
+                    - id: 6447b45cac0475131f3a6261
+                      op: REMOVE
+                      path: /items/124dfa82410fas824kfa
+                      previousValue:
+                        itemId: 2298854309b06d4c6d3cf1zfe
+                        quantity:
+                          quantity: 1
+                          unitCode: H87
+                        price:
+                          priceId: 14551d2309b06sd46d3cf19bq
+                          unitPrice: 13
+                          totalNetValue: 13
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 20
+                          product:
+                            productId: 74698542309b06dc46d3cf19fe
+                      userId: 612ji52309521897214
+                      userFirstName: Stefan
+                      userLastName: Muller
+                      userType: EMPLOYEE
+                      modifiedAt: '2024-04-02T13:06:15.280Z'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_read'
+      security:
+        - OAuth2:
+            - quote.quote_read
+  '/quote/{tenant}/quotes/{quoteId}':
+    get:
+      tags:
+        - Quote management
+      summary: Retrieving a single quote
+      description: |
+        Retrieves a quote by a given id.
+
+        ***
+
+        ### **Additional scope information**
+        One of the scopes is required.
+
+        * The `quote.quote_read_own` scope is only required to customers to retrieve their own quote.
+
+        ***
+      operationId: GET-quote-retrieve-quote
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: quoteId
+          in: path
+          description: |
+            Quote unique identifier generated when the quote is created.
+          required: true
+          schema:
+            type: string
+            example: 084bcaf5-66b8-4ddd-9489-65c5f6449e94
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+              examples:
+                Get quote by id:
+                  value:
+                    id: 5b3188dc-9a5c-4163-8756-4f228c295a59
+                    businessModel: B2B
+                    customer:
+                      customerId: '72318750'
+                      firstName: Stefan
+                      lastName: Muller
+                      contactEmail: s.muller@emporix.com
+                    employee:
+                      employeeId: 00u6fo3yzjE8Q7X0d417
+                      firstName: John
+                      lastName: Smith
+                    cartId: 63ee5168e55c231c327220d3
+                    company:
+                      name: The best company
+                    siteCode: main
+                    orderId: B7025189
+                    currency: USD
+                    status:
+                      value: ACCEPTED
+                      comment: comment example
+                      quoteReason:
+                        id: 29817428df374918f236951
+                        code: PRICE_TOO_HIGH
+                        type: CHANGE
+                        message:
+                          en: The price is too high
+                          de: Der Preis ist zu hoch
+                      validTo: '2023-03-25T09:36:55.974Z'
+                    comment:
+                      employeeComment: Employee comment
+                    customerReference: PO-12345
+                    customerComment: Please deliver before Friday
+                    validTo: '2023-03-25T09:36:55.974Z'
+                    totalPrice:
+                      netValue: 205
+                      grossValue: 225.5
+                      taxValue: 20.5
+                    subtotalPrice:
+                      netValue: 205
+                      grossValue: 225.5
+                      taxValue: 20.5
+                    taxAggregate:
+                      lines:
+                        - name: STANDARD
+                          amount: 20.5
+                          rate: 10
+                          taxable: 225.5
+                    shipping:
+                      value: 10
+                      grossValue: 12
+                      methodId: fedex-2dayground
+                      zoneId: 63440460ceeaa26d794fcbbb
+                      methodName:
+                        en: FedEx 2Day
+                        pl: FedEx 2Dni
+                      shippingTaxCode: STANDARD
+                    billingAddress:
+                      id: 63440460cee2826d794fcb8a
+                      name: ABC
+                      addressLine1: Street
+                      addressLine2: 27a
+                      city: London
+                      countryCode: GB
+                      postcode: '32131'
+                      state: London
+                    shippingAddress:
+                      id: 63440460cee2826d794fcb8a
+                      name: ABC
+                      addressLine1: Street
+                      addressLine2: 27a
+                      city: London
+                      countryCode: GB
+                      postcode: '32131'
+                      state: London
+                    items:
+                      - id: 0972ef39-9a4a-4867-b3c1-f8c00f66ee0a
+                        quantity:
+                          quantity: 1
+                          unitCode: piece
+                        price:
+                          type: 'INTERNAL'
+                          priceId: 63ec99a2457e8f7548685fe5
+                          unitPrice: 34
+                          newUnitPrice: 34
+                          discount: 0
+                          totalNetValue: 34
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 10
+                            prices:
+                              grossValue: 37.4
+                              netValue: 34
+                        product:
+                          productId: BC10033--BC10033-35
+                          type: 'INTERNAL'
+                          name:
+                            de: 'Hohe Sicherheitsschuhe Reptile RS S3 SRC, schwarz'
+                            ar: حذاء الجريمة المحافظ المرتفع RS S3 SRC ، NERE
+                            ru: 'Safety shoes high Reptile RS S3 SRC, black'
+                            th: 'Safety shoes high Reptile RS S3 SRC, black'
+                            en: 'Safety shoes high Reptile RS S3 SRC, black'
+                            it: 'Scarpe antinfortunistiche alte Reptile RS S3 SRC, nere'
+                            fr: 'Chaussures de sécurité hautes Reptile RS S3 SRC, noir'
+                            en-gb: 'Safety shoes high Reptile RS S3 SRC, black'
+                            es: 'Zapatos de seguridad altos Reptile RS S3 SRC, negros'
+                          media:
+                            id: '82c30154-dcf7-4bb9-b210-d960fec6c9fd'
+                            contentType: image/jpg
+                            url: 'https://res.cloudinary.com/saas-ag/image/upload/emporix-docs/82c30154-dcf7-4bb9-b210-d960fec6c9fd.jpg'
+                          taxClasses:
+                            DE: STANDARD
+                            PL: ZERO
+                          mixins:
+                            customAttributes:
+                              attribute:
+                                value: 1
+                                unit: kg
+                          metadata:
+                            mixins:
+                              customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+                        mixins:
+                          customAttributes:
+                            attribute:
+                              value: 1
+                              unit: kg
+                        metadata:
+                          mixins:
+                            customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+                      - id: ac16dd14-baa4-4ccb-bad3-756b36b89235
+                        quantity:
+                          quantity: 3
+                          unitCode: piece
+                        price:
+                          type: 'INTERNAL'
+                          priceId: 63ec9ad0457e8f75486861cf
+                          unitPrice: 57
+                          newUnitPrice: 57
+                          totalNetValue: 171
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 10
+                            prices:
+                              grossValue: 188.1
+                              netValue: 171
+                        product:
+                          type: 'INTERNAL'
+                          productId: '0601394000'
+                          name:
+                            de: GWS 750 - Kabelgebundener Winkelschleifer 750 W 115 mm
+                            ar: GWS 750 - 750 W 115 مم طاحونة الزاوية
+                            ru: GWS 750 - Corded angle grinder 750 W 115 mm
+                            th: GWS 750 - Corded angle grinder 750 W 115 mm
+                            en: GWS 750 - Corded angle grinder 750 W 115 mm
+                            it: GWS 750 - Smerigliatrice angolare a filo 750 W 115 mm
+                            fr: GWS 750 - Meuleuse d'angle filaire 750 W 115 mm
+                            en-gb: GWS 750 - Corded angle grinder 750 W 115 mm
+                            es: GWS 750 - Amoladora angular con cable 750 W 115 mm
+                          media:
+                            contentType: image/jpg
+                            url: 'https://res.cloudinary.com/saas-ag/image/upload/emporix-docs/937b1491-e099-46f2-b31a-f7c2f7945f7a.jpg'
+                          taxClasses:
+                            DE: STANDARD
+                            PL: ZERO
+                    restriction: main
+                    mixins:
+                      customAttributes:
+                        attribute:
+                          value: 1
+                          unit: kg
+                    metadata:
+                      mixins:
+                        customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+                      version: 1
+                      createdAt: '2023-02-23T09:36:55.929Z'
+                      modifiedAt: '2023-02-23T09:38:49.196Z'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_read'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      security:
+        - OAuth2:
+            - quote.quote_read
+            - quote.quote_read_own
+    patch:
+      operationId: PATCH-quote-update-quote
+      summary: Partially updating a quote
+      description: |
+        Partially updates a quote with a given ID. Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` - adding an item to the items list
+          - `remove` - removing an item from the items list
+          - `replace` - replacing an item with given ID with new definition which may contain custom price proposal or defined price
+
+        After events are saved, some of the information is retrieved in the async way from other services: full price definition is based on the provided price ID, and the full product name is based on the provided product ID.
+
+        ***
+
+        ### **Additional scope information**
+        One of the scopes is required.
+
+        * The `quote.quote_manage_own` scope allows customers to modify only their own quotes.
+        * Customers can update the `status`, `customerReference`, and `customerComment` fields.
+        * Customer status updates are limited to `ACCEPTED`, `DECLINED`, and `IN_PROGRESS`.
+
+        ***
+      responses:
+        '204':
+          description: The request was successful. The quote has been updated.
+        '400':
+          $ref: '#/components/responses/Bad_request_400_cl'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_manage, quote.quote_manage_own'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteUpdateRequest'
+            examples:
+              Multiple update list:
+                value:
+                  - op: ADD
+                    path: /items
+                    value:
+                      itemId: 2298854309b06d4c6d3cf1zfe
+                      quantity:
+                        quantity: 1
+                        unitCode: H87
+                      price:
+                        priceId: 14551d2309b06sd46d3cf19bq
+                        unitPrice: 13
+                        totalNetValue: 13
+                        tax:
+                          taxClass: STANDARD
+                          taxRate: 20
+                      product:
+                        productId: 74698542309b06dc46d3cf19fe
+                  - op: REPLACE
+                    path: /status
+                    value:
+                      value: OPEN
+                      comment: new comment
+                  - op: REPLACE
+                    path: /items/22988s54309b06d46d3acf19fe
+                    value:
+                      quantity:
+                        quantity: 1
+                        unitCode: H87
+                      price:
+                        priceId: 14551d2309b06sd46d3cf19bq
+                        unitPrice: 13
+                        totalNetValue: 13
+                        tax:
+                          taxClass: STANDARD
+                          taxRate: 20
+                      product:
+                        productId: 74698542309b06dc46d3cf19fe
+                  - op: REMOVE
+                    path: /items/124dfa82410fas824kfa
+              Add item to a quote:
+                value:
+                  - op: ADD
+                    path: /items
+                    value:
+                      - itemId: 2298854309b06d4c6d3cf1zfe
+                        quantity:
+                          quantity: 1
+                          unitCode: H87
+                        price:
+                          priceId: 14551d2309b06sd46d3cf19bq
+                          unitPrice: 13
+                          totalNetValue: 13
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 20
+                        product:
+                          productId: 74698542309b06dc46d3cf19fe
+              Add mixin to a quote:
+                value:
+                  - op: ADD
+                    path: /mixins/customAttributes
+                    value:
+                      value: 12
+                      unit: kg
+                  - op: ADD
+                    path: /metadata/mixins/newAttributes
+                    value: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/695297f5b3fd5d378296ae41_customAttributes_v2.json'
+              Replace mixin value in a quote:
+                value:
+                  - op: REPLACE
+                    path: /mixins/customAttributes/unit
+                    value: kg
+              Remove mixin value from a quote:
+                value:
+                  - op: REMOVE
+                    path: /mixins/customAttributes/unit
+              Add mixin and metadata to a quote item:
+                value:
+                  - op: ADD
+                    path: /items/2298854309b06d4c6d3cf1zfe/mixins/design
+                    value:
+                      product_type: item
+                      freezer_number_of_shelves_baskets: 123
+                  - op: ADD
+                    path: /items/2298854309b06d4c6d3cf1zfe/metadata/mixins/design
+                    value: 'https://storage.googleapis.com/emporix_mixin/freezers-design.json'
+              Replace mixin and metadata in a quote item:
+                value:
+                  - op: REPLACE
+                    path: /items/2298854309b06d4c6d3cf1zfe/mixins/quoteCustomAttributes
+                    value:
+                      itemLevelAttribute: new value
+                  - op: REPLACE
+                    path: /items/2298854309b06d4c6d3cf1zfe/metadata/mixins/quoteCustomAttributes
+                    value: 'https://storage.googleapis.com/emporix_mixin/freezers-design.json'
+              Remove mixin and metadata from a quote item:
+                value:
+                  - op: REMOVE
+                    path: /items/2298854309b06d4c6d3cf1zfe/mixins/quoteCustomAttributes/itemLevelAttribute
+                  - op: REMOVE
+                    path: /items/2298854309b06d4c6d3cf1zfe/metadata/mixins/quoteCustomAttributes
+              Add mixin and metadata to a quote product:
+                value:
+                  - op: ADD
+                    path: /items/2298854309b06d4c6d3cf1zfe/product/mixins/design
+                    value:
+                      product_type: item
+                      freezer_number_of_shelves_baskets: 123
+                  - op: ADD
+                    path: /items/2298854309b06d4c6d3cf1zfe/product/metadata/mixins/design
+                    value: 'https://storage.googleapis.com/emporix_mixin/freezers-design.json'
+              Replace mixin and metadata in a quote product:
+                value:
+                  - op: REPLACE
+                    path: /items/2298854309b06d4c6d3cf1zfe/product/mixins/quoteCustomAttributes
+                    value:
+                      productLevelAttribute: new value
+                  - op: REPLACE
+                    path: /items/2298854309b06d4c6d3cf1zfe/product/metadata/mixins/quoteCustomAttributes
+                    value: 'https://storage.googleapis.com/emporix_mixin/freezers-design.json'
+              Remove mixin and metadata from a quote product:
+                value:
+                  - op: REMOVE
+                    path: /items/2298854309b06d4c6d3cf1zfe/product/mixins/quoteCustomAttributes/productLevelAttribute
+                  - op: REMOVE
+                    path: /items/2298854309b06d4c6d3cf1zfe/product/metadata/mixins/quoteCustomAttributes
+              Replace item list of a quote:
+                value:
+                  - op: REPLACE
+                    path: /items
+                    value:
+                      - itemId: 2298854309b06d4c6d3cf1zfe
+                        quantity:
+                          quantity: 1
+                          unitCode: H87
+                        price:
+                          priceId: 14551d2309b06sd46d3cf19bq
+                          unitPrice: 13
+                          totalNetValue: 13
+                          tax:
+                            taxClass: STANDARD
+                            taxRate: 20
+                        product:
+                          productId: 74698542309b06dc46d3cf19fe
+              Replace item in a quote:
+                value:
+                  - op: REPLACE
+                    path: /items/2s298854309b06d46d3cf19fe
+                    value:
+                      quantity:
+                        quantity: 1
+                        unitCode: H87
+                      price:
+                        priceId: 14551d2309b06sd46d3cf19bq
+                        unitPrice: 13
+                        totalNetValue: 13
+                        tax:
+                          taxClass: STANDARD
+                          taxRate: 20
+                      product:
+                        productId: 74698542309b06dc46d3cf19fe
+              Delete item from a quote:
+                value:
+                  - op: REMOVE
+                    path: /items/124dfa8241sd0fas824kfa
+              Delete items from a quote:
+                value:
+                  - op: REMOVE
+                    path: /items
+                    value:
+                      - itemId: 124dfa8241sd0fas824kfa
+                      - itemId: 124dfa8241sd0fas824k7b
+              Delete company name in a quote:
+                value:
+                  - op: REMOVE
+                    path: /companyName
+              Change quote status:
+                value:
+                  - op: REPLACE
+                    path: /status
+                    value:
+                      value: DECLINED
+                      comment: new comment
+                      quoteReasonId: 6437ed5dc0dc2925289a5bbd
+              Change customer reference:
+                value:
+                  - op: REPLACE
+                    path: /customerReference
+                    value:
+                      value: PO-12345
+              Change customer comment:
+                value:
+                  - op: REPLACE
+                    path: /customerComment
+                    value:
+                      value: Please deliver before Friday
+              Accept quote:
+                value:
+                  - op: REPLACE
+                    path: /status
+                    value:
+                      value: ACCEPTED
+                      comment: new comment
+              Change quote validTo value:
+                value:
+                  - op: REPLACE
+                    path: /validTo
+                    value: '2024-04-02T13:06:15.280Z'
+              Change quantity of an item:
+                value:
+                  - op: REPLACE
+                    path: /items/124dfa8241sd0fas824kfa
+                    value:
+                      quantity:
+                        quantity: 1
+                        unitCode: H87
+                      price:
+                        priceId: 14551d2309b06sd46d3cf19bq
+                        unitPrice: 13
+                        totalNetValue: 13
+                        tax:
+                          taxClass: STANDARD
+                          taxRate: 20
+                      product:
+                        productId: 74698542309b06dc46d3cf19fe
+              Change price of an item:
+                value:
+                  - op: REPLACE
+                    path: /items/124dfa8241sd0fas824kfa/price
+                    value:
+                      totalNetValue: 13
+              Set comment to a quote:
+                value:
+                  - op: REPLACE
+                    path: /comment
+                    value: Comment to add
+              Change shipping address of a quote:
+                value:
+                  - op: REPLACE
+                    path: /shippingAddressId
+                    value: 74698542309b06dc46d3cf19fa
+              Change billing address of a quote:
+                value:
+                  - op: REPLACE
+                    path: /billingAddressId
+                    value: 74698542309b06dc46d3cf19fa
+              Change company name of a quote:
+                value:
+                  - op: REPLACE
+                    path: /companyName
+                    value: new the best company name
+              Change customer of a quote:
+                value:
+                  - op: REPLACE
+                    path: /customerId
+                    value: C12345678
+              Change shipping of a quote:
+                value:
+                  - op: REPLACE
+                    path: /shipping
+                    value:
+                      value: 10
+                      methodId: fedex-2dayground
+                      zoneId: 63440460ceeaa26d794fcbbb
+                      shippingTaxCode: STANDARD
+      security:
+        - OAuth2:
+            - quote.quote_manage
+            - quote.quote_manage_own
+      tags:
+        - Quote management
+    delete:
+      summary: Deleting a quote
+      tags:
+        - Quote management
+      operationId: DELETE-quote-remove-quote
+      description: |-
+        Deletes a quote with a given quote ID.
+      responses:
+        '204':
+          description: Quote has been deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a scope for this action.
+                    details:
+                      - 'Required scope(s): quote.quote_manage'
+      security:
+        - OAuth2:
+            - quote.quote_manage
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        description: |
+          The tenant that the caller is acting upon
+
+          **Note:** This value must always be provided in lowercase.
+        schema:
+          pattern: '^[a-z][a-z0-9]+$'
+          minLength: 3
+          maxLength: 16
+          type: string
+      - schema:
+          type: string
+        name: quoteId
+        required: true
+        in: path
+        description: |
+          Quote unique identifier generated when the quote is created.
+  '/quote/{tenant}/quote-reasons':
+    post:
+      tags:
+        - Quote reason
+      summary: Creating a reason for changing the quote status
+      description: |-
+        Creating reasons for the 'CHANGE' or 'DECLINE' types of quote statuses.
+        The reason for the quote status change serves to provide more descriptive information why the status has been changed. This option is available both for merchants and customers, depending on who updates the status of the quote.
+      operationId: POST-quote-create-quote-reason
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteReasonCreateRequest'
+            example:
+              code: PRICE_TOO_HIGH
+              type: CHANGE
+              message:
+                en: The price is too high
+                de: Der Preis ist zu hoch
+        required: true
+      responses:
+        '201':
+          description: The request was successful. Quote reason was created and its id is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteReasonIdResponse'
+              example:
+                id: 642c1ff3c78f9b2958d17c18
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - quote.quote_manage
+    get:
+      tags:
+        - Quote reason
+      summary: Retrieving reasons for changing the quote status
+      description: |-
+        Retrieves a full list of reasons for changing the quote status with details.
+      operationId: GET-quote-list-reasons
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/X-Total-Count'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_q_param'
+        - $ref: '#/components/parameters/trait_fields'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuoteReasonResponse'
+              example:
+                - id: 642c1ff3c78f9b2958d17c18
+                  code: PRICE_TOO_HIGH
+                  message:
+                    en: The price is too high
+                    de: Der Preis ist zu hoch
+                  type: CHANGE
+                  metadata:
+                    version: 1
+                    createdAt: '2023-02-23T09:36:55.929Z'
+                    modifiedAt: '2023-02-23T09:38:49.196Z'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+      security:
+        - OAuth2:
+            - quote.quote_read
+            - quote.quote_read_own
+  '/quote/{tenant}/quote-reasons/{quoteReasonId}':
+    get:
+      tags:
+        - Quote reason
+      summary: Retrieving a quote reason
+      description: |-
+        Retrieves a quote reason with details by its unique identifier. 
+      operationId: GET-quote-retrieve-reason
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: quoteReasonId
+          in: path
+          description: |
+            Quote reason unique identifier generated when the quote reason is created.
+          required: true
+          schema:
+            type: string
+            example: 642c1ff3c78f9b2958d17c18
+        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteReasonResponse'
+              example:
+                id: 642c1ff3c78f9b2958d17c18
+                code: PRICE_TOO_HIGH
+                message:
+                  en: The price is too high
+                  de: Der Preis ist zu hoch
+                type: CHANGE
+                metadata:
+                  version: 1
+                  createdAt: '2023-02-23T09:36:55.929Z'
+                  modifiedAt: '2023-02-23T09:38:49.196Z'
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+      security:
+        - OAuth2:
+            - quote.quote_read
+            - quote.quote_read_own
+    put:
+      tags:
+        - Quote reason
+      summary: Updating the reason for changing the quote status
+      description: |-
+        Updating the reason for changing the quote status. 
+      operationId: PUT-quote-update-reason
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: quoteReasonId
+          in: path
+          description: |
+            Quote reason unique identifier generated when the quote reason is created.
+          required: true
+          schema:
+            type: string
+            example: 642c1ff3c78f9b2958d17c18
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteReasonUpdateRequest'
+            example:
+              code: PRICE_TOO_HIGH
+              type: CHANGE
+              message:
+                en: The price is too high
+                de: Der Preis ist zu hoch
+              metadata:
+                version: 1
+        required: true
+      responses:
+        '204':
+          description: The request was successful. Quote reason has been updated.
+        '400':
+          $ref: '#/components/responses/Bad_request_400'
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+      security:
+        - OAuth2:
+            - quote.quote_manage
+    delete:
+      summary: Deleting the reason for changing the quote status
+      tags:
+        - Quote reason
+      operationId: DELETE-quote-remove-reason
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: quoteReasonId
+          in: path
+          description: |
+            Quote reason unique identifier generated when the quote reason is created.
+          required: true
+          schema:
+            type: string
+            example: 642c1ff3c78f9b2958d17c18
+      description: |-
+        Deletes the reason provided for the quote status change with a specific reason ID.
+      security:
+        - OAuth2:
+            - quote.quote_manage
+      responses:
+        '204':
+          description: Quote reason has been deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unathorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+components:
+  schemas:
+    Restriction:
+      type: string
+      nullable: true
+      description: |
+        Access control identifier that determines who can view or manage the quotes.
+
+        **Purpose**: Restricts quote visibility based on scope permissions. Only users/applications 
+        with matching restriction scopes can access quotes with a specific restriction value.
+
+        **Access Control**:
+        - *Reading*: Users can only query and view quotes with the `restriction` value that matches one of their authorized restrictions.
+
+        **Validation**: The value must exist in the tenant's configured list of valid restrictions.
+
+        **Restriction Synchronization**:
+        - If quote is created by a customer (based on a cart) and `restriction` property is not set, the `restriction` value of quote is inherited from customer's restriction.
+        - If a quote is created by an employee and the `restriction` property is not set with tenant configuration property `enableSyncBetweenRestrictionsAndSiteCodes` set to `true`, the `restriction` field automatically syncs with quote's siteCode property.
+      example: "DE"
+    QuoteItemUpdatePriceRow:
+      type: object
+      description: Price details
+      properties:
+        priceId:
+          type: string
+          description: The ID of the matched price
+        unitePrice:
+          minimum: 0
+          type: number
+          description: The effective unit price of the product
+        totalNetValue:
+          minimum: 0
+          type: number
+          description: The total net value for the entire quantity of the item.
+        tax:
+          type: object
+          description: The tax information of the item.
+          required:
+            - taxClass
+          properties:
+            taxClass:
+              type: string
+              description: The matched tax class of the item.
+            taxRate:
+              type: number
+              description: The tax rate of the item.
+      required:
+        - tax
+    QuoteUpdateStatus:
+      type: object
+      description: Quote status.
+      properties:
+        value:
+          type: string
+          description: The status value of the code.
+        comment:
+          type: string
+          description: The comment to the status.
+        quoteReasonId:
+          type: string
+          description: |-
+            The ID of the quote reason. Can be provided only in following scenarios:
+            - when changing state from OPEN to IN_PROGRESS - quote reason has to be of CHANGE type
+            - when changing state from OPEN to DECLINED - quote reason has to be of DECLINE type
+            - when changing state from IN_PROGRESS to DECLINED_BY_MERCHANT - quote reason has to be of DECLINE type
+      required:
+        - value
+    ErrorResponse:
+      required:
+        - code
+        - message
+        - status
+      type: object
+      properties:
+        resourceId:
+          type: string
+          nullable: true
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+    QuoteIdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the generated document.
+      example:
+        id: e343dc9e-a3f6-4573-bb01-a8ae21d2d4ae
+      description: ID of the generated quote.
+    QuoteReasonIdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the generated document.
+      example:
+        id: 642c1ff3c78f9b2958d17c18
+      description: ID of the generated quote reason.
+    QuoteItemUpdatePrice:
+      type: object
+      description: TotalNetValue item model.
+      properties:
+        totalNetValue:
+          type: number
+    QuoteItemUpdate:
+      type: object
+      description: Quote item model.
+      properties:
+        quantity:
+          type: object
+          properties:
+            quantity:
+              type: number
+            unitCode:
+              type: string
+        price:
+          $ref: '#/components/schemas/QuoteItemUpdatePriceRow'
+        product:
+          type: object
+          properties:
+            productId:
+              type: string
+      required:
+        - itemType
+        - quantity
+        - price
+        - product
+    QuoteItemsReplaceUpdate:
+      type: array
+      description: Quote item ID.
+      items:
+        allOf:
+          - $ref: '#/components/schemas/QuoteItemUpdate'
+          - type: object
+            properties:
+              itemId:
+                type: string
+                description: ID of the item. It's generated automatically when it's not provided.
+    AddressResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the address.
+        name:
+          type: string
+          description: The name of the address.
+        addressLine1:
+          type: string
+          description: First line of the address.
+        addressLine2:
+          type: string
+          description: Second line of the address.
+        city:
+          type: string
+          description: City name.
+        postcode:
+          type: string
+          description: The postal code of the city.
+        state:
+          type: string
+          description: The state where the city is located.
+        countryCode:
+          type: string
+          description: The code of the country location.
+    QuoteReasonResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The quote reason ID.
+        type:
+          type: string
+          enum:
+            - CHANGE
+            - DECLINE
+          description: Type of the quote reason.
+        message:
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: string
+            - type: string
+          description: Localized message - can be either string or map with languages as map's keys accordingly to specified 'Accept-Language' header.
+        code:
+          type: string
+          description: Code of the reason for the quote status change.
+        metadata:
+          type: object
+          description: The Quote Reason metadata details.
+          properties:
+            version:
+              type: integer
+              description: Version of the quote reason that is used for the optimistic locking handling.
+            createdAt:
+              type: string
+              format: date-time
+              description: The Quote Reason creation timestamp.
+            modifiedAt:
+              type: string
+              format: date-time
+              description: The Quote Reason modification timestamp.
+    QuoteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            Quote ID
+
+            **NOTE**:
+            If not specified during creation, this attribute is automatically generated. It is also possible to assign a custom ID.
+        businessModel:
+          type: string
+          description: Business model of the quote.
+          enum:
+            - B2B
+            - B2C
+        customerReference:
+          type: string
+          description: Customer-provided reference stored on the quote.
+          example: PO-12345
+        customerComment:
+          type: string
+          description: Customer-provided comment stored on the quote.
+          example: Please deliver before Friday
+        customer:
+          type: object
+          description: This attribute contains details about the customer for whom the quote was created.
+          properties:
+            customerId:
+              type: string
+              description: The ID of the customer for whom the quote was created.
+            firstName:
+              type: string
+              description: |-
+                Customer's first name
+
+                **NOTE**:
+                This attribute is filled automatically after the quote is created.
+            lastName:
+              type: string
+              description: |-
+                Customer's last name
+
+                **NOTE**:
+                This attribute is filled automatically after the quote is created.
+            contactEmail:
+              type: string
+              description: |-
+                Customer's contact email
+
+                **NOTE**:
+                This attribute is filled automatically after the quote is created.
+        employee:
+          type: object
+          description: This attribute contains details about the employee that is processing the quote.
+          properties:
+            employeeId:
+              type: string
+              description: The ID of the employee that is processing the quote.
+            firstName:
+              type: string
+              description: |-
+                Employee's first name
+
+                **NOTE**:
+                This attribute is filled automatically after the quote is created or the employee ID is updated.
+            lastName:
+              type: string
+              description: |-
+                Employee's last name.
+
+                **NOTE**:
+                This attribute is filled automatically after the quote is created or the employee ID is updated.
+        cartId:
+          type: string
+          description: The ID of the cart from which the quote was created (not available when the quote was created manually)
+        company:
+          type: object
+          description: The company for which the quote was created.
+          properties:
+            name:
+              type: string
+              description: The company name for which the quote was created.
+        siteCode:
+          type: string
+          description: The site code for which the quote was created
+        orderId:
+          type: string
+          description: The ID of the order which was created based on the quote. The order is created and assigned to the quote when status of the quote transitions to `ACCEPTED`.
+        currency:
+          type: string
+          description: The currency of the quote prices.
+        status:
+          type: object
+          description: The status of the quote.
+          properties:
+            value:
+              type: string
+              description: The status value of the quote.
+            comment:
+              type: string
+              description: Comment relating to the status.
+            quoteReason:
+              allOf:
+                - $ref: '#/components/schemas/QuoteReasonResponse'
+                - type: object
+                  description: The reason for status change.
+        validTo:
+          type: string
+          format: date-time
+          description: The date until which the quote is valid and can be accepted by the customer.
+        comment:
+          type: object
+          description: Employee and customer comments.
+          properties:
+            employeeComment:
+              type: string
+              description: Employee comment
+        billingAddress:
+          $ref: '#/components/schemas/AddressResponse'
+        shippingAddress:
+          $ref: '#/components/schemas/AddressResponse'
+        totalPrice:
+          type: object
+          description: The calculated total price details.
+          properties:
+            currency:
+              type: string
+              description: Currency of the value.
+            netValue:
+              type: number
+              description: The total net value.
+            grossValue:
+              type: number
+              description: The total gross value.
+            taxValue:
+              type: number
+              description: The amount of the tax for the total price.
+        subtotalPrice:
+          type: object
+          description: The calculated quote subtotal price.
+          properties:
+            currency:
+              type: string
+              description: Currency of the value.
+            netValue:
+              type: number
+              description: The subtotal net value.
+            grossValue:
+              type: number
+              description: The subtotal gross value.
+            taxValue:
+              type: number
+              description: The subtotal tax value.
+        taxAggregate:
+          type: object
+          description: Tax aggregation of the total price.
+          properties:
+            lines:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The tax code.
+                  amount:
+                    type: number
+                    description: The amount of the tax.
+                  rate:
+                    type: number
+                    description: The tax rate.
+                  taxable:
+                    type: number
+                    description: The total taxable amount.
+        shipping:
+          allOf:
+            - $ref: '#/components/schemas/QuoteShipping'
+            - type: object
+              properties:
+                grossValue:
+                  type: number
+                  description: Gross value of the shipping cost.
+                methodName:
+                  type: object
+                  description: Localized name of the shipping method selected by the customer.
+                  additionalProperties:
+                    type: string
+        items:
+          type: array
+          description: A list of quote items.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the quote item used for patch operations on the item.
+              quantity:
+                type: object
+                description: The attribute contains details about the item quantity.
+                properties:
+                  quantity:
+                    type: number
+                    description: The quantity of the item that is used for the price calculation.
+                  unitCode:
+                    type: string
+                    description: The unit code of the quantity (it must be one of the units defined in the Unit Handling Service).
+              price:
+                type: object
+                description: Item price details.
+                properties:
+                  type:
+                    type: string
+                    description: Defines if product is external or internal. If the product is internal, it's taken from the Emporix Product Service. If the price is external, it's a custom product from external system.
+                    enum:
+                      - INTERNAL
+                      - EXTERNAL
+                  priceId:
+                    type: string
+                    description: The ID of the price that was initially assigned to the item.
+                  unitPrice:
+                    type: number
+                    description: The original unit price of the item that is copied from the initial price.
+                  newUnitPrice:
+                    type: number
+                    description: The new unit price that is auto-calculated based on provided `quantity` and `totalNetValue` values.
+                  discount:
+                    type: number
+                    description: The difference in percentage between `unitPrice` and `newUnitPrice`.
+                  totalNetValue:
+                    type: number
+                    description: 'The total net price of the item that is initially based on the provided price, but it can be overridden to allow for a merchant discount.'
+                  tax:
+                    type: object
+                    description: This attribute contains information about the calculated item tax.
+                    properties:
+                      taxClass:
+                        type: string
+                        description: The tax class assigned to the item is initially copied from the initial price.
+                      taxRate:
+                        type: number
+                        description: The tax rate that is copied from the initial price.
+                      prices:
+                        type: object
+                        description: 'The auto-calculated item net and gross prices '
+                        properties:
+                          grossValue:
+                            type: number
+                          netValue:
+                            type: number
+                  mixins:
+                    type: object
+                    description: Mixins request.
+                    additionalProperties: true
+                  metadata:
+                    type: object
+                    description: Metadata request.
+                    properties:
+                      mixins:
+                        type: object
+                        description: Links to the mixin schemas.
+                        additionalProperties: true
+              product:
+                type: object
+                description: Product details.
+                properties:
+                  type:
+                    type: string
+                    description: Defines if product is external or internal. If the product is internal, it's taken from the Emporix Product Service. If the price is external, it's a custom product from external system.
+                    enum:
+                      - INTERNAL
+                      - EXTERNAL
+                  productId:
+                    type: string
+                    description: The ID of the product or variant assigned to the quote item.
+                  name:
+                    type: object
+                    description: |-
+                      This attribute contains the product name language map.
+
+                      **NOTE**:
+                      After the item has been added to the quote, the product name language map attribute is automatically populated.
+                  media:
+                    type: object
+                    description: This attribute comprises the product media information and is automatically populated upon the creation of the quote.
+                    properties:
+                      id:
+                        type: string
+                        description: ID of the media.
+                      contentType:
+                        type: string
+                        description: 'The content type of the media. For example: `image/jpg`.'
+                      url:
+                        type: string
+                        description: The url to the product media.
+                  taxClasses:
+                    type: object
+                    description: Map of key-value pairs that associates tax classes with locations (countries).
+                  mixins:
+                    type: object
+                    description: Mixins request.
+                    additionalProperties: true
+                  metadata:
+                    type: object
+                    description: Metadata request.
+                    properties:
+                      mixins:
+                        type: object
+                        description: Links to the mixin schemas.
+                        additionalProperties: true
+        mixins:
+          type: object
+          description: Mixins request.
+          additionalProperties: true
+        metadata:
+          type: object
+          description: Quote metadata details.
+          properties:
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties: true
+            version:
+              type: integer
+              description: Version of the quote that is used for the optimistic locking handling.
+            createdAt:
+              type: string
+              format: date-time
+              description: Quote creation timestamp.
+            modifiedAt:
+              type: string
+              format: date-time
+              description: Quote modification timestamp.
+        restriction:
+          $ref: '#/components/schemas/Restriction'
+    QuoteReasonCreateRequest:
+      type: object
+      description: The schema specifies the attributes that must be provided when creating a quote reason.
+      properties:
+        id:
+          type: string
+          description: 'The ID for a quote reason can either be manually provided at the time of the quote reason creation, or is automatically generated if not provided.'
+        type:
+          type: string
+          description: Type of the quote reason.
+          enum:
+            - CHANGE
+            - DECLINE
+        code:
+          type: string
+          description: Code of the reason for the quote status change.
+        message:
+          type: object
+          additionalProperties:
+            type: string
+          description: Localized message in the form of a map of translations.
+      required:
+        - type
+        - code
+        - message
+    QuoteReasonUpdateRequest:
+      type: object
+      description: The schema specifies the attributes that must be provided when creating a quote reason.
+      properties:
+        type:
+          type: string
+          description: Type of the quote reason.
+          enum:
+            - CHANGE
+            - DECLINE
+        code:
+          type: string
+          description: Code of the reason for the quote status change.
+        message:
+          type: object
+          additionalProperties:
+            type: string
+          description: Localized message in the form of a map of translations.
+        metadata:
+          type: object
+          description: The Quote Reason metadata details
+          properties:
+            version:
+              type: integer
+              description: Version of the quote reason that is used for the optimistic locking handling
+          required:
+            - version
+      required:
+        - type
+        - code
+        - message
+        - metadata
+    QuoteCreateRequest:
+      type: object
+      description: The schema specifies the attributes that must be provided when creating a quote manually.
+      properties:
+        id:
+          type: string
+          description: 'The ID for a quote can either be manually provided at the time of the quote creation, or is automatically generated if not provided.'
+        customerId:
+          type: string
+          description: The customer ID for which the new quote is created. Either this attribute or the `customerEmail` attribute is required for the quote creation
+        employeeId:
+          type: string
+          description: 'The employee ID for which the new quote is created. By default, the employeeId is taken from session token, but in case the session token is not provided, employeeId is taken from the payload. Default employee from the configuration will be assigned to the quote in case session token nor ''employeeId'' is not provided.'
+        companyName:
+          type: string
+          description: The name of the merchant company.
+        siteCode:
+          type: string
+          description: The site code for which the quote is created.
+        currency:
+          type: string
+          description: The currency for which the quote is created.
+        billingAddressId:
+          type: string
+          description: For B2B customers, it represents the location which should specify the billing address. For B2C customers, it represents identifier of customer's billing address.
+        shippingAddressId:
+          type: string
+          description: For B2B customers, it represents the location which should specify the shipping address. For B2C customers, it represents identifier of customer's shipping address.
+        validTo:
+          type: string
+          format: date-time
+          description: 'The date until which the quote is valid for the customer. After this date, the quote cannot be approved and transformed into order by the customer.'
+        shipping:
+          $ref: '#/components/schemas/QuoteShipping'
+        items:
+          type: array
+          description: Quote items.
+          items:
+            type: object
+            properties:
+              itemId:
+                type: string
+                description: ID of the item. It's generated automatically when it's not provided.
+              quantity:
+                type: object
+                description: The quantity of the quote item in a given unit.
+                properties:
+                  quantity:
+                    type: number
+                    description: The quantity of quote items.
+                  unitCode:
+                    type: string
+                    description: The unit of the quantity as defined in the Unit Handling Service.
+                required:
+                  - quantity
+                  - unitCode
+              product:
+                type: object
+                description: Product reference.
+                required:
+                  - productId
+                properties:
+                  type:
+                    type: string
+                    description: Defines if product is external or internal. If the product is internal, it's taken from the Emporix Product Service. If the price is external, it's a custom product from external system.
+                    enum:
+                      - INTERNAL
+                      - EXTERNAL
+                  productId:
+                    type: string
+                    description: Product or variant ID.
+                  name:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: Localized name of a product. Used for the `EXTERNAL` products as the `INTERNAL` ones are populated from the product catalog data.
+                  media:
+                    type: object
+                    description: Media object that can be provided for an `EXTERNAL` product. `INTERNAL` products have media populated automatically and override the given value.
+                    properties:
+                      id:
+                        type: string
+                        description: ID of the media.
+                      contentType:
+                        type: string
+                        description: 'The content type of the media. For example: `image/jpg`.'
+                      url:
+                        type: string
+                        description: The url to the product media.
+                  mixins:
+                    type: object
+                    description: Mixins request.
+                    additionalProperties: true
+                  metadata:
+                    type: object
+                    description: Metadata request.
+                    properties:
+                      mixins:
+                        type: object
+                        description: Links to the mixin schemas.
+                        additionalProperties: true
+              price:
+                type: object
+                description: Matched price of the product.
+                properties:
+                  type:
+                    type: string
+                    description: Defines if price is internal or external. If the price is internal, it's taken from the Emporix Price Service. If the price is external, it's a custom price from external system.
+                    enum:
+                      - INTERNAL
+                      - EXTERNAL
+                  priceId:
+                    type: string
+                    description: ID of the matched price. Required only for type=`INTERNAL`.
+                  priceListId:
+                    type: string
+                    description: Identifier of price list. The field should be populated only in case when the price belongs to any price list.
+                  unitPrice:
+                    type: number
+                    description: Effective unit price of the product.
+                  totalNetValue:
+                    type: number
+                    description: Total net value for the entire quantity of the item.
+                  tax:
+                    type: object
+                    description: Tax information of the item.
+                    required:
+                      - taxClass
+                      - taxRate
+                    properties:
+                      taxClass:
+                        type: string
+                        description: Matched tax class of the item.
+                      taxRate:
+                        type: number
+                        description: Tax rate of the item.
+                required:
+                  - priceId
+                  - unitPrice
+                  - totalNetValue
+                  - tax
+              mixins:
+                type: object
+                description: Mixins request.
+                additionalProperties: true
+              metadata:
+                type: object
+                description: Metadata request.
+                properties:
+                  mixins:
+                    type: object
+                    description: Links to the mixin schemas.
+                    additionalProperties: true
+            required:
+              - product
+        restriction:
+          $ref: '#/components/schemas/Restriction'
+        mixins:
+          type: object
+          description: Mixins request.
+          additionalProperties: true
+        metadata:
+          type: object
+          description: Metadata request.
+          properties:
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties: true
+        customerEmail:
+          type: string
+          description: The contact email that identifies the customer. Either this attribute or the `customerId` attribute is mandatory for the quote creation request.
+      required:
+        - customerId
+        - siteCode
+        - currency
+        - billingAddressId
+        - shippingAddressId
+    QuoteShipping:
+      type: object
+      description: The shipping cost of the quote.
+      properties:
+        value:
+          type: number
+          description: Net value of the shipping cost.
+        methodId:
+          type: string
+          description: Shipping method's unique identifier.
+        zoneId:
+          type: string
+          description: Shipping zone identifier.
+        shippingTaxCode:
+          type: string
+          description: Tax code of the shipping method.
+    QuoteItemIds:
+      type: array
+      description: List of item IDs.
+      items:
+        type: object
+        properties:
+          itemId:
+            type: string
+            description: ID of the item.
+    QuoteUpdateRequest:
+      type: array
+      description: Quote update operation list.
+      items:
+        type: object
+        properties:
+          op:
+            type: string
+            enum:
+              - ADD
+              - REMOVE
+              - REPLACE
+          path:
+            type: string
+            enum:
+              - /status
+              - /validTo
+              - /comment
+              - /billingAddressId
+              - /shippingAddressId
+              - /companyName
+              - /customerId
+              - /shipping
+              - /restriction
+              - /items
+              - '/items/{itemId}'
+              - '/items/{itemId}/price'
+              - '/items/{itemId}/mixins/{mixinsPath}'
+              - '/items/{itemId}/metadata/mixins/{mixinsPath}'
+              - '/items/{itemId}/product/mixins/{mixinsPath}'
+              - '/items/{itemId}/product/metadata/mixins/{mixinsPath}'
+              - '/mixins/{mixinsPath}'
+              - '/metadata/{mixinsPath}'
+          value:
+            $ref: '#/components/schemas/QuoteUpdateValues'
+        required:
+          - op
+          - path
+    QuoteUpdateValues:
+      anyOf:
+        - $ref: '#/components/schemas/QuoteItemUpdate'
+        - $ref: '#/components/schemas/QuoteItemsReplaceUpdate'
+        - $ref: '#/components/schemas/QuoteItemUpdatePrice'
+        - $ref: '#/components/schemas/QuoteUpdateStatus'
+        - $ref: '#/components/schemas/QuoteShipping'
+        - $ref: '#/components/schemas/QuoteItemIds'
+        - type: string
+          description: Value of the string type.
+        - type: object
+          description: Mixin request.
+    QuoteHistory:
+      type: array
+      description: Quote update operation list.
+      items:
+        type: object
+        properties:
+          id:
+            description: The unique ID of the audit log.
+            type: string
+          op:
+            description: operation type
+            enum:
+              - ADD
+              - REMOVE
+              - REPLACE
+              - CREATE
+            type: string
+          path:
+            description: Path that indicates on which element the update has been executed.
+            enum:
+              - /quote
+              - /status
+              - /validTo
+              - /comment
+              - /billingAddressId
+              - /shippingAddressId
+              - /companyName
+              - /customerId
+              - /shipping
+              - /restriction
+              - /items
+              - '/items/{itemId}'
+              - '/items/{itemId}/price'
+              - '/items/{itemId}/mixins/{mixinsPath}'
+              - '/items/{itemId}/metadata/mixins/{mixinsPath}'
+              - '/items/{itemId}/product/mixins/{mixinsPath}'
+              - '/items/{itemId}/product/metadata/mixins/{mixinsPath}'
+              - '/mixins/{mixinsPath}'
+              - '/metadata/{mixinsPath}'
+            type: string
+          newValue:
+            allOf:
+              - $ref: '#/components/schemas/QuoteUpdateValues'
+              - type: object
+                description: New value after the update.
+          previousValue:
+            allOf:
+              - $ref: '#/components/schemas/QuoteUpdateValues'
+              - type: object
+                description: Value before update.
+            description: Value before update.
+          userId:
+            type: string
+            description: ID of the user who modified the item.
+          userFirstName:
+            type: string
+            description: First name of the user who modified the item.
+          userLastName:
+            type: string
+            description: Last name of the user who modified the item.
+          userType:
+            enum:
+              - EMPLOYEE
+              - CUSTOMER
+              - SYSTEM
+            type: string
+          restriction:
+            $ref: '#/components/schemas/Restriction'
+          modifiedAt:
+            type: string
+            description: Modification date.
+    QuoteCreateFromCartRequest:
+      type: object
+      description: This schema includes the attributes that are required to be provided when creating a quote from the cart.
+      title: QuoteCreateFromCartRequest
+      required:
+        - cartId
+      properties:
+        cartId:
+          type: string
+          description: ID of the cart from which the new quote should be created.
+        employeeId:
+          type: string
+          description: 'The employee ID for which the new quote is created. By default, the employeeId is taken from the configuration, but in case the ''employeeId'' property is provided, the employeeId from the request is assigned to the quote. Only user of EMPLOYEE type can assign employee to the quote.'
+        billingAddressId:
+          type: string
+          description: For B2B customers, it represents the location which should specify the billing address. For B2C customers, it represents identifier of customer's billing address.
+        shippingAddressId:
+          type: string
+          description: For B2B customers, it represents the location which should specify the shipping address. For B2C customers, it represents identifier of customer's shipping address.
+        shipping:
+          $ref: '#/components/schemas/QuoteShipping'
+        customerReference:
+          type: string
+          description: Customer-provided reference stored on the quote.
+          example: PO-12345
+        customerComment:
+          type: string
+          description: Customer-provided comment stored on the quote.
+          example: Please deliver before Friday
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            quote.quote_read: Needed to retrieve quotes.
+            quote.quote_read_own: Needed to retrieve own quotes by the customer.
+            quote.quote_manage: Needed to manage quotes.
+            quote.quote_manage_own: Needed to manage own quotes by the customer.
+  parameters:
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      name: sort
+      in: query
+      description: |-
+        List of properties used to sort the results, separated by colons. The order of properties indicates their priority in sorting.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        If the sorting direction is not specified, the fields are sorted in ascending order.
+      schema:
+        type: string
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        Number of items to be retrieved per page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_fields:
+      name: fields
+      in: query
+      description: |
+        Fields to be returned in the response.
+
+        When this parameter is passed, only the `id` and `{fieldName}` are retrieved for each entry.
+        You can specify multiple fields by separating them with commas.
+      schema:
+        type: string
+        example: 'code,message'
+    trait_q_param:
+      name: q
+      in: query
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        * Searching for items by string-based properties:
+          * By a field value: `q=siteCode:main`, where `siteCode` is the field name, and `main` is its desired value.
+          * By a localized field value: `q=items.product.name.en:apple_lobo`, where `name` is the field name of product, `en` is the language code, and `apple_lobo` is the field value expressed in the specified language. **Note**: This query works only for localized fields, which are stored in a map format, where `key` is the language code and `value` is the translation to particular language.
+        * Searching for items by a number-based property:
+          * With a specific value: `q=items.quantity.quantity:20`
+          * With a value greater than: `q=items.quantity.quantity:>20`
+          * With a value lower than: `q=items.quantity.quantity:<20`
+          * With a value greater than or equal to: `q=items.quantity.quantity:>=20`
+          * With a value lower than or equal to: `q=items.quantity.quantity:<=20`
+          * With a value within a range of values: `q=items.quantity.quantity:(>=10 AND <=20)`\
+           where `items.quantity.quantity` is the name of the number-based field, and `20` is its querying value.
+        * Searching for items by a date-based property: All number-based property queries are also valid for dates. In that case, the date should be placed within double quotes: `q=metadataCreatedAt:(>="2021-05-18T07:27:27.455Z" AND <"2021-05-20T07:27:27.455Z")`
+        * Searching for items by a boolean-based property: `q=description.multiLanguage:true`, where `description.multiLanguage` is the boolean field name, and `true` is its desired value.
+        * Searching for items with a nonexistent or empty property: `q=description.en:null`, where `description.en` is the field that has its value set to `null`.
+        * Searching for items with an existing property: `q=mixins.mixinName:exists`, where the specific mixin named `mixinName` exists in the database.
+        * Searching for items by multiple specific values: `q=id:(5c3325baa9812100098ff48f,5c3325d1a9812100098ff494)`, where `id` is the field name, and strings within the bracket are the desired values.
+        * Searching for items by multiple fields: `q=id:5c3325baa9812100098ff48f siteCode:main` where `id` and `siteCode` are field names. All objects that contain the specified values are returned. Multiple fields (separated by space) can be specified. Multiple values for each field can also be specified in the format presented earlier.
+        * Searching for items with string-based properties conforming to a regex: `q=siteCode:~ain` or `q=code:(~U PL)` - in case of searching for strings with space, where `siteCode` is the name of the field, and `ain` or `U PL` is its querying regex.
+        * Searching for items with a localized string-based property conforming to a regex: `items.product.name.en:~(Yoghurt im)` - where `name` is the product field name, `en` is the desired language, and `Joghurt im` is the search term.
+      schema:
+        type: string
+        example: 'siteCode:{main}'
+    trait_contentLanguage_header:
+      in: header
+      name: Content-Language
+      required: true
+      description: The Content-Language request HTTP header defines language(s) of the payload.
+      schema:
+        type: string
+        example: de
+    trait_acceptLanguage_header:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields. If a value is specified, then it must be present in the tenant configuration.
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    X-Total-Count:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+        example: true
+        default: false
+      description: |
+        Flag indicating whether the total number of retrieved items should be returned.
+  responses:
+    Unathorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. It usually means that tenant from the token does not match tenant from path.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid Access Token:
+              value:
+                fault:
+                  faultstring: Invalid Access Token
+                  detail:
+                    errorcode: keymanagement.service.invalid_access_token
+            Unauthorized:
+              value: { }
+    Bad_request_400:
+      description: Unsupported language provided.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              status:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: string
+          examples:
+            Unsupported language:
+              value:
+                code: 400
+                status: Bad Request
+                message: Language header validation failed
+                details:
+                  - 'Following languages are not supported: ''ru'''
+    Bad_request_400_cl:
+      description: Unsupported content language provided.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              status:
+                type: string
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: string
+          examples:
+            Bad request:
+              value:
+                code: 400
+                status: Bad Request
+                message: Language header validation failed
+                details:
+                  - 'Following languages are not supported: ''ru'''
+    Forbidden_403:
+      description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: You need a scope for this action.
+                details:
+                  - 'Required scope(s): quote.quote_manage'
+    Conflict_409:
+      description: Conflict.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: 409
+            status: Conflict
+            message: Duplicated key
+    Not_Found_404:
+      description: Given resource cannot be found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Quote does not exists:
+              value:
+                resourceId: 084bcag6-66b8-4ddd-9489-65c5f6449e94
+                code: 404
+                status: Not Found
+                message: Error while getting resource
+                details:
+                  - Resource with id '084bcaf6-66b8-4ddd-9489-65c5f6449e94' not found
+security:
+  - OAuth2: []

@@ -1,0 +1,1074 @@
+openapi: 3.0.0
+info:
+  title: Unit Handling Service
+  version: ''
+  description: |-
+    Define and manage various unit systems, including metric, imperial, USC, and custom in which your products may be sold.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Unit management
+    description: Manage Units
+  - name: Unit conversion
+    description: Convert Units
+  - name: Type management
+    description: Read Units
+paths:
+  '/unit-handling/{tenant}/units':
+    description: Unit-handling service
+    post:
+      tags:
+        - Unit management
+      summary: Adding a new unit
+      description: |-
+        Creates a new unit. After successful creation, the unit is visible and executable for other parts of the system after 5 minutes.
+        * If the `Content-Language` is set to `*`
+        the request body payload should contain localized fields not as a string,
+        but as a map in format: `key:value`, where the `key` is the language code and `value` is the translation.
+      security:
+        - OAuth2: 
+            - unithandling.unit_manage
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaseUnit'
+            examples:
+              Unit with name as a string:
+                $ref: '#/components/examples/UnitCreateWithStringName'
+              Unit with name as a map:
+                $ref: '#/components/examples/UnitCreateWithMapName'
+      responses:
+        '201':
+          description: The unit has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUnitResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '409':
+          $ref: '#/components/responses/UnitConflictResponse409'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: POST-unit-handling-create-unit
+    get:
+      tags:
+        - Unit management
+      summary: Finding units by filters with sorting and paging
+      description: |-
+        Retrieves a list of units conforming with the given filters. Supports sorting and paging.
+
+        * If the `Accept-Language` is set to `*` each internationalized field is returned as a map that contains all of translations in a format of `key:value` pairs, where the `key` is the language code and `value` is the translation.
+        * The `Accept-Language` can contain the priority list of languages which should be returned. Always one language is returned as a single string field. Example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+        * If the `Accept-Language` header is empty default language defined in the `Configuration service` is taken.
+        * If the unit name matches none of the specified languages, an empty string is returned in the name field.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/params'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/tenant-path'
+        - $ref: '#/components/parameters/accept-language'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/totalCount'
+      responses:
+        '200':
+          description: The units were retrieved successfully.
+          headers:
+            Content-Language:
+              description: The Content-Language response HTTP header defines language(s) of the response body.
+              schema:
+                type: string
+                example: fr
+            X-Total-Count:
+              description: |-
+                'The total number of entities in the database matching the specified query criteria.
+                Returned if request X-Total-Count header has been set to true.'
+              schema:
+                type: number
+                example: 69
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unit'
+              examples:
+                Unit with name as a string:
+                  $ref: '#/components/examples/UnitWithStringNameList'
+                Unit with name as a map:
+                  $ref: '#/components/examples/UnitWithMapNameList'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: GET-unit-handling-list-units
+    delete:
+      tags:
+        - Unit management
+      summary: Deleting units in bulk by codes
+      description: |-
+        Deletes the units with the given codes. After successful deletion, units will not be visible and executable for other parts of the system after 5 minutes.
+        * The codes are defined in the request body as an array of strings.
+        * Example: `["g", "kg", "dag", "test"]`
+      security:
+        - OAuth2: 
+            - unithandling.unit_manage
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+      responses:
+        '204':
+          description: The units have been successfully deleted.
+        '400':
+          description: The units cannot be deleted due to no payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestNoBody400'
+              example:
+                message: Bad Request
+                _links:
+                  self:
+                    href: /testtenant/units
+                    templated: false
+                _embedded:
+                  errors:
+                    - message: 'Required Body [unitCodes] not specified'
+                      path: /unitCodes
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: DELETE-unit-handling-remove-units
+  '/unit-handling/{tenant}/units/{unitCode}':
+    description: The unit resource
+    get:
+      tags:
+        - Unit management
+      summary: Retrieving a unit by code
+      description: |-
+        Retrieves the unit with the given code.
+
+        * If the `Accept-Language` is set to `*` each internationalized field is returned as a map that contains all of translations in a format of `key:value` pairs, where the `key` is the language code and `value` is the translation.
+        * The `Accept-Language` can contain the priority list of languages which should be returned. Always one language is returned as a single string field.
+        * If the `Accept-Language` header is empty default language defined in the `Configuration service` is taken.
+        * If the unit name matches none of the specified languages, an empty string is returned in the name field.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/unit-code'
+        - $ref: '#/components/parameters/tenant-path'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Returns the given unit.
+          headers:
+            Content-Language:
+              description: The Content-Language response HTTP header defines language(s) of the response body.
+              schema:
+                type: string
+                example: fr
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+              examples:
+                Unit with name as a string:
+                  $ref: '#/components/examples/UnitWithStringName'
+                Unit with name as a map:
+                  $ref: '#/components/examples/UnitWithMapName'
+        '400':
+          $ref: '#/components/responses/BadRequest400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '404':
+          $ref: '#/components/responses/UnitNotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: GET-unit-handling-retrieve-unit
+    delete:
+      tags:
+        - Unit management
+      summary: Deleting a specific unit
+      description: |-
+        Deletes a unit with a given code. After a successful deletion, the unit is not visible and executable for other parts of the system after 5 minutes.
+      security:
+        - OAuth2: 
+            - unithandling.unit_manage
+      parameters:
+        - $ref: '#/components/parameters/unit-code'
+        - $ref: '#/components/parameters/tenant-path'
+      responses:
+        '204':
+          description: The unit has been successfully deleted.
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/UnitNotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: DELETE-unit-handling-remove-unit
+    put:
+      tags:
+        - Unit management
+      summary: Updating a unit
+      description: |-
+        Updates an existing unit. Optimistic locking is applied to prevent update races when unit in
+        the payload contains the optional version field. After successful update, the unit is visible and executable for other parts of the system after 5 minutes.
+        * If the `Content-Language` is set to `*`
+        the request body payload should contain localized fields not as a string,
+        but as a map in format: `key:value`, where the `key` is the language code and `value` is the translation.
+      security:
+        - OAuth2: 
+            - unithandling.unit_manage
+      parameters:
+        - $ref: '#/components/parameters/unit-code'
+        - $ref: '#/components/parameters/tenant-path'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUnit'
+            examples:
+              Unit with name as a string:
+                $ref: '#/components/examples/UnitWithStringName'
+              Unit with name as a map:
+                $ref: '#/components/examples/UnitWithMapName'
+              Unit without version defined:
+                $ref: '#/components/examples/UnitWithoutVersion'
+      responses:
+        '204':
+          description: The unit has been updated successfully.
+        '400':
+          description: The unit cannot be updated due to an incorrect payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest400'
+              examples:
+                Mandatory field not specified:
+                  $ref: '#/components/examples/UnitNameFieldNotSpecified400'
+                Unit codes mismatch:
+                  value:
+                    unitCode: gg
+                    code: 400
+                    status: Bad Request
+                    message: The unit code from URL does not match the unit code from request body
+                Content-Language not specified:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: The Content-Language cannot be empty
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          description: The unit has not been found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound404'
+              examples:
+                Unit with specified version not found:
+                  value:
+                    unitCode: g
+                    code: 404
+                    status: Not Found
+                    message: 'Cannot find the unit with code: g and version: 0. It is possible to update a unit with the latest version only. Fetch the unit to get the latest version.'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PUT-unit-handling-update-unit
+  '/unit-handling/{tenant}/units/conversion-factor-commands':
+    description: The conversion factor command
+    put:
+      tags:
+        - Unit conversion
+      summary: Fetching conversion factor
+      description: Calculates conversion factor for the given pair of units.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversionFactorPayload'
+      responses:
+        '201':
+          description: The factor has been successfully calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionFactorResponse'
+              example:
+                commandUuid: 'e948a54d-ffeb-405a-9614-c68406274554,'
+                input:
+                  sourceUnit: 'us-fl-oz,'
+                  targetUnit: cl
+                output:
+                  conversionFactor: 2.95735296
+        '400':
+          description: The conversion factor cannot be fetched due to wrong parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadConversionRequest400'
+              examples:
+                Mandatory field not specified:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: There is a validation error. Please check the details.
+                    details:
+                      - The conversion input must be specified
+                Converting units of different type:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Units of different type cannot be converted.
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '404':
+          description: At least one of the specified units cannot be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound404'
+              examples:
+                Unit not found:
+                  $ref: '#/components/examples/UnitNotFound404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PUT-unit-handling-calculate-conversion-factor
+  '/unit-handling/{tenant}/units/convert-unit-commands':
+    description: The convert unit command
+    put:
+      tags:
+        - Unit conversion
+      summary: Converting unit
+      description: Converts the source unit to a target unit.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversionPayload'
+        description: ''
+      responses:
+        '201':
+          description: The unit has ben successfully converted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionResponse'
+              examples:
+                Conversion response:
+                  value:
+                    commandUuid: 83ddc478-89d7-48e1-8b6c-527f4c67fb56
+                    input:
+                      sourceUnitAmount: 100
+                      sourceUnit: us-fl-oz
+                      targetUnit: cl
+                    output:
+                      targetUnitAmount: 295.735296
+                      targetUnit: cl
+        '400':
+          description: The unit cannot be converted due to wrong parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadConversionRequest400'
+              examples:
+                Mandatory field not specified:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: There is a validation error. Please check the details.
+                    details:
+                      - The conversion input must be specified
+                Converting units of different type:
+                  value:
+                    code: 400
+                    status: 'Bad Request,'
+                    message: Units of different type cannot be converted.
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '404':
+          description: At least one of the specified units cannot be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound404'
+              examples:
+                Unit not found:
+                  $ref: '#/components/examples/UnitNotFound404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PUT-unit-handling-convert-unit
+  '/unit-handling/{tenant}/types':
+    description: Unit types endpoint
+    get:
+      tags:
+        - Type management
+      summary: Retrieving all unit types
+      description: Retrieves list of all unit types present in the database.
+      security:
+        - OAuth2: []
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+      responses:
+        '200':
+          description: All unit types retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - length
+                - mass
+                - quantity
+                - volume
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: GET-unit-handling-list-all-unit-types
+components:
+  parameters:
+    tenant-path:
+      in: path
+      name: tenant
+      required: true
+      description: The tenant name.
+      schema:
+        type: string
+    unit-code:
+      in: path
+      name: unitCode
+      required: true
+      description: The code of the unit.
+      schema:
+        type: string
+        example: g
+    params:
+      in: query
+      name: params
+      required: false
+      description: |-
+        **Note**: params is not a name of query param. Any API model field can be taken as a filtering parameter.
+
+        Filtering can be done by each field available in API. Filtering by multiple fields is also allowed. In that case, fields are aggregated with `AND` logic operator.
+        * In a case of string values, the `contains` approach is taken (filtering by substrings). 
+        * In a case of boolean and number fields, the `equals` approach is taken.
+
+        Filtering query params examples:
+        * `type=mass` - all units with `type` that contains `mass` are returned. For example, in that case all mass units will be returned.
+        * `type=a` - all units with `type` that contains `a` are returned. For example, in that case all `mass` and `distance` units are returned.
+        * `factor=1` - all units with `factor` that equals `1` are returned.
+        * `baseUnit=true` - all units with `baseUnit` that equals `true` are returned.
+        * `type=mass&name=gram` - all units with `type` that contains `mass` AND `name` that contains `gram` are returned. For example, in that case `kilogram`, `gram`, `decagram` units are returned.
+
+        Filtering by localized fields:
+        * Filtering by localized fields without language key is possible only when `Accept-Language` header with correct language is provided or when it is not set at all (in that case the default language is taken).
+        For example, when `Accept-Language` is set to 'en', the request with parameter `name=meter` returns all units with `name` that contains `meter` in English. For example, in that case `meter`, `kilometer` and `millimeter` units are returned.
+
+        * When `Accept-Language` header is set to `*` filtering by localized fields is possible only when fields contains a language key.
+        For example, when `Accept-Language` is set to '*', the request with parameter `name.en=meter` returns all units with `name.en` that contains `meter` in English. For example, in that case `meter`, `kilometer` and `millimeter` units are returned.
+      schema:
+        type: string
+    pageNumber:
+      in: query
+      name: pageNumber
+      required: false
+      description: The page number to be displayed.
+      schema:
+        type: number
+        example: 1
+    pageSize:
+      in: query
+      name: pageSize
+      required: false
+      description: Number of units on a single page.
+      schema:
+        type: number
+        default: 60
+    sort:
+      in: query
+      name: sort
+      required: false
+      description: |-
+        Fields to sort the response data by following order of the parameters from left to right.
+        Can contain multiple fields in format: `field name`:`sort direction` separated by a comma.
+        * The colon with `sort direction` parameter is redundant and descending order is taken only
+        if it's equal to `desc` or `DESC`.
+        * Ascending order is considered in any other case.
+        Sorting by `name` parameter works properly only if the `Accept-Language` header is set to
+        a specific language or is empty with default language specified in the configuration service.
+      schema:
+        type: string
+        example: 'name,factor:asc,metadata.createdAt:desc'
+    totalCount:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: Total count flag. If set to true, the X-Total-Count header is returned.
+      schema:
+        type: string
+        example: 'true'
+    accept-language:
+      in: header
+      name: Accept-Language
+      required: false
+      description: 'The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If empty, English language is returned. It can be a priority list working as a fallback mechanism.'
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+    content-language:
+      in: header
+      name: Content-Language
+      required: true
+      description: The Content-Language request HTTP header defines language(s) of the payload.
+      schema:
+        type: string
+        example: fr
+  schemas:
+    BaseUnit:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The unit code.
+          example: g
+        name:
+          description: 'The name of the unit in the form of a map (language, value) or string.'
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties:
+                type: string
+        type:
+          type: string
+          description: The type of a unit.
+          example: mass
+        symbol:
+          type: string
+          description: The symbol of a unit.
+          example: °C
+        baseUnit:
+          type: boolean
+          description: The base unit flag.
+          example: true
+        factor:
+          type: number
+          description: The conversion factor. The factor value must be greater than zero.
+          example: 1
+      required:
+        - code
+        - name
+        - type
+        - baseUnit
+        - factor
+    Unit:
+      allOf:
+        - $ref: '#/components/schemas/BaseUnit'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/UnitMetadata'
+    UpdateUnit:
+      allOf:
+        - $ref: '#/components/schemas/BaseUnit'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/UpdateUnitMetadata'
+    UnitMetadata:
+      description: The metadata of the unit.
+      properties:
+        version:
+          type: integer
+          description: The version of the document.
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp of the unit creation compliant with the ISO 8601 standard.
+          example: '2021-10-25T10:59:24.385Z'
+        modifiedAt:
+          type: string
+          format: date-time
+          description: Timestamp of the unit last modification compliant with the ISO 8601 standard.
+          example: '2021-10-25T10:59:24.385Z'
+    UpdateUnitMetadata:
+      description: The metadata of the unit.
+      properties:
+        version:
+          type: integer
+          description: The version of the document.
+          example: 1
+    ConversionFactorInput:
+      description: The input is the conversion parameters object containing the source unit code, target unit code, and the amount to convert (amount required for convert-unit, optional for conversion-factor).
+      type: object
+      properties:
+        sourceUnitAmount:
+          type: number
+        sourceUnit:
+          type: string
+          description: The source unit code.
+          example: g
+        targetUnit:
+          type: string
+          description: The target unit code.
+          example: kg
+      required:
+        - sourceUnit
+        - targetUnit
+    ConversionInput:
+      description: The input payload for conversion. Contains the source unit code, target unit code, and optionally the source unit amount to convert.
+      type: object
+      properties:
+        sourceUnitAmount:
+          type: number
+          description: The source unit quantity.
+          example: 100
+        sourceUnit:
+          type: string
+          description: The source unit code.
+          example: g
+        targetUnit:
+          type: string
+          description: The target unit code.
+          example: kg
+      required:
+        - sourceUnit
+        - targetUnit
+    ConversionFactorOutput:
+      description: Output payload
+      properties:
+        conversionFactor:
+          type: number
+          description: The conversion factor.
+          example: 0.001
+    ConversionOutput:
+      description: Output payload. Contains the computed result of a conversion factor - conversionFactor (number) and unit conversion - targetUnitAmount (number) and targetUnit (string).
+      properties:
+        targetUnitAmount:
+          type: number
+          description: The amount in the target unit after conversion from the source unit.
+          example: 0.1
+        targetUnit:
+          type: string
+          description: The target unit.
+          example: kg
+    ConversionFactorPayload:
+      type: object
+      properties:
+        commandUuid:
+          description: Optional client-generated identifier used to correlate a conversion command across request, response, and logs.
+          type: string
+        input:
+          $ref: '#/components/schemas/ConversionFactorInput'
+      required:
+        - input
+    ConversionFactorResponse:
+      type: object
+      properties:
+        commandUuid:
+          type: string
+        input:
+          $ref: '#/components/schemas/ConversionFactorInput'
+        output:
+          $ref: '#/components/schemas/ConversionFactorOutput'
+    ConversionPayload:
+      type: object
+      properties:
+        commandUuid:
+          type: string
+        input:
+          $ref: '#/components/schemas/ConversionInput'
+      required:
+        - input
+    ConversionResponse:
+      type: object
+      properties:
+        commandUuid:
+          type: string
+        input:
+          $ref: '#/components/schemas/ConversionInput'
+        output:
+          $ref: '#/components/schemas/ConversionOutput'
+    BadRequest400:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 400
+        status:
+          type: string
+          description: HTTP Status Description.
+          example: Bad Request
+        message:
+          type: string
+          description: Error message.
+          example: There is a validation error.
+        details:
+          type: array
+          description: Error message details.
+          items:
+            type: string
+          example:
+            - Required field missing. 
+    BadRequestNoBody400:
+      properties:
+        message:
+          type: string
+          description: HTTP Status Description.
+          example: Bad Request
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: Link to the requested resource.
+                  example: /testtenant/units
+                templated:
+                  type: boolean
+                  description: Link template flag.
+                  example: false
+        _embedded:
+          type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Description of the error.
+                    example: 'Required Body [unitCodes] not specified'
+                  path:
+                    type: string
+                    description: Path associated with the error
+                    example: /unitCodes
+    BadConversionRequest400:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 400
+        status:
+          type: string
+          description: HTTP Status Description.
+          example: Bad Request
+        message:
+          type: string
+          description: Error message.
+          example: Units of different type cannot be converted.
+    Conflict409:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 409
+        status:
+          type: string
+          description: HTTP Status Description.
+          example: Conflict
+        message:
+          type: string
+          description: Error message.
+          example: Unit with given code already exists.
+    Unauthorized401:
+      properties:
+        fault:
+          type: object
+          properties:
+            faultstring:
+              type: string
+              example: Invalid access token
+            detail:
+              type: object
+              properties:
+                errorcode:
+                  type: string
+                  example: oauth.v2.InvalidAccessToken
+    Forbidden403:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 403
+        status:
+          type: string
+          description: HTTP Status Description.
+          example: Forbidden
+        message:
+          type: string
+          description: Error message.
+          example: User not authorized.
+    NotFound404:
+      properties:
+        unitCode:
+          type: string
+          description: The code of the requested unit.
+          example: g
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 404
+        status:
+          type: string
+          description: HTTP Status.
+          example: Not Found
+        message:
+          type: string
+          description: Detailed error message.
+          example: The unit with code g has not been found.
+    UnexpectedError:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 500
+        status:
+          type: string
+          description: HTTP Status.
+          example: Internal server error.
+        message:
+          type: string
+          description: Detailed error message
+          example: There is internal server error.
+    CreateUnitResponse:
+      type: object
+      properties:
+        code:
+          type: string
+  responses:
+    UnauthorizedResponse401:
+      description: |-
+        Given request is unauthorized - the authorization token is invalid or has expired.
+
+        Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized401'
+          examples:
+            Access Token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+    ForbiddenResponse403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden403'
+          examples:
+            insufficient_permissions:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the given resource is forbidden.
+    UnitNotFoundResponse404:
+      description: The unit has not been found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound404'
+          examples:
+            Unit not found:
+              $ref: '#/components/examples/UnitNotFound404'
+    UnitConflictResponse409:
+      description: The unit already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Conflict409'
+          examples:
+            Unit conflict:
+              $ref: '#/components/examples/UnitConflict409'
+    ServerErrorResponse500:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnexpectedError'
+    BadRequest400:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest400'
+          examples:
+            Unit code not specified:
+              $ref: '#/components/examples/UnitCodeNotSpecified400'
+  examples:
+    UnitWithStringName:
+      value:
+        code: kg
+        name: kilogram
+        type: mass
+        baseUnit: true
+        factor: 1
+        metadata:
+          version: 1
+    UnitWithMapName:
+      value:
+        code: g
+        name:
+          en: gram
+          de: Gramm
+        type: mass
+        baseUnit: false
+        factor: 0.001
+        metadata:
+          version: 1
+    UnitWithoutVersion:
+      value:
+        code: g
+        name:
+          en: gram
+          de: Gramm
+        type: mass
+        baseUnit: false
+        factor: 0.001
+    UnitCreateWithStringName:
+      value:
+        code: kg
+        name: kilogram
+        type: mass
+        baseUnit: true
+        symbol: kg
+        factor: 1
+    UnitCreateWithMapName:
+      value:
+        code: g
+        name:
+          en: gram
+          de: Gramm
+        type: mass
+        baseUnit: false
+        symbol: kg
+        factor: 0.001
+    UnitWithStringNameList:
+      description: list containing localized units
+      value:
+        - code: g
+          name: gram
+          type: mass
+          baseUnit: true
+          factor: 1
+          metadata:
+            version: 2
+            createdAt: '2021-10-25T10:59:24.385Z'
+            modifiedAt: '2021-10-25T10:59:24.385Z'
+        - code: ug
+          name: microgram
+          type: mass
+          symbol: µg
+          baseUnit: false
+          factor: 0.000001
+          metadata:
+            version: 1
+            createdAt: '2021-10-25T10:59:24.385Z'
+            modifiedAt: '2021-10-25T10:59:24.385Z'
+    UnitWithMapNameList:
+      description: List containing units containing all languages
+      value:
+        - code: g
+          name:
+            en: gram
+            de: Gramm
+          type: mass
+          baseUnit: true
+          factor: 1
+          metadata:
+            version: 2
+            createdAt: '2021-10-25T10:59:24.385Z'
+            modifiedAt: '2021-10-25T10:59:24.385Z'
+        - code: ug
+          name:
+            en: microgram
+            de: Mikrogramm
+          type: mass
+          symbol: µg
+          baseUnit: false
+          factor: 0.000001
+          metadata:
+            version: 1
+            createdAt: '2021-10-25T10:59:24.385Z'
+            modifiedAt: '2021-10-25T10:59:24.385Z'
+    UnitNotFound404:
+      value:
+        unitCode: g
+        code: 404
+        status: Not Found
+        message: The unit with code g has not been found.
+    UnitConflict409:
+      value:
+        code: 409
+        status: Conflict
+        message: The unit with given code already exists.
+    UnitNameFieldNotSpecified400:
+      value:
+        code: 400
+        status: Bad Request
+        message: There is a validation error. 
+        details:
+          - The unit name must be specified
+    UnitCodeNotSpecified400:
+      value:
+        code: 400
+        status: Bad Request
+        message: There is a validation error.
+        details:
+          - The unit code must be specified
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            unithandling.unit_manage: Needed to manage measurement units.
+security:
+  - OAuth2: []

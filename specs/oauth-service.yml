@@ -1,0 +1,94 @@
+openapi: 3.0.1
+info:
+  title: OAuth Service
+  description: "The OAuth Service allows you to generate the following token types:\n\
+    \n| Token type | Description |\n| --- | --- |\n| Service access token | Needed to access the Emporix services such as adding\
+    \ new products, managing categories or modifying prices.|\n\n"
+  contact: {}
+  version: ""
+servers:
+- url: https://api.emporix.io
+paths:
+  /oauth/token:
+    post:
+      tags:
+      - Service Access Token
+      summary: Requesting a service access token
+      description: "Sends an authentication request and returns a service access token.\n\
+        \n**Note**: We do not support refresh tokens for service access tokens. In\
+        \ case your service access token expires, you need to send a new authentication\
+        \ request.\n\nGrant type parameter is always ```client_credentials```.\n"
+      operationId: POST-oauth-request-client-credentials
+      parameters:
+      - name: Content-Type
+        in: header
+        required: true
+        schema: 
+          type: string
+          example: application/x-www-form-urlencoded
+      requestBody:
+        description: ""
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AccessTokenRequest'
+            examples:
+              payloadExample:
+                value:
+                  client_id: "{client_id}"
+                  client_secret: "{client_secret}"
+                  grant_type: client_credentials
+                  scope: "tenant={tenant} ..."
+      responses:
+        "200":
+          description: The request was successful. A service access token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+              examples:
+                Response example:
+                  value:
+                    refresh_token_expires_in: 0
+                    refresh_token: ""
+                    session_idle_time: 120
+                    token_type: Bearer
+                    access_token: vkFuQ6oTwj8_Ye4eiRSsqMeqLYNeQRJi
+                    expires_in: 14399
+                    scope: "tenant={tenant} ..."
+      servers:
+      - url: https://api.emporix.io
+        description: Production
+components:
+  schemas:
+    AccessToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+          format: int32
+        session_idle_time:
+          type: integer
+          format: int32
+        refresh_token:
+          type: string
+        refresh_token_expires_in:
+          type: integer
+          format: int32
+        scope:
+          type: string
+    AccessTokenRequest:
+      type: object
+      properties:
+        grant_type:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        scope:
+          type: string

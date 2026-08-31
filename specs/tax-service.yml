@@ -1,0 +1,1051 @@
+openapi: 3.0.0
+info:
+  title: Tax Service
+  version: ''
+  description: |-
+    Create, manage and update tax (VAT, Sales Tax, MWst) and tax classes.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Taxes
+  - name: Tax calculation
+paths:
+  '/tax/{tenant}/taxes':
+    post:
+      summary: Creating a new tax configuration
+      description: |
+        Creates a new tax configuration.
+      security:
+        - OAuth2:
+            - tax.tax_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/taxCreation'
+            examples:
+              Tax configuration with a map of localized attributes:
+                value:
+                  location:
+                    countryCode: DE
+                  taxClasses:
+                    - code: STANDARD
+                      name:
+                        en: Standard
+                      order: 0
+                      rate: 19
+                      isDefault: true
+                    - code: REDUCED
+                      name:
+                        en: Reduced
+                      order: 1
+                      rate: 7
+                    - code: ZERO
+                      name:
+                        en: Zero
+                      order: 2
+                      rate: 0
+              Tax configuration with localized attributes:
+                value:
+                  location:
+                    countryCode: DE
+                  taxClasses:
+                    - code: STANDARD
+                      name: Standard
+                      order: 0
+                      rate: 19
+                      isDefault: true
+                    - code: REDUCED
+                      name: Reduced
+                      order: 1
+                      rate: 7
+                    - code: ZERO
+                      name: Zero
+                      order: 2
+                      rate: 0
+        description: ''
+      responses:
+        '201':
+          description: The request was successful. The tax configuration has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taxCreationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-tax-create-configuration
+      tags:
+        - Taxes
+    get:
+      summary: Retrieving all tax configurations
+      description: |-
+        Retrieves all tax configurations assigned to the tenant. You can filter the results with query parameters.
+      security:
+        - OAuth2:
+            - tax.tax_read
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguageV2_header'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/trait_name'
+        - $ref: '#/components/parameters/trait_rate_query_param'
+        - $ref: '#/components/parameters/trait_country_code_query_param'
+        - $ref: '#/components/parameters/trait_tax_class_code_query_param'
+        - $ref: '#/components/parameters/trait_description_query_param'
+      responses:
+        '200':
+          description: The request was successful. A list of tax configurations is returned.
+          content:
+            application/json:
+              examples:
+                Tax configurations with a map of localized attributes:
+                  value:
+                    - location:
+                        countryCode: DE
+                      taxClasses:
+                        - code: STANDARD
+                          name:
+                            en: Standard
+                          order: 0
+                          rate: 19
+                          isDefault: true
+                        - code: REDUCED
+                          name:
+                            en: Reduced
+                          order: 1
+                          rate: 7
+                        - code: ZERO
+                          name:
+                            en: Zero
+                          order: 2
+                          rate: 0
+                      metadata:
+                        version: 1
+                        createdAt: '2022-03-31T09:52:15.423Z'
+                        modifiedAt: '2022-03-31T09:53:25.464Z'
+                    - location:
+                        countryCode: PL
+                      taxClasses:
+                        - code: STANDARD
+                          name:
+                            en: Standard
+                          order: 0
+                          rate: 23
+                        - code: REDUCED_8
+                          name:
+                            en: Reduced
+                          order: 1
+                          rate: 8
+                          isDefault: true
+                        - code: REDUCED_5
+                          name:
+                            en: Reduced (Food)
+                          order: 2
+                          rate: 5
+                        - code: ZERO
+                          name:
+                            en: Zero
+                          order: 3
+                          rate: 0
+                      metadata:
+                        version: 2
+                        createdAt: '2022-03-31T09:52:15.423Z'
+                        modifiedAt: '2022-03-31T09:53:25.464Z'
+                Tax configurations with localized attributes:
+                  value:
+                    - location:
+                        countryCode: DE
+                      taxClasses:
+                        - code: STANDARD
+                          name: Standard
+                          order: 0
+                          rate: 19
+                          isDefault: true
+                        - code: REDUCED
+                          name: Reduced
+                          order: 1
+                          rate: 7
+                        - code: ZERO
+                          name: Zero
+                          order: 2
+                          rate: 0
+                    - location:
+                        countryCode: PL
+                      taxClasses:
+                        - code: STANDARD
+                          name: Standard
+                          order: 0
+                          rate: 23
+                        - code: REDUCED_8
+                          name: Reduced
+                          order: 1
+                          rate: 8
+                        - code: REDUCED_5
+                          name: Reduced (Food)
+                          order: 2
+                          rate: 5
+                          isDefault: true
+                        - code: ZERO
+                          name: Zero
+                          order: 3
+                          rate: 0
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/taxRetrieval'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Taxes
+      operationId: GET-tax-list-configurations
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/tax/{tenant}/taxes/{locationCode}':
+    get:
+      summary: Retrieving a tax configuration
+      description: |-
+        Retrieves a tax configuration for a specified location.
+      security:
+        - OAuth2:
+            - tax.tax_read
+      parameters:
+        - $ref: '#/components/parameters/trait_acceptLanguageV2_header'
+      responses:
+        '200':
+          description: The request was successful. The tax configuration is returned.
+          content:
+            application/json:
+              examples:
+                Tax configuration with a map of localized attributes:
+                  value:
+                    location:
+                      countryCode: DE
+                    taxClasses:
+                      - code: STANDARD
+                        name:
+                          en: Standard
+                        order: 0
+                        rate: 19
+                        isDefault: true
+                      - code: REDUCED
+                        name:
+                          en: Reduced
+                        order: 1
+                        rate: 7
+                      - code: ZERO
+                        name:
+                          en: Zero
+                        order: 2
+                        rate: 0
+                    metadata:
+                      version: 2
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:53:25.464Z'
+                Tax configuration with localized attributes:
+                  value:
+                    location:
+                      countryCode: DE
+                    taxClasses:
+                      - code: STANDARD
+                        name: Standard
+                        order: 0
+                        rate: 19
+                        isDefault: true
+                      - code: REDUCED
+                        name: Reduced
+                        order: 1
+                        rate: 7
+                      - code: ZERO
+                        name: Zero
+                        order: 2
+                        rate: 0
+                    metadata:
+                      version: 2
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:53:25.464Z'
+              schema:
+                $ref: '#/components/schemas/taxRetrieval'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Taxes
+      operationId: GET-tax-retrieve-configuration-by-location
+    put:
+      summary: Updating a tax configuration
+      description: |-
+        Updates a tax configuration based on the specified location code.
+
+        **Note**: The tax configuration's identifier - the country code - is immutable and cannot be changed using this endpoint.
+      security:
+        - OAuth2:
+            - tax.tax_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_contentLanguage_header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/taxUpdate'
+            examples:
+              Tax configuration with a map of localized attributes:
+                value:
+                  location:
+                    countryCode: DE
+                  taxClasses:
+                    - code: STANDARD
+                      name:
+                        en: Standard
+                      order: 0
+                      rate: 19
+                      isDefault: true
+                    - code: REDUCED
+                      name:
+                        en: Reduced
+                      order: 1
+                      rate: 7
+                    - code: ZERO
+                      name:
+                        en: Zero
+                      order: 2
+                      rate: 0
+                  metadata:
+                    version: 1
+              Tax configuration with localized attributes:
+                value:
+                  location:
+                    countryCode: DE
+                  taxClasses:
+                    - code: STANDARD
+                      name: Standard
+                      order: 0
+                      rate: 19
+                      isDefault: true
+                    - code: REDUCED
+                      name: Reduced
+                      order: 1
+                      rate: 7
+                    - code: ZERO
+                      name: Zero
+                      order: 2
+                      rate: 0
+                  metadata:
+                    version: 1
+                    createdAt: '2022-03-31T09:52:15.423Z'
+                    modifiedAt: '2022-03-31T09:53:25.464Z'
+      responses:
+        '204':
+          description: The request was successful. The tax configuration has been updated.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Taxes
+      operationId: PUT-tax-update-configuration-by-location
+    delete:
+      summary: Deleting a tax configuration
+      description: |-
+        Deletes a tax configuration based on the specified location code.
+      security:
+        - OAuth2:
+            - tax.tax_manage
+      responses:
+        '204':
+          description: The request was successful. The tax configuration has been deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Taxes
+      operationId: DELETE-tax-remove-configuration-by-location
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - schema:
+          type: string
+        name: locationCode
+        in: path
+        required: true
+        description: 'Location country code, defined when the tax configuration is created.'
+  '/tax/{tenant}/taxes/calculation-commands':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    put:
+      summary: Calculating net and gross values for prices
+      operationId: PUT-tax-calculate-commands
+      responses:
+        '200':
+          description: The request was successful. The calculated value is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taxCalculationResponse'
+              examples:
+                Net to gross:
+                  value:
+                    commandUuid: cb0d5627-08ef-4de9-a676-a254a4311261
+                    input:
+                      targetCountry: DE
+                      targetTaxClass: STANDARD
+                      includesTax: false
+                      price: 1.59
+                    output:
+                      netPrice: 1.59
+                      grossPrice: 1.8921
+                      targetTaxRate: 19
+                Gross to net:
+                  value:
+                    commandUuid: 4c489943-0af3-43e7-ad97-b0475b66ff27
+                    input:
+                      targetLocation:
+                        countryCode: DE
+                      targetTaxClass: STANDARD
+                      includesTax: true
+                      price: 1.59
+                    output:
+                      netPrice: 1.3361344538
+                      grossPrice: 1.59
+                      sourceTaxRate: 19
+                Gross in one country to gross in another country:
+                  value:
+                    commandUuid: d72bf92b-7840-4f53-a222-fd1d807fd6aa
+                    input:
+                      sourceLocation:
+                        countryCode: DE
+                      sourceTaxClass: STANDARD
+                      targetLocation:
+                        countryCode: PL
+                      targetTaxClass: STANDARD
+                      includesTax: true
+                      price: 1.59
+                    output:
+                      netPrice: 1.3361344538
+                      grossPrice: 1.643445378174
+                      sourceTaxRate: 19
+                      targetTaxRate: 23
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/taxCalculationRequest'
+            examples:
+              Net to gross:
+                value:
+                  input:
+                    targetLocation:
+                      countryCode: DE
+                    targetTaxClass: STANDARD
+                    includesTax: false
+                    price: 1.59
+              Gross to net:
+                value:
+                  input:
+                    targetLocation:
+                      countryCode: DE
+                    targetTaxClass: STANDARD
+                    includesTax: true
+                    price: 1.59
+              Gross in one country to gross in another country:
+                value:
+                  input:
+                    sourceLocation:
+                      countryCode: DE
+                    sourceTaxClass: STANDARD
+                    targetLocation:
+                      countryCode: PL
+                    targetTaxClass: STANDARD
+                    includesTax: true
+                    price: 1.59
+      description: |-
+        Supports the following calculation operations for prices:
+        * Net to gross values
+        * Gross to net values
+        * Gross values in one country to gross values in another country
+
+        **Note**: This endpoint calculates net and gross values for prices based on existing tax configurations. To use this endpoint, you need to create tax configurations first.
+          * To calculate gross values beetween countries, you need to create tax configurations for both countries.
+      tags:
+        - Tax calculation
+      security:
+        - OAuth2:
+            []
+components:
+  schemas:
+    errorMessage:
+      title: error
+      description: Schema for API specified errors.
+      type: object
+      properties:
+        taxConfigurationCode:
+          type: string
+          description: link to documentation to investigate further and finding support
+        code:
+          description: 'classification of the error type, lower case with underscore eg validation_failure'
+          type: integer
+        status:
+          description: 'original HTTP error code, should be consistent with the response HTTP code'
+          type: string
+        message:
+          description: descriptive error message for debugging
+          type: string
+        details:
+          description: list of problems causing this error
+          type: array
+          items:
+            title: errorDetail
+            description: schema for specific error cause
+            type: string
+      required:
+        - code
+        - status
+    metadata:
+      type: object
+      properties:
+        createdAt:
+          description: Date and time when the object was created.
+          type: string
+          format: date-time
+        modifiedAt:
+          description: Date and time when the object was last modified.
+          type: string
+          format: date-time
+        version:
+          minimum: 1
+          type: integer
+          description: Version of the object.
+    taxCreation:
+      title: taxCreation
+      type: object
+      description: 'Tax configuration for a specified location. It consists of a country code and a list of tax classes applicable in that country.  '
+      properties:
+        location:
+          $ref: '#/components/schemas/location'
+        taxClasses:
+          type: array
+          description: List of tax classes applicable in the specified country.
+          items:
+            $ref: '#/components/schemas/taxClass'
+      required:
+        - location
+        - taxClasses
+    taxRetrieval:
+      title: taxRetrieval
+      type: object
+      description: 'Tax configuration for a specified location. It consists of a country code and a list of tax classes applicable in that country.  '
+      properties:
+        locationCode:
+          type: string
+        location:
+          $ref: '#/components/schemas/location'
+        taxClasses:
+          type: array
+          description: List of tax classes applicable in the specified country.
+          items:
+            $ref: '#/components/schemas/taxClass'
+        metadata:
+          $ref: '#/components/schemas/metadata'
+    taxClass:
+      title: taxClass
+      type: object
+      description: 'Single tax class. '
+      properties:
+        code:
+          type: string
+          description: Unique tax class code.
+        name:
+          description: |-
+            Tax class name.
+
+            * If the `Content-Language` header is set to `*`, then the name should be provided as a map of translations, where each key is a language code and the value is the name in its respective language.
+            * If the `Content-Language` header is set to a specific language, the name should be provided as a string.
+            * If the `Content-Language` header is empty, the endpoint will asume that the name is provided in the default language defined in the Configuration Service.
+
+            **Note**: You can provide the names only in languages defined in the Configuration Service. In case the name is provided in a language that is not defined in the Configuration Service, the request will be rejected.
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: string
+            - type: string
+        description:
+          description: |-
+            Tax class description.
+
+            * If the `Content-Language` header is set to `*`, then the description should be provided as a map of translations, where each key is a language code and the value is the description in its respective language.
+            * If the `Content-Language` header is set to a specific language, the description should be provided as a string.
+            * If the `Content-Language` header is empty, the endpoint will asume that the description is provided in the default language defined in the Configuration Service.
+
+            **Note**: You can provide the descriptions only in languages defined in the Configuration Service. In case the description is provided in a language that is not defined in the Configuration Service, the request will be rejected.
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: string
+            - type: string
+        order:
+          type: integer
+          description: Number indicating the position on the tax class list. Tax classes in a configuration are sorted based on their `order` values in ascending order.
+        rate:
+          type: number
+          description: |-
+            Tax rate, expressed as a number.
+
+            For example, if the tax rate is 23%, this field should be set to `23`.
+        isDefault:
+          type: boolean
+          description: Indicates that the tax class is a default tax class for the tax configuration. Only one tax class can be marked as a default for a particular tax configuration.
+      required:
+        - code
+        - name
+        - rate
+    taxCreationResponse:
+      title: taxCreationResponse
+      type: object
+      description: ''
+      properties:
+        locationCode:
+          type: string
+          description: Code of country for which the tax configuration has been created.
+    taxCalculationRequest:
+      title: ''
+      type: object
+      description: ''
+      properties:
+        commandUuid:
+          type: string
+          description: |-
+            Calculation command's unique identifier.
+
+            **Note**: This field is optional. If not specified, the `commandUuid` will be generated by the server.
+        input:
+          type: object
+          description: Information based on which the price will be calculated.
+          required:
+            - targetTaxClass
+            - targetLocation
+            - price
+          properties:
+            sourceLocation:
+              description: |-
+                Country for which the provided price is originally defined.
+
+                **Note**: This field is only mandatory if the `includesTax` field is set to `true`.
+              allOf:
+                - $ref: '#/components/schemas/location'
+            sourceTaxClass:
+              type: string
+              description: |-
+                Tax class originally applied to the provided price.
+
+                **Note**: This field is only mandatory if the `includesTax` field is set to `true`.
+            targetLocation:
+              description: Country for which the price should be calculated.
+              allOf:
+                - $ref: '#/components/schemas/location'
+            targetTaxClass:
+              type: string
+              description: Tax class that should be applied when calculating the price.
+            includesTax:
+              type: boolean
+              description: |-
+                Flag indicating whether the value provided in the `price` field is expressed as net or gross.
+
+                | Value | Description |
+                | --- | --- |
+                | `true` | Prices are expressed as gross values. |
+                | `false` | Prices are expressed as net values. |
+            price:
+              type: number
+              description: |-
+                Original price value.
+
+                This field should contain by a number where the cent part is separated by a dot sign - such as `12.99`.
+
+                **Note**: The cent part of the price is not limited to two digits. You can specify the price with any precision.
+      required:
+        - input
+    taxCalculationResponse:
+      title: ''
+      type: object
+      description: ''
+      properties:
+        commandUuid:
+          type: string
+          description: Calculation command's unique identifier.
+        input:
+          type: object
+          description: Information based on which the price was calculated.
+          properties:
+            sourceLocation:
+              description: Country for which the provided price was originally defined.
+              allOf:
+                - $ref: '#/components/schemas/location'
+            sourceTaxClass:
+              type: string
+              description: Tax class originally applied to the provided price.
+            targetLocation:
+              description: Country for which the price was calculated.
+              allOf:
+                - $ref: '#/components/schemas/location'
+            targetTaxClass:
+              type: string
+              description: Tax class that was applied when calculating the price.
+            includesTax:
+              type: boolean
+              description: |-
+                Flag indicating whether the price provided in the request was expressed as net or gross.
+
+                | Value | Description |
+                | --- | --- |
+                | `true` | Prices will be expressed as gross values. |
+                | `false` | Prices will be expressed as net values. |
+            price:
+              type: number
+              description: Original price value.
+        output:
+          type: object
+          description: Calculation results.
+          properties:
+            netPrice:
+              type: number
+              description: Calculated net price.
+            grossPrice:
+              type: number
+              description: Calculated gross price.
+            sourceTaxRate:
+              type: number
+              description: Tax rate originally applied to the provided price.
+            targetTaxRate:
+              type: number
+              description: Tax rate that was applied when calculating the price.
+    location:
+      type: object
+      description: ''
+      properties:
+        countryCode:
+          type: string
+          description: 'Code of the country for which the tax classes are specified, as defined in the Country Service.'
+      required:
+        - countryCode
+    taxUpdate:
+      title: taxUpdate
+      allOf:
+        - $ref: '#/components/schemas/taxCreation'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/metadata'
+          required:
+            - metadata
+  responses:
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            ForbiddenExample:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            UnauthorizedExample:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            AccessTokenExpiredExample:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            InternalServiceErrorExample:
+              value:
+                code: 500
+                status: Internal Service Error
+                message: A server-side exception occurred that prevented the system from correctly returning the result.
+    Conflict_409:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            ConflictExample:
+              value:
+                code: 409
+                status: Conflict
+                message: The object that you are trying to update has already changed. Please refresh and try again!
+    BadRequest_400:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            BadRequestExample:
+              $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+    NotFound_404:
+      description: Resource has not been found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            NotFoundExample:
+              $ref: '#/components/examples/NotFound404_TaxNotFound'
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |-
+        Page number to be retrieved. The number of the first page is 1.
+
+        **Note:** If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      in: query
+      name: sort
+      required: false
+      description: |-
+        List of properties used to sort the results, separated by colons. The order of properties indicates their priority in sorting.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        If the sorting direction is not specified, the fields are sorted in ascending order.
+
+        Possible {fieldName} values are:
+          * `name`
+          * `description`
+          * `countryCode`
+          * `taxClassCode`
+          * `rate`
+      schema:
+        type: string
+        example: 'name,taxClassCode:desc'
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: Number of items to be retrieved per page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_contentLanguage_header:
+      in: header
+      schema:
+        type: string
+      name: Content-Language
+      required: true
+      description: |
+        Language in which localized fields in the request body are provided.
+
+        * If the `Content-Language` header is set to `*`, the localized fields should be provided as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the `Content-Language` header is set to a specific language, the localized fields should be provided as strings.
+        * If the `Content-Language` header is empty, the endpoint will asume that the localized fields are provided in the default language defined in the Configuration Service.
+
+        **Note**: You can provide the localized fields only in languages defined in the Configuration Service. In case the fields are provided in languages that are not defined in the Configuration Service, the request will be rejected.
+    trait_acceptLanguageV2_header:
+      in: header
+      name: Accept-Language
+      required: false
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields.
+
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+    trait_XTotalCount_header:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: Flag indicating whether the total number of retrieved items should be returned.
+      schema:
+        default: false
+        type: boolean
+    trait_name:
+      name: name
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Tax class names. When specified, only tax configurations containing the specified tax class names will be returned.
+
+        **Important**: See how the `Accept-Language` header influences this parameter:
+          * If The `Accept-Language` header is set to `*`, you need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `*` and you want to find English names containing the word "Reduced", this parameter should be set to "name.en=Reduced"
+
+          * If the `Accept-Language` header is set to a particular language or not specified, you do not need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `en` and you want to find names containing the word "Reduced", this parameter should be set to "name=Reduced"
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-sensitive.
+    trait_rate_query_param:
+      name: rate
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Tax class rates, expressed as numbers. When specified, only tax configurations containing the specified tax class rates will be returned.
+
+        **Note**: When filtering the results with this field, the `equals` operator is used.
+    trait_country_code_query_param:
+      name: countryCode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Three-letter country codes, as defined in the Country Service. When specified, only tax configurations defined for the specified countries will be returned.
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-sensitive.
+    trait_tax_class_code_query_param:
+      name: taxClassCode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Tax class codes. When specified, only tax configurations containing the specified tax class codes will be returned.
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-sensitive.
+    trait_description_query_param:
+      name: description
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Tax class descriptions. When specified, only tax configurations containing the specified tax class descriptions will be returned.
+
+        **Important**: See how the `Accept-Language` header influences this parameter:
+          * If The `Accept-Language` header is set to `*`, you need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `*` and you want to find English descriptions containing the word "Fruit", this parameter should be set to "description.en=Fruit"
+
+          * If the `Accept-Language` header is set to a particular language or not specified, you do not need to specify a language in this parameter.
+
+            For example, if the `Accept-Language` header is set to `en` and you want to find descriptions containing the word "Fruit", this parameter should be set to "description=Fruit"
+
+        **Note**: When filtering the results with this field, the `contains` operator is used. The operator is case-sensitive.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            tax.tax_manage: 'Needed to create, update, and delete tax configurations.'
+            tax.tax_read: Needed to retrieve tax configurations.
+  examples:
+    BadRequest400_AmbiguousTenant:
+      value:
+        code: 400
+        status: Bad Request
+        message: Tenant in the header is not matching with the one provided in the URI.
+    NotFound404_TaxNotFound:
+      value:
+        code: 404
+        status: Not Found
+        message: The tax was not found for this code
+  requestBodies: {}
+security:
+  - OAuth2: []

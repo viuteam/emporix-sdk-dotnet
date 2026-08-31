@@ -1,0 +1,639 @@
+openapi: 3.0.1
+info:
+  title: Brand Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |-
+    Manage detailed brand information about products.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Brands
+    description: Manage brands
+  - name: Media
+    description: Manage brands media
+paths:
+  '/brand/brands':
+    get:
+      tags:
+        - Brands
+      description: |-
+        Retrieves all brands created in the tenant. No specific scopes are required.
+      operationId: GET-brand-list-brands
+      parameters:
+        - $ref: '#/components/parameters/query_q'
+        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+      responses:
+        '200':
+          description: The brands have been successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/brands'
+              example:
+                - name: Brand_1
+                  description: Description of Brand_1 in HTML.
+                  localizedName:
+                    en: Brand one
+                    de: Marke einz
+                  localizedDescription:
+                    en: Description of <strong>Brand one</strong> in HTML.
+                    de: Beschreibung der <strong>Marke einz</strong> in HTML.
+                  image: 'https://res.cloudinary.com/saas-ag/image/upload/tenant/brands/media_Id'
+                  cloudinaryUrl: 'tenant/brands/media_Id'
+                  metadata:
+                    createdAt: '2015-01-17T23:00:52.364Z'
+                    modifiedAt: '2015-01-17T23:00:52.364Z'
+                    version: 3
+                  id: 55421f3b6ecea7b1a3b73d26
+                - name: Brand_2
+                  description: Description of Brand_2 in HTML.
+                  localizedName:
+                    en: Brand two
+                    de: Marke zwei
+                  localizedDescription:
+                    en: Description of <strong>Brand two</strong> in HTML.
+                    de: Beschreibung der <strong>Marke zwei</strong> in HTML.
+                  image: 'https://res.cloudinary.com/saas-ag/image/upload/tenant/brands/media_Id'
+                  cloudinaryUrl: 'tenant/brands/media_Id'
+                  metadata:
+                    createdAt: '2015-01-17T23:00:52.364Z'
+                    modifiedAt: '2015-01-17T23:00:52.364Z'
+                    version: 3
+                  id: 55421f3b6ecea7b1a3b73d26
+        '400':
+          $ref: '#/components/responses/trait_400'
+        '403':
+          $ref: '#/components/responses/trait_403'
+        '500':
+          $ref: '#/components/responses/trait_500'
+      summary: Retrieving all brands
+      security:
+        - OAuth2: []
+    post:
+      tags:
+        - Brands
+      description: |-
+        Creates a new brand.
+      operationId: POST-brand-create-brand
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/brand'
+      security:
+        - OAuth2:
+            - brand.brand_manage
+      responses:
+        '201':
+          description: |
+            The brand has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/brandResponse'
+              example:
+                name: Brand_2
+                description: Description of Brand_2 in HTML.
+                localizedName:
+                  en: Brand one
+                  de: Marke einz
+                localizedDescription:
+                  en: Description of <strong>Brand one</strong> in HTML.
+                  de: Beschreibung der <strong>Marke einz</strong> in HTML.
+                image: 'https://res.cloudinary.com/saas-ag/image/upload/tenant/brands/media_Id'
+                metadata:
+                  createdAt: '2015-01-17T23:00:52.364Z'
+                  modifiedAt: '2015-01-17T23:00:52.364Z'
+                  version: 1
+                id: 55421f3b6ecea7b1a3b73d26
+        '400':
+          $ref: '#/components/responses/trait_400'
+        '403':
+          $ref: '#/components/responses/trait_403'
+        '409':
+          $ref: '#/components/responses/trait_409'
+        '500':
+          $ref: '#/components/responses/trait_500'
+      summary: Adding a new brand
+  '/brand/brands/{brandId}':
+    get:
+      tags:
+        - Brands
+      description: |-
+        Retrieves details of a specified brand. No specific scopes are required.
+      operationId: GET-brand-retrieve-brand
+      parameters:
+        - $ref: '#/components/parameters/header_accept_language'
+      responses:
+        '200':
+          description: Brand successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/brandResponse'
+              example:
+                name: Haribo
+                description: Description of Brand_2 in HTML.
+                localizedName:
+                  en: Brand one
+                  de: Marke einz
+                localizedDescription:
+                  en: Description of <strong>Brand one</strong> in HTML.
+                  de: Beschreibung der <strong>Marke einz</strong> in HTML.
+                image: 'https://res.cloudinary.com/saas-ag/image/upload/tenant/brands/media_Id'
+                cloudinaryUrl: 'tenant/brands/media_Id'
+                metadata:
+                  createdAt: '2015-01-17T23:00:52.364Z'
+                  modifiedAt: '2015-01-17T23:00:52.364Z'
+                  version: 3
+                id: 55421f3b6ecea7b1a3b73d26
+        '400':
+          $ref: '#/components/responses/trait_400'
+        '404':
+          $ref: '#/components/responses/trait_404'
+        '500':
+          $ref: '#/components/responses/trait_500'
+      summary: Retrieving a brand
+      security:
+        - OAuth2: []
+    put:
+      tags:
+        - Brands
+      description: |
+        Updates a specified brand by replacing all of its existing data with data from the request body.
+      operationId: PUT-brand-update-brand
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateBrand'
+        required: false
+      security:
+        - OAuth2:
+            - brand.brand_manage
+      responses:
+        '200':
+          description: The brand has been successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/brandResponse'
+              example:
+                name: Haribo
+                description: Description of <strong>Haribo</strong> in HTML.
+                localizedName:
+                  en: Brand one
+                  de: Marke einz
+                localizedDescription:
+                  en: Description of <strong>Brand one</strong> in HTML.
+                  de: Beschreibung der <strong>Marke einz</strong> in HTML.
+                image: 'https://res.cloudinary.com/saas-ag/image/upload/tenant/brands/media_Id'
+                cloudinaryUrl: 'tenant/brands/media_Id'
+                metadata:
+                  createdAt: '2015-01-17T23:00:52.364Z'
+                  modifiedAt: '2015-01-17T23:00:52.364Z'
+                  version: 2
+                id: 55421f3b6ecea7b1a3b73d26
+        '400':
+          $ref: '#/components/responses/trait_400'
+        '403':
+          $ref: '#/components/responses/trait_403'
+        '404':
+          $ref: '#/components/responses/trait_404'
+        '500':
+          $ref: '#/components/responses/trait_500'
+      summary: Updating a brand
+    patch:
+      tags:
+        - Brands
+      description: |
+        Partially updates a specified brand by replacing fields provided in the request body.
+      operationId: PATCH-brand-update-brand
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Brnad partially update payload:
+                value:
+                  name: Brand one
+                  description: "Description of <strong>Haribo</strong> in HTML."
+            schema:
+              $ref: '#/components/schemas/updateBrand'
+        required: false
+      security:
+        - OAuth2:
+            - brand.brand_manage
+      responses:
+        '200':
+          description: The brand has been successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/brandResponse'
+              example:
+                name: Haribo
+                description: Description of <strong>Haribo</strong> in HTML.
+                localizedName:
+                  en: Brand one
+                  de: Marke einz
+                localizedDescription:
+                  en: Description of <strong>Brand one</strong> in HTML.
+                  de: Beschreibung der <strong>Marke einz</strong> in HTML.
+                image: 'https://res.cloudinary.com/saas-ag/image/upload/tenant/brands/media_Id'
+                cloudinaryUrl: 'tenant/brands/media_Id'
+                metadata:
+                  createdAt: '2015-01-17T23:00:52.364Z'
+                  modifiedAt: '2015-01-17T23:00:52.364Z'
+                  version: 2
+                id: 55421f3b6ecea7b1a3b73d26
+        '400':
+          $ref: '#/components/responses/trait_400'
+        '403':
+          $ref: '#/components/responses/trait_403'
+        '404':
+          $ref: '#/components/responses/trait_404'
+        '500':
+          $ref: '#/components/responses/trait_500'
+      summary: Partially updating a brand
+    delete:
+      tags:
+        - Brands
+      description: |
+        Deletes a specified brand.
+      operationId: DELETE-brand-remove-brand
+      security:
+        - OAuth2:
+            - brand.brand_delete
+      responses:
+        '204':
+          description: The brand has been successfully deleted.
+        '403':
+          $ref: '#/components/responses/trait_403'
+        '404':
+          $ref: '#/components/responses/trait_404'
+        '500':
+          $ref: '#/components/responses/trait_500'
+      summary: Deleting a brand
+    parameters:
+      - $ref: '#/components/parameters/path_brandId'
+components:
+  schemas:
+    brands:
+      title: Collection of Brands
+      type: array
+      items:
+        $ref: '#/components/schemas/brandResponse'
+    brand:
+      title: Brand
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of a brand.
+          example: 55421f3b6ecea7b1a3b73d26
+        name:
+          type: string
+          description: Brand name.
+          example: Brand one
+        description:
+          type: string
+          description: Brand description.
+          example: Description of <strong>Haribo</strong> in HTML.
+        localizedName:
+          type: object
+          description: Map of key-value pairs containing localized names of the brand.
+          additionalProperties:
+            type: string
+          example:
+            en: Brand one
+            de: Marke einz
+        localizedDescription:
+          type: object
+          description: Map of key-value pairs containing localized descriptions of the brand.
+          additionalProperties:
+            type: string
+          example:
+            en: Description of <strong>Brand one</strong> in HTML.
+            de: Beschreibung der <strong>Marke einz</strong> in HTML.
+    updateBrand:
+      title: Brand
+      type: object
+      properties:
+        name:
+          type: string
+          description: Brand name.
+          example: Brand one
+        description:
+          type: string
+          description: Brand description.
+          example: Description of <strong>Haribo</strong> in HTML.
+        localizedName:
+          type: object
+          description: Map of key-value pairs containing localized names of the brand.
+          additionalProperties:
+            type: string
+          example:
+            en: Brand one
+            de: Marke einz
+        localizedDescription:
+          type: object
+          description: Map of key-value pairs containing localized descriptions of the brand.
+          additionalProperties:
+            type: string
+          example:
+            en: Description of <strong>Brand one</strong> in HTML.
+            de: Beschreibung der <strong>Marke einz</strong> in HTML.
+        metadata:
+          $ref: '#/components/schemas/updateMetaData'
+    brandResponse:
+      title: Brand Response
+      type: object
+      properties:
+        name:
+          type: string
+          description: Brand name.
+        cloudinaryUrl:
+          type: string
+          description: Id of the associated media file.
+        description:
+          type: string
+          description: Brand description.
+        localizedName:
+          type: object
+          description: Map of key-value pairs containing localized names of the brand.
+          additionalProperties:
+            type: string
+        localizedDescription:
+          type: object
+          description: Map of key-value pairs containing localized descriptions of the brand.
+          additionalProperties:
+            type: string
+        image:
+          type: string
+          description: Link to the associated media file.
+        mediaId:
+          type: string
+          description: Id of the media.
+        id:
+          type: string
+          description: Unique identifier of a brand.
+        metadata:
+          $ref: '#/components/schemas/metaData'
+    metaData:
+      title: Metadata
+      type: object
+      properties:
+        createdAt:
+          type: string
+          description: Date and time when the object was created compliant with the ISO 8601 standard.
+          example: '2015-01-17T23:00:52.364Z'
+        modifiedAt:
+          type: string
+          description: Date and time when the object was last modified compliant with the ISO 8601 standard.
+          example: '2015-01-17T23:00:52.364Z'
+        version:
+          minimum: 1
+          type: integer
+          description: Object version.
+          example: 1
+    updateMetaData:
+      title: Metadata
+      type: object
+      properties:
+        version:
+          minimum: 1
+          type: integer
+          description: Object version.
+          example: 1
+    error:
+      title: error
+      required:
+        - status
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          maximum: 599
+          minimum: 100
+          type: integer
+          description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+        status:
+          type: string
+          description: 'HTTP status'
+        errorCode:
+          type: string
+          description: 'Code of the error'
+        resourceId:
+          type: string
+          description: 'Id of the resource'
+        message:
+          type: string
+          description: Descriptive error message for debugging.
+        details:
+          type: array
+          description: List of problems causing this error.
+          items:
+            title: errorDetail
+            oneOf:
+              - type: string
+                description: detailed exception message
+              - type: object
+                properties:
+                  field:
+                    type: string
+                    description: 'A bean notation expression specifying the element in the request data that causes the error, for example `product.variants[3].name`. This field may be empty if the violation was not field-specific.'
+                  type:
+                    pattern: '[a-z]+[a-z_]*[a-z]+'
+                    type: string
+                    description: 'Classification of the error detail type, provided in lower case with underscore, for example missing_value. This value must always be interpreted in the context of the general error type.'
+                  message:
+                    type: string
+                    description: Descriptive and detailed message for debugging.
+                  moreInfo:
+                    type: string
+                    description: Link to documentation.
+                description: Schema for the specific error cause.
+      description: Schema for API-specific errors.
+  responses:
+    trait_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            BadRequestExample:
+              value:
+                code: 400
+                message: 'There are validation problems, see details section for more information'
+                status: Bad Request
+    trait_403:
+      description: |
+        Given authorization scopes are not sufficient and do not match the required scopes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            ForbiddenExample:
+              value:
+                code: 403
+                message: Given request does not have required scopes. It is not authorized to perform this operation.
+                status: Forbidden
+                details:
+                  - "Missing required scopes '[brand.brand_manage]'"
+    trait_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            NotFoundExample:
+              value:
+                code: 404
+                message: The requested resource does not exist.
+                status: Not Found
+                resourceId: 55421f3b6ecea7b1a3b73d26
+    trait_409:
+      description: |
+        Creation failed because there was a conflict with another resource. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            ConflictExample:
+              value:
+                code: 409
+                message: The requested resource could not be created due to server-side uniqueness validation.
+                status: Conflict
+    trait_500:
+      description: |
+        Some server side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+          examples:
+            InternalServerErrorExample:
+              value:
+                code: 500
+                message: Something went wrong while processing the request. Please contact the administrator.
+                status: Internal Server Error
+  parameters:
+    path_brandId:
+      name: brandId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of a brand.
+    query_q:
+      name: q
+      in: query
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        * Searching for items by string-based properties:
+          * By field value: `q=name:brand_one`, where `name` is the field name and `brand_one` is its desired value.
+          * By localized field value: `q=name.en:brand_one`, where `name` is the field name, `en` is a language code, and `brand_one` is the field value expressed in the specified language. **Note**: This query works only for localized fields stored in the map format, where `key` is the language code and `value` is the translation to a particular language.
+        * Searching for items by a number-based property:
+          * With a specific value: `q=metadata.version:2`
+          * With a value greater than: `q=metadata.version:>1`
+          * With a value lower than: `q=metadata.version:<3`
+          * With a value greater than or equal to: `q=metadata.version:>=1`
+          * With a value lower than or equal to: `q=metadata.version:<=2`
+          * With a value within a range of values: `q=metadata.version:(>=1 AND <=2)`\
+           where `metadata.version` is the name of the number-based field, and `2` is it's querying value.
+        * Searching for items by a date-based property: All numer-based property queries are also valid for dates. In that case, the date should be placed within double quotes: `q=metadata.createdAt:(>="2021-05-18T07:27:27.455Z" AND <"2021-05-20T07:27:27.455Z")`
+        * Searching for items with a nonexistent or empty property: `q=localizedDescription.en:null`, where `localizedDescription.en` is the field that has its value set to `null`.
+        * Searching for items with an existing property: `q=localizedDescription:exists`, where `localizedDescription` is the field that has a non-empty value.
+        * Searching for items by multiple specific values: `q=id:(5c3325baa9812100098ff48f,5c3325d1a9812100098ff494)`, where `id` is the field name, and strings within the bracket are the desired values.
+        * Searching for items by multiple fields: `q=id:5c3325baa9812100098ff48f name:brand_one` where `id` and `name` are field names. All objects that contain the specified values are returned. Multiple fields (separated by space) can be specified. Multiple values for each field can also be specified in a format presented earlier.
+        * Searching for items with string-based properties conforming to a regex: `q=name:~_on` or `q=name:(~brand on)` - in case of searching for strings with space, where `name` is the name of field and `_on` or `brand on` is its querying regex.
+        * Searching for items with a localized string-based property conforming to a regex: `localizedName.en:~(_on)` - where `localizedName` is the localized field name, `en` is a desired language, and `_on` is a search term.
+      schema:
+        type: string
+        example: 'name:{brandName}'
+    header_accept_language:
+      name: Accept-Language
+      in: header
+      description: |
+        The language or multiple languages acceptable for the response. Defines language(s) of the localized fields that should be returned in the response body.
+        If set to `*`, the response body will contain translations into all languages specified in the tenant configuration.
+        The specified language needs to be defined in the Configuration Service, under the `project_lang` key.
+
+        **Note**: If not specified, the localized fields will be saved in the default language configured by the tenant in the Configuration Service.
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+      required: false
+    header_content_language:
+      name: Content-Language
+      in: header
+      description: |
+        Defines the language in which the localized fields are specified.
+        If set to `*`, the request body may contain translations into all languages specified in the tenant configuration.
+        The specified language need to be defined in the Configuration Serivce under `project_lang` key.
+
+        **Note**: If not specified, localized fields will be saved in the default language configured by the tenant in the Configuration Service.
+      schema:
+        type: string
+        example: 'en'
+      required: false
+    pageSize:
+      schema:
+        type: string
+      in: query
+      name: pageSize
+      description: The number of documents to be retrieved per page.
+    pageNumber:
+      schema:
+        type: string
+      in: query
+      name: pageNumber
+      description: The page number to be retrieved. The size of the pages should be specified by the pageSize parameter.
+    sort:
+      schema:
+        type: string
+      in: query
+      name: sort
+      description: List of properties used to sort the results, separated by colons.
+    fields:
+      schema:
+        type: string
+      in: query
+      name: fields
+      description: Fields to be returned in the response.
+    xTotalCount:
+      schema:
+        type: boolean
+      in: header
+      name: X-Total-Count
+      description: Flag indicating whether the total number of retrieved results should be returned.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            brand.brand_manage: Needed to manage brands.
+security:
+  - OAuth2: []

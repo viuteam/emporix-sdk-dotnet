@@ -1,0 +1,274 @@
+openapi: 3.0.0
+info:
+  title: AI Rag Indexer
+  version: ''
+  description: The service creates embeddings for Vector Search.
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+tags:
+  - name: Reindex
+    description: Invoke Reindex
+  - name: Metadata
+    description: Manage Metadata
+servers:
+  - url: https://api.emporix.io
+paths:
+  '/ai-rag-indexer/{tenant}/{type}/reindex':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_type'
+    post:
+      deprecated: true
+      summary: Reindexing the entities of given type
+      operationId: GET-ai-rag-indexer-reindex
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Triggers a full reindexing process for the selected entity type. The process retrieves all entities of the given type, generates embeddings for each of them, and updates the corresponding records in the Vector Database.
+
+        This endpoint is marked as deprecated. Use the [Creating reindex job](https://developer.emporix.io/api-references/api-guides/configuration/indexing-service/api-reference/reindex#post-indexing-tenant-reindex-jobs) endpoint instead.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Reindex
+  '/ai-rag-indexer/{tenant}/{type}/rag-metadata':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_type'
+    get:
+      summary: Listing fields for RAG search
+      operationId: GET-ai-rag-indexer-retrieve-rag-metadata
+      responses:
+        '200':
+          description: List of fields for RAG search.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                Fields:
+                  value:
+                    - "code"
+                    - "id"
+                    - "labels"
+                    - "labels.description"
+                    - "labels.description.de"
+                    - "labels.description.en"
+                    - "labels.id"
+                    - "labels.name"
+                    - "mixins"
+                    - "mixins.additionalattributes"
+                    - "mixins.additionalattributes.temperature"
+                    - "name"
+                    - "name.de"
+                    - "name.en"
+                    - "published"
+                    - "segmentIds"
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Returns a list of fields that can be used to create embeddings for RAG search.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Metadata
+  '/ai-rag-indexer/{tenant}/{type}/filter-metadata':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_type'
+    get:
+      summary: Listing fields for vector search filtering
+      operationId: GET-ai-rag-indexer-retrieve-filter-metadata
+      responses:
+        '200':
+          description: List of fields for vector search filter.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetadataFilter'
+              examples:
+                Fields:
+                  value:
+                    - key: code
+                      type: string
+                    - key: id
+                      type: string
+                    - key: published
+                      type: boolean
+                    - key: segmentIds
+                      type: list
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves a list of fields which can be used for vector search filtering. Filtering is applied before RAG retrieval stage.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Metadata
+components:
+  schemas:
+    MetadataFilter:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Unique identifier of the fields. It contains full field path.
+        name:
+          type: string
+          deprecated: true
+          description: Name of the field.
+        description:
+          type: string
+          deprecated: true
+          description: Description of the field.
+        type:
+          type: string
+          description: Type of the field.
+          enum:
+            - string
+            - integer
+            - float
+            - boolean
+            - datetime
+            - date
+            - time
+            - dictionary
+            - list
+            - object
+    ErrorMessage:
+      type: object
+      properties:
+        code:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        moreInfo:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+      description: ''
+    ErrorMessageFault:
+      type: object
+      properties:
+        fault:
+          type: object
+          properties:
+            faultstring:
+              type: string
+            detail:
+              type: object
+              properties:
+                errorcode:
+                  type: string
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes:
+            ai.text_manage: Needed to execute actions related to the text generation.
+            ai.completion_manage: Needed to execute actions related to the AI completions.
+            ai.agent_read: Needed to read AI agents.
+            ai.agent_manage: Needed to manage AI agents.
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      schema:
+        type: string
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant name should always be provided in lowercase.
+    path_type:
+      schema:
+        type: string
+      in: path
+      required: true
+      name: type
+      description: "Rag Entity Type. Supported predefined types: [ORDER, PRODUCT] and custom entity types."
+  responses:
+    401_resp_common:
+      description: The authorization token is invalid or has expired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessageFault'
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    403_resp_common:
+      description: Authorization scopes of the access token are not sufficient and do not match the scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Access forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    400_resp_common:
+      description: The request was syntactically incorrect.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Code must not be null:
+              value:
+                code: 400
+                status: Bad Request
+                message: Validation problem with request body.
+                details:
+                  - message: code must not be null nor blank

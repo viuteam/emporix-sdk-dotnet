@@ -1,0 +1,940 @@
+openapi: 3.0.0
+info:
+  title: Media Service
+  version: ''
+  description: |
+    The Media Service allows you to manage assets associated with your tenant. The assets may include media, such as images or video, and other files, for example contracts or specification sheets.
+  contact:
+    email: documentation@emporix.com
+tags:
+  - name: Assets
+    description: Manage Assets
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/media/{tenant}/assets':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Creating an asset
+      description: |-
+        Creates a new asset for the tenant. An asset represents a digital (max 10MB) object in the system, for example a video, image, or a document.
+        - To create an asset of the `BLOB` type, use the `multipart/form-data` request body. 
+        - To create an asset of the `LINK` type, use the `application/json` request body.
+
+        **Access and assignment rules:**
+        - Assets assigned to predefined `refIds` types (such as `CATEGORY` or `PRODUCT`) require `PUBLIC` access.
+        - `PRIVATE` access assets can be linked to custom schema types or remain unassigned.
+      security:
+        - OAuth2:
+            - media.asset_manage
+            - media.asset_manage_by_vendor
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetCreateMultipart'
+            examples:
+              Asset of the BLOB type added for a CATEGORY:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+                  body:
+                    type: BLOB
+                    access: PUBLIC
+                    refIds:
+                      - id: 123e06ecf0452c2d6c0b81392
+                        type: CATEGORY
+                    details:
+                      filename: theBestImage
+                      mimeType: image/jpg
+                    mixins:
+                      mediaCustomAttributes:
+                        altText: Cordless impact driver
+                    metadata:
+                      mixins:
+                        mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+              Asset of the BLOB type added for a PRODUCT:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+                  body:
+                    type: BLOB
+                    access: PUBLIC
+                    refIds:
+                      - id: 890e06ecf0452c2d6c0b81392
+                        type: PRODUCT
+              Unassociated private asset of the BLOB type:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+                  body:
+                    type: BLOB
+                    access: PRIVATE
+                    details:
+                      filename: contract
+                      mimeType: application/pdf
+              Unassociated public asset of the BLOB type:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+                  body:
+                    type: BLOB
+                    access: PUBLIC
+                    details:
+                      filename: image1
+                      mimeType: image/jpg
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetCreateLink'
+            examples:
+              Asset of the LINK type added for a category:
+                value:
+                  id: 123e06ecf0452c2d6c0b81390
+                  type: LINK
+                  access: PUBLIC
+                  url: 'https://example.com/media/category-banner.html'
+                  refIds:
+                    - id: 123e06ecf0452c2d6c0b81392
+                      type: CATEGORY
+                  mixins:
+                    mediaCustomAttributes:
+                      altText: Product specification sheet
+                  metadata:
+                    mixins:
+                      mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+              Asset of the LINK type added for a product:
+                value:
+                  id: 123e06ecf0452c2d6c0b81390
+                  type: LINK
+                  access: PUBLIC
+                  url: 'https://example.com/media/product-image.html'
+                  refIds:
+                    - id: 567e06ecf0452c2d6c0b81392
+                      type: PRODUCT
+              Unassociated private asset of the LINK type:
+                value:
+                  id: 123e06ecf0452c2d6c0b81390
+                  type: LINK
+                  access: PRIVATE
+                  url: 'https://example.com/media/asset-without-refIds.html'
+              Unassociated public asset of the LINK type:
+                value:
+                  id: 123e06ecf0452c2d6c0b81390
+                  type: LINK
+                  access: PUBLIC
+                  url: 'https://example.com/media/asset-without-refIds.html'
+      responses:
+        '201':
+          description: The request was successful. The asset has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+              examples:
+                Asset created:
+                  value:
+                    id: 53ac81fd0cce8b26b36f3492
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge_413'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: POST-media-create-asset
+      tags:
+        - Assets
+    get:
+      summary: Retrieving all assets
+      description: |-
+        Retrieves all assets assigned to the tenant. You can filter, sort, and paginate the results with query parameters.
+      security:
+        - OAuth2:
+            - media.asset_read
+            - media.asset_manage
+            - media.asset_read_by_vendor
+            - media.asset_manage_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_XTotalCount_header'
+        - $ref: '#/components/parameters/trait_sort'
+        - $ref: '#/components/parameters/query_q_product'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetAssets'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-media-list-assets
+      tags:
+        - Assets
+  '/media/{tenant}/assets/{assetId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_asset_id_path'
+    get:
+      summary: Retrieving an asset
+      description: |-
+        Retrieves an asset by its unique identifier.
+      security:
+        - OAuth2:
+            - media.asset_read
+            - media.asset_read_by_vendor
+            - media.asset_manage_by_vendor
+      responses:
+        '200':
+          $ref: '#/components/responses/GetAsset'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-media-retrieve-asset
+      tags:
+        - Assets
+    put:
+      summary: Updating an asset
+      description: |-
+        Updates a given asset. The `type` and `access` properties are immutable. Accepts files of up to 10MB.
+        - To update an asset of the `BLOB` type, use `multipart/form-data` request body. 
+        - To update an asset of the `LINK` type, use `application/json` request body.
+      security:
+        - OAuth2:
+            - media.asset_manage
+            - media.asset_manage_by_vendor
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetUpdateMultipart'
+            examples:
+              Asset of BLOB type:
+                value:
+                  file:
+                    externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+                  body:
+                    type: BLOB
+                    access: PUBLIC
+                    refIds:
+                      - id: 123e06ecf0452c2d6c0b81392
+                        type: CATEGORY
+                    details:
+                      filename: theBestImage
+                      mimeType: image/jpg
+                    mixins:
+                      mediaCustomAttributes:
+                        altText: Cordless impact driver
+                    metadata:
+                      version: 1
+                      mixins:
+                        mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetUpdateLink'
+            examples:
+              Asset of LINK type:
+                value:
+                  type: LINK
+                  access: PUBLIC
+                  url: 'https://emporix.io/docs/index.html'
+                  refIds:
+                    - id: 123e06ecf0452c2d6c0b81392
+                      type: CATEGORY
+                  mixins:
+                    mediaCustomAttributes:
+                      altText: Product specification sheet
+                  metadata:
+                    version: 1
+                    mixins:
+                      mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+      responses:
+        '204':
+          description: The asset has been updated successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest_400_Update'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge_413'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: PUT-media-update-asset
+      tags:
+        - Assets
+    delete:
+      summary: Deleting an asset
+      description: |-
+        Deletes an asset.
+      security:
+        - OAuth2:
+            - media.asset_manage
+            - media.asset_manage_by_vendor
+      responses:
+        '204':
+          description: The asset has been deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: DELETE-media-remove-asset
+      tags:
+        - Assets
+  '/media/{tenant}/assets/{assetId}/download':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_asset_id_path'
+    get:
+      summary: Downloading an asset
+      description: |-
+        Downloads an asset by its unique identifier.
+      security:
+        - OAuth2:
+            - media.asset_read
+            - media.asset_read_by_vendor
+            - media.asset_manage_by_vendor
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPrivateAsset'
+        '301':
+          $ref: '#/components/responses/Redirect'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: GET-media-download-asset
+      tags:
+        - Assets
+components:
+  schemas:
+    errorMessage:
+      title: Error
+      description: Schema for specific API errors.
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code.
+          minimum: 100
+          maximum: 599
+        status:
+          description: HTTP status.
+          type: string
+        message:
+          description: Descriptive error message for debugging.
+          type: string
+        details:
+          description: List of problems causing this error.
+          type: array
+          items:
+            title: Error Detail
+            description: Error details.
+            type: string
+        resourceId:
+          description: Id of the resource.
+          type: string
+      required:
+        - status
+        - code
+        - message
+    MetadataCreate:
+      type: object
+      properties:
+        mixins:
+          type: object
+          additionalProperties:
+            type: string
+          description: A key-value map, where key is a mixin name and value is a link to the mixin schema. Must be provided together with the corresponding mixin values in the `mixins` object.
+    MetadataUpdate:
+      allOf:
+        - type: object
+          properties:
+            version:
+              minimum: 1
+              type: integer
+              description: Version of the document.
+          required:
+            - version
+        - $ref: '#/components/schemas/MetadataCreate'
+    MetadataGet:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MetadataUpdate'
+      properties:
+        createdAt:
+          description: Date and time when the document was created.
+          type: string
+        modifiedAt:
+          description: Date and time when the document was last modified.
+          type: string
+    RefId:
+      type: object
+      properties:
+        type:
+          type: string
+          description: |
+            Reference type. Can be one of the predefined types: `BRAND`, `CATEGORY`, `LABEL`, `PRODUCT`, `MODULE` or any custom schema type.
+        id:
+          type: string
+          description: Reference Id.
+    Asset:
+      title: Asset
+      type: object
+      properties:
+        access:
+          type: string
+          enum:
+            - PUBLIC
+            - PRIVATE
+          description: |
+            Access type of the asset. This property is immutable. 
+            - PUBLIC: Assets will be stored by a public storage provider and will be accessible at an external link.
+            - PRIVATE: Assets will be stored by a private storage provider and will not be accessible at an external url. Assets of the `PRIVATE` type can only be accessed by calling the `media/{tenant}/assets/{assetId}/download` endpoint in the Media Service.
+        refIds:
+          type: array
+          description: List of references.
+          items:
+            $ref: '#/components/schemas/RefId'
+        mixins:
+          type: object
+          description: Custom asset attributes.
+        metadata:
+          $ref: '#/components/schemas/MetadataCreate'
+    AssetDetailsCreate:
+      title: Asset Request Detailed Information
+      type: object
+      properties:
+        filename:
+          type: string
+          description: Asset filename.
+        mimeType:
+          type: string
+          description: The MIME (media) type of the asset.
+    AssetDetailsGet:
+      title: Asset Response Detailed Information
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AssetDetailsCreate'
+      properties:
+        bytes:
+          type: number
+          description: Size of the content associated with the asset in bytes.
+        etag:
+          type: string
+          description: The ETAG digest for the asset.
+    AssetUpdateMultipart:
+      title: Asset Update Mutlipart Payload
+      type: object
+      properties:
+        file:
+          type: object
+          format: binary
+          description: Content of the file.
+        body:
+          description: Asset Json update payload
+          allOf:
+            - $ref: '#/components/schemas/AssetUpdateBlob'
+      required:
+        - file
+        - body
+    AssetCreateMultipart:
+      title: Asset Create Multipart Payload
+      type: object
+      properties:
+        file:
+          type: object
+          format: binary
+          description: Content of the file. The max file size is 10MB.
+        body:
+          description: Asset JSON creation payload.
+          allOf:
+            - $ref: '#/components/schemas/AssetCreateBlob'
+      required:
+        - file
+        - body
+    AssetCreateLink:
+      title: Asset Create Link Payload
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Asset'
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an asset.
+        type:
+          type: string
+          enum:
+            - LINK
+          description: Asset type. This property is immutable.
+        url:
+          type: string
+          description: Resource link.
+      required:
+        - type
+        - access
+        - url
+    AssetCreateBlob:
+      title: Asset Create Blob Payload
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Asset'
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an asset.
+        type:
+          type: string
+          enum:
+            - BLOB
+          description: Asset type. This property is immutable.
+        details:
+          $ref: '#/components/schemas/AssetDetailsCreate'
+      required:
+        - type
+        - access
+    GetAsset:
+      title: Get Asset
+      allOf:
+        - $ref: '#/components/schemas/Asset'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of an asset.
+            type:
+              type: string
+              enum:
+                - BLOB
+                - LINK
+              description: Asset type. This property is immutable.
+            vendorId:
+              type: string
+              description: Id of a vendor to which the asset belongs.
+            url:
+              type: string
+              description: Resource link.
+            details:
+              $ref: '#/components/schemas/AssetDetailsGet'
+            metadata:
+              $ref: '#/components/schemas/MetadataGet'
+    GetAssetLink:
+      title: Get Asset Link
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AssetCreateLink'
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an asset.
+        vendorId:
+          type: string
+          description: Id of a vendor to which the asset belongs.
+        metadata:
+          $ref: '#/components/schemas/MetadataGet'
+    GetAssetBlob:
+      title: Get Asset Blob
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AssetCreateBlob'
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an asset.
+        vendorId:
+          type: string
+          description: Id of a vendor to which the asset belongs.
+        details:
+          $ref: '#/components/schemas/AssetDetailsGet'
+        metadata:
+          $ref: '#/components/schemas/MetadataGet'
+    AssetUpdateLink:
+      title: Asset Update Link Payload
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Asset'
+      properties:
+        url:
+          type: string
+          description: Resource link.
+        type:
+          type: string
+          enum:
+            - LINK
+          description: Asset type. This property is immutable.
+        metadata:
+          $ref: '#/components/schemas/MetadataUpdate'
+      required:
+        - access
+        - url
+        - type
+    AssetUpdateBlob:
+      title: Asset Update Blob Payload
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Asset'
+      properties:
+        type:
+          type: string
+          enum:
+            - BLOB
+          description: Asset type. This property is immutable.
+        details:
+          $ref: '#/components/schemas/AssetDetailsCreate'
+        metadata:
+          $ref: '#/components/schemas/MetadataUpdate'
+      required:
+        - access
+        - type
+  responses:
+    GetAssets:
+      description: Resources have been retrieved successfully.
+      content:
+        application/json:
+          schema:
+            type: array
+            description: List of assets.
+            items:
+              $ref: '#/components/schemas/GetAsset'
+          examples:
+            Assets:
+              value:
+                - id: "123e06ecf0452c2d6c0b81390"
+                  type: BLOB
+                  access: PUBLIC
+                  url: "https://api.emporix/tenant/id/download"
+                  details:
+                    filename: public.txt
+                    mimeType: text/plain
+                  refIds:
+                    - id: "123e06ecf0452c2d6c0b81392"
+                      type: CATEGORY
+                  mixins:
+                    mediaCustomAttributes:
+                      altText: Cordless impact driver
+                  metadata:
+                    createdAt: "2022-03-31T13:18:02.379Z"
+                    modifiedAt: "2022-03-31T13:18:02.379Z"
+                    version: 1
+                    mixins:
+                      mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+                - id: "123e06ecf0452c2d6c0b81390"
+                  type: LINK
+                  access: PUBLIC
+                  url: "https://emporix.io/docs/index.html"
+                  metadata:
+                    createdAt: "2022-03-31T13:18:02.379Z"
+                    modifiedAt: "2022-03-31T13:18:02.379Z"
+                    version: 1
+                  refIds:
+                    - id: "123e06ecf0452c2d6c0b81392"
+                      type: CATEGORY
+    GetAsset:
+      description: The request was successful. The requested asset is returned.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/GetAssetBlob'
+              - $ref: '#/components/schemas/GetAssetLink'
+          examples:
+            Asset of type LINK:
+              value:
+                id: 123e06ecf0452c2d6c0b81390
+                type: LINK
+                access: PUBLIC
+                url: 'https://emporix.io/docs/index.html'
+                refIds:
+                  - id: 123e06ecf0452c2d6c0b81392
+                    type: CATEGORY
+                mixins:
+                  mediaCustomAttributes:
+                    altText: Product specification sheet
+                metadata:
+                  createdAt: '2022-03-31T13:18:02.379Z'
+                  modifiedAt: '2022-03-31T13:18:02.379Z'
+                  version: 1
+                  mixins:
+                    mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+    GetPrivateAsset:
+      description: This is a successful response when requesting a PRIVATE BLOB asset.
+      content:
+        text/plain:
+          schema:
+            type: string
+            format: byte
+      headers:
+        ETag:
+          schema:
+            type: string
+          description: Version identifier of the resource, necessary for caching.
+    Redirect:
+      description: This is a successful response when requesting for a PUBLIC access asset.
+      headers:
+        Location:
+          schema:
+            type: string
+          description: Url address of the requested file.
+    BadRequest_400:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Ambiguous tenant:
+              $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+    BadRequest_400_Update:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Ambiguous tenant:
+              $ref: '#/components/examples/BadRequest400_AmbiguousTenant'
+            Document version not specified:
+              $ref: '#/components/examples/BadRequest400_VersionNotSpecified'
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    Forbidden_403:
+      description: Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Access to resource is forbidden:
+              $ref: '#/components/examples/Forbidden403_Example'
+    NotFound_404:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Asset not found:
+              $ref: '#/components/examples/NotFound404_assetNotFound'
+    Conflict_409:
+      description: |
+        There are three possible reasons:
+        1. Product with given code already exists, please choose unique code for your product
+        2. Optimistic locking failed. If user sends metadata/version attribute which is outdated (someone else updated product in the time user was performing his changes). User should retrieve the latest product data and retry the request.
+        3. Optimistic locking failed. User did not provide metadata/version attribute in update request, but someone else updated product while it was internally handled by product service. Resending the same request can result in successful update, but the update can override recently persisted changes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            conflict:
+              $ref: '#/components/examples/Conflict409_Example'
+    RequestTooLarge_413:
+      description: Media request is too large.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Request too large:
+              $ref: '#/components/examples/RequestTooLarge_Example'
+    InternalServiceError_500:
+      description: Internal Service Error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Internal service error:
+              $ref: '#/components/examples/InternalServiceError500_Example'
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant that the caller is acting upon.
+
+        **Note**: The tenant name should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: The page number to be retrieved where the size of the pages must be specified by the `pageSize` parameter. The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_sort:
+      in: query
+      name: sort
+      required: false
+      description: 'Fields to sort the response data by following the order of the parameters from left to right. Can contain multiple fields in the following format: `field name:sort direction`, separated by a comma. The colon preceding the `sort direction` parameter is optional, and the descending order is taken only if it is equal to `desc` or `DESC`. The ascending order is assumed in any other case.'
+      schema:
+        type: string
+        example: 'name,metadata.createdAt:desc'
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        The number of documents being retrieved on the page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    trait_XTotalCount_header:
+      in: header
+      name: X-Total-Count
+      required: false
+      description: 'To get information how many entities meet the filtering requirements, the `X-Total-Count` header has been introduced. The header is optional and its default value is `false`. If the header is provided and it is set to `true`, then the total count is returned in the `X-Total-Count` response header. In both cases (X-Total-Count `true`, `false` or not provided), the response body has the same format (array of entities). This means that the information about the total count is returned only on demand, provided that the X-Total-Count header is present in a request.'
+      schema:
+        default: false
+        type: boolean
+    trait_asset_id_path:
+      name: assetId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of an asset.
+    query_q_product:
+      name: q
+      in: query
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        * Searching for items by string-based properties:
+          * By a field value: `q=access:PUBLIC`, where `access` is the field name, and `PUBLIC` is its desired value.
+        * Searching for items by a number-based property:
+          * With a specific value: `q=details.bytes:200`
+          * With a value greater than: `q=details.bytes:>200`
+          * With a value lower than: `q=details.bytes:<200`
+          * With a value greater than or equal to: `q=details.bytes:>=200`
+          * With a value lower than or equal to: `q=details.bytes:<=200`
+          * With a value within a range of values: `q=details.bytes:(>=100 AND <=200)`, where `details.bytes` is the name of a number-based field, and `200` is its querying value.
+        * Searching for items by a date-based property: All numer-based property queries are also valid for dates. In that case, the date should be placed within double quotes: `q=metadata.createdAt:(>="2021-05-18T07:27:27.455Z" AND <"2021-05-20T07:27:27.455Z")`
+        * Searching for items with a nonexistent or empty property: `q=details.filename:null`, where `details.filename` is the field that has its value set to `null`.
+        * Searching for items with an existing property: `q=details:exists`, where `details` is the field that has a non-empty value.
+        * Searching for items by multiple specific values: `q=id:(5c3325baa9812100098ff48f,5c3325d1a9812100098ff494)`, where `id` is the field name, and strings within the brackets are the desired values.
+        * Searching for items by multiple fields: `q=id:5c3325baa9812100098ff48f access:PUBLIC`, where `id` and `access` are field names. All objects that contain the specified values are returned. Multiple fields (separated by spaces) can be specified. Multiple values for each field can also be specified in a format presented earlier.
+        * Searching for items with string-based properties conforming to a regex: `q=id:~ABCD12` or `q=id:(~AB CD)` - in the case of searching for strings with a space, where `id` is the name of the field and `ABCD12` or `AB CD` are its querying regular expressions.
+      schema:
+        type: string
+        example: 'name:{name}'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            media.asset_read: Needed to read assets
+            media.asset_manage: Needed to manage assets
+  examples:
+    BadRequest400_AmbiguousTenant:
+      value:
+        status: Bad request
+        code: 400
+        message: Tenant in the header is not matching with the one provided in the URI.
+        details:
+          - 'https://saas-ag.com/patterns/errortypes.html'
+    BadRequest400_VersionNotSpecified:
+      value:
+        status: Bad request
+        code: 400
+        message: The document version has to be provided on update operations.
+        details:
+          - 'https://saas-ag.com/patterns/errortypes.html'
+    Forbidden403_Example:
+      value:
+        status: Bad request
+        code: 403
+        message: The access to the requested resource has been forbidden by the server..
+        details:
+          - Missing required scopes
+    NotFound404_assetNotFound:
+      value:
+        code: 404
+        status: element_resource_non_existing
+        message: The asset with the requested code does not exist.
+    Conflict409_Example:
+      value:
+        code: 409
+        status: Conflict
+        message: Conflict
+    RequestTooLarge_Example:
+      value:
+        code: 413
+        status: Request Entity Too Large
+        message: 'The part named [file] exceeds the maximum allowed content length.'
+    InternalServiceError500_Example:
+      value:
+        code: 500
+        status: internal_service_error
+        message: A server-side exception occurred that prevented the system from correctly returning the result.
+        details:
+          - 'https://pattern.yaas.io/errortypes.html'
+  requestBodies: {}
+security:
+  - OAuth2:
+      - media.asset_read
+      - media.asset_manage
+      - media.asset_read_by_vendor - allows to read assets which belong to the vendor
+      - media.asset_manage_by_vendor - allows to create an asset for products which belong to the vendor

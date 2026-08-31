@@ -1,0 +1,1429 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+  title: Approval Service
+  version: ''
+  description: |
+    The Emporix API Approval Service allows you to manage approval requests for resources such as shopping carts and quotes.
+
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Approvals
+  - name: Approval
+  - name: Search
+paths:
+  '/approval/{tenant}/approvals':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Creating a single approval
+      responses:
+        '201':
+          description: |
+            The resource has been successfully created. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/approvalId'
+              examples:
+                approvalId:
+                  value:
+                    id: 88b1779c-a8bf-4b94-b1be-b0edd149bba5
+        '400':
+          $ref: '#/components/responses/approvals_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/approval_post_response_Conflict_409'
+      description: |
+        Creates a single approval document with information about the approver, resource type and resource identifier.
+
+        - **`resourceType: CART`**: `details` is **required** (shipping, addresses, currency, payment methods, etc.).
+        - **`resourceType: QUOTE`**: `details` must be **omitted**; the service loads quote data using `resourceId`.
+
+        The user must be a *Requestor* or an *Approver* to have the required `approval.approval_manage_own` scope.
+
+        In case of any validation problems, the below `errorCodes` can be returned:
+          - **APPROVAL-400003**: Incorrect value of the approval status
+          - **APPROVAL-400004**: Not matching combination of approval action and resource type 
+          - **APPROVAL-400005**: Approval has been already given
+          - **APPROVAL-400006**: Provided approver cannot be assigned to the approval
+          - **APPROVAL-400008**: Requested user has no permissions to the resource
+          - **APPROVAL-400011**: Requested user is not assigned to any company
+          - **APPROVAL-404002**: Provided resource does not exist
+          - **APPROVAL-404003**: Requested user is not assigned to any legal entity
+          - **APPROVAL-409001**: Approval already exists
+      operationId: POST-approval-create-approval
+      requestBody:
+        $ref: '#/components/requestBodies/approvalCreateBody'
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+      security:
+        - CustomerAccessToken: []
+      tags:
+        - Approvals
+    get:
+      summary: Retrieving a list of approvals
+      operationId: GET-approval-list-approvals
+      responses:
+        '200':
+          $ref: '#/components/responses/listOfApprovalsResponse_200'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+      tags:
+        - Approvals
+      description: |
+        Retrieves a list of approval documents assigned to the user. The user must be a *Requestor* or an *Approver* to have the required `approval.approval_read_own` scope.
+      parameters:
+        - $ref: '#/components/parameters/x_total_count_header'
+        - $ref: '#/components/parameters/page_size_query_param'
+        - $ref: '#/components/parameters/page_number_query_param'
+        - $ref: '#/components/parameters/sort_query_param'
+        - $ref: '#/components/parameters/q_query_param'
+      security:
+        - CustomerAccessToken: []
+  '/approval/{tenant}/approvals/{approvalId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/approvalId'
+    get:
+      summary: Retrieving a single approval
+      tags:
+        - Approvals
+      operationId: GET-approval-retrieve-approval
+      description: |
+        Retrieves a single approval document which is assigned to the user. The user must be a *Requestor* or an *Approver* to have the required `approval.approval_read_own` scope.
+
+        In case of any validation problems, the below `errorCodes` can be returned:
+          - **APPROVAL-404001**: Approval does not exist
+      responses:
+        '200':
+          $ref: '#/components/responses/singleApprovalResponse_200'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/approvals_response_NotFound_404'
+      security:
+        - CustomerAccessToken: []
+    patch:
+      summary: Updating a single approval
+      operationId: PATCH-approval-update-approval
+      responses:
+        '204':
+          description: No Content.
+        '400':
+          $ref: '#/components/responses/approvals_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/approvals_response_NotFound_404'
+      tags:
+        - Approvals
+      description: |
+        Partially updates a single approval document with given information. To update the approval, the user must be a *Requestor* or an *Approver* to have the required `approval.approval_manage_own` scope.
+
+        Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` (adding an item to the items list)
+          - `remove` (removing an item from the items list)
+          - `replace` (replacing an item with given id with new definition)
+        Approval can be updated only when status is PENDING.
+
+        In case of any validation problems, the below `errorCodes` can be returned:
+          - **APPROVAL-400002**: Approval status cannot be changed to the new value
+          - **APPROVAL-400003**: Incorrect value of the approval status
+          - **APPROVAL-400004**: Not matching combination of approval action and resource type 
+          - **APPROVAL-400005**: Approval has been already permitted
+          - **APPROVAL-400007**: Not supported patch operation
+          - **APPROVAL-400009**: Approval process has been finished and cannot be updated
+          - **APPROVAL-400010**: Incorrect patch operation
+          - **APPROVAL-404001**: Approval does not exist
+      requestBody:
+        $ref: '#/components/requestBodies/approvalUpdateBody'
+      security:
+        - CustomerAccessToken: []
+    delete:
+      summary: Deleting a single approval
+      operationId: DELETE-approval-remove-approval
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/approvals_response_DeleteBadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/approvals_response_NotFound_404'
+      tags:
+        - Approvals
+      description: |-
+        Deletes a single approval document.
+        To delete an approval, a customer must be a *Requestor* or an *Approver* to have the required `approval.approval_manage_own` scope. The approval can only be deleted if its status is `PENDING`. The approval status is changed to `CLOSED` during deletion.
+
+        In case of any validation problems, the below `errorCodes` can be returned:
+          - **APPROVAL-404001**: Approval does not exist.
+      security:
+        - CustomerAccessToken: []
+  '/approval/{tenant}/approval/permitted':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Checking the resource approval
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalPermittedResponse_200'
+        '400':
+          $ref: '#/components/responses/approvals_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+      description: |
+        Checks the approval for given resource. The endpoint verifies whether a user is authorized to perform a specific action on a given resource within a tenant. The user must be a *Requestor* or an *Approver* to have the required `approval.approval_read_own` scope.
+
+        In case of any validation problems, the below `errorCodes` can be returned:
+          - **APPROVAL-400011**: Requested user is not assigned to any company
+      operationId: POST-approval-check-approval
+      requestBody:
+        $ref: '#/components/requestBodies/approvalPermittedRequestBody'
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+      security:
+        - CustomerAccessToken: []
+      tags:
+        - Approval
+  '/approval/{tenant}/search/users':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Search for the users eligible to act as approvers
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalSearchUsersResponse_200'
+        '400':
+          $ref: '#/components/responses/approvals_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+      description: |
+        Searches for the users who can be assigned to the approvals. The user must be a *Requestor* or an *Approver* to have the required `approval.approval_read_own` scope.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+          - **APPROVAL-400008**: Requested user has no permissions to the resource.
+          - **APPROVAL-400011**: Requested user is not assigned to any company.
+          - **APPROVAL-404002**: Provided resource does not exist.
+          - **APPROVAL-404003**: Requested user is not assigned to any legal entity.
+      operationId: POST-approval-search-users
+      requestBody:
+        $ref: '#/components/requestBodies/approvalSearchUsersRequestBody'
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+      security:
+        - CustomerAccessToken: []
+      tags:
+        - Search
+components:
+  responses:
+    approvals_response_BadRequest_400:
+      description: 'Bad request due to validation, incorrect parameters, etc.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Bad request:
+              value:
+                code: 400
+                status: Bad Request
+                message: Problem with validation
+                details:
+                  - message: 'resourceType: cannot be null'
+                errorCode: APPROVAL-400001
+    approvals_response_NotFound_404:
+      description: 'Resource cannot be found.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Bad request:
+              value:
+                code: 404
+                status: Not Found
+                message: "Approval with id '123456789' does not exist."
+                errorCode: APPROVAL-404001
+    common_response_Unauthorized_401:
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    common_response_Forbidden_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    approval_post_response_Conflict_409:
+      description: |
+        Resource with given code already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Conflict - an approval already exists.:
+              value:
+                code: 409
+                status: Conflict
+                message: Approval with given id already exists.
+                errorCode: APPROVAL-409001
+    approvals_response_DeleteBadRequest_400:
+      description: Bad request - an approval cannot be deleted because it has an inappropriate status.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Bad Request - an approval cannot be deleted.:
+              value:
+                code: 400
+                status: Bad Request
+                message: Deleting this approval is not allowed since it doesn't match all preconditions.
+                errorCode: APPROVAL-400001
+    singleApprovalResponse_200:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/getApprovalResponse'
+          examples:
+            an approval retrieved by a customer:
+              value:
+                id: 64e241ced632aa413a27a318
+                status: PENDING
+                resourceType: CART
+                resource:
+                  id: cartId
+                  items:
+                    - quantity: 1
+                      itemId: 507f1f77bcf86cd799439011
+                      itemPrice:
+                        currency: EUR
+                        amount: 10.0
+                        unitPrice: 10.0
+                        calculatedPrice:
+                          price:
+                            netValue: 10.0
+                            grossValue: 12.00
+                            taxValue: 2.00
+                  totalPrice:
+                    currency: EUR
+                    amount: 10.0
+                    netValue: 10.0
+                    grossValue: 12.00
+                    taxValue: 2.00
+                  subTotalPrice:
+                    currency: EUR
+                    amount: 10.0
+                    netValue: 10.0
+                    grossValue: 12.00
+                    taxValue: 2.00
+                  subtotalAggregate:
+                    currency: EUR
+                    netValue: 10.0
+                    grossValue: 12.00
+                    taxValue: 2.00
+                  siteCode: main
+                  deliveryWindow:
+                    id: deliveryWindowId
+                    slotId: deliveryWindowSlotId
+                    deliveryDate: "2023-04-30T13:18:02.379Z"
+                action: CHECKOUT
+                requestor:
+                  userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14ceb
+                  firstName: John
+                  lastName: Doe
+                approver:
+                  userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14cbb
+                  firstName: John
+                  lastName: Doe
+                comment: Comment to the approval user
+                approverComment: Important comment to the requestor user
+                expiryDate: '2023-04-31T13:18:02.379Z'
+                details:
+                  currency: EUR
+                  paymentMethods:
+                    - provider: stripe
+                      customAttributes:
+                        paymentType: invoice
+                      method: invoice
+                      amount: 3.0
+                  shipping:
+                    zoneId: deliveryarea
+                    methodId: 4-more_hours_timeframe
+                    amount: 10
+                    methodName: Delivery method name
+                    shippingTaxCode: STANDARD
+                  payment:
+                    paymentId: 636cc738-f0cd-11ed-a05b-0242ac120003
+                    customAttributes:
+                      attribute1: value of the attribute1
+                      attribute2: value of the attribute2
+                  addresses:
+                    - contactName: John Doe
+                      street: Fritz-Elsas-Straße
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      type: SHIPPING
+                      contactPhone: '123456789'
+                    - contactName: John Doe
+                      street: Fritz-Elsas-Straße
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      type: BILLING
+                      contactPhone: '123456789'
+                legalEntity:
+                  id: legalEntityId
+                createdResource:
+                  id: '64ef8d12b6385140afea1603'
+                metadata:
+                  createdAt: '2023-04-31T13:18:02.379Z'
+                  modifiedAt: '2023-04-31T13:18:02.379Z'
+                  version: 1
+    listOfApprovalsResponse_200:
+      description: Example response.
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/getApprovalResponse'
+            type: array
+          examples:
+            All approvals:
+              value:
+                - id: 64e241ced632aa413a27a318
+                  status: PENDING
+                  resourceType: CART
+                  resource:
+                    id: cartId
+                    items:
+                      - quantity: 1
+                        itemId: 507f1f77bcf86cd799439011
+                        itemPrice:
+                          currency: EUR
+                          amount: 10.0
+                          unitPrice: 10.0
+                          calculatedPrice:
+                            price:
+                              netValue: 10.0
+                              grossValue: 12.00
+                              taxValue: 2.00
+                    totalPrice:
+                      currency: EUR
+                      amount: 10.0
+                      netValue: 10.0
+                      grossValue: 12.00
+                      taxValue: 2.00
+                    subTotalPrice:
+                      currency: EUR
+                      amount: 10.0
+                      netValue: 10.0
+                      grossValue: 12.00
+                      taxValue: 2.00
+                    subtotalAggregate:
+                      currency: EUR
+                      netValue: 10.0
+                      grossValue: 12.00
+                      taxValue: 20
+                    siteCode: main
+                    deliveryWindow:
+                      id: deliveryWindowId
+                      slotId: deliveryWindowSlotId
+                      deliveryDate: "2023-04-30T13:18:02.379Z"
+                  action: CHECKOUT
+                  requestor:
+                    userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14ceb
+                    firstName: John
+                    lastName: Doe
+                  approver:
+                    userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14cbb
+                    firstName: John
+                    lastName: Doe
+                  comment: Comment to the approval user
+                  approverComment: Important comment to the requestor user
+                  expiryDate: '2023-04-31T13:18:02.379Z'
+                  details:
+                    currency: EUR
+                    paymentMethods:
+                      - provider: stripe
+                        customAttributes:
+                          paymentType: invoice
+                        method: invoice
+                        amount: 3.0
+                    shipping:
+                      zoneId: deliveryarea
+                      methodId: 4-more_hours_timeframe
+                      amount: 10
+                      methodName: Delivery method name
+                      shippingTaxCode: STANDARD
+                    payment:
+                      paymentId: 636cc738-f0cd-11ed-a05b-0242ac120003
+                      customAttributes:
+                        attribute1: value of the attribute1
+                        attribute2: value of the attribute2
+                    addresses:
+                      - contactName: John Doe
+                        street: Fritz-Elsas-Straße
+                        streetNumber: '20'
+                        streetAppendix: ''
+                        zipCode: '70173'
+                        city: Stuttgart
+                        country: DE
+                        type: SHIPPING
+                        contactPhone: '123456789'
+                      - contactName: John Doe
+                        street: Fritz-Elsas-Straße
+                        streetNumber: '20'
+                        streetAppendix: ''
+                        zipCode: '70173'
+                        city: Stuttgart
+                        country: DE
+                        type: BILLING
+                        contactPhone: '123456789'
+                  legalEntity:
+                    id: legalEntityId
+                  createdResource:
+                    id: '64ef8d12b6385140afea1603'
+                  metadata:
+                    createdAt: '2023-04-31T13:18:02.379Z'
+                    modifiedAt: '2023-04-31T13:18:02.379Z'
+                    version: 1
+    ApprovalPermittedResponse_200:
+      description: Approval permitted response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/approvalPermittedResponse'
+          examples:
+            Action permitted - approval exists:
+              value:
+                status: APPROVED
+                action: CHECKOUT
+                permitted: true
+                approvalId: 64ef8d12b6385140afea1603
+            Action permitted for admin user - approval does not exist:
+              value:
+                action: CHECKOUT
+                permitted: true
+            Action denied - approval exists:
+              value:
+                status: PENDING
+                action: CHECKOUT
+                permitted: false
+                approvalId: 64ef8d12b6385140afea1603
+            Action denied if approval is not defined:
+              value:
+                action: CHECKOUT
+                permitted: false
+    ApprovalSearchUsersResponse_200:
+      description: Approval permitted response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/approvalSearchUsersResponse'
+          examples:
+            List of approval users:
+              value:
+                - userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14ceb
+                  firstName: John
+                  lastName: Doe
+  schemas:
+    coreErrorMessage:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+        status:
+          type: string
+          description: HTTP Status.
+        message:
+          type: string
+          description: Error message.
+        errorCode:
+          type: string
+          description: code of the error.
+        details:
+          description: Details information.
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+    basicApproval:
+      title: basicApproval
+      description: Base schema for an approval.
+      allOf:
+        - $ref: '#/components/schemas/genericApprovalForCreate'
+        - type: object
+          properties:
+            resourceType:
+              $ref: '#/components/schemas/resourceType'
+            details:
+              $ref: '#/components/schemas/details'
+      required:
+        - resourceType
+        - action
+        - approver
+    genericApprovalForCreate:
+      title: basicApproval
+      description: Base schema for an approval creation.
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/approvalAction'
+        approver:
+          type: object
+          description: User who can approve the approval request.
+          properties:
+            userId:
+              type: string
+              description: Identifier of the user.
+        comment:
+          type: string
+          description: A comment from the requestor to the approver.
+
+      required:
+        - action
+        - approver
+    details:
+      type: object
+      title: additional information
+      description: |
+        Checkout details for **cart** approvals. **Required** when `resourceType` is `CART`.
+      properties:
+        shipping:
+          $ref: '#/components/schemas/shipping'
+        payment:
+          $ref: '#/components/schemas/payment'
+        paymentMethods:
+          description: Methods chosen to process the payment for the order.
+          type: array
+          items:
+            $ref: '#/components/schemas/paymentMethod'
+        currency:
+          type: string
+          description: 'Three-letter currency code, compliant with the ISO 4217 standard.'
+        addresses:
+          type: array
+          uniqueItems: true
+          minItems: 1
+          description: List of addresses associated with the order.
+          items:
+            $ref: '#/components/schemas/address'
+    address:
+      type: object
+      description: Information about the customer address.
+      properties:
+        contactName:
+          type: string
+          minLength: 0
+        companyName:
+          type: string
+        street:
+          type: string
+          minLength: 0
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        zipCode:
+          type: string
+          maxLength: 11
+          minLength: 0
+        city:
+          type: string
+          minLength: 0
+        country:
+          type: string
+          minLength: 1
+        state:
+          type: string
+        contactPhone:
+          type: string
+        type:
+          type: string
+          description: Type of the address data, for example `BILLING` or `SHIPPING`.
+          enum:
+            - SHIPPING
+            - BILLING
+    shipping:
+      type: object
+      title: Shipping information
+      description: Information about the shipping.
+      additionalProperties: false
+      properties:
+        methodId:
+          type: string
+          description: Shipping method's unique identifier.
+          minLength: 0
+        zoneId:
+          type: string
+          description: Shipping zone identifier.
+          minLength: 0
+        methodName:
+          type: string
+          description: Shipping method chosen by the customer.
+          minLength: 0
+        amount:
+          type: number
+          minimum: 0
+          description: Shipping net cost.
+        shippingTaxCode:
+          type: string
+          description: The tax code of the shipping.
+    payment:
+      type: object
+      description: Information about the payment.
+      title: Payment information
+      additionalProperties: false
+      properties:
+        paymentId:
+          type: string
+          minLength: 0
+        customAttributes:
+          type: object
+    paymentMethod:
+      type: object
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          description: |
+            Payment provider, possible values: 
+              * `payment-gateway` - When the Emporix Payment-Gateway service should be used to handle a payment. For details about custom attributes that are required for a particular payment mode, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments. 
+              * `custom` - When a custom provider is used. In this case the created order has the `IN_CHECKOUT` status.
+              * `none` - For payment by cash or invoice.
+          minLength: 0
+        customAttributes:
+          type: object
+          description: Additional information about the payment method.
+          properties:
+            token:
+              type: string
+              description: 'Payment token used for the tokenized credit card flows. The field is used when provider type is `payment-gateway`. For more details, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments'
+            modeId:
+              type: string
+              description: 'Identifier of a payment mode. The payment mode has to be configured in the Emporix Payment Gateway service beforehand. For more details, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments'
+            paymentType:
+              type: string
+              description: 'Payment type chosen by the customer, for example `paymentByCredit` or `paymentByDebit`.'
+        method:
+          type: string
+          description: 'Payment method chosen by the customer, for example `invoice` or `cash-on-delivery`.'
+        amount:
+          type: number
+          description: Amount to be paid by the customer.
+    user:
+      title: user schema
+      type: object
+      properties:
+        userId:
+          type: string
+          description: An identifier of the user.
+        firstName:
+          type: string
+          description: First name of the user.
+        lastName:
+          type: string
+          description: Last name of the user.
+      required:
+        - userId
+        - firstName
+        - lastName
+    resourceType:
+      title: A type of a resource
+      description: |
+        Type of resource under approval.  
+      type: string
+      enum:
+        - CART
+        - QUOTE
+    approvalAction:
+      title: An approval action
+      description: Base schema for an approval action type.
+      type: string
+      enum:
+        - CHECKOUT
+    approvalStatus:
+      title: A status of the approval
+      description: Base schema for the approval status.
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - CLOSED
+        - EXPIRED
+        - DECLINED
+    expiryDate:
+      title: An expiration date
+      description: 'An expiration date which defines when the approval will expire. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+      type: string
+    getApprovalResponse:
+      title: An approval response
+      allOf:
+        - $ref: '#/components/schemas/basicApproval'
+        - type: object
+          description: Base schema for an approval response.
+          properties:
+            id:
+              type: string
+              description: An identifier of the approval document.
+            approverComment:
+              type: string
+              description: A comment from an approver user.
+            resource:
+              $ref: '#/components/schemas/resourceResponse'
+            requestor:
+              $ref: '#/components/schemas/user'
+            approver:
+              $ref: '#/components/schemas/user'
+            status:
+              $ref: '#/components/schemas/approvalStatus'
+            expiryDate:
+              $ref: '#/components/schemas/expiryDate'
+            legalEntity:
+              $ref: '#/components/schemas/legalEntity'
+            createdResource:
+              $ref: '#/components/schemas/createdResource'
+            metadata:
+              $ref: '#/components/schemas/metadata'
+    legalEntity:
+      title: Legal entity
+      description: |
+        Legal entity (company) the approval belongs to. Set when the approval is created from the customer token.
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the legal entity.
+      required:
+        - id
+    createdResource:
+      title: Created resource
+      description: |
+        Resource created when the approval flow completes and the approved action is executed. Present once the downstream system has created the linked entity; omitted until then.
+
+        For checkout approvals (`action: CHECKOUT`), `id` is typically the order identifier (for example, from Order Service).
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the created resource (for checkout approvals, typically an order ID).
+          example: '64ef8d12b6385140afea1603'
+      required:
+        - id
+    approvalPermittedResponse:
+      title: approval permitted response
+      allOf:
+        - type: object
+          description: Base schema for approval permitted response.
+          properties:
+            action:
+              $ref: '#/components/schemas/approvalAction'
+            status:
+              $ref: '#/components/schemas/approvalStatus'
+            permitted:
+              type: boolean
+              description: Indicates if the operation is permitted.
+            approvalId:
+              type: string
+              description: Identifier of the approval.
+          required:
+            - permitted
+            - action
+    resourceResponse:
+      title: Resource
+      description: Resource of the approval.
+      type: object
+      properties:
+        id:
+          type: string
+          description: The identifier of the resource.
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/resourceItem'
+        totalPrice:
+          $ref: '#/components/schemas/price'
+        subTotalPrice:
+          $ref: '#/components/schemas/price'
+        subtotalAggregate:
+          $ref: '#/components/schemas/taxablePrice'
+        siteCode:
+          type: string
+          description: Name of the site.
+        deliveryWindow:
+          $ref: '#/components/schemas/deliveryWindow'
+    resourceItem:
+      title: Resource item
+      description: Item of the resource.
+      type: object
+      properties:
+        quantity:
+          type: number
+          description: Quantity of the given item.
+        itemPrice:
+          $ref: '#/components/schemas/resourceItemPrice'
+        itemYrn:
+          deprecated: true
+          type: string
+          description: YRN which identifies the product.
+        itemId:
+          type: string
+          description: Line-item identifier (e.g. quote line id).
+    resourceItemPrice:
+      title: Resource item price
+      description: Per-line price; used for resource line items.
+      type: object
+      properties:
+        currency:
+          type: string
+          description: Currency of the price.
+        amount:
+          type: number
+          deprecated: true
+          description: Deprecated; prefer `unitPrice`, `newUnitPrice`, or `calculatedPrice`.
+        unitPrice:
+          type: number
+          description: Unit net price before adjustments.
+        newUnitPrice:
+          type: number
+          description: Unit net price after adjustments (valid for quote line items).
+        calculatedPrice:
+          $ref: '#/components/schemas/calculatedPrice'
+    calculatedPrice:
+      title: Calculated price breakdown
+      type: object
+      properties:
+        price:
+          type: object
+          properties:
+            netValue:
+              description: Net value of the price.
+              type: number
+            grossValue:
+              type: number
+              description: Gross value of the price.
+            taxValue:
+              description: Tax value of the price.
+              type: number
+    price:
+      title: Price value
+      description: Aggregated price (totals, subtotals) with currency and optional tax breakdown.
+      type: object
+      properties:
+        currency:
+          type: string
+          description: Currency of the price.
+        amount:
+          type: number
+          deprecated: true
+          description: Deprecated; use `netValue`, `grossValue`, and `taxValue` when present.
+        netValue:
+          type: number
+          description: Net value of the price.
+        grossValue:
+          type: number
+          description: Gross value of the price.
+        taxValue:
+          type: number
+          description: Tax value of the price.
+    taxablePrice:
+      title: Taxable price value
+      description: Price value with the currency and tax information.
+      type: object
+      properties:
+        currency:
+          type: string
+          description: Currency of the price.
+        netValue:
+          type: number
+          description: Net value of the price.
+        grossValue:
+          type: number
+          description: Gross value of the price.
+        taxValue:
+          type: number
+          description: Tax value of the price.
+    deliveryWindow:
+      title: Delivery Window
+      description: delivery window required for order.
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the delivery window.
+        slotId:
+          type: string
+          description: Identifier of the slot.
+        deliveryDate:
+          type: string
+          description: Delivery date.
+    approvalSearchUsersResponse:
+      title: Search approval users response
+      description: Base schema search approval users response.
+      type: array
+      items:
+        $ref: '#/components/schemas/user'
+    createCartApprovalRequest:
+      title: Create a cart approval
+      allOf:
+        - $ref: '#/components/schemas/genericApprovalForCreate'
+        - type: object
+          description: Request payload for creating a CART approval.
+          properties:
+            id:
+              type: string
+              description: An identifier of the approval document.
+            resourceId:
+              type: string
+              description: An identifier of the approval resource.
+            resourceType:
+              type: string
+              enum:
+                - CART
+            details:
+              $ref: '#/components/schemas/details'
+          required:
+            - resourceId
+            - resourceType
+            - action
+            - approver
+            - details
+    createQuoteApprovalRequest:
+      title: Create a quote approval
+      allOf:
+        - $ref: '#/components/schemas/genericApprovalForCreate'
+        - type: object
+          description: Request payload for creating a QUOTE approval (without details).
+          properties:
+            id:
+              type: string
+              description: An identifier of the approval document.
+            resourceId:
+              type: string
+              description: An identifier of the approval resource.
+            resourceType:
+              type: string
+              enum:
+                - QUOTE
+          required:
+            - resourceId
+            - resourceType
+            - action
+            - approver
+    updateApprovalRequest:
+      type: array
+      description: Approval partial update operation list.
+      items:
+        type: object
+        properties:
+          op:
+            anyOf:
+              - enum:
+                  - add
+                  - remove
+                  - replace
+            type: string
+          path:
+            anyOf:
+              - enum:
+                  - /status
+                  - /details*
+                  - /comment
+                  - /approverComment
+                  - /resource/deliveryWindow*
+            type: string
+          value:
+            anyOf:
+              - $ref: '#/components/schemas/approvalStatus'
+              - type: string
+                description: Value of the string type.
+              - type: object
+                description: Any part of the details object.
+              - type: object
+                description: Any part of the delivery window object.
+        required:
+          - op
+          - path
+    basicMetadata:
+      type: object
+      properties:
+        version:
+          minimum: 1
+          type: integer
+          description: Version of the object. The version is required during the update operation because of the optimistic locking mechanism.
+      required:
+        - version
+    metadata:
+      allOf:
+        - $ref: '#/components/schemas/basicMetadata'
+        - type: object
+          properties:
+            createdAt:
+              description: 'Date and time when the object was created. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              type: string
+            modifiedAt:
+              description: 'Date and time when the object was last modified. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              type: string
+      required:
+        - createdAt
+        - modifiedAt
+        - version
+    approvalId:
+      title: approvalId
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the created approval.
+    approvalPermittedRequest:
+      title: approval permitted request
+      type: object
+      properties:
+        resourceType:
+          $ref: '#/components/schemas/resourceType'
+        resourceId:
+          type: string
+          description: An identifier of the resource for approval.
+        action:
+          $ref: '#/components/schemas/approvalAction'
+      required:
+        - resourceType
+        - resourceId
+        - action
+    searchUsersRequest:
+      title: Search approver users request
+      type: object
+      properties:
+        resourceType:
+          $ref: '#/components/schemas/resourceType'
+        resourceId:
+          type: string
+          description: An identifier of the resource for approval.
+        action:
+          $ref: '#/components/schemas/approvalAction'
+      required:
+        - resourceType
+        - resourceId
+        - action
+  requestBodies:
+    approvalCreateBody:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/createCartApprovalRequest'
+              - $ref: '#/components/schemas/createQuoteApprovalRequest'
+          examples:
+            An approval request for cart checkout:
+              value:
+                id: 64e241ced632aa413a27a318
+                resourceType: CART
+                resourceId: cartId
+                action: CHECKOUT
+                approver:
+                  userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14cbb
+                comment: Comment to the approval user
+                details:
+                  currency: EUR
+                  paymentMethods:
+                    - provider: stripe
+                      customAttributes:
+                        paymentType: invoice
+                      method: invoice
+                      amount: 3.0
+                  shipping:
+                    zoneId: deliveryarea
+                    methodId: 4-more_hours_timeframe
+                    amount: 10
+                    methodName: Delivery method name
+                    shippingTaxCode: STANDARD
+                  payment:
+                    paymentId: 636cc738-f0cd-11ed-a05b-0242ac120003
+                    customAttributes:
+                      attribute1: value of the attribute1
+                      attribute2: value of the attribute2
+                  addresses:
+                    - contactName: John Doe
+                      street: Fritz-Elsas-Straße
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      type: SHIPPING
+                      contactPhone: '123456789'
+                    - contactName: John Doe
+                      street: Fritz-Elsas-Straße
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      type: BILLING
+                      contactPhone: '123456789'
+            An approval request for quote checkout:
+              value:
+                id: 64e241ced632aa413a27a319
+                resourceType: QUOTE
+                resourceId: quoteId
+                action: CHECKOUT
+                approver:
+                  userId: aaa2f2b6-7dc8-45ff-9f20-4e6163c14cbb
+                comment: Comment for quote approval
+    approvalUpdateBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/updateApprovalRequest'
+          examples:
+            Multiple update list:
+              value:
+                - op: replace
+                  path: /comment
+                  value: new comment
+                - op: replace
+                  path: /status
+                  value: APPROVED
+            Change status of the approval:
+              value:
+                - op: replace
+                  path: /status
+                  value: APPROVED
+            Change comment of the approval:
+              value:
+                - op: replace
+                  path: /comment
+                  value: new comment
+            Add comment by the approver:
+              value:
+                - op: add
+                  path: /approverComment
+                  value: new comment
+            Change currency of the details:
+              value:
+                - op: replace
+                  path: /details/currency
+                  value: EUR
+            Change delivery window:
+              value:
+                - op: replace
+                  path: /resource/deliveryWindow
+                  value:
+                    id: deliveryWindowId
+                    slotId: deliveryWindowSlotId
+                    deliveryDate: "2010-05-02T13:06:15.280Z"
+            Change details of the approval:
+              value:
+                - op: replace
+                  path: /details
+                  value:
+                    currency: EUR
+                    paymentMethods:
+                      - provider: stripe
+                        customAttributes:
+                          paymentType: invoice
+                        method: invoice
+                        amount: 3.0
+                    shipping:
+                      zoneId: deliveryarea
+                      methodId: 4-more_hours_timeframe
+                      amount: 10
+                      methodName: Delivery method name
+                      shippingTaxCode: STANDARD
+                    payment:
+                      paymentId: 636cc738-f0cd-11ed-a05b-0242ac120003
+                      customAttributes:
+                        attribute1: value of the attribute1
+                        attribute2: value of the attribute2
+                    addresses:
+                      - contactName: John Doe
+                        street: Fritz-Elsas-Straße
+                        streetNumber: '20'
+                        streetAppendix: ''
+                        zipCode: '70173'
+                        city: Stuttgart
+                        country: DE
+                        type: SHIPPING
+                        contactPhone: '123456789'
+                      - contactName: John Doe
+                        street: Fritz-Elsas-Straße
+                        streetNumber: '20'
+                        streetAppendix: ''
+                        zipCode: '70173'
+                        city: Stuttgart
+                        country: DE
+                        type: BILLING
+                        contactPhone: '123456789'
+    approvalPermittedRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/approvalPermittedRequest'
+          examples:
+            Check if action is permitted (cart):
+              value:
+                resourceId: cartId
+                resourceType: CART
+                action: CHECKOUT
+            Check if action is permitted (quote):
+              value:
+                resourceId: quoteId
+                resourceType: QUOTE
+                action: CHECKOUT
+    approvalSearchUsersRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/searchUsersRequest'
+          examples:
+            Search for approval users (cart):
+              value:
+                resourceId: cartId
+                resourceType: CART
+                action: CHECKOUT
+            Search for approval users (quote):
+              value:
+                resourceId: quoteId
+                resourceType: QUOTE
+                action: CHECKOUT
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+        **Note**: The tenant name should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    page_number_query_param:
+      name: pageNumber
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: 'The page number to be retrieved, where the size of the pages is specified by the `pageSize` parameter. The number of the first page is 1.'
+    page_size_query_param:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 60
+        minimum: 1
+        maximum: 60
+      description: The number of documents being retrieved on one page.
+    sort_query_param:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'sort=name,metadata.createdAt:desc'
+      description: 'Fields to sort the response data by following the order of the parameters from left to right. Can contain multiple fields in the following format: `field name:sort direction`, separated by a comma. The colon preceding the `sort direction` parameter is optional, and the descending order is taken only if it is equal to `desc` or `DESC`. The ascending order is assumed in any other case.'
+    q_query_param:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'q=status:APPROVED'
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        See: [Standard Practices - Query parameter](https://developer.emporix.io/docs/content/q-param)
+
+    x_total_count_header:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+      description: 'To get information how many entities meet the filtering requirements, the `X-Total-Count` header has been introduced. The header is optional and its default value is `false`. If the header is provided and it is set to `true`, then the total count is approved in the `X-Total-Count` response header. In both cases (X-Total-Count `true`, `false` or not provided), the response body has the same format (array of entities). This means that the information about the total count is approved only on demand, provided that the X-Total-Count header is present in a request.'
+    approvalId:
+      name: approvalId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of an approval.
+  securitySchemes:
+    CustomerAccessToken:
+      type: http
+      scheme: bearer
+      description: 'To generate a customer access token, go to the [Logging in a customer](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login) endpoint.'

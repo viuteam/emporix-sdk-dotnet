@@ -1,0 +1,319 @@
+#nullable enable
+Viu.Emporix.EmporixCredentials
+Viu.Emporix.EmporixCredentials.Backend.get -> Viu.Emporix.EmporixServiceCredentials?
+Viu.Emporix.EmporixCredentials.Backend.set -> void
+Viu.Emporix.EmporixCredentials.Custom.get -> System.Collections.Generic.IDictionary<string!, Viu.Emporix.EmporixServiceCredentials!>!
+Viu.Emporix.EmporixCredentials.EmporixCredentials() -> void
+Viu.Emporix.EmporixCredentials.Storefront.get -> Viu.Emporix.EmporixStorefrontCredentials?
+Viu.Emporix.EmporixCredentials.Storefront.set -> void
+Viu.Emporix.EmporixOptions
+Viu.Emporix.EmporixOptions.Credentials.get -> Viu.Emporix.EmporixCredentials!
+Viu.Emporix.EmporixOptions.Credentials.set -> void
+Viu.Emporix.EmporixOptions.EmporixOptions() -> void
+Viu.Emporix.EmporixOptions.Host.get -> string!
+Viu.Emporix.EmporixOptions.Host.set -> void
+Viu.Emporix.EmporixOptions.Retry.get -> Viu.Emporix.EmporixRetryOptions!
+Viu.Emporix.EmporixOptions.Retry.set -> void
+Viu.Emporix.EmporixOptions.Tenant.get -> string!
+Viu.Emporix.EmporixOptions.Tenant.set -> void
+Viu.Emporix.EmporixOptions.Timeouts.get -> Viu.Emporix.EmporixTimeoutOptions!
+Viu.Emporix.EmporixOptions.Timeouts.set -> void
+Viu.Emporix.EmporixOptions.TokenCache.get -> Viu.Emporix.EmporixTokenCacheOptions!
+Viu.Emporix.EmporixOptions.TokenCache.set -> void
+Viu.Emporix.EmporixRetryOptions
+Viu.Emporix.EmporixRetryOptions.EmporixRetryOptions() -> void
+Viu.Emporix.EmporixRetryOptions.MaxAttempts.get -> int
+Viu.Emporix.EmporixRetryOptions.MaxAttempts.set -> void
+Viu.Emporix.EmporixRetryOptions.MaxBackoff.get -> System.TimeSpan
+Viu.Emporix.EmporixRetryOptions.MaxBackoff.set -> void
+Viu.Emporix.EmporixServiceCredentials
+Viu.Emporix.EmporixServiceCredentials.ClientId.get -> string!
+Viu.Emporix.EmporixServiceCredentials.ClientId.set -> void
+Viu.Emporix.EmporixServiceCredentials.EmporixServiceCredentials() -> void
+Viu.Emporix.EmporixServiceCredentials.Scope.get -> string?
+Viu.Emporix.EmporixServiceCredentials.Scope.set -> void
+Viu.Emporix.EmporixServiceCredentials.Secret.get -> string!
+Viu.Emporix.EmporixServiceCredentials.Secret.set -> void
+Viu.Emporix.EmporixStorefrontContext
+Viu.Emporix.EmporixStorefrontContext.Currency.get -> string?
+Viu.Emporix.EmporixStorefrontContext.Currency.set -> void
+Viu.Emporix.EmporixStorefrontContext.EmporixStorefrontContext() -> void
+Viu.Emporix.EmporixStorefrontContext.Language.get -> string?
+Viu.Emporix.EmporixStorefrontContext.Language.set -> void
+Viu.Emporix.EmporixStorefrontContext.SiteCode.get -> string?
+Viu.Emporix.EmporixStorefrontContext.SiteCode.set -> void
+Viu.Emporix.EmporixStorefrontContext.TargetLocation.get -> string?
+Viu.Emporix.EmporixStorefrontContext.TargetLocation.set -> void
+Viu.Emporix.EmporixStorefrontCredentials
+Viu.Emporix.EmporixStorefrontCredentials.ClientId.get -> string!
+Viu.Emporix.EmporixStorefrontCredentials.ClientId.set -> void
+Viu.Emporix.EmporixStorefrontCredentials.Context.get -> Viu.Emporix.EmporixStorefrontContext?
+Viu.Emporix.EmporixStorefrontCredentials.Context.set -> void
+Viu.Emporix.EmporixStorefrontCredentials.EmporixStorefrontCredentials() -> void
+Viu.Emporix.EmporixTimeoutOptions
+Viu.Emporix.EmporixTimeoutOptions.Connect.get -> System.TimeSpan
+Viu.Emporix.EmporixTimeoutOptions.Connect.set -> void
+Viu.Emporix.EmporixTimeoutOptions.EmporixTimeoutOptions() -> void
+Viu.Emporix.EmporixTimeoutOptions.Read.get -> System.TimeSpan
+Viu.Emporix.EmporixTimeoutOptions.Read.set -> void
+Viu.Emporix.EmporixTokenCacheOptions
+Viu.Emporix.EmporixTokenCacheOptions.EmporixTokenCacheOptions() -> void
+Viu.Emporix.EmporixTokenCacheOptions.ExpirationBuffer.get -> System.TimeSpan
+Viu.Emporix.EmporixTokenCacheOptions.ExpirationBuffer.set -> void
+Viu.Emporix.EmporixTokenCacheOptions.MaxLifetime.get -> System.TimeSpan
+Viu.Emporix.EmporixTokenCacheOptions.MaxLifetime.set -> void
+Viu.Emporix.ServiceCollectionExtensions
+const Viu.Emporix.EmporixOptions.DefaultHost = "https://api.emporix.io" -> string!
+static Viu.Emporix.ServiceCollectionExtensions.AddEmporix(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Viu.Emporix.EmporixOptions!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+Viu.Emporix.EmporixApiException
+Viu.Emporix.EmporixApiException.Details.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Viu.Emporix.EmporixApiException.ErrorCode.get -> string?
+Viu.Emporix.EmporixApiException.RawBody.get -> string?
+Viu.Emporix.EmporixApiException.StatusCode.get -> System.Net.HttpStatusCode
+Viu.Emporix.EmporixAuthenticationException
+Viu.Emporix.EmporixConfigurationException
+Viu.Emporix.EmporixException
+Viu.Emporix.EmporixException.CorrelationId.get -> string?
+Viu.Emporix.EmporixForbiddenException
+Viu.Emporix.EmporixInsufficientScopeException
+Viu.Emporix.EmporixInsufficientScopeException.RequiredScope.get -> string?
+Viu.Emporix.EmporixNetworkException
+Viu.Emporix.EmporixNotFoundException
+Viu.Emporix.EmporixRateLimitException
+Viu.Emporix.EmporixRateLimitException.RetryAfter.get -> System.TimeSpan?
+Viu.Emporix.EmporixServerException
+Viu.Emporix.EmporixTimeoutException
+Viu.Emporix.EmporixTimeoutException.Timeout.get -> System.TimeSpan
+Viu.Emporix.EmporixTransportException
+Viu.Emporix.EmporixValidationException
+Viu.Emporix.AnonymousSession
+Viu.Emporix.AnonymousSession.AccessToken.get -> string!
+Viu.Emporix.AnonymousSession.ExpiresAt.get -> System.DateTimeOffset
+Viu.Emporix.AnonymousSession.RefreshToken.get -> string!
+Viu.Emporix.AnonymousSession.SessionId.get -> string!
+Viu.Emporix.AuthContext
+Viu.Emporix.AuthContext.AuthContext() -> void
+Viu.Emporix.AuthContext.CredentialSet.get -> string?
+Viu.Emporix.AuthContext.Equals(Viu.Emporix.AuthContext other) -> bool
+Viu.Emporix.AuthContext.Kind.get -> Viu.Emporix.AuthKind
+Viu.Emporix.AuthContext.Token.get -> string?
+Viu.Emporix.AuthKind
+Viu.Emporix.AuthKind.Anonymous = 2 -> Viu.Emporix.AuthKind
+Viu.Emporix.AuthKind.Customer = 3 -> Viu.Emporix.AuthKind
+Viu.Emporix.AuthKind.None = 0 -> Viu.Emporix.AuthKind
+Viu.Emporix.AuthKind.Raw = 4 -> Viu.Emporix.AuthKind
+Viu.Emporix.AuthKind.Service = 1 -> Viu.Emporix.AuthKind
+Viu.Emporix.DefaultTokenProvider
+Viu.Emporix.DefaultTokenProvider.DefaultTokenProvider(System.Net.Http.HttpClient! httpClient, Microsoft.Extensions.Options.IOptions<Viu.Emporix.EmporixOptions!>! options, Microsoft.Extensions.Logging.ILogger<Viu.Emporix.DefaultTokenProvider!>! logger, System.TimeProvider? timeProvider = null) -> void
+Viu.Emporix.DefaultTokenProvider.Dispose() -> void
+Viu.Emporix.DefaultTokenProvider.ExpireAnonymousAccessToken() -> void
+Viu.Emporix.DefaultTokenProvider.GetAnonymousSessionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Viu.Emporix.AnonymousSession!>
+Viu.Emporix.DefaultTokenProvider.GetServiceTokenAsync(string! credentialSet, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Viu.Emporix.DefaultTokenProvider.InvalidateAnonymousSession() -> void
+Viu.Emporix.DefaultTokenProvider.InvalidateServiceToken(string! credentialSet) -> void
+Viu.Emporix.ITokenProvider
+Viu.Emporix.ITokenProvider.ExpireAnonymousAccessToken() -> void
+Viu.Emporix.ITokenProvider.GetAnonymousSessionAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Viu.Emporix.AnonymousSession!>
+Viu.Emporix.ITokenProvider.GetServiceTokenAsync(string! credentialSet, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string!>
+Viu.Emporix.ITokenProvider.InvalidateAnonymousSession() -> void
+Viu.Emporix.ITokenProvider.InvalidateServiceToken(string! credentialSet) -> void
+const Viu.Emporix.AuthContext.DefaultCredentialSet = "backend" -> string!
+override Viu.Emporix.AnonymousSession.ToString() -> string!
+override Viu.Emporix.AuthContext.GetHashCode() -> int
+override Viu.Emporix.AuthContext.ToString() -> string!
+static Viu.Emporix.AuthContext.Anonymous() -> Viu.Emporix.AuthContext
+static Viu.Emporix.AuthContext.Customer(string! token) -> Viu.Emporix.AuthContext
+static Viu.Emporix.AuthContext.Raw(string! token) -> Viu.Emporix.AuthContext
+static Viu.Emporix.AuthContext.Service(string? credentialSet = null) -> Viu.Emporix.AuthContext
+static Viu.Emporix.AuthContext.operator !=(Viu.Emporix.AuthContext left, Viu.Emporix.AuthContext right) -> bool
+static Viu.Emporix.AuthContext.operator ==(Viu.Emporix.AuthContext left, Viu.Emporix.AuthContext right) -> bool
+~override Viu.Emporix.AuthContext.Equals(object obj) -> bool
+const Viu.Emporix.ServiceCollectionExtensions.TokenHttpClientName = "Viu.Emporix.Token" -> string!
+Viu.Emporix.ICustomerTokenRefresher
+Viu.Emporix.ICustomerTokenRefresher.RefreshAsync(string! expiredToken, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<string?>
+Viu.Emporix.PaginatedItems
+Viu.Emporix.PaginatedItems<T>
+Viu.Emporix.PaginatedItems<T>.HasNextPage.get -> bool
+Viu.Emporix.PaginatedItems<T>.Items.get -> System.Collections.Generic.IReadOnlyList<T>!
+Viu.Emporix.PaginatedItems<T>.NextCursor.get -> string?
+Viu.Emporix.PaginatedItems<T>.PageNumber.get -> int
+Viu.Emporix.PaginatedItems<T>.PageSize.get -> int
+Viu.Emporix.PaginatedItems<T>.PreviousCursor.get -> string?
+Viu.Emporix.PaginatedItems<T>.TotalCount.get -> int?
+static Viu.Emporix.PaginatedItems.EnumerateAllAsync<T>(System.Func<int, System.Threading.CancellationToken, System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<T>!>!>! fetchPage, int startPage = 1, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<T>!
+const Viu.Emporix.ServiceCollectionExtensions.ApiHttpClientName = "Viu.Emporix.Api" -> string!
+Viu.Emporix.ProductPageOptions
+Viu.Emporix.ProductPageOptions.IncludeTotalCount.get -> bool
+Viu.Emporix.ProductPageOptions.IncludeTotalCount.init -> void
+Viu.Emporix.ProductPageOptions.PageNumber.get -> int
+Viu.Emporix.ProductPageOptions.PageNumber.init -> void
+Viu.Emporix.ProductPageOptions.PageSize.get -> int
+Viu.Emporix.ProductPageOptions.PageSize.init -> void
+Viu.Emporix.ProductPageOptions.ProductPageOptions() -> void
+Viu.Emporix.ProductService
+Viu.Emporix.ProductService.CreateAsync(Viu.Emporix.ProductModels.BasicProductCreation! product, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.ProductModels.ResourceLocation?>!
+Viu.Emporix.ProductService.CreateManyAsync(System.Collections.Generic.IReadOnlyCollection<Viu.Emporix.ProductModels.BasicProductCreation!>! products, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BulkResponse!>!>!
+Viu.Emporix.ProductService.DeleteAsync(string! productId, bool? force = null, bool? doIndex = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.ProductService.GetAsync(string! productId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.ProductModels.BasicProductWithId?>!
+Viu.Emporix.ProductService.GetByCodeAsync(string! code, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.ProductModels.BasicProductWithId?>!
+Viu.Emporix.ProductService.GetManyByCodeAsync(System.Collections.Generic.IReadOnlyCollection<string!>! codes, int chunkSize = 100, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BasicProductWithId!>!>!
+Viu.Emporix.ProductService.GetManyByIdAsync(System.Collections.Generic.IReadOnlyCollection<string!>! productIds, int chunkSize = 100, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BasicProductWithId!>!>!
+Viu.Emporix.ProductService.ListAllAsync(int? pageSize = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Viu.Emporix.ProductModels.BasicProductWithId!>!
+Viu.Emporix.ProductService.ListAsync(Viu.Emporix.ProductPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.ProductModels.BasicProductWithId!>!>!
+Viu.Emporix.ProductService.ListVariantsAsync(string! parentVariantId, int pageSize = 200, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Viu.Emporix.ProductModels.BasicProductWithId!>!
+Viu.Emporix.ProductService.ReplaceAsync(string! productId, Viu.Emporix.ProductModels.BasicProductUpdate! product, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.ProductService.SearchAsync(string! query, Viu.Emporix.ProductPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.ProductModels.BasicProductWithId!>!>!
+Viu.Emporix.ProductService.SearchByNameAsync(string! term, Viu.Emporix.ProductPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.ProductModels.BasicProductWithId!>!>!
+Viu.Emporix.ProductService.UpdateAsync(string! productId, Viu.Emporix.ProductModels.BasicProductUpdate! changes, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.ProductWriteOptions
+Viu.Emporix.ProductWriteOptions.DoIndex.get -> bool?
+Viu.Emporix.ProductWriteOptions.DoIndex.init -> void
+Viu.Emporix.ProductWriteOptions.ProductWriteOptions() -> void
+Viu.Emporix.ProductWriteOptions.SkipRelatedItemsValidation.get -> bool?
+Viu.Emporix.ProductWriteOptions.SkipRelatedItemsValidation.init -> void
+Viu.Emporix.ProductWriteOptions.SkipVariantGeneration.get -> bool?
+Viu.Emporix.ProductWriteOptions.SkipVariantGeneration.init -> void
+Viu.Emporix.EmporixClient
+Viu.Emporix.EmporixClient.Dispose() -> void
+Viu.Emporix.EmporixClient.EmporixClient(Viu.Emporix.EmporixOptions! options, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
+Viu.Emporix.EmporixClient.Products.get -> Viu.Emporix.ProductService!
+Viu.Emporix.EmporixClient.Tenant.get -> string!
+Viu.Emporix.EmporixClient.TokenProvider.get -> Viu.Emporix.ITokenProvider!
+Viu.Emporix.CartCreated
+Viu.Emporix.CartCreated.CartCreated() -> void
+Viu.Emporix.CartCreated.CartId.get -> string?
+Viu.Emporix.CartCreated.CartId.set -> void
+Viu.Emporix.CartService
+Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CartItemResponse?>!
+Viu.Emporix.CartService.ApplyCouponAsync(string! cartId, string! couponCode, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.ClearAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.CreateAsync(Viu.Emporix.CartModels.CreateCart? cart, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartCreated?>!
+Viu.Emporix.CartService.DeleteAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.GetAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.Cart?>!
+Viu.Emporix.CartService.GetCurrentAsync(Viu.Emporix.CurrentCartQuery! query, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.Cart?>!
+Viu.Emporix.CartService.ListItemsAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.CartItemResponse!>!>!
+Viu.Emporix.CartService.RefreshAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.Cart?>!
+Viu.Emporix.CartService.RemoveCouponAsync(string! cartId, string! couponCode, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.RemoveItemAsync(string! cartId, string! itemId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.UpdateItemAsync(string! cartId, string! itemId, Viu.Emporix.CartModels.UpdateCartItem! changes, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.ValidateAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CartValidationResult?>!
+Viu.Emporix.CategoryAssignmentOperations
+Viu.Emporix.CategoryAssignmentOperations.CreateAsync(string! categoryId, Viu.Emporix.CategoryModels.CategoryAssignment! assignment, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CategoryAssignmentOperations.DeleteAsync(string! categoryId, string! assignmentId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CategoryAssignmentOperations.ListAsync(string! categoryId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CategoryModels.CategoryAssignment!>!>!
+Viu.Emporix.CategoryPageOptions
+Viu.Emporix.CategoryPageOptions.CategoryPageOptions() -> void
+Viu.Emporix.CategoryPageOptions.IncludeTotalCount.get -> bool
+Viu.Emporix.CategoryPageOptions.IncludeTotalCount.init -> void
+Viu.Emporix.CategoryPageOptions.PageNumber.get -> int
+Viu.Emporix.CategoryPageOptions.PageNumber.init -> void
+Viu.Emporix.CategoryPageOptions.PageSize.get -> int
+Viu.Emporix.CategoryPageOptions.PageSize.init -> void
+Viu.Emporix.CategoryService
+Viu.Emporix.CategoryService.Assignments.get -> Viu.Emporix.CategoryAssignmentOperations!
+Viu.Emporix.CategoryService.CreateAsync(Viu.Emporix.CategoryModels.CategoryCreateRequest! category, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CategoryModels.CategoryIdResponse?>!
+Viu.Emporix.CategoryService.DeleteAsync(string! categoryId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CategoryService.GetAsync(string! categoryId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CategoryModels.Category?>!
+Viu.Emporix.CategoryService.GetTreeAsync(string! categoryId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CategoryModels.CategoryTree?>!
+Viu.Emporix.CategoryService.ListAllAsync(int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Viu.Emporix.CategoryModels.Category!>!
+Viu.Emporix.CategoryService.ListAsync(Viu.Emporix.CategoryPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.CategoryModels.Category!>!>!
+Viu.Emporix.CategoryService.SearchAsync(string! query, Viu.Emporix.CategoryPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.CategoryModels.Category!>!>!
+Viu.Emporix.CategoryService.UpdateAsync(string! categoryId, Viu.Emporix.CategoryModels.CategoryPartialUpdateRequest! changes, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CurrentCartQuery
+Viu.Emporix.CurrentCartQuery.Create.get -> bool
+Viu.Emporix.CurrentCartQuery.Create.init -> void
+Viu.Emporix.CurrentCartQuery.CurrentCartQuery() -> void
+Viu.Emporix.CurrentCartQuery.LegalEntityId.get -> string?
+Viu.Emporix.CurrentCartQuery.LegalEntityId.init -> void
+Viu.Emporix.CurrentCartQuery.SiteCode.get -> string!
+Viu.Emporix.CurrentCartQuery.SiteCode.init -> void
+Viu.Emporix.CurrentCartQuery.Type.get -> string?
+Viu.Emporix.CurrentCartQuery.Type.init -> void
+Viu.Emporix.EmporixClient.Carts.get -> Viu.Emporix.CartService!
+Viu.Emporix.EmporixClient.Categories.get -> Viu.Emporix.CategoryService!
+Viu.Emporix.ProductYrn
+static Viu.Emporix.ProductYrn.Create(string! tenant, string! productId) -> string!
+static Viu.Emporix.ProductYrn.GetProductId(string? yrn) -> string!
+Viu.Emporix.BrandService
+Viu.Emporix.BrandService.CreateAsync(Viu.Emporix.BrandServiceModels.Brand! brand, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.BrandServiceModels.BrandResponse?>!
+Viu.Emporix.BrandService.DeleteAsync(string! brandId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.BrandService.GetAsync(string! brandId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.BrandServiceModels.BrandResponse?>!
+Viu.Emporix.BrandService.ListAsync(Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.BrandServiceModels.BrandResponse!>!>!
+Viu.Emporix.BrandService.UpdateAsync(string! brandId, Viu.Emporix.BrandServiceModels.UpdateBrand! changes, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CatalogService
+Viu.Emporix.CatalogService.CreateAsync(Viu.Emporix.CatalogModels.CreateCatalog! catalog, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CatalogModels.CreateCatalogResponse?>!
+Viu.Emporix.CatalogService.DeleteAsync(string! catalogId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CatalogService.GetAsync(string! catalogId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CatalogModels.Catalog?>!
+Viu.Emporix.CatalogService.ListAsync(string? query = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CatalogModels.Catalog!>!>!
+Viu.Emporix.CatalogService.ListForCategoryAsync(string! categoryId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CatalogModels.Catalog!>!>!
+Viu.Emporix.CatalogService.ReplaceAsync(string! catalogId, Viu.Emporix.CatalogModels.UpdateCatalog! catalog, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.EmporixClient.Brands.get -> Viu.Emporix.BrandService!
+Viu.Emporix.EmporixClient.Catalogs.get -> Viu.Emporix.CatalogService!
+Viu.Emporix.EmporixClient.Labels.get -> Viu.Emporix.LabelService!
+Viu.Emporix.LabelService
+Viu.Emporix.LabelService.CreateAsync(Viu.Emporix.LabelServiceModels.LabelCreation! label, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.LabelService.DeleteAsync(string! labelId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.LabelService.GetAsync(string! labelId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.LabelServiceModels.Label?>!
+Viu.Emporix.LabelService.ListAsync(Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.LabelServiceModels.Label!>!>!
+Viu.Emporix.LabelService.UpdateAsync(string! labelId, Viu.Emporix.LabelServiceModels.LabelUpdate! changes, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CustomerAddressOperations
+Viu.Emporix.CustomerAddressOperations.CreateAsync(Viu.Emporix.CustomerModels.AddressCreateDto! address, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CustomerModels.AddressDto?>!
+Viu.Emporix.CustomerAddressOperations.DeleteAsync(string! addressId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CustomerAddressOperations.ListAsync(Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CustomerModels.AddressDto!>!>!
+Viu.Emporix.CustomerAddressOperations.UpdateAsync(string! addressId, Viu.Emporix.CustomerModels.AddressUpdateDto! address, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CustomerLogin
+Viu.Emporix.CustomerLogin.CustomerLogin() -> void
+Viu.Emporix.CustomerLogin.Email.get -> string!
+Viu.Emporix.CustomerLogin.Email.init -> void
+Viu.Emporix.CustomerLogin.Password.get -> string!
+Viu.Emporix.CustomerLogin.Password.init -> void
+Viu.Emporix.CustomerService
+Viu.Emporix.CustomerService.Addresses.get -> Viu.Emporix.CustomerAddressOperations!
+Viu.Emporix.CustomerService.GetMeAsync(Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CustomerModels.Customer?>!
+Viu.Emporix.CustomerService.LoginAsync(Viu.Emporix.CustomerLogin! credentials, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CustomerSession!>!
+Viu.Emporix.CustomerService.LogoutAsync(Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CustomerService.RefreshSessionAsync(string! refreshToken, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CustomerSession!>!
+Viu.Emporix.CustomerService.RequestPasswordResetAsync(string! email, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CustomerService.SignUpAsync(Viu.Emporix.CustomerModels.Customer! customer, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CustomerModels.Customer?>!
+Viu.Emporix.CustomerService.UpdateMeAsync(Viu.Emporix.CustomerModels.Customer! customer, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CustomerModels.Customer?>!
+Viu.Emporix.CustomerSession
+Viu.Emporix.CustomerSession.CustomerToken.get -> string!
+Viu.Emporix.CustomerSession.ExpiresIn.get -> int?
+Viu.Emporix.CustomerSession.RefreshToken.get -> string!
+Viu.Emporix.CustomerSession.SaasToken.get -> string!
+Viu.Emporix.CustomerSession.SessionId.get -> string?
+Viu.Emporix.EmporixClient.Customers.get -> Viu.Emporix.CustomerService!
+override Viu.Emporix.CustomerSession.ToString() -> string!
+Viu.Emporix.AvailabilityService
+Viu.Emporix.AvailabilityService.CreateAsync(Viu.Emporix.AvailabilityModels.AvailabilityDto! availability, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.AvailabilityService.DeleteAsync(string! productId, string! siteCode, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.AvailabilityService.GetAsync(string! productId, string! siteCode, bool treatMissingAsAvailable = false, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.AvailabilityModels.Availability?>!
+Viu.Emporix.AvailabilityService.ListForSiteAsync(string! siteCode, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.AvailabilityModels.Availability!>!>!
+Viu.Emporix.CheckoutService
+Viu.Emporix.CheckoutService.PlaceOrderAsync(Viu.Emporix.CheckoutModels.RequestCheckout! checkout, Viu.Emporix.AuthContext auth, string? saasToken = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CheckoutModels.ResponseCheckout?>!
+Viu.Emporix.EmporixClient.Availability.get -> Viu.Emporix.AvailabilityService!
+Viu.Emporix.EmporixClient.Checkout.get -> Viu.Emporix.CheckoutService!
+Viu.Emporix.EmporixClient.Media.get -> Viu.Emporix.MediaService!
+Viu.Emporix.EmporixClient.Orders.get -> Viu.Emporix.OrderService!
+Viu.Emporix.EmporixClient.Prices.get -> Viu.Emporix.PriceService!
+Viu.Emporix.MediaService
+Viu.Emporix.MediaService.CreateLinkAsync(Viu.Emporix.MediaModels.AssetCreateLink! asset, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAssetLink?>!
+Viu.Emporix.MediaService.DeleteAsync(string! assetId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.MediaService.DownloadAsync(string! assetId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Net.Http.HttpResponseMessage!>!
+Viu.Emporix.MediaService.GetAsync(string! assetId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAsset?>!
+Viu.Emporix.MediaService.ListAsync(int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.MediaModels.GetAsset!>!>!
+Viu.Emporix.OrderService
+Viu.Emporix.OrderService.ChangeStatusAsync(string! orderId, string! status, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.OrderService.GetAsync(string! orderId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.OrderV2Models.Order?>!
+Viu.Emporix.OrderService.ListMineAsync(Viu.Emporix.AuthContext auth, string? query = null, int pageNumber = 1, int pageSize = 60, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.OrderV2Models.Order!>!>!
+Viu.Emporix.PriceMatchOptions
+Viu.Emporix.PriceMatchOptions.ChunkSize.get -> int
+Viu.Emporix.PriceMatchOptions.ChunkSize.init -> void
+Viu.Emporix.PriceMatchOptions.PriceMatchOptions() -> void
+Viu.Emporix.PriceService
+Viu.Emporix.PriceService.CreateAsync(Viu.Emporix.PriceModels.CreatePrice! price, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.PriceService.DeleteAsync(string! priceId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.PriceService.GetAsync(string! priceId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PriceModels.GetPrice?>!
+Viu.Emporix.PriceService.ListAsync(string? query = null, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.PriceModels.GetPrice!>!>!
+Viu.Emporix.PriceService.MatchByContextAsync(Viu.Emporix.PriceModels.MatchByContext! request, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.PriceModels.Match!>!>!
+Viu.Emporix.PriceService.MatchByContextChunkedAsync(System.Collections.Generic.IReadOnlyCollection<Viu.Emporix.PriceModels.Items!>! items, Viu.Emporix.PriceMatchOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.PriceModels.Match!>!>!

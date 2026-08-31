@@ -1,0 +1,746 @@
+openapi: 3.0.0
+info:
+  title: Checkout Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |-
+    Converts a cart into a sales order by executing a number of checkout steps in sequence.
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/checkout/{tenant}/checkouts/order':
+    post:
+      responses:
+        '200':
+          description: The request was successful. A unique order ID is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseCheckout'
+              examples:
+                example-1:
+                  value:
+                    orderId: B702231
+                    paymentDetails: null
+                    checkoutId: ''
+        '400':
+          $ref: '#/components/responses/trait_yaasAware_400'
+        '401':
+          $ref: '#/components/responses/trait_tokenExpired_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '409':
+          description: |
+            Conflict. Possible causes:
+            * Selected delivery window does not have available capacity.
+            * Order with the given cart ID and checkout=true already exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                  type:
+                    type: string
+                  message:
+                    type: string
+                  moreInfo:
+                    type: string
+                    nullable: true
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        type:
+                          type: string
+                        message:
+                          type: string
+                        moreInfo:
+                          type: string
+                          nullable: true
+              examples:
+                Order with checkout cart already exists:
+                  value:
+                    status: 409
+                    type: Conflict
+                    message: "Order with cartId '69b3dfa3a64df43dd0266fd6' and checkout=true already exists (order id: ORDER-2026-03-13-10-48-31-DE0671-D)"
+                    moreInfo: null
+                    details:
+                      - field: cartId
+                        type: unique_checkout_cartId_index
+                        message: '69b3dfa3a64df43dd0266fd6'
+                        moreInfo: null
+                      - field: existingOrderId
+                        type: unique_checkout_cartId_index
+                        message: ORDER-2026-03-13-10-48-31-DE0671-D
+                        moreInfo: null
+                Delivery window capacity conflict:
+                  value:
+                    status: 409
+                    type: conflict_resource
+                    message: Something went wrong while trying reserve a slot in a delivery window
+                    moreInfo: ''
+                    details: []
+        '500':
+          description: |
+            Some server side exception occurred which prevented it from correctly returning the result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                example-1:
+                  value:
+                    status: 500
+                    type: internal_service_error
+                    moreInfo: ''
+                    message: Something went wrong while processing the request. Please contact the administrator.
+                    details: []
+      description: |-
+        This endpoint initiates a checkout for a given cart or quote. The customer must be active while the checkout is in progress. Checkout is an atomic operation — it either succeeds or fails. If a checkout request fails, an appropriate validation message is returned. Depending on the issue, the checkout payload or cart content can be adjusted to meet the validation rules, and the request can then be retried.
+
+         The checkout process performs the following operations:
+         * Validates checkout
+           * checks if cart data is provided
+           * checks if customer data is provided
+           * checks if only one payment method is provided
+           * checks if customer mixin is compliant with the customer mixin schema
+           * checks if customer address mixin is compliant with the address mixin schema
+         * Validates cart data
+           * checks if product prices are valid (is existing, has valid date range, quantity is valid for a wholesale price)
+           * checks if the free shipping discount is properly applied (it fails when cart contains a free shipping coupon but the shipping calculation is not equal to zero)
+           * checks if products in cart are valid (is existing, has a valid tax code) and still in stock
+           * checks if used coupons are valid  
+           * checks if the currency in the cart is the same as configured for the site 
+           * checks if the selected delivery window capacity is valid
+           * checks if the cart's delivery window has all required fields
+         * Creates an order
+         * Handles the payment
+         * Closes the cart
+      operationId: POST-checkout-trigger-checkout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/requestCheckout'
+                - $ref: '#/components/schemas/requestFromQuoteCheckout'
+            examples:
+              Request checkout example:
+                value:
+                  cartId: 9b36757a-5ea1-4689-9ed3-fb630eb5048c
+                  paymentMethods:
+                    - provider: payment-gateway
+                      customAttributes:
+                        customer: '635544345'
+                        modeId: 9a33c7a5-9535-42af-a936-2fa6ece27579
+                      method: invoice
+                  currency: EUR
+                  shipping:
+                    methodId: 4-more_hours_timeframe
+                    zoneId: deliveryarea
+                    methodName: Delivery method name
+                    amount: 10
+                    shippingTaxCode: STANDARD
+                  deliveryWindowId: cbda2a28-f0cc-11ed-a05b-0242ac120003
+                  addresses:
+                    - contactName: John Doe
+                      companyName: Emporix
+                      street: Fritz-Elsaas
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      state: ''
+                      contactPhone: '123456789'
+                      type: SHIPPING
+                      metadata:
+                        mixins: {}
+                      mixins: {}
+                    - contactName: John Doe
+                      companyName: Emporix
+                      street: Fritz-Elsaas
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      state: ''
+                      contactPhone: '123456789'
+                      type: BILLING
+                      metadata:
+                        mixins: {}
+                      mixins: {}
+                  customer:
+                    id: '8765472'
+                    title: MR
+                    firstName: John
+                    middleName: ''
+                    lastName: Doe
+                    contactPhone: '56432245'
+                    email: test@doc.com
+                    company: Emporix
+                    metadata:
+                      mixins: {}
+                    mixins: {}
+              Request checkout from the quote example:
+                value:
+                  quoteId: Q1000637
+                  paymentMethods:
+                    - provider: payment-gateway
+                      customAttributes:
+                        customer: '635544345'
+                        modeId: 9a33c7a5-9535-42af-a936-2fa6ece27579
+                      method: invoice
+                  deliveryWindowId: cbda2a28-f0cc-11ed-a05b-0242ac120003
+              Request guest checkout:
+                value:
+                  cartId: 9b36757a-5ea1-4689-9ed3-fb630eb5048c
+                  paymentMethods:
+                    - provider: payment-gateway
+                      customAttributes:
+                        customer: '635544345'
+                        modeId: 9a33c7a5-9535-42af-a936-2fa6ece27579
+                      method: invoice
+                  currency: EUR
+                  shipping:
+                    methodId: 4-more_hours_timeframe
+                    zoneId: deliveryarea
+                    methodName: Delivery method name
+                    amount: 10
+                    shippingTaxCode: STANDARD
+                  deliveryWindowId: cbda2a28-f0cc-11ed-a05b-0242ac120003
+                  addresses:
+                    - contactName: John Doe
+                      companyName: Emporix
+                      street: Fritz-Elsaas
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      state: ''
+                      contactPhone: '123456789'
+                      type: SHIPPING
+                      metadata:
+                        mixins: {}
+                      mixins: {}
+                    - contactName: John Doe
+                      companyName: Emporix
+                      street: Fritz-Elsaas
+                      streetNumber: '20'
+                      streetAppendix: ''
+                      zipCode: '70173'
+                      city: Stuttgart
+                      country: DE
+                      state: ''
+                      contactPhone: '123456789'
+                      type: BILLING
+                      metadata:
+                        mixins: {}
+                      mixins: {}
+                  customer:
+                    guest: true
+                    title: MR
+                    firstName: John
+                    middleName: ''
+                    lastName: Doe
+                    contactPhone: '56432245'
+                    email: test@doc.com
+                    company: Emporix
+                    metadata:
+                      mixins: {}
+                    mixins: {}
+        required: true
+        description: ''
+      security:
+        - CustomerAccessToken: []
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - $ref: '#/components/parameters/trait_saas_token'
+      summary: Triggering a checkout
+      tags:
+        - Checkouts
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+components:
+  schemas:
+    address.json:
+      type: object
+      description: Information about the customer's address.
+      additionalProperties: false
+      properties:
+        contactName:
+          type: string
+          minLength: 0
+          description: Contact name
+        companyName:
+          type: string
+          description: Company name
+        street:
+          type: string
+          minLength: 0
+          description: Street
+        streetNumber:
+          type: string
+          description: Street number
+        streetAppendix:
+          type: string
+          description: Street appendix
+        zipCode:
+          type: string
+          maxLength: 11
+          minLength: 0
+          description: zip code
+        city:
+          type: string
+          minLength: 0
+          description: City
+        country:
+          type: string
+          pattern: '[a-zA-Z]{2}'
+          minLength: 2
+          maxLength: 2
+          description: Country
+        state:
+          type: string
+          description: State
+        contactPhone:
+          type: string
+          description: Contact phone
+        type:
+          type: string
+          description: 'Type of the address data, for example `BILLING` or `SHIPPING`.'
+          minLength: 0
+        metadata:
+          $ref: '#/components/schemas/mixinMetadata.json'
+        mixins:
+          type: object
+          description: Mixins object
+          additionalProperties: true
+      required:
+        - contactName
+        - street
+        - zipCode
+        - city
+        - country
+        - type
+    customer.json:
+      type: object
+      description: Information about the customer.
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Customers’s unique identifier generated when a customer’s account is created. Required only when checkout is done by a logged in customer.
+        name:
+          type: string
+          description: Name
+        title:
+          type: string
+          description: Title
+        firstName:
+          type: string
+          description: First name. Providing either `firstName` or `lastName` is required.
+        middleName:
+          type: string
+          description: Middle name
+        lastName:
+          type: string
+          description: Last name. Providing either `firstName` or `lastName` is required.
+        contactPhone:
+          type: string
+          description: Contact phone
+        email:
+          type: string
+          format: email
+          minLength: 0
+          description: Email
+        company:
+          type: string
+          description: Company name
+        metadata:
+          $ref: '#/components/schemas/mixinMetadata.json'
+        mixins:
+          type: object
+          description: Mixins object
+          additionalProperties: true
+        guest:
+          type: boolean
+          description: Indicates if the checkout is done by an anonymous customer (if true) or logged in customer (if false). Required only for guest checkout.
+      required:
+        - email
+    errorMessage:
+      title: ''
+      description: Schema for API-specific errors.
+      type: object
+      properties:
+        status:
+          minimum: 100
+          maximum: 599
+          description: Original HTTP error code. It should be consistent with the HTTP response code.
+          type: integer
+        type:
+          type: string
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: |-
+            Classification of the error type.
+
+            **Note:** The error type should be written in lowercase and include underscores, for example `validation_failure`.
+          minLength: 0
+        message:
+          description: Descriptive error message for debugging purposes.
+          type: string
+        moreInfo:
+          type: string
+          description: More information (such as a link to the documentation) for investigating further and getting support.
+        details:
+          description: List of problems causing the error.
+          type: array
+          items:
+            title: errorDetail
+            description: Schema for a specific error cause.
+            type: object
+            properties:
+              field:
+                description: |-
+                  Element in request data which is causing the error, for example `product.name`.
+
+                  If the violation was not field-specific, this field will be empty.
+                type: string
+              type:
+                type: string
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: |-
+                  Classification of the specific error cause. This value should always be interpreted within the context of the general error type.
+
+                  **Note:** The error type should be written in lowercase and include underscores, for example `missing_value`.
+                minLength: 0
+              message:
+                description: Descriptive error message for debugging purposes.
+                type: string
+              moreInfo:
+                type: string
+                description: More information (such as a link to the documentation) for investigating further and getting support.
+    mixinMetadata.json:
+      type: object
+      additionalProperties: false
+      description: ''
+      properties:
+        mixins:
+          type: object
+          additionalProperties: true
+    requestCheckout:
+      type: object
+      description: Schema for triggering a checkout.
+      additionalProperties: false
+      properties:
+        cartId:
+          type: string
+          description: Customer cart’s unique identifier generated when a cart is created.
+          minLength: 0
+        paymentMethods:
+          description: Methods chosen to process the payment for the order.
+          type: array
+          items:
+            $ref: '#/components/schemas/requestPaymentMethod.json'
+        currency:
+          type: string
+          description: 'Three-letter currency code, compliant with the ISO 4217 standard.'
+        shipping:
+          $ref: '#/components/schemas/shipping.json'
+        addresses:
+          type: array
+          uniqueItems: true
+          minItems: 2
+          description: List of addresses associated with the order. There must be at least one address of type `SHIPPING` and one address of type `BILLING`.
+          items:
+            $ref: '#/components/schemas/address.json'
+        customer:
+          $ref: '#/components/schemas/customer.json'
+      required:
+        - cartId
+        - customer
+        - shipping
+        - addresses
+        - paymentMethods
+    requestFromQuoteCheckout:
+      type: object
+      description: Schema for triggering a checkout from the quote.
+      additionalProperties: false
+      properties:
+        quoteId:
+          type: string
+          description: The identifier of the quote.
+          minLength: 0
+        paymentMethods:
+          description: Methods chosen to process the payment for the order.
+          type: array
+          items:
+            $ref: '#/components/schemas/requestPaymentMethod.json'
+        deliveryWindowId:
+          type: string
+          description: Delivery window's unique identifier.
+      required: 
+        - quoteId
+        - paymentMethods
+    requestPaymentMethod.json:
+      type: object
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          description: |
+            Payment provider, possible values: 
+              * `payment-gateway` - When the Emporix Payment-Gateway service should be used to handle a payment. For details about custom attributes that are required for a particular payment mode, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments. 
+              * `custom` - When a custom provider is used. In this case the created order has the `IN_CHECKOUT` status.
+              * `none` - For payment by cash or invoice.
+          minLength: 0
+        customAttributes:
+          type: object
+          description: Additional information about the payment method.
+          properties:
+            token:
+              type: string
+              description: 'Payment token used for the tokenized credit card flows. The field is used when provider type is `payment-gateway`. For more details, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments'
+            modeId:
+              type: string
+              description: 'Identifier of a payment mode. The payment mode has to be configured in the Emporix Payment Gateway service beforehand. For more details, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments'
+            paymentType:
+              type: string
+              description: 'Payment type chosen by the customer, for example `paymentByCredit` or `paymentByDebit`.'
+        method:
+          type: string
+          description: 'Payment method chosen by the customer, for example `invoice` or `cash-on-delivery`.'
+        amount:
+          type: number
+          description: Amount to be paid by the customer.
+      required:
+        - provider
+    responseCheckout:
+      type: object
+      additionalProperties: false
+      properties:
+        orderId:
+          type: string
+          description: Order’s unique identifier generated when a checkout is triggered.
+        paymentDetails:
+          type: object
+          nullable: true
+        checkoutId:
+          type: string
+          nullable: true
+    shipping.json:
+      type: object
+      description: Information about the shipping.
+      additionalProperties: false
+      properties:
+        methodId:
+          type: string
+          description: Shipping method's unique identifier.
+          minLength: 0
+        zoneId:
+          type: string
+          description: Shipping zone identifier.
+          minLength: 0
+        methodName:
+          type: string
+          description: Shipping method chosen by the customer.
+          minLength: 0
+        amount:
+          type: number
+          minimum: 0
+          description: 'Shipping cost. '
+        shippingTaxCode:
+          type: string
+          description: The tax code of the shipping
+      required:
+        - zoneId
+        - amount
+        - methodId
+        - methodName
+  responses:
+    trait_yaasAware_400:
+      description: Request was syntactically incorrect. Details are be provided within the response payload.
+      content:
+        application/json:
+          schema:
+            example:
+              status: 400
+              message: 'There are validation problems, see details section for more information'
+              moreInfo: ''
+              type: validation_violation
+              details:
+                - field: tenant
+                  message: size must be between 3 and 16
+                  type: invalid_header
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'original HTTP error code, should be consistent with the response HTTP code'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'classification of the error type, lower case with underscore e.g. validation_failure'
+                type: string
+              message:
+                description: descriptive error message for debugging
+                type: string
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and finding support
+              details:
+                description: list of problems causing this error
+                type: array
+                items:
+                  description: schema for specific error cause
+                  type: object
+                  properties:
+                    field:
+                      description: 'a bean notation expression specifying the element in request data causing the error, eg product.variants[3].name, this can be empty if violation was not field specific'
+                      type: string
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      description: 'classification of the error detail type, lower case with underscore eg missing_value, this value must be always interpreted in context of the general error type.'
+                      type: string
+                    message:
+                      description: descriptive error detail message for debugging
+                      type: string
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further and finding support for error detail
+                  required:
+                    - type
+            required:
+              - status
+              - type
+    trait_restricted_403:
+      description: Authorization token's scopes do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            example:
+              status: 403
+              message: Not allowed to access this resource
+              moreInfo: ''
+              type: insufficient_permissions
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'original HTTP error code, should be consistent with the response HTTP code'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'classification of the error type, lower case with underscore eg validation_failure'
+                type: string
+              message:
+                description: descriptive error message for debugging
+                type: string
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and finding support
+              details:
+                description: list of problems causing this error
+                type: array
+                items:
+                  description: schema for specific error cause
+                  type: object
+                  properties:
+                    field:
+                      description: 'a bean notation expression specifying the element in request data causing the error, eg product.variants[3].name, this can be empty if violation was not field specific'
+                      type: string
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      description: 'classification of the error detail type, lower case with underscore eg missing_value, this value must be always interpreted in context of the general error type.'
+                      type: string
+                    message:
+                      description: descriptive error detail message for debugging
+                      type: string
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further and finding support for error detail
+                  required:
+                    - type
+            required:
+              - status
+              - type
+          examples:
+            example-1:
+              value:
+                status: 403
+                type: insufficient_permissions
+                moreInfo: ''
+                message: The access to the requested resource has been forbidden by the server.
+                details: []
+    trait_tokenExpired_401:
+      description: Access forbidden. The authorization token has expired.
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                    minLength: 0
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+                        minLength: 0
+          examples:
+            example-1:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+  parameters:
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant's name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_saas_token:
+      name: saas-token
+      in: header
+      description: Customer’s `saasToken` retrieved when logging in a customer. The header is required for customer's checkout. If the checkout is done by a guest then the header can be skipped.
+      schema:
+        type: string
+        example: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2MTQ0MzU2MyIsImV4cCI6MTY5Nzk3MDUyOH0.F0b5jr6KeSoBCj-suTLuasmydaJEudc1ZrESkQXSCGk
+  examples: {}
+  requestBodies: {}
+  headers: {}
+  securitySchemes:
+    CustomerAccessToken:
+      type: http
+      scheme: bearer
+  links: {}
+  callbacks: {}
+security:
+  - CustomerAccessToken: []
+tags:
+  - name: Checkouts

@@ -1,0 +1,863 @@
+openapi: 3.0.1
+info:
+  title: Shopping List Service
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+  version: ''
+  description: Manage shopping lists
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Shopping Lists
+paths:
+  /shoppinglist/{tenant}/shopping-lists:
+    post:
+      tags:
+        - Shopping Lists
+      summary: Creating a shopping list
+      description: |-
+        Creates a shopping list.
+        ***
+
+        ### Additional scope info
+
+          * `shoppinglist.shoppinglist_manage` - Required only for the employee to create a shopping list for a provided customer. If the scope is not present, then the customerId is resolved from the token.
+      security:
+        - CustomerAccessToken: []
+        - OAuth2: 
+            - shoppinglist.shoppinglist_manage
+      operationId: POST-shopping-list-create-shopping-list
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ownShoppingListCreateRequest'
+                - $ref: '#/components/schemas/employeeShoppingListCreateRequest'
+            examples:
+              Employee:
+                value:
+                  customerId: C120043
+                  name: default
+                  items:
+                    - id: 1
+                      productId: 55cdcd91a88ed11babd7ca7e
+                      quantity: 7.1
+                      cuttingOption: small
+                      servicePackagingOption: paper
+                      comment: fragile
+              Own:
+                value:
+                  name: default
+                  items:
+                    - id: 1
+                      productId: 55cdcd91a88ed11babd7ca7e
+                      quantity: 7.1
+                      cuttingOption: small
+                      servicePackagingOption: paper
+                      comment: fragile
+        required: false
+      responses:
+        '201':
+          description: |
+            The shopping list resource has been successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                example:
+                  id: C120043
+        '400':
+          $ref: '#/components/responses/trait_shopping_400'
+        '401':
+          $ref: '#/components/responses/trait_yaasAware_401'
+        '409':
+          $ref: '#/components/responses/trait_yaasAware_409'
+        '500':
+          $ref: '#/components/responses/trait_yaasAware_500'
+    get:
+      tags:
+        - Shopping Lists
+      summary: Retrieving a shopping list
+      description: |-
+
+        Gets shopping list by name or defaults to all shopping lists if name is not provided.
+        When scope is provided then all shopping lists are returned. If scope is not provided, then only own shopping list is returned.
+
+        ### Additional scope info
+
+        * `shoppinglist.shoppinglist_read` - Required only for the employee to read shopping lists. If scope is not present, then the customerId is resolved from the token.
+      security:
+        - OAuth2:
+            - shoppinglist.shoppinglist_read
+      operationId: GET-shopping-list-retrieve-shopping-list
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: name
+          in: query
+          description: |
+            Name of the shopping list. If missing all shopping lists are provided. This query param has no effect when it's used by employee.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getShoppingLists'
+              example:
+                - customerId: "C120046"
+                  default:
+                    name: default
+                    items:
+                      - id: 1
+                        productId: 55cdcd91a88ed11babd7ca7e
+                        quantity: 7.1
+                        cuttingOption: small
+                        servicePackagingOption: paper
+                        comment: fragile
+                      - id: 2
+                        productId: 75cdcd91a88ed11babd7ca9i
+                        quantity: 1.5
+                        cuttingOption: small
+                        servicePackagingOption: paper
+                        comment: fragile
+
+        '400':
+          $ref: '#/components/responses/trait_shopping_400'
+        '401':
+          $ref: '#/components/responses/trait_yaasAware_401'
+        '500':
+          $ref: '#/components/responses/trait_yaasAware_500'
+  /shoppinglist/{tenant}/shopping-lists/{customerId}:
+    put:
+      tags:
+        - Shopping Lists
+      summary: Updating a customer shopping list
+      description: |
+        Updates a shopping list.
+        ***
+
+        ### Additional scope info
+
+          * `shoppinglist.shoppinglist_manage` - Required only for the employee to update a shopping list. If the scope is not present, then the operation is allowed for customer to update his own shopping list.
+      security:
+        - CustomerAccessToken: []
+        - OAuth2: 
+            - shoppinglist.shoppinglist_manage
+      operationId: PUT-shopping-list-update-customer-shopping-list
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: customerId
+          in: path
+          required: true
+          description: Unique identifier of the customer.
+          schema:
+            type: string
+            example: C120053
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ownShoppingListUpdateRequest'
+            example:
+              name: default
+              items:
+                - id: 3
+                  productId: 23cdcd91a88ed11babd7ca7y
+                  quantity: 2.4
+                  cuttingOption: small
+                  servicePackagingOption: paper
+                  comment: fragile
+        required: false
+      responses:
+        '204':
+          description: |
+            The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/trait_shopping_400'
+        '401':
+          $ref: '#/components/responses/trait_yaasAware_401'
+        '404':
+          $ref: '#/components/responses/trait_yaasAware_404'
+        '409':
+          $ref: '#/components/responses/trait_yaasAware_409'
+        '500':
+          $ref: '#/components/responses/trait_yaasAware_500'
+    get:
+      tags:
+        - Shopping Lists
+      summary: Retrieving a customer shopping list
+      description: |
+        Retrieves a shopping list based on the customer number. This endpoint is valid only for the employee.
+        ***
+      operationId: GET-shopping-list-retrieve-customer-shopping-list
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: customerId
+          in: path
+          required: true
+          description: Unique identifier of the customer.
+          schema:
+            type: string
+            example: C120053
+        - name: name
+          in: query
+          description: |
+            Name of the shopping list
+          schema:
+            type: string
+      security:
+        - CustomerAccessToken: []
+        - OAuth2:
+            - shoppinglist.shoppinglist_read
+      responses:
+        '200':
+          description: shopping list successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getShoppingList'
+              example:
+                customerId: C120048
+                default:
+                  name: default
+                  items:
+                    - id: 1
+                      productId: 55cdcd91a88ed11babd7ca7e
+                      quantity: 7.1
+                      cuttingOption: small
+                      servicePackagingOption: paper
+                      comment: fragile
+                    - id: 2
+                      productId: 75cdcd91a88ed11babd7ca9i
+                      quantity: 1.5
+                      cuttingOption: small
+                      servicePackagingOption: paper
+                      comment: fragile
+        '401':
+          $ref: '#/components/responses/trait_yaasAware_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+        '404':
+          $ref: '#/components/responses/trait_yaasAware_404'
+        '500':
+          $ref: '#/components/responses/trait_yaasAware_500'
+    delete:
+      tags:
+        - Shopping Lists
+      summary: Removing a customer shopping list
+      description: |
+        Deletes a shopping list.
+        ***
+
+        ### Additional scope info
+
+          * `shoppinglist.shoppinglist_manage` - Required only for the employee to delete a shopping list. If the scope is not present, then the operation is allowed for customer to delete his own shopping list.
+      operationId: DELETE-shopping-list-remove-customer-shopping-list
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Your Emporix tenant name.
+
+            **Note**: The tenant name should always be written in lowercase.
+          required: true
+          schema:
+            type: string
+            example: saasdev2
+        - name: customerId
+          in: path
+          required: true
+          description: Unique identifier of the customer.
+          schema:
+            type: string
+            example: C120053
+        - name: name
+          in: query
+          description: |
+            Name of the shopping list. If no `name` is provided, then all shopping lists of given customer are removed.
+          schema:
+            type: string
+      security:
+        - OAuth2:
+            - shoppinglist.shoppinglist_delete
+            - shoppinglist.shoppinglist_manage
+      responses:
+        '204':
+          description: |
+            The resource has been successfully deleted.
+        '400':
+          $ref: '#/components/responses/trait_shopping_400'
+        '401':
+          $ref: '#/components/responses/trait_yaasAware_401'
+        '403':
+          $ref: '#/components/responses/trait_yaasAware_403'
+        '404':
+          $ref: '#/components/responses/trait_yaasAware_404'
+        '500':
+          $ref: '#/components/responses/trait_yaasAware_500'
+components:
+  schemas:
+    TimeProperties:
+      type: object
+      properties:
+        epochSecond:
+          type: number
+        nano:
+          type: number
+    shoppinglistItem:
+      title: ShoppinglistItem
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: string
+        quantity:
+          type: number
+        cuttingOption:
+          type: string
+        servicePackagingOption:
+          type: string
+        comment:
+          type: string
+        mixins:
+          type: object
+          additionalProperties: true
+      required:
+        - productId
+        - quantity
+    getShoppingLists:
+      type: array
+      items:
+        $ref: '#/components/schemas/getShoppingList'
+
+    getShoppingList:
+      type: object
+      properties:
+        customerId:
+          description: Unique identifier of customer
+          type: string
+        metadata:
+          deprecated: true
+          type: object
+          properties:
+            createdAt:
+              $ref: '#/components/schemas/TimeProperties'
+            modifiedAt:
+              $ref: '#/components/schemas/TimeProperties'
+            version:
+              type: number
+      additionalProperties:
+        type: object
+        properties:
+          name:
+            type: string
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/shoppinglistItem'
+          mixins:
+            type: object
+            additionalProperties: true
+            description: |
+              Map of custom shopping lists attributes.
+          metadata:
+            properties:
+              mixins:
+                type: object
+                additionalProperties: true
+                description: Mixins schemas
+              createdAt:
+                $ref: '#/components/schemas/TimeProperties'
+              modifiedAt:
+                $ref: '#/components/schemas/TimeProperties'
+              version:
+                type: number
+    ownShoppingListCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/shoppinglistItem'
+        mixins:
+          type: object
+          additionalProperties: true
+          description: |
+            Map of custom shopping lists attributes.
+        metadata:
+          properties:
+            mixins:
+              type: object
+              additionalProperties: true
+              description: Mixins schemas
+      required:
+        - name
+    ownShoppingListUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/ownShoppingListCreateRequest'
+      properties:
+        metadata:
+          properties:
+            mixins:
+              type: object
+              additionalProperties: true
+              description: Mixins schemas
+            version:
+              type: integer
+    employeeShoppingListCreateRequest:
+      allOf:
+        - $ref: '#/components/schemas/ownShoppingListCreateRequest'
+      properties:
+        customerId:
+          type: string
+          description: Unique identifier of customer
+        mixins:
+          type: object
+          additionalProperties: true
+          description: |
+            Map of custom shopping lists attributes.
+        metadata:
+          properties:
+            mixins:
+              type: object
+              additionalProperties: true
+              description: Mixins schemas
+  responses:
+    trait_shopping_400:
+      description: Request syntactically incorrect. Any details will be provided
+        within the response payload.
+      content:
+        application/json:
+          schema:
+            title: error
+            required:
+              - status
+              - type
+            type: object
+            properties:
+              status:
+                maximum: 599
+                minimum: 1E+2
+                type: integer
+                description: original HTTP error code, should be consistent with
+                  the response HTTP code
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                type: string
+                description: classification of the error type, lower case with
+                  underscore eg validation_failure
+              message:
+                type: string
+                description: descriptive error message for debugging
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and
+                  finding support
+                format: uri
+              details:
+                type: array
+                description: list of problems causing this error
+                items:
+                  title: errorDetail
+                  required:
+                    - type
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      description: a bean notation expression specifying the element
+                        in request data causing the error, eg product.variants[3].name,
+                        this can be empty if violation was not field specific
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      type: string
+                      description: classification of the error detail type, lower
+                        case with underscore eg missing_value, this value must
+                        be always interpreted in context of the general error
+                        type.
+                    message:
+                      type: string
+                      description: descriptive error detail message for debugging
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further
+                        and finding support for error detail
+                      format: uri
+                  description: schema for specific error cause
+            description: Schema for API specified errors.
+            example:
+              status: 400
+              message: There are validation problems, see details section for
+                more information
+              moreInfo: https://pattern.yaas.io/errortypes.html
+              type: validation_violation
+              details:
+                - field: tenant
+                  message: size must be between 1 and 36
+                  type: invalid_header
+    trait_yaasAware_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    trait_yaasAware_403:
+      description: |
+        Given authorization scopes are not sufficient and do not match required scopes.
+      content:
+        application/json:
+          schema:
+            title: error
+            required:
+              - status
+              - type
+            type: object
+            properties:
+              status:
+                maximum: 599
+                minimum: 1E+2
+                type: integer
+                description: original HTTP error code, should be consistent with
+                  the response HTTP code
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                type: string
+                description: classification of the error type, lower case with
+                  underscore eg validation_failure
+              message:
+                type: string
+                description: descriptive error message for debugging
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and
+                  finding support
+                format: uri
+              details:
+                type: array
+                description: list of problems causing this error
+                items:
+                  title: errorDetail
+                  required:
+                    - type
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      description: a bean notation expression specifying the element
+                        in request data causing the error, eg product.variants[3].name,
+                        this can be empty if violation was not field specific
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      type: string
+                      description: classification of the error detail type, lower
+                        case with underscore eg missing_value, this value must
+                        be always interpreted in context of the general error
+                        type.
+                    message:
+                      type: string
+                      description: descriptive error detail message for debugging
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further
+                        and finding support for error detail
+                      format: uri
+                  description: schema for specific error cause
+            description: Schema for API specified errors.
+            example:
+              status: 403
+              message: Given request does not have required scopes. It is not
+                authorized to perform this operation.
+              type: insufficient_permissions
+    trait_yaasAware_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            title: error
+            required:
+              - status
+              - type
+            type: object
+            properties:
+              status:
+                maximum: 599
+                minimum: 1E+2
+                type: integer
+                description: original HTTP error code, should be consistent with
+                  the response HTTP code
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                type: string
+                description: classification of the error type, lower case with
+                  underscore eg validation_failure
+              message:
+                type: string
+                description: descriptive error message for debugging
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and
+                  finding support
+                format: uri
+              details:
+                type: array
+                description: list of problems causing this error
+                items:
+                  title: errorDetail
+                  required:
+                    - type
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      description: a bean notation expression specifying the element
+                        in request data causing the error, eg product.variants[3].name,
+                        this can be empty if violation was not field specific
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      type: string
+                      description: classification of the error detail type, lower
+                        case with underscore eg missing_value, this value must
+                        be always interpreted in context of the general error
+                        type.
+                    message:
+                      type: string
+                      description: descriptive error detail message for debugging
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further
+                        and finding support for error detail
+                      format: uri
+                  description: schema for specific error cause
+            description: Schema for API specified errors.
+            example:
+              status: 404
+              message: The requested URI does not map to a single element resource.
+              moreInfo: https://pattern.yaas.io/errortypes.html
+              type: element_resource_non_existing
+    trait_yaasAware_409:
+      description: |
+        Creation failed because there was a conflict with another resource. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            title: error
+            required:
+              - status
+              - type
+            type: object
+            properties:
+              status:
+                maximum: 599
+                minimum: 1E+2
+                type: integer
+                description: original HTTP error code, should be consistent with
+                  the response HTTP code
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                type: string
+                description: classification of the error type, lower case with
+                  underscore eg validation_failure
+              message:
+                type: string
+                description: descriptive error message for debugging
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and
+                  finding support
+                format: uri
+              details:
+                type: array
+                description: list of problems causing this error
+                items:
+                  title: errorDetail
+                  required:
+                    - type
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      description: a bean notation expression specifying the element
+                        in request data causing the error, eg product.variants[3].name,
+                        this can be empty if violation was not field specific
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      type: string
+                      description: classification of the error detail type, lower
+                        case with underscore eg missing_value, this value must
+                        be always interpreted in context of the general error
+                        type.
+                    message:
+                      type: string
+                      description: descriptive error detail message for debugging
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further
+                        and finding support for error detail
+                      format: uri
+                  description: schema for specific error cause
+            description: Schema for API specified errors.
+            example:
+              status: 409
+              message: The requested resource could not be created due to server-side
+                validation.
+              moreInfo: https://pattern.yaas.io/errortypes.html
+              type: conflict_resource
+    trait_yaasAware_500:
+      description: |
+        Some server side error occurred.
+      content:
+        application/json:
+          schema:
+            title: error
+            required:
+              - status
+              - type
+            type: object
+            properties:
+              status:
+                maximum: 599
+                minimum: 1E+2
+                type: integer
+                description: original HTTP error code, should be consistent with
+                  the response HTTP code
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                type: string
+                description: classification of the error type, lower case with
+                  underscore eg validation_failure
+              message:
+                type: string
+                description: descriptive error message for debugging
+              moreInfo:
+                type: string
+                description: link to documentation to investigate further and
+                  finding support
+                format: uri
+              details:
+                type: array
+                description: list of problems causing this error
+                items:
+                  title: errorDetail
+                  required:
+                    - type
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                      description: a bean notation expression specifying the element
+                        in request data causing the error, eg product.variants[3].name,
+                        this can be empty if violation was not field specific
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      type: string
+                      description: classification of the error detail type, lower
+                        case with underscore eg missing_value, this value must
+                        be always interpreted in context of the general error
+                        type.
+                    message:
+                      type: string
+                      description: descriptive error detail message for debugging
+                    moreInfo:
+                      type: string
+                      description: link to documentation to investigate further
+                        and finding support for error detail
+                      format: uri
+                  description: schema for specific error cause
+            description: Schema for API specified errors.
+            example:
+              status: 500
+              message: Something went wrong while processing the request. Please
+                contact the administrator.
+              moreInfo: https://pattern.yaas.io/errortypes.html
+              type: internal_service_error
+  securitySchemes:
+    CustomerAccessToken:
+      type: http
+      scheme: bearer
+      description: 'To generate a customer access token, go to the [Logging in a customer](https://developer.emporix.io/api-references-1/readme/api-reference-11/authentication-and-authorization#post-customer-tenant-login) endpoint.'
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            shoppinglist.shoppinglist_read: Needed to retrieve shopping lists.
+            shoppinglist.shoppinglist_manage: Needed to manage shopping lists.
+            shoppinglist.shoppinglist_delete: Needed to delete shopping lists.
+security:
+  - CustomerAccessToken: [ ]
+  - OAuth2: [ ]

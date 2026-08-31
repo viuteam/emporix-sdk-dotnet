@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Viu.Emporix.SpecSync</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    A developer-machine tool that never ships — the trimming and AOT requirements
+    from Directory.Build.props do not apply here. Warnings-as-errors stays.
+  -->
+  <PropertyGroup>
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>false</EnableAotAnalyzer>
+    <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Viu.Emporix.Tests" />
+  </ItemGroup>
+
+</Project>

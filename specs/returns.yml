@@ -1,0 +1,1486 @@
+openapi: 3.0.0
+info:
+  title: Returns Service
+  version: ''
+  description: The Emporix API Returns Service allows you to manage your returns.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Returns
+paths:
+  '/return/{tenant}/returns':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Creating a single return
+      responses:
+        '201':
+          description: |
+            The resource has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/returnId'
+              examples:
+                returnId:
+                  value:
+                    id: 88b1779c-a8bf-4b94-b1be-b0edd149bba5
+        '400':
+          $ref: '#/components/responses/returns_post_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/returns_post_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |
+        Creates a single return document with given information.
+        If a return is created by a customer directly, then the `returns.returns_manage_own` scope is required.
+        If a return is created by a tenant employee on behalf of a customer, then the `returns.returns_manage` scope is required.
+
+        **Note**: Depending on a case, a different set of fields is required and allowed.
+
+      operationId: POST-returns-create-return
+      requestBody:
+        $ref: '#/components/requestBodies/returnCreateBody'
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - $ref: '#/components/parameters/saasToken'
+      security:
+        - OAuth2:
+            - returns.returns_manage
+            - returns.returns_manage_own
+      tags:
+        - Returns
+    get:
+      summary: Retrieving a list of returns
+      operationId: GET-returns-list-returns
+      responses:
+        '200':
+          $ref: '#/components/responses/listOfReturnsResponse_200'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+      tags:
+        - Returns
+      description: |
+        Retrieves a list of return documents.
+      parameters:
+        - $ref: '#/components/parameters/x_total_count_header'
+        - $ref: '#/components/parameters/page_size_query_param'
+        - $ref: '#/components/parameters/page_number_query_param'
+        - $ref: '#/components/parameters/sort_query_param'
+        - $ref: '#/components/parameters/q_query_param'
+      security:
+        - OAuth2:
+            - returns.returns_read
+            - returns.returns_read_own
+  '/return/{tenant}/returns/{returnId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/returnId'
+    get:
+      summary: Retrieving a single return
+      tags:
+        - Returns
+      operationId: GET-returns-retrieve-return
+      description: |
+        Retrieves a single return document.
+      responses:
+        '200':
+          $ref: '#/components/responses/singleReturnResponse_200'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/returns_response_NotFound_404'
+      security:
+        - OAuth2:
+            - returns.returns_read
+            - returns.returns_read_own
+    put:
+      summary: Updating a single return
+      operationId: PUT-returns-update-return
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/returns_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/returns_response_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Returns
+      description: |
+        Updates a single return document with given information.
+        If a return is updated by a customer directly, then the `returns.returns_manage_own` scope is required.
+        If a return is updated by a tenant employee on behalf of a customer, then the `returns.returns_manage` scope is required.
+
+        **Note**: Depending on a case, a different set of fields is required and allowed.
+
+        A customer can change a return only when the return approval status is `PENDING`.
+      requestBody:
+        $ref: '#/components/requestBodies/returnUpdateBody'
+      security:
+        - OAuth2:
+            - returns.returns_manage
+            - returns.returns_manage_own
+      parameters:
+        - $ref: '#/components/parameters/saasToken'
+    delete:
+      summary: Deleting a single return
+      operationId: DELETE-returns-remove-return
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/returns_response_DeleteBadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Returns
+      description: |-
+        Deletes a single return document.
+        The return can be deleted completely only by an employee, that is a user who has the `returns.returns_manage` scope granted. A customer, who has the `returns.returns_manage_own` scope granted, can delete a return only if the return status is `PENDING`. The return status is changed to `CLOSED` during the delete operation.
+      security:
+        - OAuth2:
+            - returns.returns_manage
+            - returns.returns_manage_own
+      parameters:
+        - $ref: '#/components/parameters/saasToken'
+    patch:
+      summary: Partially updating a single return
+      operationId: PATCH-returns-update-return
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/returns_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/returns_response_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Returns
+      description: |
+        Parial update of a single return document with given information.
+        If a return is updated by a customer directly, then the `returns.returns_manage_own` and `returns.returns_read_own` scopes are required.
+        If a return is updated by a tenant employee on behalf of a customer, then the `returns.returns_manage` and `returns.returns_read` scopes are required.
+
+        **Note**: Depending on a case, a different set of fields is allowed.
+
+        A customer can change a return only when the return approval status is `PENDING`.
+
+        The patch request consists of set of operation, that should be defined according to [RFC-6902](https://datatracker.ietf.org/doc/html/rfc6902) standard
+      security:
+        - OAuth2:
+            - returns.returns_manage
+            - returns.returns_manage_own
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/patchOperation'
+            examples:
+              Update a requestor ID:
+                value:
+                  - op: replace
+                    path: /requestor/customerId
+                    value: changedCustomerId
+              Update a mixins value:
+                value:
+                  - op: add
+                    path: /mixins/customAttributes/prop1
+                    value: '11'
+                  - op: replace
+                    path: /mixins/customAttributes/prop2
+                    value:
+                      foo: bar
+                  - op: add
+                    path: /metadata/mixins
+                    value:
+                      customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+              Update a status:
+                value:
+                  - op: replace
+                    path: /approvalStatus
+                    value: APPROVED
+              Update a reason:
+                value:
+                  - op: replace
+                    path: /reason
+                    value:
+                      code: '007'
+                      details: it's broken
+      parameters:
+        - $ref: '#/components/parameters/saasToken'
+components:
+  responses:
+    returns_response_NotFound_404:
+      description: Not found response due to not-existing entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/returnErrorMessage'
+          examples:
+            Not found:
+              value:
+                returnId: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                code: 404
+                status: Not Found
+                message: The return with id 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e has not been found.
+    returns_response_BadRequest_400:
+      description: Bad request due to validation, incorrect parameters, etc.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+    common_response_Unauthorized_401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    common_response_Forbidden_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    common_response_InternalServerError_500:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Internal Server Error:
+              value:
+                code: 500
+                status: Internal Server Error
+                message: Problem encountered while trying to connect to the database.
+    returns_post_response_BadRequest_400:
+      description: Resources cannot be created due to an error.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/coreErrorMessage'
+    returns_post_response_Conflict_409:
+      description: |
+        Return with given code already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+    returns_response_DeleteBadRequest_400:
+      description: Bad request - a return cannot be deleted because it has an inappropriate status.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Bad Request - A return cannot be deleted.:
+              value:
+                code: 400
+                status: Bad Request
+                message: Deleting this return is not allowed since it doesn't match all preconditions.
+    singleReturnResponse_200:
+      description: ''
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/fullCustomerReturn'
+              - $ref: '#/components/schemas/fullEmployeeReturn'
+          examples:
+            A return retrieved by a customer:
+              value:
+                id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                approvalStatus: PENDING
+                received: false
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        name: T-shirt
+                        quantity: 2
+                        reason:
+                          code: '001'
+                          details: It's too small
+                        unitPrice:
+                          value: 1.99
+                          currency: USD
+                        total:
+                          value: 3.98
+                          currency: USD
+                        calculatedUnitPrice:
+                          netValue: 1.68
+                          grossValue: 1.99
+                          taxValue: 0.31
+                          taxCode: STANDARD
+                          taxRate: 19.0
+                        calculatedPrice:
+                          finalPrice:
+                            netValue: 3.36
+                            grossValue: 3.98
+                            taxValue: 0.62
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                      - id: '32102'
+                        name: Jacket
+                        quantity: 15
+                        unitPrice:
+                          value: 1
+                          currency: USD
+                        total:
+                          value: 15
+                          currency: USD
+                        calculatedUnitPrice:
+                          netValue: 0.84
+                          grossValue: 1.0
+                          taxValue: 0.16
+                          taxCode: STANDARD
+                          taxRate: 19.0
+                        calculatedPrice:
+                          finalPrice:
+                            netValue: 12.6
+                            grossValue: 15.0
+                            taxValue: 2.4
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                total:
+                  value: 18.98
+                  currency: USD
+                calculatedPrice:
+                  finalPrice:
+                    netValue: 15.96
+                    grossValue: 18.98
+                    taxValue: 3.02
+                    taxCode: STANDARD
+                    taxRate: 19.0
+                expiryDate: '2023-04-31T13:18:02.379Z'
+                metadata:
+                  createdAt: '2023-04-31T13:18:02.379Z'
+                  modifiedAt: '2023-04-31T13:18:02.379Z'
+                  version: 1
+            A return retrieved by an employee:
+              value:
+                id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                approvalStatus: PENDING
+                received: false
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        name: T-shirt
+                        quantity: 2
+                        reason:
+                          code: '001'
+                          details: It's too small
+                        unitPrice:
+                          value: 1.99
+                          currency: USD
+                        total:
+                          value: 3.98
+                          currency: USD
+                        calculatedUnitPrice:
+                          netValue: 1.68
+                          grossValue: 1.99
+                          taxValue: 0.31
+                          taxCode: STANDARD
+                          taxRate: 19.0
+                        calculatedPrice:
+                          finalPrice:
+                            netValue: 3.36
+                            grossValue: 3.98
+                            taxValue: 0.62
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                      - id: '32102'
+                        name: Jacket
+                        quantity: 15
+                        unitPrice:
+                          value: 1
+                          currency: USD
+                        total:
+                          value: 15
+                          currency: USD
+                        calculatedUnitPrice:
+                          netValue: 0.84
+                          grossValue: 1.0
+                          taxValue: 0.16
+                          taxCode: STANDARD
+                          taxRate: 19.0
+                        calculatedPrice:
+                          finalPrice:
+                            netValue: 12.6
+                            grossValue: 15.0
+                            taxValue: 2.4
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                requestor:
+                  firstName: John
+                  lastName: Dee
+                  email: j.dee@emporix.com
+                submitter:
+                  userType: USER
+                  firstName: John
+                  lastName: Dee
+                  email: j.dee@emporix.com
+                approver:
+                  type: GROUP
+                  id: 4fe59978-c523-4792-9df7-f0b0c123f081
+                total:
+                  value: 18.98
+                  currency: USD
+                calculatedPrice:
+                  finalPrice:
+                    netValue: 15.96
+                    grossValue: 18.98
+                    taxValue: 3.02
+                    taxCode: STANDARD
+                    taxRate: 19.0
+                expiryDate: '2023-04-31T13:18:02.379Z'
+                metadata:
+                  createdAt: '2023-04-31T13:18:02.379Z'
+                  modifiedAt: '2023-04-31T13:18:02.379Z'
+                  version: 1
+    listOfReturnsResponse_200:
+      description: Example response
+      headers:
+        X-Total-Count:
+          description: |-
+            'The total number of entities in the database matching the specified query criteria.
+            Returned if request X-Total-Count header has been set to true.'
+          schema:
+            type: number
+            example: 100
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/fullCustomerReturn'
+              - $ref: '#/components/schemas/fullEmployeeReturn'
+          examples:
+            Returns retrieved by a customer:
+              value:
+                - id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                  approvalStatus: PENDING
+                  received: false
+                  orders:
+                    - id: B1LMYY52
+                      items:
+                        - id: '32090'
+                          name: T-shirt
+                          quantity: 2
+                          reason:
+                            code: '001'
+                            details: It's too small
+                          unitPrice:
+                            value: 1.99
+                            currency: USD
+                          total:
+                            value: 3.98
+                            currency: USD
+                          calculatedUnitPrice:
+                            netValue: 1.68
+                            grossValue: 1.99
+                            taxValue: 0.31
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                          calculatedPrice:
+                            finalPrice:
+                              netValue: 3.36
+                              grossValue: 3.98
+                              taxValue: 0.62
+                              taxCode: STANDARD
+                              taxRate: 19.0
+                        - id: '32102'
+                          name: Jacket
+                          quantity: 15
+                          unitPrice:
+                            value: 1
+                            currency: USD
+                          total:
+                            value: 15
+                            currency: USD
+                          calculatedUnitPrice:
+                            netValue: 0.84
+                            grossValue: 1.0
+                            taxValue: 0.16
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                          calculatedPrice:
+                            finalPrice:
+                              netValue: 12.6
+                              grossValue: 15.0
+                              taxValue: 2.4
+                              taxCode: STANDARD
+                              taxRate: 19.0
+                  reason:
+                    code: '001'
+                    details: The items do not work.
+                  total:
+                    value: 18.98
+                    currency: USD
+                  calculatedPrice:
+                    finalPrice:
+                      netValue: 15.96
+                      grossValue: 18.98
+                      taxValue: 3.02
+                      taxCode: STANDARD
+                      taxRate: 19.0
+                  expiryDate: '2023-04-31T13:18:02.379Z'
+                  metadata:
+                    createdAt: '2023-04-31T13:18:02.379Z'
+                    modifiedAt: '2023-04-31T13:18:02.379Z'
+                    version: 1
+            Returns retrieved by an employee:
+              value:
+                - id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                  approvalStatus: PENDING
+                  received: false
+                  orders:
+                    - id: B1LMYY52
+                      items:
+                        - id: '32090'
+                          name: T-shirt
+                          quantity: 2
+                          reason:
+                            code: '001'
+                            details: It's too small
+                          unitPrice:
+                            value: 1.99
+                            currency: USD
+                          total:
+                            value: 3.98
+                            currency: USD
+                          calculatedUnitPrice:
+                            netValue: 1.68
+                            grossValue: 1.99
+                            taxValue: 0.31
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                          calculatedPrice:
+                            finalPrice:
+                              netValue: 3.36
+                              grossValue: 3.98
+                              taxValue: 0.62
+                              taxCode: STANDARD
+                              taxRate: 19.0
+                        - id: '32102'
+                          name: Jacket
+                          quantity: 15
+                          unitPrice:
+                            value: 1
+                            currency: USD
+                          total:
+                            value: 15
+                            currency: USD
+                          calculatedUnitPrice:
+                            netValue: 0.84
+                            grossValue: 1.0
+                            taxValue: 0.16
+                            taxCode: STANDARD
+                            taxRate: 19.0
+                          calculatedPrice:
+                            finalPrice:
+                              netValue: 12.6
+                              grossValue: 15.0
+                              taxValue: 2.4
+                              taxCode: STANDARD
+                              taxRate: 19.0
+                  reason:
+                    code: '001'
+                    details: The items do not work.
+                  requestor:
+                    customerId: 4fe59978-c523-4792-9df7-f0b0c123f034
+                    firstName: John
+                    lastName: Dee
+                    email: j.dee@emporix.com
+                  submitter:
+                    userType: USER
+                    firstName: John
+                    lastName: Dee
+                    email: j.dee@emporix.com
+                  approver:
+                    type: GROUP
+                    id: 4fe59978-c523-4792-9df7-f0b0c123f081
+                  total:
+                    value: 18.98
+                    currency: USD
+                  calculatedPrice:
+                    finalPrice:
+                      netValue: 15.96
+                      grossValue: 18.98
+                      taxValue: 3.02
+                      taxCode: STANDARD
+                      taxRate: 19.0
+                  expiryDate: '2023-04-31T13:18:02.379Z'
+                  metadata:
+                    createdAt: '2023-04-31T13:18:02.379Z'
+                    modifiedAt: '2023-04-31T13:18:02.379Z'
+                    version: 1
+  schemas:
+    coreErrorMessage:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+        status:
+          type: string
+          description: HTTP Status.
+        message:
+          type: string
+          description: Error message.
+        details:
+          type: array
+          description: Error message details.
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Detailed message of the error.
+    returnErrorMessage:
+      allOf:
+        - properties:
+            returnId:
+              type: string
+              description: Unique identifier of a return.
+        - $ref: '#/components/schemas/coreErrorMessage'
+    calculatedPrice:
+      type: object
+      description: Price calculation derived from the order entry `calculatedPrice.finalPrice`. The `finalPrice` reflects already applied discounts and fees.
+      properties:
+        netValue:
+          type: number
+          format: double
+          description: Net value of the price.
+        grossValue:
+          type: number
+          format: double
+          description: Gross value of the price.
+        taxValue:
+          type: number
+          format: double
+          description: Tax value of the price.
+        taxCode:
+          type: string
+          description: Tax code applied to the price. Set to `null` when items with different tax codes are aggregated.
+        taxRate:
+          type: number
+          format: double
+          description: Tax rate applied to the price. Set to `null` when items with different tax rates are aggregated.
+    calculatedFinalPrice:
+      type: object
+      description: Wrapper for the calculated price containing the final price after discounts and fees.
+      properties:
+        finalPrice:
+          $ref: '#/components/schemas/calculatedPrice'
+    metadataCore:
+      title: metadataCore
+      description: 'Core metadata fields shared across multiple objects.'
+      type: object
+      properties:
+        mixins:
+          type: object
+          description: Links to the mixin schemas.
+          additionalProperties:
+            type: string
+          example:
+            productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+    metadataUpdate:
+      title: metadataUpdate
+      description: 'Metadata fields required when updating an existing object.'
+      allOf:
+        - $ref: '#/components/schemas/metadataCore'
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: number
+          description: Version of the object. The version is required during the update operation because of the optimistic locking mechanism.
+          example: 1
+          minimum: 1
+    metadataResponse:
+      title: metadataResponse
+      description: |
+        Metadata fields returned by the API.  
+        Extends `metadataUpdate` with timestamps indicating when the object
+        was created and last modified.
+      allOf:
+        - $ref: '#/components/schemas/metadataUpdate'
+        - type: object
+          properties:
+            createdAt:
+              description: 'Date and time when the object was created. The value is returned as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              type: string
+            modifiedAt:
+              description: 'Date and time when the object was last modified. The value is returned as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              type: string
+    basicReturn:
+      title: basicReturn
+      description: Base schema for a return.
+      type: object
+      properties:
+        orders:
+          type: array
+          description: A list of orders that contain items to be returned. All the orders must have the same currency.
+          items:
+            $ref: '#/components/schemas/order'
+        reason:
+          type: object
+          description: 'A reason why the return is created. One of the values needs to be provided: `code` or `details`.'
+          properties:
+            code:
+              type: string
+              description: Code of a particular reason for return. A number which represents a reason why an order has been (fully or partially) returned.
+            details:
+              type: string
+              description: Details why an order has been (fully or partially) returned.
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/metadataCore'
+      required:
+        - orders
+        - reason
+    basicCustomerReturn:
+      title: A return request created by a customer.
+      description: Base schema for a return requested BY A CUSTOMER.
+      $ref: '#/components/schemas/basicReturn'
+    basicEmployeeReturn:
+      title: A return request created on behalf of a customer.
+      description: Base schema for returns created by an employee FOR A REGISTERED CUSTOMER.
+      allOf:
+        - $ref: '#/components/schemas/basicEmployeeReturnBase'
+        - type: object
+          properties:
+            requestor:
+              type: object
+              description: Indicates who requested the return. The field can be set and updated only by an employee, that is a person who has a `returns.returns_manage` scope granted. For a customer, who has the `returns.returns_manage_own` scope granted, the value is populated automatically based on an auth token.
+              properties:
+                customerId:
+                  type: string
+                  description: Identifier of a customer to whom the order and return belong.
+              required:
+                - customerId
+    employeeReturnForAnonymousOrder:
+      title: A return request created on behalf of a customer FOR AN ANONYMOUS ORDER.
+      description: Base schema for returns created by an employee for an ANONYMOUS ORDER.
+      allOf:
+        - $ref: '#/components/schemas/basicEmployeeReturnBase'
+        - type: object
+          properties:
+            requestor:
+              type: object
+              description: Indicates who requested the return. The field can be set and updated only by an employee, that is a person who has a `returns.returns_manage` scope granted. For a customer, who has the `returns.returns_manage_own` scope granted, the value is populated automatically based on an auth token.
+              required:
+                - anonymous
+                - email
+              properties:
+                anonymous:
+                  type: boolean
+                  description: Indicates that the request is related with anonymous orders
+                email:
+                  type: string
+                  description: Email which has been used for anonymous order
+                customerId:
+                  type: string
+                  description: Identifier of a customer to whom the order and return belong.
+    basicEmployeeReturnBase:
+      title: Base schema for returns created by an employee.
+      description: Common structure for returns created by an employee on behalf of a customer.
+      allOf:
+        - $ref: '#/components/schemas/basicReturn'
+        - type: object
+          properties:
+            requestor:
+              type: object
+              description: |
+                Indicates who requested the return. The field can be set and updated only by an employee,
+                that is a person who has the `returns.returns_manage` scope granted.
+                For a customer with the `returns.returns_manage_own` scope, the value is populated
+                automatically based on an auth token.
+            submitter:
+              type: object
+              description: |
+                Indicates who submitted the return. The return can be submitted by an employee
+                on behalf of a customer. In that case, the submitter and requestor are different entities.
+                This field can be set and updated only by an employee with the
+                `returns.returns_manage` scope granted.
+              required:
+                - firstName
+                - lastName
+                - email
+              properties:
+                firstName:
+                  type: string
+                  description: Requestor first name.
+                lastName:
+                  type: string
+                  description: Requestor last name.
+                email:
+                  type: string
+                  description: Requestor email address.
+            approver:
+              type: object
+              description: |
+                Information about the approver of the return. The return can be approved
+                by a particular user or a group of users. The field can be set and updated
+                only by an employee with the `returns.returns_manage` scope granted.
+
+                The provided value is validated against the `iam-service`:
+                * If `type` is equal to `USER`, then the provided `id` must be a valid employee identifier
+                * If `type` is equal to `GROUP`, then the provided `id` must be a valid employee group identifier
+              properties:
+                type:
+                  type: string
+                  description: 'Indicates whether the return must be approved by a user or a group. Possible values: `USER` or `GROUP`.'
+                  enum:
+                    - USER
+                    - GROUP
+                id:
+                  type: string
+                  description: 'Identifier of a user or a user group depending on the `type` value.'
+            expiryDate:
+              type: string
+              description: |
+                'The date when a return expires. The field can be set and updated only by an employee
+                with the `returns.returns_manage` scope granted.
+
+                If the value is not provided, the default value is fetched from the
+                `configuration-service` under the `return.defaultExpiryDate` key.
+
+                If the configuration does not exist, a fallback of 30 days is applied.
+          required:
+            - requestor
+            - submitter
+    updateCustomerReturn:
+      title: A return updated by a customer
+      description: Base schema for a return requested by a customer.
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of a return.
+        - $ref: '#/components/schemas/basicReturn'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/metadataUpdate'
+          required:
+            - metadata
+    updateEmployeeReturn:
+      title: A return updated on behalf of a customer.
+      description: Base schema for a return requested by an employee.
+      allOf:
+        - $ref: '#/components/schemas/updateCustomerReturn'
+        - type: object
+          properties:
+            approvalStatus:
+              type: string
+              enum:
+                - PENDING
+                - APPROVED
+                - REJECTED
+                - CLOSED
+              description: 'Indicates the current status of the order. When an order is being created, its status is automatically set to PENDING. An approver can change the status to `APPROVED` or `REJECTED`. A customer can change the status to `CLOSED`.'
+            received:
+              type: boolean
+              description: Indicates whether the items from the return have been received.
+            requestor:
+              type: object
+              description: 'Indicates who requested the return. The field can be updated only by an employee, that is a person who has the `returns.returns_manage` scope granted.'
+              required:
+                - customerId
+              properties:
+                customerId:
+                  type: string
+                  description: Identifier of a customer to whom the order and return belong.
+            submitter:
+              type: object
+              description: 'Indicates who submitted the return. The return can be submitted by an employee on behalf of a customer. In that case, the submitter and requestor data is different. The field can be set and updated only by an employee, that is a person who has the `returns.returns_manage` scope granted. For a customer, who has the `returns.returns_manage_own` scope granted, the value is populated automatically based on an auth token.'
+              required:
+                - firstName
+                - lastName
+                - email
+              properties:
+                firstName:
+                  type: string
+                  description: Requestor first name.
+                lastName:
+                  type: string
+                  description: Requestor last name.
+                email:
+                  type: string
+                  description: Requestor email address.
+            approver:
+              type: object
+              description: |-
+                Information about the approver of the return. The return can be approved by a particular user or a group of users. The field can be set and updated only by an employee, that is a person who has the `returns.returns_manage` scope granted. The provided value is validated agains the `iam-service`:
+                * If `type` is equal to `USER`, then the provided `id` must be a valid employee identifier
+                * If `type` is equal to `GROUP`, then the provided `id` must be a valid employee group identifier
+              properties:
+                type:
+                  type: string
+                  description: 'Indicates whether the return needs to be approved by a particular user or a user group. Possible values: `USER` or `GROUP`.'
+                  enum:
+                    - USER
+                    - GROUP
+                id:
+                  type: string
+                  description: Identifier of a user or a user group, depending on the `type` value.
+            expiryDate:
+              type: string
+              description: The date when the return expires. The field can be set and updated only by an employee, that is a person who has the `returns.returns_manage` scope granted. If the value is not provided, then the default value is fetched from the `configuration-service` under the `return.defaultExpiryDate` key. The value should be provided in the number format. The value specifies for how many days the return will be valid. If the configuration does not exist, then a `30` days offset is taken as a fallback.
+          required:
+            - approvalStatus
+            - requestor
+            - submitter
+    fullCustomerReturn:
+      title: A customer return object.
+      description: Schema for retrieving returns by a customer.
+      allOf:
+        - $ref: '#/components/schemas/basicCustomerReturn'
+        - $ref: '#/components/schemas/assistedBuying'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of a return, represented as a UUID string.
+            metadata:
+              $ref: '#/components/schemas/metadataResponse'
+            received:
+              type: boolean
+              description: Indicates whether the items from the return have been received.
+            approvalStatus:
+              type: string
+              enum:
+                - APPROVED
+                - PENDING
+                - REJECTED
+                - CLOSED
+            expiryDate:
+              type: string
+              description: 'A date when the return will expire. The value is returned as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/fullReturnOrder'
+            total:
+              type: object
+              properties:
+                value:
+                  type: number
+                currency:
+                  type: string
+            calculatedPrice:
+              $ref: '#/components/schemas/calculatedFinalPrice'
+              description: 'Aggregated calculated price across all returned items. Derived from each order entry `calculatedPrice.finalPrice`. Null if no order entries have calculated prices.'
+    fullEmployeeReturn:
+      title: A return object for an employee
+      description: Schema for retrieving returns by an employee.
+      allOf:
+        - $ref: '#/components/schemas/fullCustomerReturn'
+        - type: object
+          properties:
+            requestor:
+              type: object
+              description: 'Indicates who requested the return. The field is visible only to an employee, that is a person who has the returns.returns_read scope.'
+              properties:
+                customerId:
+                  type: string
+                  description: Identifier of a customer to whom the order and return belong.
+                firstName:
+                  type: string
+                  description: Requestor first name.
+                lastName:
+                  type: string
+                  description: |
+                    Requestor's last name.
+                email:
+                  type: string
+                  description: Requestor email.
+            submitter:
+              type: object
+              description: 'Indicates who submitted the return. The return can be submitted by an employee on behalf of a customer. In that case, the submitter and requestor data is different. The field can be retrieved only by an employee, that is a person who has the `returns.returns_manage scope` granted.'
+              properties:
+                userType:
+                  type: string
+                  description: Indicates who sent the return request. Information whether the request has been sent by a customer or by someone else on behalf of a customer.
+                firstName:
+                  type: string
+                  description: Submitter first name.
+                lastName:
+                  type: string
+                  description: Submitter last name.
+                email:
+                  type: string
+                  description: Submitter email name.
+            approver:
+              type: object
+              description: 'Information about the approver of the return. The return can be approved by a particular user or a group of users. The field can be retrieved only by an employee, that is a person who has the `returns.returns_read` scope granted.'
+              properties:
+                type:
+                  type: string
+                  description: Indicates whether the return needs to be approved by a particular user or user group.
+                  enum:
+                    - USER
+                    - GROUP
+                id:
+                  type: string
+                  description: Identifier of a user or a user group, depending on the `type` value.
+    fullReturnOrder:
+      allOf:
+        - $ref: '#/components/schemas/order'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/fullReturnItem'
+    fullReturnItem:
+      allOf:
+        - $ref: '#/components/schemas/orderItem'
+        - type: object
+          description: Detailed information about a returned item within an order.
+          properties:
+            name:
+              type: string
+              description: Name of a product.
+            unitPrice:
+              type: object
+              description: The value represents a price (value and currency) of a single unit of the product.
+              properties:
+                value:
+                  type: number
+                  description: The value represents a price value of a single unit of the product.
+                currency:
+                  type: string
+                  description: The value represents the currency associated with the price. The currency is compliant with the ISO-4217 standard.
+            total:
+              type: object
+              description: The value represents the total price (value and currency) of all returned products related to the order.
+              properties:
+                value:
+                  type: number
+                  description: The value represents the total price value of all returned products.
+                currency:
+                  type: string
+                  description: The value represents the currency associated with the price. The currency is compliant with the ISO-4217 standard.
+            calculatedUnitPrice:
+              allOf:
+                - $ref: '#/components/schemas/calculatedPrice'
+              description: 'Unit price derived from the order entry `calculatedPrice.finalPrice` divided by the order entry amount. Includes discounts and fees. Present only if the order entry has a valid `calculatedPrice.finalPrice`.'
+            calculatedPrice:
+              allOf:
+                - $ref: '#/components/schemas/calculatedFinalPrice'
+              description: 'Total calculated price for the returned quantity of this item. Computed as `calculatedUnitPrice` multiplied by the returned quantity. Present only if the order entry has a valid `calculatedPrice.finalPrice`.'
+    order:
+      type: object
+      description: 'Represents the order which is being (fully or partially) returned.'
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an order.
+        items:
+          type: array
+          description: 'Represents a list of items included in the order. In the `order` entity, the field is called `entries`.'
+          items:
+            $ref: '#/components/schemas/orderItem'
+      required:
+        - id
+        - items
+    orderItem:
+      type: object
+      description: Represents an item included in the order.
+      properties:
+        id:
+          type: string
+          description: 'Unique identifier of an item. In the order entity, the field is called `order.entries[].id`.'
+        quantity:
+          type: integer
+          description: 'Quantity of the items in the order. In the order entity, the field is called `order.entries[].amount`.'
+        reason:
+          type: object
+          description: A reason why the item needs to be returned.
+          properties:
+            code:
+              type: string
+              description: Code representing the reason for return.
+            details:
+              type: string
+              description: Details why the item is being returned.
+      required:
+        - id
+        - quantity
+    returnId:
+      title: returnId
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the created return.
+    patchOperation:
+      title: patchRequest
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+            - add
+            - remove
+            - replace
+          description: 'Indicates an operation which should be done on a return. Available operations: `add` `remove` and `replace`'
+        path:
+          type: string
+          description: 'Indicates a path for which the value should be applied. For example: `/mixins/additionalAttributes/externalId`, `/approvalStatus`, `/requestor/customerId`'
+        value:
+          oneOf:
+            - type: object
+            - type: string
+          description: Indicates a value that should be changed or added. The value can be of a primitive type, like string, number, boolean or it can be an object or an array.
+      required:
+        - op
+        - path
+    assistedBuyingEntry:
+      title: AssistedBuyingEntry
+      type: object
+      properties:
+        employeeId:
+          type: string
+          description: Identifier of an employee who performed an action on behalf of a customer.
+        operation:
+          type: string
+          description: 'Indicates an operation type done by an employee on behalf of a customer. Available options: `CREATE` and `UPDATE_STATUS`.'
+          enum:
+            - CREATE
+            - UPDATE_STATUS
+        timestamp:
+          type: string
+          description: 'Indicates a timestamp when an operation was performed.'
+    assistedBuying:
+      title: assistedBuying
+      type: object
+      properties:
+        entries:
+          type: array
+          description: 'List of operations done by an employee on behalf of a customer.'
+          items:
+            $ref: '#/components/schemas/assistedBuyingEntry'
+      description: 'The field is populated only if an assisted buying operation was performed. The field is read-only. There is no possibility to update it by PUT/PATCH operation.'
+  requestBodies:
+    returnCreateBody:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/basicCustomerReturn'
+              - $ref: '#/components/schemas/basicEmployeeReturn'
+              - $ref: '#/components/schemas/employeeReturnForAnonymousOrder'
+          examples:
+            A return requested by a customer:
+              value:
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        quantity: 2
+                        reason:
+                          code: '001'
+                      - id: '32102'
+                        quantity: 15
+                        reason:
+                          details: It's too small.
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                mixins:
+                  customAttributes:
+                    attr1: value1
+                metadata:
+                  mixins:
+                    customAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+            A return requested on behalf of a customer:
+              value:
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        quantity: 2
+                        reason:
+                          code: '001'
+                      - id: '32102'
+                        quantity: 15
+                        reason:
+                          code: '002'
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                requestor:
+                  customerId: 4fe59978-c523-4792-9df7-f0b0c123f031
+                submitter:
+                  userType: USER
+                  firstName: John
+                  lastName: Dee
+                  email: j.dee@emporix.com
+                approver:
+                  type: GROUP
+                  id: 4fe59978-c523-4792-9df7-f0b0c123f081
+                expiryDate: '2023-04-31T13:18:02.379Z'
+                mixins:
+                  customAttributes:
+                    attr1: value1
+            A return requested on behalf of a customer for anonymous order:
+              value:
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        quantity: 2
+                        reason:
+                          code: '001'
+                      - id: '32102'
+                        quantity: 15
+                        reason:
+                          code: '002'
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                requestor:
+                  email: customerEmail@emporix.com
+                  anonymous: true
+                submitter:
+                  userType: USER
+                  firstName: John
+                  lastName: Dee
+                  email: j.dee@emporix.com
+                approver:
+                  type: GROUP
+                  id: 4fe59978-c523-4792-9df7-f0b0c123f081
+                expiryDate: '2023-04-31T13:18:02.379Z'
+                mixins:
+                  customAttributes:
+                    attr1: value1
+    returnUpdateBody:
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/updateCustomerReturn'
+              - $ref: '#/components/schemas/updateEmployeeReturn'
+          examples:
+            A return being updated by a customer:
+              value:
+                id: 6369140c5c6de75d9e84c97f
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        quantity: 2
+                        reason:
+                          code: '001'
+                      - id: '32102'
+                        quantity: 15
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                mixins:
+                  customAttributes:
+                    attr1: value1
+                metadata:
+                  version: 1
+            A return being updated on behalf of a customer:
+              value:
+                id: 6369140c5c6de75d9e84c97f
+                orders:
+                  - id: B1LMYY52
+                    items:
+                      - id: '32090'
+                        quantity: 2
+                      - id: '32102'
+                        quantity: 15
+                reason:
+                  code: '001'
+                  details: The items do not work.
+                approvalStatus: APPROVED
+                requestor:
+                  customerId: C7257042672
+                submitter:
+                  userType: CUSTOMER
+                  firstName: John
+                  lastName: Dee
+                  email: j.dee@emporix.com
+                approver:
+                  type: USER
+                  id: 6367f4dced75a02ef12dfd11
+                expiryDate: '2023-04-31T13:18:02.379Z'
+                mixins:
+                  customAttributes:
+                    attr1: value1
+                metadata:
+                  version: 1
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+        **Note**: The tenant name should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    page_number_query_param:
+      name: pageNumber
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: 'The page number to be retrieved, where the size of the pages is specified by the `pageSize` parameter. The number of the first page is 1.'
+    page_size_query_param:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 60
+        minimum: 1
+        maximum: 60
+      description: 'The number of documents being retrieved on one page.'
+    sort_query_param:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'sort=name,metadata.createdAt:desc'
+      description: 'Fields to sort the response data by following the order of the parameters from left to right. Can contain multiple fields in the following format: `field name:sort direction`, separated by a comma. The colon preceding the `sort direction` parameter is optional, and the descending order is taken only if it is equal to `desc` or `DESC`. The ascending order is assumed in any other case.'
+    q_query_param:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'q=approvalStatus:APPROVED'
+      description: |
+        A standard query parameter is used to search for specific values.
+
+           + Searching for an item by a string property: `q=approvalStatus:PENDING`, where `approvalStatus` is the name of the string field and `PENDING` is its required value.
+           + Searching for items by a number-based property:
+             + Searching for items with specific values: `q=mixins.returnCustomAttributes.orderQuantity:20`
+             + Searching for items with values greater than: `q=mixins.returnCustomAttributes.orderQuantity:>20`
+             + Searching for items with values lower than: `q=mixins.returnCustomAttributes.orderQuantity:<20`
+             + Searching for items with values greater than or equal to: `q=mixins.returnCustomAttributes.orderQuantity:>=20`
+             + Searching for items with values lower than or equal to: `q=mixins.returnCustomAttributes.orderQuantity:<=20`
+             + Searching for items within a range of values: `q=mixins.returnCustomAttributes.orderQuantity:(>=10 AND <=20)`, where `mixins.returnCustomAttributes.orderQuantity` is the name of a number-based field, and `20` is its querying value.
+           + Searching for items by a date property. All number-based property queries are also valid for dates. In that case, the date should be placed within double quotes: `q=metadataCreatedAt:(>="2021-05-18T07:27:27.455Z" AND <"2021-05-20T07:27:27.455Z")`
+           + Searching for items by a boolean value: `q=received:true`, where `received` is the name of a boolean field, and 'true' is its required value.
+           + Searching for items with a non-existing or empty property: `q=reason.description:null`, where `reason.description` is the name of the field that has the `null` value.
+           + Searching for items with an existing property: `q=mixins.mixinName:exists`, where the specific mixin named `mixinName` exists in the database.
+           + Searching for items by multiple specific values: `q=id:(5c3325baa9812100098ff48f,5c3325d1a9812100098ff494)`, where `id` is the name of the field, and strings within a bracket are its required values.
+           + Searching for items by multiple fields: `q=id:5c3325baa9812100098ff48f code:A705121667`, where `id` and 'code' are the names of fields. All documents that contain the specified values in these fields are returned. Multiple fields separated by spaces can be specified. Multiple values for each field can also be provided in the format presented above.
+           + Searching for items with string fields conforming to a regex: `q=orders._id:~EON107` or `q=code:(~EON107 EON106)` - in the case of searching for strings with a space, where `order._id` is the name of the field and `EON107` or `EON107 EON106` are its querying regular expressions.
+    x_total_count_header:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+      description: 'To get information how many entities meet the filtering requirements, the `X-Total-Count` header has been introduced. The header is optional and its default value is `false`. If the header is provided and it is set to `true`, then the total count is returned in the `X-Total-Count` response header. In both cases (X-Total-Count `true`, `false` or not provided), the response body has the same format (array of entities). This means that the information about the total count is returned only on demand, provided that the X-Total-Count header is present in a request.'
+    returnId:
+      name: returnId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of a return.
+    saasToken:
+      name: saas-token
+      in: header
+      required: false
+      schema:
+        type: string
+      description: 'Customer saasToken retrieved when logging in a customer. The header is mandatory for operations done by a customer. '
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            returns.returns_read: Needed for reading returns by a tenant employee (all tenant returns).
+            returns.returns_manage: Needed to manage returns by a tenant employee (all tenant returns).
+            returns.returns_read_own: Needed for reading returns by a customer (only customer's own returns).
+            returns.returns_manage_own: Needed to manage returns by a customer (only customer's own returns).
+security:
+  - OAuth2: []

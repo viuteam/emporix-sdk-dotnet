@@ -1,0 +1,1532 @@
+openapi: 3.0.0
+info:
+  title: Payment-Gateway Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |-
+    The Emporix API Payment-Gateway Service allows you to manage your payment methods.
+tags:
+  - name: Payment
+  - name: Payment mode
+  - name: Payment - frontend
+  - name: Payment mode - frontend
+  - name: Transaction
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/payment-gateway/{tenant}/paymentmodes/config':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Creating a single payment mode entity
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentModeResponse'
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/common_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |
+        Creates a new payment mode for a given tenant. Currently the service supports the following payment methods:
+
+        * Payment methods supported by Spreedly: https://docs.spreedly.com/reference/supported-gateways/
+        * Saferpay: https://docs.saferpay.com/home/interfaces/payment-api
+        * Unzer Invoice: https://docs.unzer.com/payment-methods/unzer-invoice-upl/
+      operationId: POST-payment-gateway-create-payment-mode
+      security:
+        - OAuth2:
+            - payment-gateway.paymentmodes_manage
+      tags:
+        - Payment mode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/paymentModeRequest'
+            examples:
+              Creatng a Spreedly payment mode:
+                value:
+                  code: paypal
+                  active: true
+                  provider: SPREEDLY
+                  configuration:
+                    Spreedly/GatewayToken: KnQsG1FFJjfcKEUt5ObMilP2Rs4
+                    Spreedly/EnvironmentKey: Zrg5UfAqQefDY8KGvU5b9OKuxz
+                    Spreedly/AccessSecret: ZrvF6kkV4KgapqzXzR67SsTR4PMbCGTnXLMasskAXKWePSOgnU3XO4EpIvIPUDcF
+                    Spreedly/PaymentMethodType: paypal
+                    Spreedly/RedirectURL: 'https://storefront.emporix.io/exmporix/my-account/my-orders'
+                    Spreedly/SignatureSecret: _eJMkqevWxAdq9qOyA7fjnfCseO7gIaG28rSRBHKJVeKHM6i_Uqt6fGa_cWhzGvc
+              Creating an invoice payment mode:
+                value:
+                  code: invoice
+                  active: true
+                  provider: INVOICE
+                  configuration: {}
+        description: ''
+    get:
+      summary: Retrieving a list of payment modes
+      operationId: GET-payment-gateway-list-payment-modes
+      responses:
+        '200':
+          $ref: '#/components/responses/getAllPaymentModes'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment mode
+      description: |
+        Retrieves a list of configured payment modes for a given tenant. 
+      security:
+        - OAuth2:
+            - payment-gateway.paymentmodes_read
+  '/payment-gateway/{tenant}/paymentmodes/config/{id}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_paymentmode_id'
+    get:
+      summary: Retrieving a single payment mode
+      tags:
+        - Payment mode
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentModeResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      operationId: GET-payment-gateway-retrieve-payment-mode
+      description: |
+        Retrieves a single payment mode configuration for a given tenant based on a payment mode identifier. 
+      security:
+        - OAuth2:
+            - payment-gateway.paymentmodes_read
+    put:
+      summary: Updating a single payment mode
+      operationId: PUT-payment-gateway-update-payment-mode
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentModeResponse'
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |
+        Updates a single payment mode for a given tenant based on a unique mode identifier. 
+      security:
+        - OAuth2:
+            - payment-gateway.paymentmodes_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/paymentMethodUpdateRequest'
+            examples:
+              Update a payment mode:
+                value:
+                  active: true
+                  configuration:
+                    Spreedly/GatewayToken: KnQsG1FFJjfcKEUt5ObMilP2Rs4
+                    Spreedly/EnvironmentKey: Zrg5UfAqQefDY8KGvU5b9OKuxz
+                    Spreedly/AccessSecret: ZrvF6kkV4KgapqzXzR67SsTR4PMbCGTnXLMasskAXKWePSOgnU3XO4EpIvIPUDcF
+                    Spreedly/PaymentMethodType: paypal
+                    Spreedly/RedirectURL: 'https://storefront.emporix.io/exmporix/my-account/my-orders'
+                    Spreedly/SignatureSecret: _eJMkqevWxAdq9qOyA7fjnfCseO7gIaG28rSRBHKJVeKHM6i_Uqt6fGa_cWhzGvc
+      tags:
+        - Payment mode
+    delete:
+      summary: Deleting a single payment mode
+      operationId: DELETE-payment-gateway-remove-payment-mode
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |
+        Deletes a single payment mode for a given tenant based on a unique mode identifier. 
+      security:
+        - OAuth2:
+            - payment-gateway.paymentmodes_manage
+      tags:
+        - Payment mode
+  '/payment-gateway/{tenant}/paymentmodes/frontend':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving all the payment modes
+      tags:
+        - Payment mode - frontend
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentModesStorefrontResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+      operationId: GET-payment-gateway-list-payment-modes-frontend
+      description: |
+        Retrieves a list of configured payment modes for a given tenant with publicly available properties (excluding all secrets, signatures etc). 
+        The endpoint should be used by a frontend application to fetch all the possible payment methods configured for a particular tenant. 
+        No scope is required.
+  '/payment-gateway/{tenant}/paymentmodes/frontend/{id}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_paymentmode_id'
+    get:
+      summary: Retrieving a single payment mode
+      tags:
+        - Payment mode - frontend
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentModesStorefrontResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+      operationId: GET-payment-gateway-retrieve-payment-mode-frontend
+      description: |
+        Retrieves a single payment mode for a given tenant with publicly available properties (excluding all secrets, signatures etc). 
+        The endpoint should be used by a frontend application to fetch a payment method configuration for a particular tenant. 
+        No scope is required.
+  '/payment-gateway/{tenant}/payment/authorize':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Authorizing a payment
+      operationId: POST-payment-gateway-authorize-payment
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentAuthorizeResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '422':
+          $ref: '#/components/responses/common_response_Unprocessable_Entity_422'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment
+      description: |
+        Authorizes a given payment. 
+      security:
+        - OAuth2:
+            - payment-gateway.authorize_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/authorizePaymentRequest'
+  '/payment-gateway/{tenant}/payment/{transactionId}/capture':
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        description: |
+          Your Emporix tenant's name.
+          **Note**: The tenant name should always be written in lowercase.
+        schema:
+          pattern: '^[a-z][a-z0-9]+$'
+          minLength: 3
+          maxLength: 16
+          type: string
+      - $ref: '#/components/parameters/path_transaction_id'
+    post:
+      summary: Capturing a payment
+      operationId: POST-payment-gateway-capture-payment
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentCaptureResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '422':
+          $ref: '#/components/responses/common_response_Unprocessable_Entity_422'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment
+      description: |
+        Creates a flow to capture a given payment transaction. The capture operation requires transactionId, thus it can be invoked only if the payment had been previously authorized. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/captureRequest'
+            examples:
+              Capture request:
+                value:
+                  amount: 3.99
+                  currency: EUR
+      security:
+        - OAuth2:
+            - payment-gateway.capture_manage
+  '/payment-gateway/{tenant}/payment/{transactionId}/refund':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_transaction_id'
+    post:
+      summary: Refunding a payment
+      operationId: POST-payment-gateway-refund-payment
+      responses:
+        '200':
+          $ref: '#/components/responses/commonPaymentResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '422':
+          $ref: '#/components/responses/common_response_Unprocessable_Entity_422'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment
+      description: |
+        Creates a flow to return a given payment. The refund operation requires transactionId, thus it can be invoked only if the payment has been authorized and captured previously. 
+      security:
+        - OAuth2:
+            - payment-gateway.refund_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/refundRequest'
+            examples:
+              Refund example:
+                value:
+                  amount: 3.99
+                  currency: EUR
+  '/payment-gateway/{tenant}/payment/{transactionId}/cancel':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_transaction_id'
+    post:
+      summary: Cancelling a payment
+      operationId: POST-payment-gateway-cancel-payment
+      responses:
+        '200':
+          $ref: '#/components/responses/commonPaymentResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '422':
+          $ref: '#/components/responses/common_response_Unprocessable_Entity_422'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment
+      description: |
+        Creates a flow to cancel a given payment transaction. The cancel operation requires transactionId, thus it can be invoked only if the payment has been authorized previously. 
+
+      security:
+        - OAuth2:
+            - payment-gateway.cancel_manage
+  '/payment-gateway/{tenant}/payment/frontend/initialize':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Initializing a payment
+      operationId: POST-payment-gateway-initialize-payment-frontend
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentInitializeResponse'
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '422':
+          $ref: '#/components/responses/common_response_Unprocessable_Entity_422'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment - frontend
+      description: |
+        Initializes a payment by accepting a request sent from the frontend.
+        No scope is required.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/initializePaymentRequest'
+  '/payment-gateway/{tenant}/payment/frontend/authorize':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Authorizing a payment
+      operationId: POST-payment-gateway-authorize-payment-frontend
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentAuthorizeResponse'
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '422':
+          $ref: '#/components/responses/common_response_Unprocessable_Entity_422'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Payment - frontend
+      description: |
+        Authorize a payment by accepting a request sent from the frontend.
+        No scope is required.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/authorizeFrontendPaymentRequest'
+  '/payment-gateway/{tenant}/transactions':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving many transactions
+      tags:
+        - Transaction
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentTransactionsResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      operationId: GET-payment-gateway-list-transactions
+      description: |
+        Retrieves many payment transactions. A particular transaction contains all transactions' events attached as an entries of the response body.  
+      security:
+        - OAuth2:
+            - payment-gateway.paymenttransactions_read
+      parameters:
+        - $ref: '#/components/parameters/page_number_query_param'
+        - $ref: '#/components/parameters/page_size_query_param'
+        - $ref: '#/components/parameters/sort_query_param'
+        - $ref: '#/components/parameters/x_total_count_header'
+  '/payment-gateway/{tenant}/transactions/{transactionId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_transaction_id'
+    get:
+      summary: Retrieving a single transaction
+      tags:
+        - Transaction
+      responses:
+        '200':
+          $ref: '#/components/responses/paymentTransactionResponse'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      operationId: GET-payment-gateway-retrieve-transaction-by-transactionId
+      security:
+        - OAuth2:
+            - payment-gateway.paymenttransactions_read
+      description: |
+        Retrieves a single payment transaction. The transaction contains all the transaction's events attached as an entries of the response body.  
+components:
+  responses:
+    common_response_Unauthorized_401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    common_response_BadRequest_400:
+      description: Bad request. The syntax of the request is incorrect.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            BadRequest:
+              value:
+                code: 400
+                timestamp: '2023-10-03T12:23:31.485306Z'
+                message: The syntax of the request is incorrect.
+    common_response_Forbidden_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Forbidden:
+              value:
+                status: 403
+                type: 'Forbidden'
+                message: The access to the requested resource has been forbidden by the server.
+                details:
+                  - message: "Missing required scopes '[payment-gateway.authorize_manage]'"
+    common_response_NotFound_404:
+      description: Not found. The resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            NotFound:
+              value:
+                code: 404
+                timestamp: '2023-10-03T12:23:31.485306Z'
+                message: The resource does not exist.
+    common_response_Conflict_409:
+      description: Conflict. The resource already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Conflict:
+              value:
+                code: 409
+                timestamp: '2023-10-03T12:23:31.485306Z'
+                message: The resource already exists.
+    common_response_Unprocessable_Entity_422:
+      description: Unprocessable Entity. The payment action is not supported.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Unprocessable Entity:
+              value:
+                code: 422
+                timestamp: '2023-10-03T12:23:31.485306Z'
+                message: The payment action is not supported.
+    common_response_InternalServerError_500:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Internal Server Error:
+              value:
+                code: 500
+                timestamp: '2023-10-03T12:23:31.485306Z'
+                message: Problem encountered while trying to connect to the database.
+    getAllPaymentModes:
+      description: Get all payment modes configured in the payment-gateway service for a given tenant.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/paymentModesResponse'
+          examples:
+            All payment modes:
+              value:
+                - id: 92d77b2b-9385-43ad-a859-55176fbcbd36
+                  code: credit_card
+                  active: true
+                  provider: SPREEDLY
+                  configuration:
+                    Spreedly/GatewayToken: 5xGx9vcZlMe1AVuHQk00CZTS8YM
+                    Spreedly/EnvironmentKey: Zrg5UfAqQefDY8KGvU4b31Kuxz
+                    Spreedly/AccessSecret: ZbvF3kkV4KgapqzXzR67SsTR4IMbCGTnXLMasskPXKWePSOgnU3XO4EpIvIPUMcF
+                    Spreedly/PaymentMethodType: credit_card
+                    Spreedly/RedirectURL: 'https://example.com'
+                    Spreedly/SCAProviderToken: Fnj4SPHmrrbCaHFkWjMItJWzNql
+                - id: a8c96773-1cdf-4ea7-b1a2-1453d17f5324
+                  code: sprel
+                  active: true
+                  provider: SPREEDLY
+                  configuration:
+                    Spreedly/GatewayToken: 5xGx9vcZlMe1AVuHQk00CZTS8YM
+                    Spreedly/EnvironmentKey: Zrg5UfAqQefDY8KGvU4b31Kuxz
+                    Spreedly/AccessSecret: ZbvF3kkV4KgapqzXzR67SsTR4IMbCGTnXLMasskPXKWePSOgnU3XO4EpIvIPUMcF
+                    Spreedly/SignatureSecret: _eJMkqevWxXcq6qOyA1fjnfCseO7gISG28rSRBHKJVeKHM6i_Pqt6fGa_cWhzGvc
+                    Spreedly/PaymentMethodType: sprel
+                    Spreedly/RedirectURL: 'https://storefront.emporix.io/emporix/payment-callback'
+                - id: ef48f439-1c2c-42ff-807d-ed4cac287741
+                  code: paypal
+                  siteCode: main
+                  active: true
+                  provider: SPREEDLY
+                  configuration:
+                    Spreedly/GatewayToken: 5xGx9vcZlMe1AVuHQk00CZTS8YM
+                    Spreedly/EnvironmentKey: Zrg5UfAqQefDY8KGvU4b31Kuxz
+                    Spreedly/AccessSecret: ZbvF3kkV4KgapqzXzR67SsTR4IMbCGTnXLMasskPXKWePSOgnU3XO4EpIvIPUMcF
+                    Spreedly/PaymentMethodType: paypal
+                    Spreedly/RedirectURL: 'https://storefront.emporix.io/emporix/payment-callback'
+                    Spreedly/SignatureSecret: _eJMkqevWxXcq9qOyA7fjnfCseO7gISG28rSRBHKPVeKDM6i_Uqt6fGa_cWhzGvc
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/paymentModeResponse'
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/paymentModesResponse'
+    paymentModeResponse:
+      description: Payment mode configured in the payment-gateway service for a given tenant.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/paymentModeResponse'
+          examples:
+            Payment Mode:
+              value:
+                id: 92d77b2b-9385-43ad-a859-55176fbcbd36
+                code: credit_card
+                active: true
+                provider: SPREEDLY
+                configuration:
+                  Spreedly/GatewayToken: 5xGx9vcZlMe1AVuHQk00CZTS8YM
+                  Spreedly/EnvironmentKey: Zrg5UfAqQefDY8KGvU4b31Kuxz
+                  Spreedly/AccessSecret: ZbvF3kkV4KgapqzXzR67SsTR4IMbCGTnXLMasskPXKWePSOgnU3XO4EpIvIPUMcF
+                  Spreedly/PaymentMethodType: credit_card
+                  Spreedly/RedirectURL: 'https://example.com'
+                  Spreedly/SCAProviderToken: Fnj4SPHmrrbCaHFkWjMItJWzNql
+    paymentModesStorefrontResponse:
+      description: 'Payment modes configured in the payment-gateway service for a given tenant that returns only properties publicly available. '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/paymentModesFrontendResponse'
+          examples:
+            Payment modes with publicly available properties:
+              value:
+                - id: 92d77b2b-9385-43ad-a859-55176fbcbd2f
+                  code: credit_card
+                  integrationType: TOKENIZED
+                  javascriptUrl: 'https://core.spreedly.com/iframe/iframe-v1.min.js'
+                  paymentMethodType: credit_card
+                  environmentKey: Zrg5UfAqQefDY8KGvU4b9OKuxz
+                - id: a8c96773-1cdf-4ea7-b1a2-1453d17f5374
+                  code: sprel
+                  integrationType: OFFSITE
+                  paymentMethodType: sprel
+                  environmentKey: Zrg5UfAqQefDY8KGvU4b9OKuxz
+                - id: ef48f439-1c3c-42ff-807d-ef4cac237745
+                  code: paypal
+                  integrationType: OFFSITE
+                  paymentMethodType: paypal
+                  environmentKey: Zrg5UfAqQefDY8KGvU4b9OKuxz
+    paymentInitializeResponse:
+      description: Payment initialized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/initializePaymentResponse'
+          examples:
+            Authorize response:
+              value:
+                successful: true
+                paymentTransactionId: FTrjO4SrNF0Had7yBCeVU5ziqwL
+                externalPaymentRedirectURL: 'https://www.sandbox.paypal.com/checkoutnow?token=0SC35196GX656501J'
+                externalPaymentParameters: {}
+    paymentAuthorizeResponse:
+      description: Payment authorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/authorizePaymentResponse'
+          examples:
+            Authorize response:
+              value:
+                successful: true
+                paymentTransactionId: FTrjO4SrNF0Had7yBCeVU5ziqwL
+                requiresExternalPayment: true
+                externalPaymentRedirectURL: 'https://www.sandbox.paypal.com/checkoutnow?token=0SC35196GX656501J'
+                externalPaymentParameters: {}
+    commonPaymentResponse:
+      description: Payment transaction response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/commonPaymentResponse'
+          examples:
+            Successful operation:
+              value:
+                successful: true
+                message: Success!
+    paymentTransactionResponse:
+      description: Payment transaction response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/paymentTransactionResponse'
+          examples:
+            Payment transaction:
+              value:
+                id: d8abfb12-0266-43dc-905e-415158029d45
+                provider: SPREEDLY
+                paymentInformation:
+                  paymentMode: 92d77b2b-9385-43ad-a859-55176fbcbd2f
+                  creditCardToken: FrHVCFtcshQ8gkOR8t5RlneLy02
+                entries:
+                  - id: 5ab6f875-5414-4845-afe9-8976531a2573
+                    createdDate: '2023-07-02T09:19:42.170Z'
+                    type: AUTHORIZATION
+                    successful: true
+                    amount:
+                      amount: 36.63
+                      currency: EUR
+                    summary: Succeeded!
+                    remoteRequest: |-
+                      {
+                        "transaction" : {
+                          "amount" : 3663,
+                          "payment_method_token" : "O7z9EVXYwzzxgQO78nobou22ET1",
+                          "currency_code" : "EUR",
+                          "order_id" : "EON1562",
+                          "retain_on_success" : false
+                        }
+                      }
+                    remoteResponse: |-
+                      {
+                        "transaction" : {
+                          "token" : "FrHVCFtcshQ8gkOR8t5RlneLy02",
+                          "succeeded" : true,
+                          "message" : "Succeeded!",
+                          "response" : {
+                            "success" : true,
+                            "message" : "Successful authorize",
+                            "pending" : false,
+                            "cancelled" : false,
+                            "result_unknown" : false,
+                            "created_at" : "2023-07-02T09:19:42Z",
+                            "updated_at" : "2023-07-02T09:19:42Z"
+                          },
+                          "state" : "succeeded",
+                          "retained" : false,
+                          "amount" : "3663",
+                          "gateway_transaction_id" : "48",
+                          "created_at" : "2023-07-02T09:19:42Z",
+                          "updated_at" : "2023-07-02T09:19:42Z",
+                          "transaction_type" : "Authorization",
+                          "order_id" : "EON1562",
+                          "gateway_token" : "5xGx9vcZlMe1AVuHQk00CZTS8YM",
+                          "currency_code" : "EUR",
+                          "shipping_address" : {
+                            "name" : "John Smith"
+                          },
+                          "payment_method" : {
+                            "token" : "O7z9EVXYwzzxgQO78nobou22ET1",
+                            "test" : true,
+                            "month" : 9,
+                            "year" : 2023,
+                            "number" : "XXXX-XXXX-XXXX-1111",
+                            "fingerprint" : "78250e7a0b53b34f526fbf99be66982e1127",
+                            "created_at" : "2023-07-02T09:19:39Z",
+                            "updated_at" : "2023-07-02T09:19:39Z",
+                            "storage_state" : "cached",
+                            "last_four_digits" : "1111",
+                            "first_name" : "John",
+                            "last_name" : "Smith",
+                            "full_name" : "John Smith",
+                            "eligible_for_card_updater" : true,
+                            "issuer_identification_number" : "41111111",
+                            "payment_method_type" : "credit_card",
+                            "verification_value" : "XXX"
+                          }
+                        }
+                      }
+                  - id: b5c995f9-0ae8-455d-af0a-68f6995305bd
+                    createdDate: '2023-07-02T09:20:17.333Z'
+                    type: CAPTURE
+                    successful: true
+                    amount:
+                      amount: 36.63
+                      currency: EUR
+                    summary: Succeeded!
+                    remoteRequest: |-
+                      {
+                        "amount" : 3663,
+                        "currency_code" : "EUR"
+                      }
+                    remoteResponse: |-
+                      {
+                        "transaction" : {
+                          "token" : "ReaQQuCxWIhL1h1gyfE0VAuKQlI",
+                          "succeeded" : true,
+                          "message" : "Succeeded!",
+                          "response" : {
+                            "success" : true,
+                            "message" : "Successful capture",
+                            "pending" : false,
+                            "cancelled" : false,
+                            "result_unknown" : false,
+                            "created_at" : "2023-07-02T09:20:17Z",
+                            "updated_at" : "2023-07-02T09:20:17Z"
+                          },
+                          "gateway_transaction_id" : "51"
+                        }
+                      }
+                  - id: a080a8e1-c48f-410d-bd5a-7b921f5ce549
+                    createdDate: '2023-07-02T09:20:28.650Z'
+                    type: REFUND
+                    successful: true
+                    amount:
+                      amount: 1
+                      currency: EUR
+                    summary: Succeeded!
+                    remoteRequest: |-
+                      {
+                        "amount" : 100,
+                        "currency_code" : "EUR"
+                      }
+                    remoteResponse: |-
+                      {
+                        "transaction" : {
+                          "token" : "Xn8g3ZiTFJ1Sbd3AOlvr2aZtdaW",
+                          "succeeded" : true,
+                          "message" : "Succeeded!",
+                          "response" : {
+                            "success" : true,
+                            "message" : "Successful credit",
+                            "pending" : false,
+                            "cancelled" : false,
+                            "result_unknown" : false,
+                            "created_at" : "2023-07-02T09:20:28Z",
+                            "updated_at" : "2023-07-02T09:20:28Z"
+                          },
+                          "gateway_transaction_id" : "59"
+                        }
+                      }
+                  - id: e7d19c09-322b-4596-9206-4b45a532bff1
+                    createdDate: '2023-07-02T09:20:38.441Z'
+                    type: REFUND
+                    successful: true
+                    amount:
+                      amount: 2
+                      currency: EUR
+                    summary: Succeeded!
+                    remoteRequest: |-
+                      {
+                        "amount" : 200,
+                        "currency_code" : "EUR"
+                      }
+                    remoteResponse: |-
+                      {
+                        "transaction" : {
+                          "token" : "CfcdzCUsXFlkNYNrnQsYoAquNAn",
+                          "succeeded" : true,
+                          "message" : "Succeeded!",
+                          "response" : {
+                            "success" : true,
+                            "message" : "Successful credit",
+                            "pending" : false,
+                            "cancelled" : false,
+                            "result_unknown" : false,
+                            "created_at" : "2023-07-02T09:20:38Z",
+                            "updated_at" : "2023-07-02T09:20:38Z"
+                          },
+                          "gateway_transaction_id" : "68"
+                        }
+                      }
+    paymentTransactionsResponse:
+      description: Payment transactions response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/paymentTransactionResponse'
+          examples:
+            Payment transactions response:
+              value:
+                - id: d8abfb12-0266-43dc-905e-415158029d45
+                  provider: SPREEDLY
+                  paymentInformation:
+                    paymentMode: 92d77b2b-9385-43ad-a859-55176fbcbd2f
+                    creditCardToken: FrHVCFtcshQ8gkOR8t5RlneLy02
+                  entries:
+                    - id: 5ab6f875-5414-4845-afe9-8976531a2573
+                      createdDate: '2023-07-02T09:19:42.170Z'
+                      type: AUTHORIZATION
+                      successful: true
+                      amount:
+                        amount: 36.63
+                        currency: EUR
+                      summary: Succeeded!
+                      remoteRequest: |-
+                        {
+                          "transaction" : {
+                            "amount" : 3663,
+                            "payment_method_token" : "O7z9EVXYwzzxgQO78nobou22ET1",
+                            "currency_code" : "EUR",
+                            "order_id" : "EON1562",
+                            "retain_on_success" : false
+                          }
+                        }
+                      remoteResponse: |-
+                        {
+                          "transaction" : {
+                            "token" : "FrHVCFtcshQ8gkOR8t5RlneLy02",
+                            "succeeded" : true,
+                            "message" : "Succeeded!",
+                            "response" : {
+                              "success" : true,
+                              "message" : "Successful authorize",
+                              "pending" : false,
+                              "cancelled" : false,
+                              "result_unknown" : false,
+                              "created_at" : "2023-07-02T09:19:42Z",
+                              "updated_at" : "2023-07-02T09:19:42Z"
+                            },
+                            "state" : "succeeded",
+                            "retained" : false,
+                            "amount" : "3663",
+                            "gateway_transaction_id" : "48",
+                            "created_at" : "2023-07-02T09:19:42Z",
+                            "updated_at" : "2023-07-02T09:19:42Z",
+                            "transaction_type" : "Authorization",
+                            "order_id" : "EON1562",
+                            "gateway_token" : "5xGx9vcZlMe1AVuHQk00CZTS8YM",
+                            "currency_code" : "EUR",
+                            "shipping_address" : {
+                              "name" : "John Smith"
+                            },
+                            "payment_method" : {
+                              "token" : "O7z9EVXYwzzxgQO78nobou22ET1",
+                              "test" : true,
+                              "month" : 9,
+                              "year" : 2023,
+                              "number" : "XXXX-XXXX-XXXX-1111",
+                              "fingerprint" : "78250e7a0b53b34f526fbf99be66982e1127",
+                              "created_at" : "2023-07-02T09:19:39Z",
+                              "updated_at" : "2023-07-02T09:19:39Z",
+                              "storage_state" : "cached",
+                              "last_four_digits" : "1111",
+                              "first_name" : "John",
+                              "last_name" : "Smith",
+                              "full_name" : "John Smith",
+                              "eligible_for_card_updater" : true,
+                              "issuer_identification_number" : "41111111",
+                              "payment_method_type" : "credit_card",
+                              "verification_value" : "XXX"
+                            }
+                          }
+                        }
+                    - id: b5c995f9-0ae8-455d-af0a-68f6995305bd
+                      createdDate: '2023-07-02T09:20:17.333Z'
+                      type: CAPTURE
+                      successful: true
+                      amount:
+                        amount: 36.63
+                        currency: EUR
+                      summary: Succeeded!
+                      remoteRequest: |-
+                        {
+                          "amount" : 3663,
+                          "currency_code" : "EUR"
+                        }
+                      remoteResponse: |-
+                        {
+                          "transaction" : {
+                            "token" : "ReaQQuCxWIhL1h1gyfE0VAuKQlI",
+                            "succeeded" : true,
+                            "message" : "Succeeded!",
+                            "response" : {
+                              "success" : true,
+                              "message" : "Successful capture",
+                              "pending" : false,
+                              "cancelled" : false,
+                              "result_unknown" : false,
+                              "created_at" : "2023-07-02T09:20:17Z",
+                              "updated_at" : "2023-07-02T09:20:17Z"
+                            },
+                            "gateway_transaction_id" : "51"
+                          }
+                        }
+                    - id: a080a8e1-c48f-410d-bd5a-7b921f5ce549
+                      createdDate: '2023-07-02T09:20:28.650Z'
+                      type: REFUND
+                      successful: true
+                      amount:
+                        amount: 1
+                        currency: EUR
+                      summary: Succeeded!
+                      remoteRequest: |-
+                        {
+                          "amount" : 100,
+                          "currency_code" : "EUR"
+                        }
+                      remoteResponse: |-
+                        {
+                          "transaction" : {
+                            "token" : "Xn8g3ZiTFJ1Sbd3AOlvr2aZtdaW",
+                            "succeeded" : true,
+                            "message" : "Succeeded!",
+                            "response" : {
+                              "success" : true,
+                              "message" : "Successful credit",
+                              "pending" : false,
+                              "cancelled" : false,
+                              "result_unknown" : false,
+                              "created_at" : "2023-07-02T09:20:28Z",
+                              "updated_at" : "2023-07-02T09:20:28Z"
+                            },
+                            "gateway_transaction_id" : "59"
+                          }
+                        }
+                    - id: e7d19c09-322b-4596-9206-4b45a532bff1
+                      createdDate: '2023-07-02T09:20:38.441Z'
+                      type: REFUND
+                      successful: true
+                      amount:
+                        amount: 2
+                        currency: EUR
+                      summary: Succeeded!
+                      remoteRequest: |-
+                        {
+                          "amount" : 200,
+                          "currency_code" : "EUR"
+                        }
+                      remoteResponse: |-
+                        {
+                          "transaction" : {
+                            "token" : "CfcdzCUsXFlkNYNrnQsYoAquNAn",
+                            "succeeded" : true,
+                            "message" : "Succeeded!",
+                            "response" : {
+                              "success" : true,
+                              "message" : "Successful credit",
+                              "pending" : false,
+                              "cancelled" : false,
+                              "result_unknown" : false,
+                              "created_at" : "2023-07-02T09:20:38Z",
+                              "updated_at" : "2023-07-02T09:20:38Z"
+                            },
+                            "gateway_transaction_id" : "68"
+                          }
+                        }
+      headers:
+        X-Total-Count:
+          description: |-
+            'The total number of entities in the database matching the specified query criteria.
+            Returned if request X-Total-Count header has been set to true.'
+          schema:
+            type: number
+            example: 100
+    paymentCaptureResponse:
+      description: Payment capture response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              successful:
+                type: boolean
+                description: |
+                  Indicates if the operation finished with success or not.
+              message:
+                type: string
+                description: |
+                  In case of failed operation, the field provides error details.
+              captureId:
+                type: string
+                description: Identifier of a capture operation that is returned by a payment provider.
+  schemas:
+    coreErrorMessage:
+      anyOf:
+        - type: object
+          properties:
+            code:
+              type: integer
+              description: HTTP Status code.
+            timestamp:
+              type: string
+              description: Indicates a timestamp when the error occurred.
+            message:
+              type: string
+              description: Error message.
+        - type: object
+          properties:
+            type:
+              type: string
+              description: HTTP error type.
+            status:
+              type: integer
+              description: HTTP Status code.
+            message:
+              type: string
+              description: Error message.
+            moreInfo:
+              type: string
+              description: URL which additional information.
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Detailed message.
+    paymentModeRequest:
+      title: paymentModeRequest
+      type: object
+      required:
+        - code
+        - provider
+      properties:
+        code:
+          type: string
+          description: Indicates a code of a given method.
+        active:
+          type: boolean
+          description: Indicates whether a give mode is active.
+        provider:
+          allOf:
+            - $ref: '#/components/schemas/provider'
+          description: 'Indicates which provider should be used.'
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: |-
+            Map of configuration values for a particular gateway. Supported and required values for Spreedly: 
+            * `Spreedly/GatewayToken` - Indicates Spreedly gateway. Valid for `SPREEDLY`, `SPREEDLY_SAFERPAY`.
+            * `Spreedly/EnvironmentKey` - Indicates Spreedly environment key. Valid for `SPREEDLY`, `SPREEDLY_SAFERPAY`.
+            * `Spreedly/AccessSecret` - Indicates Spreedly access secret. Valid for `SPREEDLY`, `SPREEDLY_SAFERPAY`.
+            * `Spreedly/PaymentMethodType` - Indicates payment method type, for example: paypal. Valid for `SPREEDLY`.
+            * `Spreedly/RedirectURL` - Indicates a redirect URL where an end user should be redirected when a payment flow is finished. Usually it's a storefront URL. Valid for `SPREEDLY`.
+            * `Spreedly/SignatureSecret` - Indicates a signature secret. The value is needed  for an offsite flow, when a confirmation callback is used. Valid for `SPREEDLY`.
+            * `Spreedly/SCAProviderToken` - Indicates the Spreedly SCA (Strong Customer Authentication) provider token (3DS credit cart). Valid for `SPREEDLY`.
+            * `Spreedly/ReceiverId` - Indicates the Spreedly Receiver identifier. Valid for `SPREEDLY_SAFERPAY`.
+            * `Saferpay/BasicAuth` - Base64 encoded username and password of Saferpay account. Valid for `SPREEDLY_SAFERPAY`.
+            * `Saferpay/CustomerId` - Saferpay customer ID. Valid for `SPREEDLY_SAFERPAY`.
+            * `Saferpay/TerminalId` - Saferpay terminal ID. Valid for `SPREEDLY_SAFERPAY`.
+            * `Saferpay/TestEnvironment` - Indicates if the configuration is done for test environment or a production one. If `true` then `https://test.saferpay.com` is used as a destination. Otherwise `https://www.saferpay.com` is used. Valid for `SPREEDLY_SAFERPAY`.
+            * `Saferpay/RedirectUrl` - Indicates a redirect URL where an end user should be redirected when a payment flow is finished. Usually it's a storefront URL. Valid for `SPREEDLY_SAFERPAY`.
+            * `Unzer/PaymentMethodType` - Indicates a payment method type. Currently supported value is `PAYLATER_INVOICE`. Valid for `UNZER`.
+            * `Unzer/PublicKey` - Indicates a Unzer public key. Valid for `UNZER`.
+            * `Unzer/PrivateKey` - Indicates a Unzer private key. Valid for `UNZER`.
+            * `Unzer/CustomerType` - Indicates a customer type. Currently supported value is `B2C`. Valid for `UNZER`.
+              requestBodies: { }
+    paymentMethodUpdateRequest:
+      title: paymentMethodUpdateRequest
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: Indicates whether a give mode is active.
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: |-
+            Map of configuration values for a particular gateway. Supported and required values for Spreedly: 
+            * `Spreedly/GatewayToken` - Indicates Spreedly gateway. 
+            * `Spreedly/EnvironmentKey` - Indicates Spreedly environment key.
+            * `Spreedly/AccessSecret` - Indicates Spreedly access secret.
+            * `Spreedly/PaymentMethodType` - Indicates payment method type, for example: paypal.
+            * `Spreedly/RedirectURL` - Indicates a redirect URL where an end user should be redirected when a payment flow is finished. Usually it's a storefront URL.
+            * `Spreedly/SignatureSecret` - Indicates a signature secret. The value is needed  for an offsite flow, when a confirmation callback is used.
+            * `Spreedly/SCAProviderToken` - Indicates the Spreedly SCA (Strong Customer Authentication) provider token (3DS credit cart).
+              requestBodies: { }
+    provider:
+      type: string
+      enum: [INVOICE, CASH_ON_DELIVERY, SPREEDLY, SPREEDLY_SAFERPAY, UNZER]
+    paymentModeResponse:
+      title: paymentModeResponse
+      type: object
+      properties:
+        id:
+          type: string
+          description: Indicates an autogenerated identifier of a given payment method.
+        code:
+          type: string
+          description: Indicates a code of a given method.
+        active:
+          type: boolean
+          description: Indicates whether a give mode is active.
+        provider:
+          allOf:
+            - $ref: '#/components/schemas/provider'
+          description: 'Indicates which provider should be used.'
+        configuration:
+          type: object
+          additionalProperties:
+            type: string
+          description: |-
+            Map of configuration values for a particular gateway. Supported and required values for Spreedly: 
+            * `Spreedly/GatewayToken` - Indicates Spreedly gateway.
+            * `Spreedly/EnvironmentKey` - Indicates Spreedly environment key.
+            * `Spreedly/AccessSecret` - Indicates Spreedly access secret.
+            * `Spreedly/PaymentMethodType` - Indicates payment method type, for example: paypal.
+            * `Spreedly/RedirectURL` - Indicates a redirect URL where an end user should be redirected when a payment flow is finished. Usually it's a storefront URL.
+            * `Spreedly/SignatureSecret` - Indicates a signature secret. The value is needed  for an offsite flow, when a confirmation callback is used.
+    paymentModesResponse:
+      title: paymentModesResponse
+      type: array
+      items:
+        $ref: '#/components/schemas/paymentModeResponse'
+    paymentModeFrontendResponse:
+      title: paymentModeFrontendResponse
+      type: object
+      properties:
+        id:
+          type: string
+          description: Indicates an autogenerated identifier of a given payment method.
+        code:
+          type: string
+          description: Indicates a code of a given method.
+        integrationType:
+          type: string
+          enum:
+            - OFFSITE
+            - EXTERNAL
+            - SEPA
+            - TOKENIZED
+          description: Indicates a type of the mode integration.
+        paymentMethodType:
+          type: string
+          description: 'The field is specific for the Spreedly integration. Example values: credit_card, sprel, paypal.'
+        environmentKey:
+          type: string
+          description: The field is specific for the Spreedly integration and it indicates a Spreedly environment used for the mode configuration.
+        scaProviderToken:
+          type: string
+          description: The field is specific for the Spreedly integration. Strong Customer Authentication token.
+        javascriptUrl:
+          type: string
+          description: The field is specific for the Tokenization integration.
+        publicKey:
+          type: string
+          description: The field is specific for the Unzer integration.
+        threatMetrixId:
+          type: string
+          description: The field is specific for the Unzer integration.
+        receiverId:
+          type: string
+          description: The field is specific for the Saferpay integration.
+    paymentModesFrontendResponse:
+      title: paymentModesFrontendResponse
+      type: array
+      items:
+        $ref: '#/components/schemas/paymentModeFrontendResponse'
+    initializePaymentRequest:
+      title: initializePaymentRequest
+      type: object
+      properties:
+        order:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Identifier of an order for which the payment should be authorized.
+        paymentModeId:
+          type: string
+          description: Identifier of a payment mode configured in the payment-gateway service for a given tenant.
+        creditCardToken:
+          type: string
+          description: 'Indicates a payment method token, usually generated on a frontend site, when an user provides a credit card information.'
+    authorizeFrontendPaymentRequest:
+      title: authorizeFrontendPaymentRequest
+      allOf:
+        - $ref: '#/components/schemas/initializePaymentRequest'
+        - type: object
+          properties:
+            threeDSToken:
+              type: string
+              description: Contains a token generated during the 3DS authentication process.
+            browserInfo:
+              type: string
+              description: Holds information related to the user's web browser.
+            clientIP:
+              type: string
+              description: Stores the IP address of the client or user making the request.
+    authorizePaymentRequest:
+      title: authorizePaymentRequest
+      allOf:
+        - $ref: '#/components/schemas/authorizeFrontendPaymentRequest'
+        - type: object
+          properties:
+            amountToAuthorize:
+              type: number
+              description: Amount that should be authorized.
+            currency:
+              type: string
+              description: Currency for the amount that should be authorized.
+    initializePaymentResponse:
+      title: initializePaymentResponse
+      type: object
+      properties:
+        successful:
+          type: boolean
+          description: Indicates if the authorization process finished with success.
+        paymentTransactionId:
+          type: string
+          description: 'Unique payment transaction identifier. '
+        authorizationToken:
+          type: string
+          description: 'Authorization token'
+        externalPaymentRedirectURL:
+          type: string
+          description: Indicates a URL address where a user should be redirected in order to finish the authorization process.
+        externalPaymentHttpMethod:
+          type: string
+          description: Indicates a HTTP Method which should be used in order to finish the authorization process.
+        externalPaymentParameters:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Map of additional parameters that may be needed in order to complete the authorization flow. '
+    authorizePaymentResponse:
+      title: authorizePaymentResponse
+      allOf:
+        - $ref: '#/components/schemas/initializePaymentResponse'
+        - type: object
+          properties:
+            requiresExternalPayment:
+              type: boolean
+              description: Indicates if a redirect to an external site is required in order to finish the authorization flow.
+    captureRequest:
+      title: captureRequest
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Amount that should be captured. The amount should not be greater than amount that was authorized.
+        currency:
+          type: string
+          description: Currency for the amount that should be captured.
+    commonPaymentResponse:
+      title: commonPaymentResponse
+      type: object
+      properties:
+        successful:
+          type: boolean
+          description: Indicates if the operation finished with success or not.
+        message:
+          type: string
+          description: 'In case of failed operation, the field provides error details.'
+    refundRequest:
+      title: refundRequest
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Amount that should be refunded. The amount should not be greater than amount that was captured.
+        currency:
+          type: string
+          description: Currency for the amount that should be refunded.
+        captureId:
+          type: string
+          description: Capture identifier. The value is mandatory only if there were more captures for a payment and the refund should be related to a specific capture. In another case the value can be skipped and the capture related to the payment will be chosen automatically.
+    paymentTransactionResponse:
+      title: paymentTransactionResponse
+      type: object
+      properties:
+        id:
+          type: string
+          description: A unique identifier of a payment transaction.
+        provider:
+          $ref: '#/components/schemas/provider'
+          description: Indicates which provider should be used.
+        paymentInformation:
+          type: object
+          description: Information related to a payment mode.
+          properties:
+            paymentMode:
+              type: string
+              description: A unique identifier of a payment mode configured for the tenant.
+            creditCardToken:
+              type: string
+              description: Token of the credit card.
+            cardHolderName:
+              type: string
+              description: Name of the card holder.
+            payByLinkURL:
+              type: string
+              description: URL for pay-by-link payment flow.
+            iban:
+              type: string
+              description: International Bank Account Number.
+            bic:
+              type: string
+              description: Bank Identifier Code (SWIFT).
+            sepaMandateReference:
+              type: string
+              description: SEPA mandate reference.
+        entries:
+          type: array
+          description: List of transaction entries representing payment events.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier of a payment transaction entry.
+              createdDate:
+                type: string
+                format: date-time
+                description: Timestamp when the event happened.
+                example: "2023-07-04T22:08:05.465Z"
+              type:
+                type: string
+                description: Event type.
+                enum:
+                  - INITIALIZATION
+                  - AUTHORIZATION
+                  - CAPTURE
+                  - REFUND
+                  - CANCEL
+                  - AUTHORIZATION_START
+                  - AUTHORIZATION_CALLBACK
+              successful:
+                type: boolean
+                description: Indicates if the event completed successfully.
+              amount:
+                type: object
+                properties:
+                  amount:
+                    type: number
+                    description: Amount related to the event.
+                  currency:
+                    type: string
+                    description: ISO currency code.
+                    example: EUR
+              summary:
+                type: string
+                description: Summary of the event.
+              remoteRequest:
+                type: string
+                description: Serialized request body sent to payment provider.
+              remoteResponse:
+                type: string
+                description: Serialized response body from payment provider.
+              remoteToken:
+                type: string
+                description: Remote token returned by payment provider.
+              additionalInfo:
+                type: object
+                description: Additional info about the transaction.
+                additionalProperties: true
+  requestBodies: {}
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant's name.
+        **Note**: The tenant name should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    page_number_query_param:
+      name: pageNumber
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: 'The page number to be retrieved, where the size of the pages is specified by the `pageSize` parameter. The number of the first page is 1.'
+    page_size_query_param:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 50
+        minimum: 1
+        maximum: 50
+      description: The number of documents being retrieved on one page.
+    sort_query_param:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'sort=name,metadata.createdAt:desc'
+      description: 'Fields to sort the response data by following the order of the parameters from left to right. Can contain multiple fields in the following format: `field name:sort direction`, separated by a comma. The colon preceding the `sort direction` parameter is optional, and the descending order is taken only if it is equal to `desc` or `DESC`. The ascending order is assumed in any other case.'
+    x_total_count_header:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+      description: 'To get information how many entities meet the filtering requirements, the `X-Total-Count` header has been introduced. The header is optional and its default value is `false`. If the header is provided and it is set to `true`, then the total count is returned in the `X-Total-Count` response header. In both cases (X-Total-Count `true`, `false` or not provided), the response body has the same format (array of entities). This means that the information about the total count is returned only on demand, provided that the X-Total-Count header is present in a request.'
+    path_paymentmode_id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of a payment mode.
+    path_transaction_id:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of a payment transaction.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            payment-gateway.paymentmodes_read: Needed for reading payment modes by a tenant employee.
+            payment-gateway.paymentmodes_manage: Needed to manage payment modes by a tenant employee.
+            payment-gateway.authorize_manage: Needed to perform a payment authorization flow by a tenant employee.
+            payment-gateway.capture_manage: Needed to perform a payment capture flow by a tenant employee.
+            payment-gateway.refund_manage: Needed to perform a payment refund flow by a tenant employee.
+            payment-gateway.cancel_manage: Needed to perform a payment cancel flow by a tenant employee.
+            payment-gateway.paymenttransactions_read: Needed to read all transaction details by a tenant employee.
+security:
+  - OAuth2: []

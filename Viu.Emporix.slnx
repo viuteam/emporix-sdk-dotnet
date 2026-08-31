@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/Viu.Emporix.Sample/Viu.Emporix.Sample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Viu.Emporix/Viu.Emporix.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Viu.Emporix.Tests/Viu.Emporix.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Viu.Emporix.SpecSync/Viu.Emporix.SpecSync.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,1591 @@
+openapi: 3.0.0
+info:
+  title: Coupon Service
+  version: ''
+  description: |-
+    Generate secure and highly performant promotional coupons.
+  contact:
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+paths:
+  '/coupon/{tenant}/coupons':
+    get:
+      summary: Retrieving list of coupons by criteria
+      tags:
+        - Coupon Management
+      responses:
+        '200':
+          description: |
+            The list of coupons has been retrieved successfully.
+          headers:
+            Items-Count:
+              $ref: '#/components/headers/Total-Count'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/coupons'
+              examples:
+                CouponList:
+                  $ref: '#/components/examples/couponList'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Retrieves a list of coupons by the specified criteria. Supports sorting and paging.
+      operationId: GET-coupon-list-specified-coupons
+      parameters:
+        - $ref: '#/components/parameters/trait_sortable_sort'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_countable_totalCount'
+        - $ref: '#/components/parameters/trait_queryable_q'
+        - $ref: '#/components/parameters/show_deleted'
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+            - coupon.coupon_read
+    post:
+      summary: Creating a new coupon
+      tags:
+        - Coupon Management
+      responses:
+        '201':
+          description: |
+            The resource has been successfully created.
+          content:
+            application/json:
+              examples:
+                CreateCoupon:
+                  $ref: '#/components/examples/createCouponResponse'
+              schema:
+                $ref: '#/components/schemas/resource-location'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '409':
+          $ref: '#/components/responses/trait_conflict_409'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Creates a coupon.
+
+        By default, the coupon code is saved in uppercase. To ensure that the code is saved both in upper and lower case, set the `enableCouponCodeCaseSensitivity` configuration to true in the configuration service or System Preferences.
+      operationId: POST-coupon-create-coupon
+      requestBody:
+        content:
+          application/json:
+            examples:
+              CreateCoupon:
+                $ref: '#/components/examples/createCouponBody'
+              CreateSegmentRestrictedCoupon:
+                $ref: '#/components/examples/createSegmentRestrictedCouponBody'
+            schema:
+              $ref: '#/components/schemas/coupon-creation'
+        required: true
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/coupon/{tenant}/coupons/{code}':
+    get:
+      summary: Retrieving information about particular coupon by code
+      tags:
+        - Coupon Management
+      responses:
+        '200':
+          description: The coupon has been successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Coupon:
+                  $ref: '#/components/examples/coupon'
+              schema:
+                $ref: '#/components/schemas/coupon'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Retrieves coupon details.
+        ***
+
+        ### Additional scopes info
+        * The `coupon.coupon_redeem_on_behalf` scope is only required if the service should use the customer identification specified in the request query (`customerNumber` attribute) instead of the one associated with current authentication token.
+      operationId: GET-coupon-retrieve-coupon
+      parameters:
+        - $ref: '#/components/parameters/customer_number'
+      security:
+        - OAuth2: 
+            - coupon.coupon_redeem_on_behalf
+    put:
+      summary: Updating the coupon by code
+      tags:
+        - Coupon Management
+      responses:
+        '200':
+          description: The coupon has been successfully updated.
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '409':
+          $ref: '#/components/responses/trait_conflict_409'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Updates an existing coupon.
+      operationId: PUT-coupon-update-coupon
+      requestBody:
+        content:
+          application/json:
+            examples:
+              UpdateCoupon:
+                $ref: '#/components/examples/updateCouponBody'
+            schema:
+              $ref: '#/components/schemas/base-coupon'
+        required: true
+      parameters:
+        - $ref: '#/components/parameters/partial'
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+    patch:
+      summary: Partially updating the coupon by code
+      tags:
+        - Coupon Management
+      responses:
+        '200':
+          description: The coupon has been successfully updated.
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '409':
+          $ref: '#/components/responses/trait_conflict_409'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Partially updates an existing coupon.
+      operationId: PATCH-coupon-update-coupon
+      requestBody:
+        content:
+          application/json:
+            examples:
+              UpdateCoupon:
+                $ref: '#/components/examples/updateCouponBody'
+            schema:
+              $ref: '#/components/schemas/base-coupon'
+        required: true
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+    delete:
+      summary: Deleting a coupon by code
+      tags:
+        - Coupon Management
+      responses:
+        '204':
+          description: Coupon with given code has been successfully deleted.
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Deletes an existing coupon.
+      operationId: DELETE-coupon-remove-coupon
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+    parameters:
+      - $ref: '#/components/parameters/coupon_code'
+      - $ref: '#/components/parameters/trait_tenant'
+  '/coupon/{tenant}/coupons/{code}/validation':
+    post:
+      summary: Validating redeemability of a coupon
+      tags:
+        - Coupon Validation
+      responses:
+        '200':
+          description: |
+            The coupon can be successfully redeemed.
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Checks whether the coupon can be successfully redeemed. Performs all checks that are executed during actual
+        redemption, but does not result in a redeemed coupon. Only the status of the validation is reported.
+        ***
+
+        ### Additional scopes info
+        * The `coupon.coupon_redeem_on_behalf` scope is only required if the service should use the customer identification
+        specified in the request body (`customerNumber` attribute) instead of the one associated with current
+        authentication token.
+      operationId: POST-coupon-validate-coupon
+      requestBody:
+        content:
+          application/json:
+            examples:
+              CouponValidation:
+                $ref: '#/components/examples/couponRedemption'
+            schema:
+              $ref: '#/components/schemas/redemption-creation'
+        required: true
+      security:
+        - OAuth2: 
+            - coupon.coupon_redeem_on_behalf
+    parameters:
+      - $ref: '#/components/parameters/coupon_code'
+      - $ref: '#/components/parameters/trait_tenant'
+  '/coupon/{tenant}/coupons/{code}/redemptions':
+    get:
+      summary: Retrieving a list of redemptions by criteria
+      tags:
+        - Coupon Redemption
+      responses:
+        '200':
+          description: List of redemptions
+          headers:
+            Items-Count:
+              $ref: '#/components/headers/Total-Count'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/redemptions'
+              examples:
+                RedemptionList:
+                  $ref: '#/components/examples/redemptionList'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Retrieves a list of redemptions by the specified criteria. Supports sorting and paging.
+      operationId: GET-coupon-list-coupon-redemptions
+      parameters:
+        - $ref: '#/components/parameters/trait_sortable_sort'
+        - $ref: '#/components/parameters/trait_paged_pageNumber'
+        - $ref: '#/components/parameters/trait_paged_pageSize'
+        - $ref: '#/components/parameters/trait_countable_totalCount'
+        - $ref: '#/components/parameters/trait_queryable_q'
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+    post:
+      summary: Redeeming the coupon by creating a redemption
+      tags:
+        - Coupon Redemption
+      responses:
+        '201':
+          description: |
+            The coupon has been redeemed and the redemption has been successfully created.
+          content:
+            application/json:
+              examples:
+                CreateRedemption:
+                  $ref: '#/components/examples/createRedemptionResponse'
+              schema:
+                $ref: '#/components/schemas/resource-location'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '409':
+          $ref: '#/components/responses/trait_conflict_409'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Invalidate the coupon based on its validity scope. Redemption is not possible when the coupon has exceeded its maximum
+        number allowed redemptions. To be redeemed a coupon needs to be already valid and not expired yet.
+        ***
+
+        ### Additional scopes info
+        * The `coupon.coupon_redeem_on_behalf` scope is only required if the service should use the customer identification specified in the request body (`customerNumber` attribute) instead of the one associated with current authentication token.
+      operationId: POST-coupon-invalidate-coupon
+      requestBody:
+        content:
+          application/json:
+            examples:
+              CouponRedemption:
+                $ref: '#/components/examples/couponRedemption'
+            schema:
+              $ref: '#/components/schemas/redemption-creation'
+        required: true
+      security:
+        - OAuth2: 
+            - coupon.coupon_redeem_on_behalf
+    parameters:
+      - $ref: '#/components/parameters/coupon_code'
+      - $ref: '#/components/parameters/trait_tenant'
+  '/coupon/{tenant}/coupons/{code}/redemptions/{id}':
+    get:
+      summary: Retrieving a coupon redemption
+      tags:
+        - Coupon Redemption
+      responses:
+        '200':
+          description: The coupon redemption has been successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Redemption:
+                  $ref: '#/components/examples/redemption'
+              schema:
+                $ref: '#/components/schemas/redemption'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Retrieves a single redemption.
+        ***
+
+        ### Additional scopes info
+        * The `coupon.coupon_manage` scope is required for accessing any redemption.
+        * The `coupon.coupon_redeem` scope is required for accessing only redemption created by current user.
+        * The `coupon.coupon_redeem_on_behalf` scope is only required if the service should use the customer identification specified in the request body (`customerNumber`attribute) instead of the one associated with current authentication token.
+      operationId: GET-coupon-retrieve-coupon-redemption
+      parameters:
+        - $ref: '#/components/parameters/customer_number'
+      security:
+        - OAuth2:   
+            - coupon.coupon_manage
+            - coupon.coupon_redeem
+            - coupon.coupon_redeem_on_behalf
+    delete:
+      summary: Deleting a coupon redemption
+      tags:
+        - Coupon Redemption
+      responses:
+        '204':
+          description: |
+            A redemption with the provided code has been successfully deleted.
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '403':
+          $ref: '#/components/responses/trait_restricted_403'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Deletes a previously created redemption.
+      operationId: DELETE-coupon-remove-coupon-redemption
+      security:
+        - OAuth2:
+            - coupon.coupon_manage
+    parameters:
+      - $ref: '#/components/parameters/redemption_id'
+      - $ref: '#/components/parameters/coupon_code'
+      - $ref: '#/components/parameters/trait_tenant'
+  '/coupon/{tenant}/referral-coupons/{customerNumber}':
+    parameters:
+      - $ref: '#/components/parameters/customer_number_path'
+      - $ref: '#/components/parameters/trait_tenant'
+    get:
+      summary: Retrieving customer's referral coupon
+      tags:
+        - Referral Coupon Management
+      responses:
+        '200':
+          description: The referral coupon has been successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Redemption:
+                  $ref: '#/components/examples/referralCoupon'
+              schema:
+                $ref: '#/components/schemas/referralCoupon'
+        '204':
+          description: 'No content if there is no referral coupon'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Retrieves the referral coupon of a given customer in the database.
+
+        When the existing customer shares the referral code with a potential customer, the referred customer can benefit from the discount in a form of a fixed monetary amount.
+      operationId: GET-coupon-retrieve-referral-coupon
+      security:
+        - OAuth2: []
+    post:
+      summary: Creating a referral coupon code for a given customer
+      tags:
+        - Referral Coupon Management
+      responses:
+        '200':
+          description: The referral coupon code has been successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Redemption:
+                  $ref: '#/components/examples/referralCoupon'
+              schema:
+                $ref: '#/components/schemas/referralCoupon'
+        '400':
+          $ref: '#/components/responses/trait_queryable_400'
+        '401':
+          $ref: '#/components/responses/trait_unauthorized_401'
+        '404':
+          $ref: '#/components/responses/trait_notFound_404'
+        '500':
+          $ref: '#/components/responses/trait_internal_500'
+      description: |
+        Creates a referral coupon code for a specific customer in the database. If the coupon code exists, returns it without creating a new coupon.
+
+        **Note**: There can only be one referral coupon generated per customer.
+
+        When the existing customer shares the referral code with a potential customer, the referred customer can benefit from the discount in a form of a fixed monetary amount.
+      operationId: POST-coupon-create-referral-coupon-code
+      security:
+        - OAuth2: []
+components:
+  schemas:
+    coupons:
+      type: array
+      items:
+        $ref: '#/components/schemas/coupon-with-id-and-status'
+    base-coupon:
+      title: Coupon response/update payload
+      description: 'Coupons describe voucher alike commerce capabilities, e.g. 10% off winter accessories.'
+      type: object
+      properties:
+        name:
+          type: string
+          description: Coupon name.
+        description:
+          type: string
+          description: Coupon description.
+        discountType:
+          enum:
+            - PERCENT
+            - ABSOLUTE
+            - FREE_SHIPPING
+          description: '''PERCENT'' for relative values, ''ABSOLUTE'' for float values, referring to a specific currency, ''FREE_SHIPPING'' for reducing the shipping cost to 0.'
+          type: string
+        discountPercentage:
+          type: number
+          description: 'A discount percentage within the range [0.00, 100.00]. Must be specified only if type is ''PERCENT''.'
+          minimum: 0
+          maximum: 100
+        discountAbsolute:
+          type: object
+          description: Must be specified only if type is 'ABSOLUTE'. Defines the amount that should be substracted from the cart subtotal.
+          properties:
+            amount:
+              type: number
+              description: Total amount in the specified currency.
+            currency:
+              type: string
+              description: 'ISO 4217 currency code, e.g.: USD, EUR, CHF.'
+        allowAnonymous:
+          type: boolean
+          description: 'Specifies if the coupon can be redeemed by anonymous user. If set to false, only logged-in customers can redeem it.'
+          default: false
+        maxRedemptions:
+          type: number
+          description: Maximum number of redemptions; -1  designates 'unlimited' (seller-only).
+          default: -1
+        maxRedemptionsPerCustomer:
+          type: number
+          description: Maximum number of redemptions per customer; -1 designates 'unlimited'. Cannot be specified for coupons which can be redeemed by anonymous users.
+          default: -1
+        discountCalculationType:
+          type: string
+          enum:
+            - TOTAL
+            - SUBTOTAL
+          description: Determines whether the coupon is applied to the total or subtotal value of the order.
+          default: SUBTOTAL
+        categoryRestricted:
+          $ref: '#/components/schemas/categoryRestricted'
+        segmentRestricted:
+          $ref: '#/components/schemas/segmentRestricted'
+        restrictions:
+          $ref: '#/components/schemas/restrictions'
+        issuedTo:
+          type: string
+          description: The Id of the customer who originally received the coupon (seller-only).
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: false
+          properties:
+            version:
+              description: Version of the document. Set to 0 after creating a document. Increments by 1 after every update.
+              type: number
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties:
+                type: string
+              example:
+                couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+    coupon:
+      allOf:
+        - $ref: '#/components/schemas/base-coupon'
+        - type: object
+          properties:
+            legalEntityRedemptions:
+              type: array
+              items:
+                type: object
+                properties:
+                  legalEntityId:
+                    type: string
+                    description: The id of the legal entity to which customer is assigned.
+                  count:
+                    type: number
+                    description: The number of times a specific coupon has been redeemed in the context of the given legal entity.
+            redemptionCount:
+              type: number
+              description: 'The number of times a specific coupon has been redeemed. Read-only, set through server. (seller-only).'
+            referralCoupon:
+              $ref: '#/components/schemas/referralCouponProperty'
+            deleted:
+              description: Flag to mark a coupon as deleted (a.k.a. Soft delete). It is a read-only and seller-only attribute.
+              type: boolean
+          required:
+            - name
+            - discountType
+    coupon-creation:
+      title: Coupon creation payload
+      description: Coupon creation schema.
+      type: object
+      properties:
+        code:
+          type: string
+          description: 'e.g.: WINTER-SALE, 10OFF. If not provided, a code will be auto generated.'
+        name:
+          type: string
+          description: Coupon name.
+        description:
+          type: string
+          description: Coupon description.
+        discountType:
+          enum:
+            - PERCENT
+            - ABSOLUTE
+            - FREE_SHIPPING
+          default: ABSOLUTE
+          description: '''PERCENT'' for relative values, ''ABSOLUTE'' for float values, referring to a specific currency, ''FREE_SHIPPING'' for reducing the shipping cost to 0.'
+          type: string
+        discountPercentage:
+          type: number
+          description: 'A discount percentage within the range [0.00, 100.00]. Must be specified only if type is ''PERCENT''.'
+          minimum: 0
+          maximum: 100
+        discountAbsolute:
+          allOf:
+            - $ref: '#/components/schemas/currency-amount'
+            - description: Must be specified only if type is 'ABSOLUTE'. Defines the amount that should be substracted from the cart subtotal.
+        allowAnonymous:
+          type: boolean
+          description: 'Specifies if the coupon can be redeemed by anonymous user. If set to false, only logged-in customers can redeem it.'
+          default: false
+        maxRedemptions:
+          type: number
+          description: Maximum number of redemptions; -1 designates 'unlimited' (seller-only).
+          default: -1
+        maxRedemptionsPerCustomer:
+          type: number
+          description: Maximum number of redemptions per customer; -1 designates 'unlimited'. Cannot be specified for coupons which can be redeemed by anonymous users.
+          default: -1
+        discountCalculationType:
+          type: string
+          enum:
+            - TOTAL
+            - SUBTOTAL
+          description: Determines whether the coupon is applied to the total or subtotal value of the order.
+          default: SUBTOTAL
+        categoryRestricted:
+          $ref: '#/components/schemas/categoryRestricted'
+        segmentRestricted:
+          $ref: '#/components/schemas/segmentRestricted'
+        restrictions:
+          $ref: '#/components/schemas/restrictions'
+        issuedTo:
+          type: string
+          description: The Id of the customer who originally received the coupon (seller-only).
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: false
+          properties:
+            version:
+              description: Version of the document. Set to 0 after creating a document. Increments by 1 after every update.
+              type: number
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties:
+                type: string
+              example:
+                couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+      required:
+        - name
+    segmentRestricted:
+      type: boolean
+      description: |
+        Defines if the coupon has segment restrictions. If the value is set to `true`, the `restrictions.segments` must be provided.
+        ***
+        Info: Cannot be combined neither with the category restrictions nor with customers restrictions.
+      default: false
+    categoryRestricted:
+      type: boolean
+      description: |
+        Defines if the coupon has category restrictions.
+        ***
+        Info: Cannot be combined together with the segment restrictions.
+      default: false
+    currency-amount:
+      type: object
+      title: Money amount
+      description: Defines an amount in a specific currency.
+      properties:
+        amount:
+          type: number
+          default: 0
+          minimum: 0
+          description: Total amount in the specified currency.
+        currency:
+          type: string
+          default: USD
+          pattern: '^[A-Z]{3}$'
+          description: 'ISO 4217 currency code, e.g.: USD, EUR, CHF.'
+    redemptions:
+      type: array
+      items:
+        $ref: '#/components/schemas/redemption'
+    redemption:
+      type: object
+      title: Coupon Redemption
+      description: Defines a coupon redemption response.
+      allOf:
+        - $ref: '#/components/schemas/redemption-creation'
+      properties:
+        id:
+          description: Unique identifier of the redemption.
+          type: string
+        redeemedAt:
+          description: Timestamp of the redemption.
+          type: string
+          format: date-time
+    redemption-creation:
+      type: object
+      title: Coupon Redemption Request
+      description: Defines a coupon redemption request payload that affects a coupon instance.
+      properties:
+        orderCode:
+          description: Code of the associated order.
+          type: string
+        customerNumber:
+          type: string
+          description: 'The customer Id of the user, e.g. C0123456789. Can be specified only if coupon.coupon_redeem_on_behalf scope is present.'
+        legalEntityId:
+          type: string
+          description: 'The id of the legal entity to which customer is assigned. When customer is assigned to many legal entities then he can redeem the same coupon separately for each legal entity.'
+        orderTotal:
+          allOf:
+            - $ref: '#/components/schemas/currency-amount'
+            - description: The amount of the purchase.
+        discount:
+          allOf:
+            - $ref: '#/components/schemas/currency-amount'
+            - description: The absolute amount of the granted discount.
+      required:
+        - orderTotal
+        - discount
+    restrictions:
+      type: object
+      description: Restrictions of the coupon.
+      properties:
+        validFor:
+          type: array
+          description: A list of customer identifiers for whom the coupon can be redeemed. Cannot be specified for coupons which can be redeemed by anonymous users.
+          items:
+            type: string
+        validFrom:
+          type: string
+          format: date-time
+          description: 'Must be provided in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm), e.g. ''2015-01-31T23:59:59.999Z''.'
+        validUntil:
+          type: string
+          format: date-time
+          description: 'Must be provided in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm), e.g. ''2015-01-31T23:59:59.999Z''.'
+        minOrderValue:
+          $ref: '#/components/schemas/currency-amount'
+        includedCategories:
+          type: array
+          description: The list of product's categories to which this coupon applies to. Must be defined only if the `categoryRestricted` flag is set to true. Must be disjoint with excludedCategories list.
+          items:
+            type: string
+        excludedCategories:
+          type: array
+          description: The list of product's categories to which this coupon does not apply to. Can be defined only if the `categoryRestricted` flag is set to true. Must be disjoint with includedCategories list.
+          items:
+            type: string
+        segments:
+          type: array
+          description: The list of segments to which this coupon applies to. Can be defined only if the `segmentRestricted` flag is set to true.
+          items:
+            type: string
+    resource-location:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the link.
+        yrn:
+          type: string
+          description: Identifier of the link in the system's notation.
+    coupon-with-id-and-status:
+      allOf:
+        - $ref: '#/components/schemas/coupon'
+        - type: object
+          properties:
+            code:
+              type: string
+              description: 'e.g.: WINTER-SALE, 10OFF (read-only).'
+            referralCoupon:
+              $ref: '#/components/schemas/referralCouponProperty'
+            status:
+              type: string
+              description: 'Current status of the coupon (read-only). ''INACTIVE'': the coupon is only valid in the future; ''VALID'': can be used; ''EXPIRED'': the coupon validity period has expired; ''USED'': the maximum number of redemptions for the coupon has been reached.'
+              enum:
+                - VALID
+                - INACTIVE
+                - EXPIRED
+                - USED
+    referralCoupon:
+      title: Coupon
+      description: Coupons describe voucher alike commerce capabilities.
+      type: object
+      properties:
+        code:
+          type: string
+          description: 'e.g.: WINTER-SALE, 10OFF (read-only)'
+        name:
+          type: string
+          description: Coupon name.
+        description:
+          type: string
+          description: Coupon description.
+        discountType:
+          enum:
+            - PERCENT
+            - ABSOLUTE
+            - FREE_SHIPPING
+          description: |
+            `PERCENT` for relative values, `ABSOLUTE` for float values, referring to a specific currency, `FREE_SHIPPING` for reducing the shipping cost to 0.
+          type: string
+        discountPercentage:
+          type: number
+          description: 'A discount percentage within the range [0.00, 100.00]. Must be specified only if type is `PERCENT`.'
+          minimum: 0
+          maximum: 100
+        discountAbsolute:
+          allOf:
+            - $ref: '#/components/schemas/currency-amount'
+        allowAnonymous:
+          type: boolean
+          description: Specifies if the coupon can be redeemed by anonymous users.
+          default: false
+        maxRedemptions:
+          type: number
+          description: Maximum number of redemptions; -1 designates 'unlimited' (seller-only).
+          default: -1
+        maxRedemptionsPerCustomer:
+          type: number
+          description: Maximum number of redemptions per customer; -1 designates 'unlimited'. Cannot be specified for coupons which can be redeemed by anonymous users.
+          default: -1
+        restrictions:
+          type: object
+          properties:
+            validFor:
+              type: array
+              description: A list of customer identifiers for whom the coupon can be redeemed. Cannot be specified for coupons which can be redeemed by anonymous users.
+              items:
+                type: string
+            validFrom:
+              type: string
+              format: date-time
+              description: 'Must be provided in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm), e.g. ''2015-01-31T23:59:59.999Z'''
+            validUntil:
+              type: string
+              format: date-time
+              description: 'Must be provided in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm), e.g. ''2015-01-31T23:59:59.999Z'''
+            minOrderValue:
+              $ref: '#/components/schemas/currency-amount'
+        issuedTo:
+          type: string
+          description: The Id of the customer who originally received the coupon (seller-only).
+        referralCoupon:
+          $ref: '#/components/schemas/referralCouponProperty'
+        redemptionCount:
+          type: number
+          description: 'The number of times a specific coupon has been redeemed. Read-only, set through server (seller-only).'
+        status:
+          enum:
+            - INACTIVE
+            - VALID
+            - EXPIRED
+            - USED
+          description: 'Current status of the coupon (read-only). `INACTIVE`: the coupon is only valid in the future; `VALID`: can be used; `EXPIRED`: the coupon validity period has expired; `USED`: the maximum number of redemptions for the coupon has been reached.'
+          type: string
+        deleted:
+          description: Flag to mark a coupon as deleted (a.k.a. Soft delete). It is a read-only and seller-only attribute
+          type: boolean
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: false
+          properties:
+            version:
+              description: Version of the document. Set to 0 after creating a document. Increments by 1 after every update.
+              type: number
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties:
+                type: string
+              example:
+                couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+      required:
+        - discountType
+        - issuedTo
+        - status
+        - name
+    referralCouponProperty:
+      type: boolean
+      description: Indicates if the coupon is type of referral coupon. This property is read only.
+  responses:
+    trait_queryable_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              status: 400
+              message: 'There are validation problems, see details section for more information.'
+              type: validation_violation
+              details:
+                - field: q
+                  message: not a valid query
+                  type: invalid_query_parameter
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'Classification of the error type, lower case with underscore eg validation_failure.'
+                type: string
+              message:
+                description: Descriptive error message for debugging.
+                type: string
+              details:
+                description: List of problems causing this error.
+                type: array
+                items:
+                  title: errorDetail
+                  description: Schema for specific error cause.
+                  type: object
+                  properties:
+                    field:
+                      description: 'A bean notation expression specifying the element in request data causing the error, eg product.variants[3].name, this can be empty if violation was not field specific.'
+                      type: string
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      description: 'Classification of the error detail type, lower case with underscore eg missing_value, this value must be always interpreted in context of the general error type.'
+                      type: string
+                    message:
+                      description: Descriptive error detail message for debugging.
+                      type: string
+                    moreInfo:
+                      type: string
+                      description: Link to documentation to investigate further and finding support for error detail.
+                  required:
+                    - type
+            required:
+              - status
+              - type
+          examples:
+            Bad request:
+              value:
+                type: validation_violation
+                status: 400
+                message: The request violates validation constraints.
+                details:
+                  - type: missing_payload
+                    message: Empty payload was sent
+                    moreInfo: ''
+    trait_restricted_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              status: 403
+              message: Not allowed to access this resource
+              type: insufficient_permissions
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'Classification of the error type, lower case with underscore eg validation_failure.'
+                type: string
+              message:
+                description: Descriptive error message for debugging.
+                type: string
+            required:
+              - status
+              - type
+          examples:
+            Example 1:
+              value:
+                type: insufficient_permissions
+                status: 403
+                message: Insufficient permissions to retrieve the coupon with Id MW2023_7
+    trait_notFound_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              status: 404
+              message: The requested URI does not map to a single element resource.
+              type: element_resource_non_existing
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'Classification of the error type, lower case with underscore eg validation_failure.'
+                type: string
+              message:
+                description: Descriptive error message for debugging.
+                type: string
+            required:
+              - status
+              - type
+          examples:
+            Not found:
+              value:
+                type: resource_not_found
+                status: 404
+                message: Coupon with code MW2023_72 not found.
+    trait_conflict_409:
+      description: |
+        Creation failed because there was a conflict with another resource. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              status: 409
+              message: The requested resource could not be created due to server-side validation.
+              type: conflict_resource
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'Classification of the error type, lower case with underscore eg validation_failure.'
+                type: string
+              message:
+                description: Descriptive error message for debugging.
+                type: string
+            required:
+              - status
+              - type
+          examples:
+            Conflict:
+              value:
+                type: conflict_resource
+                status: 409
+                message: Duplicate Coupon 'MW2023_7' on tenant 'tenantname'
+    trait_internal_500:
+      description: |
+        Some server side error occurred.
+      content:
+        application/json:
+          schema:
+            title: error
+            description: Schema for API specified errors.
+            example:
+              status: 500
+              message: Something went wrong while processing the request. Please contact the administrator.
+              type: internal_service_error
+            type: object
+            properties:
+              status:
+                minimum: 100
+                maximum: 599
+                description: 'Original HTTP error code, should be consistent with the response HTTP code.'
+                type: integer
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: 'Classification of the error type, lower case with underscore eg validation_failure.'
+                type: string
+              message:
+                description: Descriptive error message for debugging.
+                type: string
+              details:
+                description: List of problems causing this error.
+                type: array
+                items:
+                  title: errorDetail
+                  description: Schema for specific error cause.
+                  type: object
+                  properties:
+                    field:
+                      description: 'A bean notation expression specifying the element in request data causing the error, eg product.variants[3].name, this can be empty if violation was not field specific.'
+                      type: string
+                    type:
+                      pattern: '[a-z]+[a-z_]*[a-z]+'
+                      description: 'Classification of the error detail type, lower case with underscore eg missing_value, this value must be always interpreted in context of the general error type.'
+                      type: string
+                    message:
+                      description: Descriptive error detail message for debugging.
+                      type: string
+                    moreInfo:
+                      type: string
+                      description: Link to documentation to investigate further and finding support for error detail.
+                  required:
+                    - type
+            required:
+              - status
+              - type
+    trait_unauthorized_401:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Unauthorized:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+  parameters:
+    coupon_code:
+      name: code
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Code of a coupon.
+    customer_number_path:
+      name: customerNumber
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Customer number (ID) of customer.
+    customer_number:
+      name: customerNumber
+      in: query
+      required: false
+      description: |
+        Customer number (ID) of customer on behalf of which we request coupon information.
+        Needed only in case of retrieving coupon eligible for other customer than the caller.
+      schema:
+        type: string
+    partial:
+      name: partial
+      in: query
+      required: true
+      description: |
+        If true, a partial update will be supported, otherwise the full object replacement will be performed.
+
+        This parameter is DEPRECATED. For partial updates, please use PATCH method instead.
+      schema:
+        type: boolean
+    redemption_id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    show_deleted:
+      name: showDeleted
+      in: query
+      description: |
+        Includes deleted coupons in the result.
+      schema:
+        type: boolean
+        default: false
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant that the caller is acting upon.
+
+        Please note that this value is always lowercase.
+      schema:
+        minLength: 3
+        maxLength: 16
+        type: string
+    trait_paged_pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        The page number to be retrieved where the size of the pages must be specified by the pageSize parameter.
+        The number of the first page is 1.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    trait_paged_pageSize:
+      name: pageSize
+      in: query
+      description: |
+        The number of documents being retrieved on the page.
+      schema:
+        default: 16
+        minimum: 1
+        type: integer
+    trait_sortable_sort:
+      name: sort
+      in: query
+      description: |
+        The list of comma-separated properties used to sort the results.
+        By default, the column values are sorted in ascending order.
+        Can either be in the form of fieldName or fieldName:asc,fieldName:desc.
+        If you want to sort by localized attributes, you must use the following form:
+        fieldName.language or fieldName.language:asc,fieldName.language:desc.
+      schema:
+        type: string
+    trait_queryable_q:
+      name: q
+      in: query
+      description: |
+        The simple query criteria based on available fields to limit returned results or a set of modified documents.
+      schema:
+        type: string
+    trait_countable_totalCount:
+      name: totalCount
+      in: query
+      description: |
+        This parameter requests to return the total number of object in the collection fulfilling
+        the criteria together with the response. This number will be returned in the 'items-count'
+        header.
+      schema:
+        type: boolean
+  examples:
+    coupon:
+      value:
+        name: MW2023_7
+        description: 'BUY MORE SAVE MORE! 7% off orders over 150€! Use code: MW2023_7'
+        discountType: PERCENT
+        discountPercentage: 7
+        allowAnonymous: false
+        maxRedemptionsPerCustomer: -1
+        categoryRestricted: false
+        segmentRestricted: false
+        mixins:
+          couponCustomAttributes:
+            provenance: Winter Sale
+            suggestedAmount: 50
+        metadata:
+          version: 1
+          mixins:
+            couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+        code: MW2023_7
+        status: EXPIRED
+        maxRedemptions: -1
+        redemptionCount: 0
+        deleted: false
+        restrictions:
+          validFrom: '2023-02-09T06:45:33.779Z'
+          validUntil: '2023-07-31T05:45:25.934Z'
+          minOrderValue:
+            amount: 150
+            currency: EUR
+          validFor: []
+    couponList:
+      value:
+        - name: MW2023_7
+          description: 'BUY MORE SAVE MORE! 7% off orders over 150€! Use code: MW2023_7'
+          discountType: PERCENT
+          discountPercentage: 7
+          allowAnonymous: false
+          maxRedemptionsPerCustomer: -1
+          categoryRestricted: false
+          segmentRestricted: false
+          mixins:
+            couponCustomAttributes:
+              provenance: Winter Sale
+              suggestedAmount: 50
+          metadata:
+            version: 1
+            mixins:
+              couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+          code: MW2023_7
+          status: EXPIRED
+          maxRedemptions: -1
+          redemptionCount: 0
+          deleted: false
+          restrictions:
+            validFrom: '2023-02-09T06:45:33.779Z'
+            validUntil: '2023-07-31T05:45:25.934Z'
+            minOrderValue:
+              amount: 150
+              currency: EUR
+            validFor: []
+        - name: MW2023_10
+          description: 'BUY MORE SAVE MORE! 10% off orders over 500€! Use code: MW2023_10'
+          discountType: PERCENT
+          discountPercentage: 10
+          allowAnonymous: false
+          maxRedemptionsPerCustomer: -1
+          categoryRestricted: false
+          segmentRestricted: false
+          mixins:
+            couponCustomAttributes:
+              provenance: Winter Sale
+              suggestedAmount: 50
+          metadata:
+            version: 3
+            mixins:
+              couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+          code: MW2023_10
+          status: VALID
+          maxRedemptions: -1
+          redemptionCount: 0
+          deleted: false
+          restrictions:
+            validFrom: '2023-02-09T06:47:29.177Z'
+            minOrderValue:
+              amount: 500
+              currency: EUR
+            validFor: []
+        - name: COUPON_FOR_SEGMENTS
+          description: 'BUY MORE SAVE MORE! 7% off orders over 150€! Use code: COUPON_FOR_SEGMENTS'
+          discountType: PERCENT
+          discountPercentage: 7
+          allowAnonymous: false
+          maxRedemptionsPerCustomer: 1
+          categoryRestricted: false
+          segmentRestricted: true
+          mixins:
+            couponCustomAttributes:
+              provenance: Winter Sale
+              suggestedAmount: 50
+          metadata:
+            version: 1
+            mixins:
+              couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+          code: MW2023_7
+          status: VALID
+          maxRedemptions: -1
+          redemptionCount: 0
+          deleted: false
+          restrictions:
+            validFrom: '2023-02-09T06:45:33.779Z'
+            validUntil: '2023-07-31T05:45:25.934Z'
+            segments:
+              - segmentId1
+              - segmentId2
+            minOrderValue:
+              amount: 150
+              currency: EUR
+            validFor: []
+    couponRedemption:
+      value:
+        customerNumber: CustomerId
+        orderTotal:
+          amount: 1090
+          currency: EUR
+        discount:
+          amount: 5
+          currency: EUR
+    createCouponBody:
+      value:
+        code: ENG2OC0
+        name: Winter Sale 2018
+        description: Great Winter Discount of 25 USD in December 2018 and January 2019 for all Orders over 50 USD
+        discountType: ABSOLUTE
+        discountAbsolute:
+          amount: 24.99
+          currency: USD
+        allowAnonymous: false
+        maxRedemptions: -1
+        maxRedemptionsPerCustomer: -1
+        categoryRestricted: false
+        segmentRestricted: false
+        restrictions:
+          validFor:
+            - C0123456789
+            - C0123456788
+          validFrom: '2014-12-01T00:00:00.000Z'
+          validUntil: '2015-01-31T23:59:59.999Z'
+          minOrderValue:
+            amount: 49.99
+            currency: USD
+        issuedTo: C01234567989
+        mixins:
+          couponCustomAttributes:
+            provenance: Winter Sale
+            suggestedAmount: 50
+        metadata:
+          mixins:
+            couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+    createSegmentRestrictedCouponBody:
+      value:
+        code: MW2023_10
+        name: Winter Sale 2018
+        description: Great Winter Discount of 25 USD in December 2018 and January 2019 for all Orders over 50 USD
+        discountType: ABSOLUTE
+        discountAbsolute:
+          amount: 24.99
+          currency: USD
+        allowAnonymous: false
+        maxRedemptions: 1
+        maxRedemptionsPerCustomer: -1
+        categoryRestricted: false
+        segmentRestricted: true
+        restrictions:
+          validFor: []
+          validFrom: '2014-12-01T00:00:00.000Z'
+          validUntil: '2015-01-31T23:59:59.999Z'
+          segments:
+            - segmentId1
+            - segmentId2
+          minOrderValue:
+            amount: 49.99
+            currency: USD
+        issuedTo: C01234567989
+        mixins:
+          couponCustomAttributes:
+            provenance: Winter Sale
+            suggestedAmount: 50
+        metadata:
+          mixins:
+            couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+    createCouponResponse:
+      value:
+        id: ENG2OC0
+    createRedemptionResponse:
+      value:
+        id: 6058912da917ae6f360f2557
+    redemption:
+      value:
+        id: 6429b8fdf8fd8e0001df1617
+        code: 10-OFF
+        customerNumber: '61443563'
+        orderTotal:
+          amount: 299.3
+          currency: USD
+        discount:
+          amount: 29.93
+          currency: USD
+        redeemedAt: '2023-04-02T17:18:53.701Z'
+    redemptionList:
+      value:
+        - id: 6429b8fdf8fd8e0001df1617
+          code: 10-OFF
+          customerNumber: '61443563'
+          orderTotal:
+            amount: 299.3
+            currency: USD
+          discount:
+            amount: 29.93
+            currency: USD
+          redeemedAt: '2023-04-02T17:18:53.701Z'
+        - id: 642aa7f5f8fd8e0001df161b
+          code: 10-OFF
+          customerNumber: '61443563'
+          orderTotal:
+            amount: 369.07
+            currency: USD
+          discount:
+            amount: 36.91
+            currency: USD
+          redeemedAt: '2023-04-03T10:18:29.233Z'
+    updateCouponBody:
+      value:
+        name: MW2023_7
+        description: 'BUY MORE SAVE MORE! 7% off orders over 150€! Use code: MW2023_7'
+        discountType: PERCENT
+        discountPercentage: 7
+        allowAnonymous: false
+        maxRedemptionsPerCustomer: -1
+        categoryRestricted: false
+        segmentRestricted: false
+        mixins:
+          couponCustomAttributes:
+            provenance: Winter Sale
+            suggestedAmount: 50
+        metadata:
+          version: 4
+          mixins:
+            couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+        maxRedemptions: -1
+        restrictions:
+          validFrom: '2023-02-09T06:45:33.779Z'
+          validUntil: '2023-07-31T05:45:25.934Z'
+          minOrderValue:
+            amount: 150
+            currency: EUR
+          validFor: []
+    referralCoupon:
+      value:
+        allowAnonymous: true
+        code: REF_30
+        deleted: false
+        description: A referral Coupon
+        discountAbsolute:
+          amount: 8
+          currency: USD
+        discountType: ABSOLUTE
+        issuedTo: '61443563'
+        referralCoupon: true
+        maxRedemptions: -1
+        maxRedemptionsPerCustomer: -1
+        name: Empfehlungsgutschein John Doe (Emporix)
+        redemptionCount: 0
+        restrictions:
+          validFor: []
+        status: VALID
+        mixins:
+          couponCustomAttributes:
+            provenance: Winter Sale
+            suggestedAmount: 50
+        metadata:
+          version: 1
+          mixins:
+            couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+  headers:
+    Total-Count:
+      required: false
+      description: |
+        The total number of objects that fulfil the criteria.
+      schema:
+        type: integer
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            coupon.coupon_read: Needed to read coupons.
+            coupon.coupon_manage: Needed to manage coupons.
+            coupon.coupon_redeem: Needed to redeem coupons.
+            coupon.coupon_redeem_on_behalf: Needed to redeem coupons on behalf of another customer.
+security:
+  - OAuth2: []
+tags:
+  - name: Coupon Management
+  - name: Coupon Validation
+  - name: Coupon Redemption
+  - name: Referral Coupon Management

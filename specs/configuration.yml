@@ -1,0 +1,973 @@
+openapi: 3.0.0
+info:
+  title: Configuration Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |-
+    General store for tenant-specific information.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Tenant configurations
+    description: Manage Tenant Configurations
+  - name: Client configurations
+    description: Manage Client Configurations
+  - name: Global configurations
+    description: Read Global Configurations
+paths:
+  '/configuration/{tenant}/global-configurations':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving global configurations
+      tags:
+        - Global configurations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuration'
+              examples:
+                Response example:
+                  value:
+                    - key: customer.deletion.redirecturl
+                      secured: false
+                      value: 'https://tenant.com/custDelete?token='
+                      version: 1
+                    - key: customer.passwordreset.redirecturl
+                      secured: false
+                      value: 'https://tenant.com/changePassword?token='
+                      version: 1
+                    - key: customer.changeemail.redirecturl
+                      secured: false
+                      value: 'https://tenant.com/emailChangeConfirm?token='
+                      version: 1
+                    - key: cust.notification.email.from
+                      secured: false
+                      value: example_email@emporix.com
+                      version: 3
+                    - key: project_country
+                      secured: false
+                      value: EN
+                      version: 2
+                    - key: project_curr
+                      secured: false
+                      value: '[{"id":"EUR","label":"Euro","default":true,"required":true}]'
+                      version: 3
+                    - key: project_lang
+                      secured: false
+                      value: '[{"id":"en","label":"English","default":true,"required":true}]'
+                      version: 2
+                    - key: taxConfiguration
+                      secured: false
+                      value:
+                        taxClassOrder:
+                          - FULL
+                          - HALF
+                          - ZERO
+                        taxClasses:
+                          FULL: 19
+                          HALF: 7
+                          ZERO: 0
+                      version: 2
+                    - key: packagingConf
+                      secured: false
+                      value:
+                        packagingGroupOptions:
+                          - 1_cooling_product
+                          - 2_standard
+                          - 3_fragile
+                        packagingPositionOptions:
+                          - 1_bottom_robust
+                          - 2_bottom_insensitive
+                          - 3_middle_standard
+                          - 4_top_sensitive
+                      version: 2
+                    - key: storefront.htmlPage
+                      secured: false
+                      value: index.html
+                      version: 1
+                    - key: storefront.host
+                      secured: false
+                      value: tenant.com
+                      version: 1
+                    - key: unitConf
+                      secured: false
+                      value:
+                        - units:
+                            LTR:
+                              availableUnitValue: 1
+                              conversion:
+                                MLT: 1000
+                            GRM:
+                              availableUnitValue: 100
+                              conversion:
+                                KGM: 0.001
+                            KGM:
+                              availableUnitValue: 1
+                              conversion:
+                                GRM: 1000
+                            MLT:
+                              availableUnitValue: 100
+                              conversion:
+                                LTR: 0.001
+                          name: UnitConfiguration
+                          description: This object holds the unit configurations and the factors to calculate between different units
+                      version: 1
+      operationId: GET-global-configuration-list-config
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: keys
+      description: |-
+        Retrieves a list of global configurations.
+  '/configuration/{tenant}/configurations':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving configurations
+      tags:
+        - Tenant configurations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuration'
+              examples:
+                Response example:
+                  value:
+                    - key: customer.deletion.redirecturl
+                      secured: false
+                      value: 'https://tenant.com/custDelete?token='
+                      version: 1
+                    - key: customer.passwordreset.redirecturl
+                      secured: false
+                      value: 'https://tenant.com/changePassword?token='
+                      version: 1
+                    - key: customer.changeemail.redirecturl
+                      secured: false
+                      value: 'https://tenant.com/emailChangeConfirm?token='
+                      version: 1
+                    - key: cust.notification.email.from
+                      secured: false
+                      value: example_email@emporix.com
+                      version: 3
+                    - key: project_country
+                      secured: false
+                      value: EN
+                      version: 2
+                    - key: project_curr
+                      secured: false
+                      value: '[{"id":"EUR","label":"Euro","default":true,"required":true}]'
+                      version: 3
+                    - key: project_lang
+                      secured: false
+                      value: '[{"id":"en","label":"English","default":true,"required":true}]'
+                      version: 2
+                    - key: taxConfiguration
+                      secured: false
+                      value:
+                        taxClassOrder:
+                          - FULL
+                          - HALF
+                          - ZERO
+                        taxClasses:
+                          FULL: 19
+                          HALF: 7
+                          ZERO: 0
+                      version: 2
+                    - key: packagingConf
+                      secured: false
+                      value:
+                        packagingGroupOptions:
+                          - 1_cooling_product
+                          - 2_standard
+                          - 3_fragile
+                        packagingPositionOptions:
+                          - 1_bottom_robust
+                          - 2_bottom_insensitive
+                          - 3_middle_standard
+                          - 4_top_sensitive
+                      version: 2
+                    - key: storefront.htmlPage
+                      secured: false
+                      value: index.html
+                      version: 1
+                    - key: storefront.host
+                      secured: false
+                      value: tenant.com
+                      version: 1
+                    - key: unitConf
+                      secured: false
+                      value:
+                        - units:
+                            LTR:
+                              availableUnitValue: 1
+                              conversion:
+                                MLT: 1000
+                            GRM:
+                              availableUnitValue: 100
+                              conversion:
+                                KGM: 0.001
+                            KGM:
+                              availableUnitValue: 1
+                              conversion:
+                                GRM: 1000
+                            MLT:
+                              availableUnitValue: 100
+                              conversion:
+                                LTR: 0.001
+                          name: UnitConfiguration
+                          description: This object holds the unit configurations and the factors to calculate between different units
+                      version: 1
+      operationId: GET-configuration-list-config
+      security:
+        - OAuth2:
+            - configuration.configuration_view
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: keys
+      description: |-
+        Retrieves a list of configurations.
+    post:
+      summary: Creating configurations
+      operationId: POST-configuration-create-config
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Configuration'
+              examples:
+                Response example:
+                  value:
+                    - key: project_country
+                      secured: false
+                      value: DE
+                      version: 1
+                    - key: project_lang
+                      secured: false
+                      value: '[{"id":"en","label":"English","default":true,"required":true},{"id":"de","label":"German","default":false,"required":false}]'
+                      version: 1
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Bad payload syntax:
+                  value:
+                    message: Can not deserialize instance of java.util.ArrayList out of START_OBJECT token
+                    status: 400
+                    type: bad_payload_syntax
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Configuration for one of the specified keys already exists:
+                  value:
+                    details:
+                      - message: 'Duplicate key for the tenant configuration during create for the tenant ''{tenant}'''
+                    message: Tenant configuration could not be created
+                    status: 409
+                    type: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Configuration'
+            examples:
+              Request example:
+                value:
+                  - key: project_country
+                    secured: false
+                    value: DE
+                    version: 1
+                  - key: project_lang
+                    secured: false
+                    value: '[{"id":"en","label":"English","default":true,"required":true},{"id":"de","label":"German","default":false,"required":false}]'
+                    version: 1
+              Create invoice settings example:
+                value:
+                  - key: invoiceSettings
+                    secured: false
+                    value:
+                      threshold: '24'
+                      status: 'CREATED,CONFIRMED'
+                      extendedOrderStatus: '70,75,76'
+                    version: 1
+        description: ''
+      security:
+        - OAuth2:
+            - configuration.configuration_manage
+      description: |-
+        Creates new configurations.
+      tags:
+        - Tenant configurations
+  '/configuration/{tenant}/configurations/{propertyKey}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/propertyKey'
+    get:
+      summary: Retrieving a configuration
+      tags:
+        - Tenant configurations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+              examples:
+                Response example:
+                  value:
+                    key: project_lang
+                    secured: false
+                    value: '[{"id":"en","label":"English","default":true,"required":true}]'
+                    version: 2
+        '404':
+          $ref: '#/components/responses/404_global'
+      operationId: GET-configuration-retrieve-config
+      security:
+        - OAuth2:
+            - configuration.configuration_view
+      description: |-
+        Retrieves a specified configuration.
+    put:
+      summary: Updating a configuration
+      operationId: PUT-configuration-update-config
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+              examples:
+                Response example:
+                  value:
+                    key: project_country
+                    secured: false
+                    value: AT
+                    version: 1
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Keys in path and payload do not match:
+                  value:
+                    details:
+                      - message: The keys specified in the path param and in the payload are not the same.
+                    message: Invalid Parameters
+                    status: 400
+                    type: application/json
+                Configuration with the specified key does not exist:
+                  value:
+                    details:
+                      - message: 'Request for updating the tenant configuration with the propertyKey ''{propertyKey}'' failed for the tenant ''{tenant}'''
+                    message: Tenant configuration could not be updated
+                    status: 400
+                    type: application/json
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Resource conflict:
+                  value:
+                    details:
+                      - message: 'Duplicate property key ''{key}'' for the tenant configuration during update for the tenant ''{tenant}'''
+                    message: Tenant configuration could not be updated
+                    status: 409
+                    type: application/json
+      security:
+        - OAuth2:
+            - configuration.configuration_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Configuration'
+            examples:
+              Request example:
+                value:
+                  key: project_country
+                  secured: false
+                  value: AT
+                  version: 1
+      description: |-
+        Updates a specified configuration.
+      tags:
+        - Tenant configurations
+    delete:
+      summary: Deleting a configuration
+      operationId: DELETE-configuration-remove-config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Bad Request:
+                  value:
+                    message: Invalid tenant supplied without proper authorization
+                    status: 400
+                    type: application/json
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Configuration not found:
+                  value:
+                    details:
+                      - message: 'Couldn''t delete the tenant configuration with the propertyKey ''''{propertyKey}'''' for the tenant ''''{tenant}'''''
+                    message: Tenant configuration could not be found
+                    status: 404
+                    type: application/json
+      security:
+        - OAuth2:
+            - configuration.configuration_manage
+      description: |-
+        Deletes a specified configuration.
+      tags:
+        - Tenant configurations
+  '/configuration/{tenant}/clients':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving clients
+      tags:
+        - Client configurations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                Response example:
+                  value:
+                    - saas-ag.caas-indexing-service-client
+        '400':
+          $ref: '#/components/responses/400_client'
+        '403':
+          $ref: '#/components/responses/403_client'
+      operationId: GET-configuration-list-clients
+      security:
+        - OAuth2:
+            - configuration.configuration_view
+      description: |-
+        Retrieves a list of clients for a specified tenant.
+  '/configuration/{tenant}/clients/{client}/configurations':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/client'
+    get:
+      summary: Retrieving client configurations
+      tags:
+        - Client configurations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientConfiguration'
+              examples:
+                Response example:
+                  value:
+                    - _id: saas-ag.caas-indexing-service-client_algolia_activation
+                      client: saas-ag.caas-indexing-service-client
+                      key: algolia_activation
+                      value: true
+                    - _id: saas-ag.caas-indexing-service-client_indexing_configuration
+                      client: saas-ag.caas-indexing-service-client
+                      key: indexing_configuration
+                      value:
+                        activePublishedProductIndexing: true
+                        activeNonPublishedProductIndexing: true
+      operationId: GET-configuration-list-client-config
+      security:
+        - OAuth2:
+            - configuration.configuration_view
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: keys
+      description: |-
+        Retrieves a list of configurations for a specified client.
+    post:
+      summary: Creating client configurations
+      operationId: POST-configuration-create-client-config
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientConfiguration'
+              examples:
+                Response example:
+                  value:
+                    - _id: test_client_test_key
+                      client: test_client
+                      key: test_key
+                      value: true
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Bad payload syntax:
+                  value:
+                    message: Can not deserialize instance of java.util.ArrayList out of START_OBJECT token
+                    status: 400
+                    type: bad_payload_syntax
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Configuration for one of the specified keys already exists:
+                  value:
+                    details:
+                      - message: 'Duplicate key for the client configuration during create for the client ''{client}'' in the tenant ''{tenant}'''
+                    message: Client configuration could not be created
+                    status: 409
+                    type: application/json
+      security:
+        - OAuth2:
+            - configuration.configuration_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClientConfiguration'
+            examples:
+              Request example:
+                value:
+                  - client: test_client
+                    key: test_key
+                    value: true
+        description: ''
+      description: |-
+        Creates a new client configuration.
+      tags:
+        - Client configurations
+  '/configuration/{tenant}/clients/{client}/configurations/{propertyKey}':
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        schema:
+          type: string
+        description: |
+          Your Emporix tenant name.
+
+          **Note**: The tenant should always be written in lowercase.
+      - $ref: '#/components/parameters/client'
+      - $ref: '#/components/parameters/propertyKey'
+    get:
+      summary: Retrieving a client configuration
+      tags:
+        - Client configurations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientConfiguration'
+              examples:
+                Response example:
+                  value:
+                    _id: saas-ag.caas-indexing-service-client_indexing_configuration
+                    client: saas-ag.caas-indexing-service-client
+                    key: indexing_configuration
+                    value:
+                      activePublishedProductIndexing: true
+                      activeNonPublishedProductIndexing: true
+        '404':
+          $ref: '#/components/responses/404_client'
+      operationId: GET-configuration-retrieve-client-config
+
+      security:
+        - OAuth2:
+            - configuration.configuration_view
+      description: |-
+        Retrieves a specified client configuration.
+    put:
+      summary: Updating a client configuration
+      operationId: PUT-configuration-update-client-config
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Configuration'
+              examples:
+                Response example:
+                  value:
+                    _id: example_client_example_key
+                    client: example_client
+                    key: example_key
+                    value: false
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Keys in path and payload do not match:
+                  value:
+                    details:
+                      - message: The keys specified in the path param and in the payload are not the same.
+                    message: Invalid Parameters
+                    status: 400
+                    type: application/json
+                Configuration with the specified key does not exist:
+                  value:
+                    details:
+                      - message: 'Request for updating the client configuration for the client ''{client}'' with propertyKey ''{key}'' in the tenant ''{tenant}'' failed'
+                    message: Client configuration could not be updated
+                    status: 400
+                    type: application/json
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Resource conflict:
+                  value:
+                    details:
+                      - message: 'Duplicate key for the client configuration during update for the tenant''{tenant}'''
+                    message: Client configuration could not be updated
+                    status: 409
+                    type: application/json
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientConfiguration'
+            examples:
+              Request example:
+                value:
+                  id: example_client_example_key
+                  client: example_client
+                  key: example_key
+                  value: false
+      security:
+        - OAuth2:
+            - configuration.configuration_manage
+      tags:
+        - Client configurations
+      description: |-
+        Updates a specified client configuration.
+    delete:
+      summary: Deleting a client configuration
+      operationId: DELETE-configuration-remove-client-config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Bad Request:
+                  value:
+                    message: Invalid tenant supplied without proper authorization
+                    status: 400
+                    type: application/json
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Configuration not found:
+                  value:
+                    details:
+                      - message: 'Couldn''t delete the client configuration for the client ''''{client}'''' with the propertyKey ''''{propertyKey}'''' for the tenant ''''{tenant}'''''
+                    message: Client configuration could not be found
+                    status: 404
+                    type: application/json
+      security:
+        - OAuth2:
+            - configuration.configuration_manage
+      tags:
+        - Client configurations
+      description: |-
+        Deletes a specified client configuration.
+components:
+  schemas:
+    BaseConfiguration:
+      title: BaseConfiguration
+      type: object
+      properties:
+        key:
+          type: string
+          description: Configuration key.
+          minLength: 1
+        value:
+          description: Configuration value. It can be any valid JSON object.
+          oneOf:
+            - type: object
+            - type: string
+            - type: array
+              items:
+                type: object
+            - type: boolean
+        version:
+          type: integer
+          description: Configuration version.
+        description:
+          type: string
+          description: Describes purpose of the configuration.
+        secured:
+          type: boolean
+          description: Flag indicating whether the configuration should be encrypted. It works only if `value` field is of `string` type.
+          default: false
+        restricted:
+          type: boolean
+          description: Flag indicating whether the configuration should be restricted. When configuration is rectricted then it cannot be deleted. When this property is set to `true` then it cannot be unset.
+          default: false
+        readOnly:
+          type: boolean
+          description: Flag indicating whether the configuration should be readOnly. When configuration is readOnly then it cannot be updated.
+          default: false
+        schemaUrl:
+          type: string
+          format: uri
+          description: 'URL of Json Schema for validation purpose. When configuration is created this value can be provided and then each update operation will be validated against this schema. This property cannot be updated so once set it cannot be unset. The Json Schema should contain one root property named `value` in order to work correctly. An example of a valid schema:
+            `{
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "required": ["value"],
+              "properties": {
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            }`
+            '
+      required:
+        - key
+        - value
+    Configuration:
+      allOf:
+        - $ref: '#/components/schemas/BaseConfiguration'
+        - type: object
+    ClientConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/BaseConfiguration'
+        - type: object
+          properties:
+            _id:
+              type: string
+              description: The client configuration unique identifier.
+              minLength: 1
+            client:
+              type: string
+              description: The client to which the configuration applies.
+              minLength: 1
+    ErrorMessage:
+      title: error
+      description: Schema for API-specific errors.
+      type: object
+      properties:
+        status:
+          minimum: 100
+          maximum: 599
+          description: Original HTTP error code. It should be consistent with the HTTP response code.
+          type: integer
+        type:
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: |-
+            Classification of the error type.
+            **Note:** The error type should be written in lowercase and include underscores, for example `validation_failure`.
+          type: string
+        message:
+          description: Descriptive error message for debugging purposes.
+          type: string
+        moreInfo:
+          type: string
+          description: More information (such as a link to the documentation) for investigating further and getting support.
+        details:
+          description: List of problems causing the error.
+          type: array
+          items:
+            type: object
+            title: errorDetail
+            description: Specific error cause.
+            properties:
+              field:
+                description: |-
+                  Element in request data which is causing the error, for example `category.name`.
+                  If the violation was not field-specific, this field will be empty.
+                type: string
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: |-
+                  Classification of the specific error cause. This value should always be interpreted within the context of the general error type.
+                  **Note:** The error type should be written in lowercase and include underscores, for example `missing_value`.
+                type: string
+              message:
+                description: Descriptive error message for debugging purposes.
+                type: string
+              moreInfo:
+                type: string
+                description: More information (such as a link to the documentation) for investigating further and getting support.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          refreshUrl: ''
+          scopes:
+            configuration.configuration_view: ''
+            configuration.configuration_manage: ''
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+  parameters:
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      schema:
+        type: string
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+    propertyKey:
+      name: propertyKey
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Desired configuration key.
+    client:
+      name: client
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Desired client's unique identifier.
+  responses:
+    404_global:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Configuration not found:
+              details:
+                - message: 'Could not find the tenant configuration with the propertyKey ''''{propertyKey}'''' for the tenant ''''{tenant}'''''
+              message: Configuration not found
+              status: 404
+              type: application/json
+    404_client:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Configuration not found:
+              details:
+                - message: 'Could not find the client configuration for the client ''''{client}'''' with the propertyKey ''''{propertyKey}'''' in the tenant ''''{tenant}'''''
+              message: Configuration not found
+              status: 404
+              type: application/json
+    400_client:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            message: Please provide tenant header
+            status: 400
+            type: bad_request
+    403_client:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            details:
+              - message: 'Missing required scopes ''[configuration.configuration_view]'''
+            message: User not authorized.
+            status: 403
+            type: Forbidden
+security:
+  - OAuth2: []

@@ -1,0 +1,3885 @@
+openapi: 3.0.0
+info:
+  title: Shipping Service
+  version: ''
+  contact:
+    name: Emporix
+    url: 'https://emporix.com'
+    email: documentation@emporix.com
+  description: |-
+    Define shipping zones & delivery windows.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Customer Group Relations
+    description: Manage shipping customer groups
+  - name: Delivery Windows
+    description: Manage delivery windows
+  - name: Shipping Cost
+    description: Manage shipping costs
+  - name: Shipping Methods
+    description: Manage shipping methods
+  - name: Shipping Zones
+    description: Manage shipping zones
+  - name: Shipping Groups
+    description: Manage shipping groups
+  - name: Sites
+    description: Find shipping related sites
+  - name: Delivery Times Management
+    description: Manage delivery times
+  - name: Delivery Times Slots Management
+    description: Manage delivery time slots
+  - name: Delivery Cycles
+    description: Generate delivery cycles
+paths:
+  '/shipping/{tenant}/areaDeliveryTimes/{deliveryAreaId}/{cartId}':
+    get:
+      tags:
+        - Delivery Windows
+      summary: Retrieving delivery windows by delivery area
+      description: |-
+        Retrieves delivery windows for the specified delivery area and cart. 
+
+        **Note**: You can filter out delivery windows before the store's cutoff time using the `afterCutOffTime` query parameter.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/deliveryAreaId'
+        - $ref: '#/components/parameters/cartId'
+        - $ref: '#/components/parameters/siteCodeQuery'
+        - $ref: '#/components/parameters/afterCutOffTimeQuery'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              example:
+                - id: 1234567890abcdef123abc0
+                  deliveryDate: '2015-06-20T12:00:00.000Z'
+                  deliveryTimeRange:
+                    startTime: '15:00'
+                    endTime: '23:00'
+                  deliveryMethod: method1
+                  cutOffTime: '10:00'
+                  slotId: 1234567890abcdef123abgi
+                - id: 1234567890abcdef123abc1
+                  deliveryDate: '2015-06-24T12:00:00.000Z'
+                  deliveryTimeRange:
+                    startTime: '12:00'
+                    endTime: '16:00'
+                  deliveryMethod: method1
+                  cutOffTime: '11:00'
+                  slotId: 1234567890abcdef123abgh
+              schema:
+                $ref: '#/components/schemas/ActualDeliveryWindows'
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: GET-shipping-retrieve-delivery-times-for-delivery-area
+      security:
+        - oAuth2: []
+      deprecated: true
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/deliveryAreaId'
+      - $ref: '#/components/parameters/cartId'
+  '/shipping/{tenant}/actualDeliveryWindows/{cartId}':
+    get:
+      tags:
+        - Delivery Windows
+      summary: Retrieving delivery windows by cart
+      description: |-
+        Retrieves actual delivery windows for the specified cart.
+
+        **NOTE:** In order to properly retrieve delivery windows, the cart must have `countryCode` and `zipCode` specified.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/cartId'
+        - $ref: '#/components/parameters/postalCodeQuery'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              example:
+                - id: 1234567890abcdef123abc0
+                  deliveryDate: '2015-06-20T12:00:00.000Z'
+                  deliveryTimeRange:
+                    startTime: '15:00'
+                    endTime: '23:00'
+                  deliveryMethod: method1
+                  cutOffTime: '2015-06-20T11:00:00.000Z'
+                  slotId: 1234567890abcdef123abgh
+                  deliveryCycle: 2015-06-20-11
+                - id: 1234567890abcdef123abc1
+                  deliveryDate: '2015-06-24T12:00:00.000Z'
+                  deliveryTimeRange:
+                    startTime: '12:00'
+                    endTime: '16:00'
+                  deliveryMethod: method1
+                  cutOffTime: '2015-06-20T10:00:00.000Z'
+                  slotId: 1234567890abcdef123abgi
+                  deliveryCycle: 2015-06-24-10
+              schema:
+                $ref: '#/components/schemas/ActualDeliveryWindows'
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: GET-shipping-retrieve-actual-delivery-window
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/cartId'
+  '/shipping/{tenant}/actualDeliveryWindows/incrementCounter':
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        description: |
+          Your Emporix tenant name.
+
+          **Note**: The tenant should always be written in lowercase.
+        schema:
+          pattern: '^[a-z][a-z0-9]+$'
+          minLength: 3
+          maxLength: 16
+          type: string
+    post:
+      tags:
+        - Delivery Windows
+      summary: Increasing the delivery window counter
+      operationId: POST-shipping-increase-orders-number-in-delivery-window
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '400':
+          $ref: '#/components/responses/deliveryDate_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Increases the number of orders in the delivery window counter if there is any capacity available. 
+
+        ### NOTE
+        The delivery window counter increases automatically when the Emporix Checkout Service is utilized. This particular endpoint should only be utilized if there is a Custom Checkout Service implementation.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **VALIDATION-DELIVERY-WINDOW-400001**: Lack of required `slotId` property in the request
+        - **VALIDATION-DELIVERY-WINDOW-400002**: Date is not in correct format
+        - **VALIDATION-DELIVERY-WINDOW-400003**: Delivery window is fully booked or does not exist for given date
+        - **VALIDATION-DELIVERY-WINDOW-400004**: Lack of required `zoneId` property in the request
+        - **VALIDATION-DELIVERY-WINDOW-500001**: Internal problem with the service
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryWindowValidationDto'
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+  '/shipping/{tenant}/findSite':
+    post:
+      summary: Finding sites by postal code
+      tags:
+        - Sites
+      description: |-
+        Retrieves a list of sites with zones where the postal code matches the `postalCode` passed in the request body.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FindSiteRequest'
+            example:
+              postalCode: '70190'
+              country: DE
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/windowsLimit'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              example:
+                - id: main
+                  zones:
+                    - id: deliveryarea
+                      name:
+                        en: Delivery area Mordor
+                      shipTo:
+                        - country: DE
+                          postalCode: '70190'
+                      methods:
+                        - id: 1-2_hours_timeframe
+                          name:
+                            en: 1-2_hours_timeframe
+                            de: 1-2 Stunden Lieferzeitfenster
+                          maxOrderValue:
+                            amount: 1000
+                            currency: EUR
+                          active: true
+                          fees:
+                            - minOrderValue:
+                                amount: 0
+                                currency: EUR
+                              cost:
+                                amount: 40
+                                currency: EUR
+                            - minOrderValue:
+                                amount: 0
+                                currency: EUR
+                              cost:
+                                amount: 0
+                                currency: EUR
+                              shippingGroupId: group1
+                            - minOrderValue:
+                                amount: 50
+                                currency: EUR
+                              cost:
+                                amount: 12
+                                currency: EUR
+                              shippingGroupId: group2
+                          shippingTaxCode: HALF
+                        - id: 3_hours_timeframe
+                          name:
+                            en: 3_hours_timeframe
+                            de: 3 Stunden Lieferzeitfenster
+                          maxOrderValue:
+                            amount: 1000
+                            currency: EUR
+                          active: true
+                          fees:
+                            - minOrderValue:
+                                amount: 0
+                                currency: EUR
+                              cost:
+                                amount: 30
+                                currency: EUR
+                            - minOrderValue:
+                                amount: 30
+                                currency: EUR
+                              cost:
+                                amount: 31
+                                currency: EUR
+                              shippingGroupId: group1
+                            - minOrderValue:
+                                amount: 50
+                                currency: EUR
+                              cost:
+                                amount: 32
+                                currency: EUR
+                              shippingGroupId: group2
+                          shippingTaxCode: HALF
+                        - id: 4-more_hours_timeframe
+                          name:
+                            en: 4-more hours timeframe
+                            de: 4-mehr Stunden Lieferzeitfenster
+                          maxOrderValue:
+                            amount: 2000
+                            currency: EUR
+                          active: true
+                          fees:
+                            - minOrderValue:
+                                amount: 0
+                                currency: EUR
+                              cost:
+                                amount: 20
+                                currency: EUR
+                            - minOrderValue:
+                                amount: 30
+                                currency: EUR
+                              cost:
+                                amount: 41
+                                currency: EUR
+                              shippingGroupId: group1
+                            - minOrderValue:
+                                amount: 50
+                                currency: EUR
+                              cost:
+                                amount: 42
+                                currency: EUR
+                              shippingGroupId: group2
+                          shippingTaxCode: ZERO
+                        - id: pickup
+                          name:
+                            en: pickup
+                            de: pickup
+                          maxOrderValue:
+                            amount: 1000
+                            currency: EUR
+                          active: true
+                          fees:
+                            - minOrderValue:
+                                amount: 0
+                                currency: EUR
+                              cost:
+                                amount: 18
+                                currency: EUR
+                            - minOrderValue:
+                                amount: 50
+                                currency: EUR
+                              cost:
+                                amount: 55
+                                currency: EUR
+                              shippingGroupId: group1
+                          shippingTaxCode: ZERO
+                      actualDeliveryWindows:
+                        - id: 5b5572a71cf31a000f31eee6
+                          deliveryDate: '2020-12-08T12:00:00.000Z'
+                          deliveryTimeRange:
+                            startTime: '15:00'
+                            endTime: '22:00'
+                          zoneId: deliveryarea
+                          deliveryMethod: method1
+                          cutOffTime: '2020-12-08T11:00:00.000Z'
+                          slotId: 1234567890abcdef123abgi
+                          deliveryCycle: 2020-12-08-11
+                        - id: 5b5572a71cf31a000f31eee6
+                          deliveryDate: '2020-12-15T12:00:00.000Z'
+                          deliveryTimeRange:
+                            startTime: '15:00'
+                            endTime: '22:00'
+                          deliveryCycle: 2020-12-15-10
+                          zoneId: deliveryarea
+                          deliveryMethod: method1
+                          cutOffTime: '2020-12-15T10:00:00.000Z'
+                          slotId: 1234567890abcdef123abgh
+                  metadata:
+                    createdAt: '2020-10-19T13:04:09.894Z'
+                    modifiedAt: '2020-10-19T13:04:10.979Z'
+                    version: 1
+              schema:
+                $ref: '#/components/schemas/Sites'
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: POST-shipping-find-sites
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/shipping/{tenant}/{site}/zones':
+    post:
+      tags:
+        - Shipping Zones
+      summary: Creating a shipping zone
+      operationId: POST-shipping-create-shipping-zone
+      description: |-
+        Creates a new shipping zone for the specified site.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Zone'
+            examples:
+              Zone create payload with name as a String:
+                $ref: '#/components/examples/ZoneCreateString'
+              Zone create payload with name as a Map:
+                $ref: '#/components/examples/ZoneCreateMap'
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/content-language'
+      responses:
+        '201':
+          description: Resource successfully created.
+          content:
+            application/json:
+              examples:
+                Zone creation response:
+                  $ref: '#/components/examples/ZoneCreationResponse'
+              schema:
+                $ref: '#/components/schemas/ResourceCreatedResponse'
+        '400':
+          $ref: '#/components/responses/zone_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '409':
+          $ref: '#/components/responses/zone_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    get:
+      tags:
+        - Shipping Zones
+      summary: Retrieving shipping zones
+      operationId: GET-shipping-list-shipping-zones
+      description: |-
+        Retrieves shipping zones for the specified site.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/activeMethods'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zones'
+              examples:
+                zones with name as a string:
+                  $ref: '#/components/examples/ZoneStringList'
+                zones with name as a map:
+                  $ref: '#/components/examples/ZoneMapList'
+        '400':
+          $ref: '#/components/responses/zone_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+  '/shipping/{tenant}/{site}/zones/{zoneId}':
+    get:
+      tags:
+        - Shipping Zones
+      summary: Retrieving a shipping zone
+      operationId: GET-shipping-retrieve-shipping-zone
+      description: |-
+        Retrieves the specified shipping zone's details.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/activeMethods'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
+              examples:
+                zone with name as string:
+                  $ref: '#/components/examples/ZoneNameAsString'
+                zone with name as map:
+                  $ref: '#/components/examples/ZoneNameAsMap'
+        '400':
+          $ref: '#/components/responses/zone_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/zone_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    put:
+      tags:
+        - Shipping Zones
+      summary: Updating a shipping zone
+      operationId: PUT-shipping-update-shipping-zone
+      description: |-
+        Fully updates the specified shipping zone.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Zone'
+            examples:
+              Zone update payload with name as a String:
+                $ref: '#/components/examples/ZoneCreateString'
+              Zone update payload with name as a Map:
+                $ref: '#/components/examples/ZoneCreateMap'
+      responses:
+        '200':
+          description: Resource successfully updated.
+        '400':
+          $ref: '#/components/responses/zone_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/zone_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    patch:
+      tags:
+        - Shipping Zones
+      summary: Partially updating a shipping zone
+      operationId: PATCH-shipping-update-shipping-zone
+      description: |-
+        Partially updates the specified shipping zone.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        description: Partial update operation will update only fields which are in the payload.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Zone'
+            examples:
+              Zone update payload with name as a String:
+                $ref: '#/components/examples/ZoneCreateString'
+              Zone update payload with name as a Map:
+                $ref: '#/components/examples/ZoneCreateMap'
+      responses:
+        '200':
+          description: Resource successfully updated.
+        '400':
+          $ref: '#/components/responses/zone_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/zone_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      tags:
+        - Shipping Zones
+      summary: Deleting a shipping zone
+      operationId: DELETE-shipping-remove-shipping-zone
+      description: |-
+        Deletes the specified shipping zone.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+      responses:
+        '204':
+          description: Resource successfully deleted.
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/zone_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+      - $ref: '#/components/parameters/zoneId'
+  '/shipping/{tenant}/deliveryWindowValidation':
+    post:
+      tags:
+        - Delivery Windows
+      summary: Validating a delivery window
+      description: |-
+        Validates the specified delivery window.
+        ***
+
+        ### NOTE
+
+        The delivery window is validated automatically when the Emporix Checkout Service is utilized. This particular endpoint should only be utilized if there is a Custom Checkout Service implementation.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **VALIDATION-DELIVERY-WINDOW-400001**: Lack of required `slotId` property in the request
+        - **VALIDATION-DELIVERY-WINDOW-400002**: Date is not in correct format
+        - **VALIDATION-DELIVERY-WINDOW-400003**: Delivery window is fully booked or does not exist for given date
+        - **VALIDATION-DELIVERY-WINDOW-400004**: Lack of required `zoneId` property in the request
+        - **VALIDATION-DELIVERY-WINDOW-500001**: Internal problem with the service
+
+      responses:
+        '200':
+          description: Resource successfully validated.
+          content:
+            application/json:
+              example: true
+              schema:
+                type: boolean
+        '400':
+          $ref: '#/components/responses/deliveryDate_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: GET-shipping-validate-delivery-window
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+      requestBody:
+        content:
+          application/json:
+            example:
+              deliveryWindowId: '25'
+              deliveryDate: '2021-01-15T12:00:00.000Z'
+              slotId: slot1
+            schema:
+              $ref: '#/components/schemas/DeliveryWindowValidationDto'
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/shipping/{tenant}/{site}/zones/{zoneId}/methods':
+    post:
+      tags:
+        - Shipping Methods
+      summary: Creating a shipping method
+      operationId: POST-shipping-create-shipping-method
+      description: |-
+        Creates a new shipping method for the specified site and shipping zone.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Method'
+            examples:
+              Method with name as a String:
+                $ref: '#/components/examples/MethodString'
+              Method with name as a Map:
+                $ref: '#/components/examples/MethodMap'
+      responses:
+        '201':
+          description: Resource successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceCreatedResponse'
+              examples:
+                method creation response:
+                  $ref: '#/components/examples/MethodCreationResponse'
+        '400':
+          $ref: '#/components/responses/method_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '409':
+          $ref: '#/components/responses/method_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    get:
+      tags:
+        - Shipping Methods
+      summary: Retrieving shipping methods
+      operationId: GET-shipping-list-all-shipping-methods
+      description: |-
+        Retrieves shipping methods for the specified site and shipping zone.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/active'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Methods'
+              examples:
+                Methods with name as a String:
+                  $ref: '#/components/examples/MethodsString'
+                Methods with name as a Map:
+                  $ref: '#/components/examples/MethodsMap'
+        '400':
+          $ref: '#/components/responses/method_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+      - $ref: '#/components/parameters/zoneId'
+  '/shipping/{tenant}/{site}/zones/{zoneId}/methods/{methodId}':
+    get:
+      tags:
+        - Shipping Methods
+      summary: Retrieving a shipping method
+      operationId: GET-shipping-retrieve-shipping-method
+      description: |-
+        Retrieves the specified shipping method's details.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/methodId'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Method'
+              examples:
+                Method with name as a String:
+                  $ref: '#/components/examples/MethodString'
+                Method with name as a Map:
+                  $ref: '#/components/examples/MethodMap'
+        '400':
+          $ref: '#/components/responses/method_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/method_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    put:
+      tags:
+        - Shipping Methods
+      summary: Updating a shipping method
+      operationId: PUT-shipping-update-shipping-method
+      description: |-
+        Fully updates the specified shipping method.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/methodId'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Method'
+            examples:
+              Method update payload with name as a String:
+                $ref: '#/components/examples/MethodString'
+              Method update payload with name as a Map:
+                $ref: '#/components/examples/MethodMap'
+      responses:
+        '200':
+          description: Resource successfully updated.
+        '400':
+          $ref: '#/components/responses/method_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/method_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    patch:
+      tags:
+        - Shipping Methods
+      summary: Partially updating a shipping method
+      operationId: PATCH-shipping-update-shipping-method
+      description: |-
+        Partially updates the specified shipping method.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/methodId'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        description: Partial update operation will update only fields which are in the payload.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Method'
+            examples:
+              Method update payload with name as a String:
+                $ref: '#/components/examples/MethodString'
+              Method update payload with name as a Map:
+                $ref: '#/components/examples/MethodMap'
+      responses:
+        '200':
+          description: Resource successfully updated.
+        '400':
+          $ref: '#/components/responses/method_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/method_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      tags:
+        - Shipping Methods
+      summary: Deleting a shipping method
+      operationId: DELETE-shipping-remove-shipping-method
+      description: |-
+        Deletes the specified shipping method.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/zoneId'
+        - $ref: '#/components/parameters/methodId'
+      responses:
+        '204':
+          description: Resource successfully deleted.
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/method_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/zoneId'
+      - $ref: '#/components/parameters/methodId'
+  '/shipping/{tenant}/{site}/quote':
+    post:
+      tags:
+        - Shipping Cost
+      summary: Calculating the final shipping cost
+      operationId: POST-shipping-calculate-shipping-cost
+      description: |-
+        The endpoint returns shipping methods, which contain the matching fee for all zones.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotePayload'
+            examples:
+              quote calculation payload:
+                $ref: '#/components/examples/QuotePayload'
+      responses:
+        '200':
+          description: Shipping costs calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+              examples:
+                quote response:
+                  $ref: '#/components/examples/QuoteResponse'
+        '400':
+          $ref: '#/components/responses/quote_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+  '/shipping/{tenant}/{site}/quote/minimum':
+    post:
+      tags:
+        - Shipping Cost
+      summary: Calculating the minimum shipping cost
+      operationId: POST-shipping-calculate-min-shipping-cost
+      description: |-
+        Retrieves the minimum shipping cost.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotePayload'
+            examples:
+              quote calculation payload:
+                $ref: '#/components/examples/QuotePayload'
+      responses:
+        '200':
+          description: Shipping costs calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumFee'
+              examples:
+                quote response:
+                  $ref: '#/components/examples/MinimumFee'
+        '400':
+          $ref: '#/components/responses/quote_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+  '/shipping/{tenant}/{site}/quote/slot':
+    post:
+      tags:
+        - Shipping Cost
+      summary: Calculating the shipping cost for a given slot
+      operationId: POST-shipping-calculate-slot-shipping-cost
+      description: |-
+        Retrieves the minimum shipping cost related to a particular slot.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteSlot'
+            examples:
+              Quote slot calculation example:
+                $ref: '#/components/examples/QuoteSlotPayload'
+      responses:
+        '200':
+          description: Shipping costs calculated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinimumFee'
+              examples:
+                quote response:
+                  $ref: '#/components/examples/MinimumFee'
+        '400':
+          $ref: '#/components/responses/quote_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+  '/shipping/{tenant}/{site}/groups':
+    post:
+      tags:
+        - Shipping Groups
+      summary: Creating a shipping group
+      operationId: POST-shipping-create-shipping-group
+      description: |-
+        Creates a new shipping group for the specified site.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+            examples:
+              Group create payload with description as a map:
+                $ref: '#/components/examples/GroupCreateMap'
+              Group create payload with description as a string:
+                $ref: '#/components/examples/GroupCreateString'
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/content-language'
+      responses:
+        '201':
+          description: Resource successfully created.
+          content:
+            application/json:
+              examples:
+                Group creation response:
+                  $ref: '#/components/examples/GroupCreationResponse'
+              schema:
+                $ref: '#/components/schemas/ResourceCreatedResponse'
+        '400':
+          $ref: '#/components/responses/group_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    get:
+      tags:
+        - Shipping Groups
+      summary: Retrieving shipping groups
+      operationId: GET-shipping-list-shipping-groups
+      description: |-
+        Retrieves a list of shipping groups for a specified site.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Groups list:
+                  $ref: '#/components/examples/GroupList'
+              schema:
+                $ref: '#/components/schemas/GroupList'
+        '400':
+          $ref: '#/components/responses/group_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+  '/shipping/{tenant}/{site}/groups/{groupId}':
+    get:
+      tags:
+        - Shipping Groups
+      summary: Retrieving a shipping group
+      operationId: GET-shipping-retrieve-shipping-group
+      description: |-
+        Retrieves the specified shipping group details.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/accept-language'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              examples:
+                Group:
+                  $ref: '#/components/examples/Group'
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/group_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '404':
+          $ref: '#/components/responses/group_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    put:
+      tags:
+        - Shipping Groups
+      summary: Updating a shipping group
+      operationId: PUT-shipping-update-shipping-group
+      description: |-
+        Fully updates the specified shipping group.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/groupId'
+        - $ref: '#/components/parameters/content-language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+            examples:
+              Group update payload with description as a map:
+                $ref: '#/components/examples/GroupCreateMap'
+              Group update payload with description as a string:
+                $ref: '#/components/examples/GroupCreateString'
+      responses:
+        '200':
+          description: Resource successfully updated.
+        '400':
+          $ref: '#/components/responses/group_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/group_notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      tags:
+        - Shipping Groups
+      summary: Deleting a shipping group
+      operationId: DELETE-shipping-remove-shipping-group
+      description: |-
+        Deletes the specified shipping group.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/groupId'
+      responses:
+        '204':
+          description: Resource successfully deleted.
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+      - $ref: '#/components/parameters/groupId'
+  '/shipping/{tenant}/{site}/cgrelations':
+    post:
+      tags:
+        - Customer Group Relations
+      summary: Creating a customer-group relation
+      operationId: POST-shipping-create-customer-group-relation
+      description: |-
+        Creates a new customer-group relation for the specified site.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CGRelation'
+            examples:
+              cgrelation:
+                $ref: '#/components/examples/CGRelation'
+      responses:
+        '201':
+          description: Resource successfully created.
+          content:
+            application/json:
+              examples:
+                Group creation response:
+                  $ref: '#/components/examples/GroupCreationResponse'
+              schema:
+                $ref: '#/components/schemas/ResourceCreatedResponse'
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    get:
+      tags:
+        - Customer Group Relations
+      summary: Retrieving customer-group relations
+      operationId: GET-shipping-list-customer-group-relations
+      description: |-
+        Retrieves a list of customer-group relations for the specified site.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CGRelationList'
+              examples:
+                cgrelations:
+                  $ref: '#/components/examples/CGRelationList'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+  '/shipping/{tenant}/{site}/cgrelations/{customerId}':
+    get:
+      tags:
+        - Customer Group Relations
+      summary: Retrieving a customer's customer-group relations
+      operationId: GET-shipping-retrieve-customer-group-relations
+      description: |-
+        Retrieves customer-group relations for the specified customer.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/customerId'
+      responses:
+        '200':
+          description: Resource successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CGRelation'
+              examples:
+                Cgrelation:
+                  $ref: '#/components/examples/CGRelation'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2: []
+    put:
+      tags:
+        - Customer Group Relations
+      summary: Updating a customer's customer-group relations
+      operationId: PUT-shipping-update-customer-group-relations
+      description: |-
+        Updates the customer-group relation for the specified customer.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/customerId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CGRelation'
+            examples:
+              CGRelation:
+                $ref: '#/components/examples/CGRelation'
+      responses:
+        '200':
+          description: Resource successfully updated.
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      tags:
+        - Customer Group Relations
+      summary: Deleting a customer's customer-group relation
+      operationId: DELETE-shipping-remove-customer-group-relation
+      description: |-
+        Deletes the customer-group relation for the specified customer.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/customerId'
+      responses:
+        '204':
+          description: Resource successfully deleted.
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/site'
+      - $ref: '#/components/parameters/customerId'
+  '/shipping/{tenant}/delivery-times':
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+    get:
+      summary: Retrieving all delivery times
+      tags:
+        - Delivery Times Management
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryTime'
+              examples:
+                sample response:
+                  value:
+                    - siteCode: main
+                      name: deliverytime1
+                      isDeliveryDay: true
+                      zoneId: zone1
+                      day:
+                        weekday: FRIDAY
+                      isForAllZones: false
+                      timeZoneId: Europe/Warsaw
+                      deliveryDayShift: 0
+                      slots:
+                        - shippingMethod: method1
+                          deliveryTimeRange:
+                            timeFrom: '10:00'
+                            timeTo: '12:00'
+                          cutOffTime:
+                            time: '2023-06-12T06:00:00.000Z'
+                            deliveryCycleName: morning
+                          capacity: 100
+                      metadata:
+                        createdAt: '2020-10-19T13:04:09.894Z'
+                        modifiedAt: '2020-10-19T13:04:10.979Z'
+                        version: 1
+                    - siteCode: main
+                      timeZoneId: UTC
+                      name: deliverytime2
+                      isDeliveryDay: true
+                      zoneId: zone2
+                      day:
+                        singleDate: '2023-06-12T10:00:00.000Z'
+                      isForAllZones: false
+                      deliveryDayShift: 2
+                      slots:
+                        - shippingMethod: method1
+                          deliveryTimeRange:
+                            timeFrom: '10:00'
+                            timeTo: '12:00'
+                          cutOffTime:
+                            time: '2023-06-12T06:00:00.000Z'
+                            cutOffDayShift: 1
+                            deliveryCycleName: morning
+                          capacity: 100
+                      metadata:
+                        createdAt: '2020-10-19T13:04:09.894Z'
+                        modifiedAt: '2020-10-19T13:04:10.979Z'
+                        version: 1
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: GET-shipping-list-delivery-times
+      description: |-
+        Returns all the delivery times defined for the given tenant.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+
+      security:
+        - oAuth2:
+            - shipping.shipping_read
+    post:
+      summary: Creating a delivery time
+      tags:
+        - Delivery Times Management
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      operationId: POST-shipping-create-delivery-time
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: ID of the created delivery time
+              examples:
+                Sample response:
+                  value:
+                    id: 647d937ea45a82228e887ab1
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Creates a single delivery time. Delivery time allows to specify the cut off times for a specific zone and day of the week. 
+
+        The endpoint has a validation which checks:
+          - if the `zoneId` belongs to the site
+          - if provided slots id are not duplicated
+          - if the site exists in the system
+          - if the `timeFrom` is before `timeTo`
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400001**: Non-delivery day cannot have declared `slots` property
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400008**: 'ZoneId' cannot be provided when `isForAllZones` flag is active 
+        - **DELIVERY-TIME-400009**: Provided zone not exist in provided site
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400012**: Delivery time `dateFrom` cannot be after `dateTo`
+        - **DELIVERY-TIME-400013**: `isForAllZones` flag cannot be active for delivery day
+        - **DELIVERY-TIME-400014**: Zone id must be provided for delivery day
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400016**: Provided `timeZoneId` is incorrect
+        - **DELIVERY-TIME-400017**: Timezone indicates different time shift than provided delivery time 
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404001**: Provided site does not exist
+        - **DELIVERY-TIME-409001**: Delivery time with given id already exists in the system
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set
+
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicDeliveryTime'
+            examples:
+              sample payload for weekday delivery time:
+                value:
+                  siteCode: main
+                  name: deliverytime1
+                  isDeliveryDay: true
+                  zoneId: zone1
+                  day:
+                    weekday: FRIDAY
+                  isForAllZones: false
+                  timeZoneId: Europe/Warsaw
+                  deliveryDayShift: 0
+                  slots:
+                    - shippingMethod: method1
+                      deliveryTimeRange:
+                        timeFrom: '10:00'
+                        timeTo: '12:00'
+                      cutOffTime:
+                        time: '2023-06-12T06:00:00.000Z'
+                        deliveryCycleName: morning
+                      capacity: 100
+              sample payload for concrete day delivery time:
+                value:
+                  siteCode: main
+                  name: deliverytime3
+                  isDeliveryDay: true
+                  zoneId: zone3
+                  day:
+                    singleDate: '2023-06-12T10:00:00.000Z'
+                  isForAllZones: false
+                  timeZoneId: Europe/Warsaw
+                  deliveryDayShift: 1
+                  slots:
+                    - shippingMethod: method1
+                      deliveryTimeRange:
+                        timeFrom: '10:00'
+                        timeTo: '12:00'
+                      cutOffTime:
+                        time: '2023-06-12T06:00:00.000Z'
+                        cutOffDayShift: 1
+                        deliveryCycleName: morning
+                      capacity: 100
+              sample payload for non delivery day:
+                value:
+                  siteCode: main
+                  name: deliverytime3
+                  isDeliveryDay: false
+                  zoneId: zone3
+                  isForAllZones: false
+                  timeZoneId: Europe/Warsaw
+                  day:
+                    singleDate: '2023-06-12T10:00:00.000Z'
+              sample payload for non delivery day for all zones:
+                value:
+                  siteCode: main
+                  name: deliverytime3
+                  isDeliveryDay: false
+                  isForAllZones: true
+                  timeZoneId: Europe/Warsaw
+                  day:
+                    singleDate: '2023-06-12T10:00:00.000Z'
+  '/shipping/{tenant}/delivery-times/bulk':
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+    post:
+      summary: Creating multiple delivery times
+      tags:
+        - Delivery Times Management
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      operationId: POST-shipping-create-delivery-times-bulk
+      responses:
+        '207':
+          description: Multi-status with all the details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  title: bulk response
+                  description: Schema for API bulk response.
+                  example:
+                    id: '123456789'
+                    index: 0
+                    code: 400
+                    status: BAD_REQUEST
+                    errorCodes:
+                      - DELIVERY-TIME-404001
+                    message: 'There are validation problems, see details section for more information'
+                    type: validation_violation
+                    details:
+                      - siteCode cannot be null
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Identifier of the delivery time
+                    index:
+                      minimum: 0
+                      description: Index of the creating entity
+                      type: integer
+                    code:
+                      minimum: 100
+                      maximum: 599
+                      description: 'original HTTP error code, should be consistent with the response HTTP code'
+                      type: integer
+                    status:
+                      description: original HTTP error status name
+                      type: string
+                    errorCodes:
+                      type: array
+                      items:
+                        type: string
+                        description: The error code which specify the problem
+                      description: Error codes in case validation problems
+                    message:
+                      description: descriptive error message for debugging
+                      type: string
+                    details:
+                      description: list of problems causing this error
+                      type: array
+                      items:
+                        title: errorDetail
+                        description: schema for specific error cause
+                        type: string
+                  required:
+                    - index
+                    - code
+                    - status
+                    - message
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Creates multiple delivery times in a single request. The maximum batch size is 50.
+
+        The endpoint has a validation which checks:
+          - if the `zoneId` belongs to the site
+          - if provided slots id are not duplicated
+          - if the site exists in the system
+          - if the `timeFrom` is before `timeTo`
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400001**: Non-delivery day cannot have declared `slots` property
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400008**: 'ZoneId' cannot be provided when `isForAllZones` flag is active 
+        - **DELIVERY-TIME-400009**: Provided zone not exist in provided site
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400012**: Delivery time `dateFrom` cannot be after `dateTo`
+        - **DELIVERY-TIME-400013**: `isForAllZones` flag cannot be active for delivery day
+        - **DELIVERY-TIME-400014**: Zone id must be provided for delivery day
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400016**: Provided `timeZoneId` is incorrect
+        - **DELIVERY-TIME-400017**: Timezone indicates different time shift than provided delivery time 
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404001**: Provided site does not exist
+        - **DELIVERY-TIME-409001**: Delivery time with given id already exists in the system
+        - **DELIVERY-TIME-409002**: Optimistic locking - provided metadata.version doesn't match
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BasicDeliveryTime'
+            examples:
+              Sample payload for bulk request:
+                value:
+                  - siteCode: main
+                    name: deliverytime1
+                    isDeliveryDay: true
+                    zoneId: zone1
+                    day:
+                      weekday: MONDAY
+                    isForAllZones: false
+                    timeZoneId: Europe/Warsaw
+                    deliveryDayShift: 0
+                    slots:
+                      - shippingMethod: method1
+                        deliveryTimeRange:
+                          timeFrom: '10:00'
+                          timeTo: '12:00'
+                        cutOffTime:
+                          time: '2023-06-12T06:00:00.000Z'
+                          deliveryCycleName: morning
+                        capacity: 100
+                  - siteCode: main
+                    name: deliverytime1
+                    isDeliveryDay: true
+                    zoneId: zone2
+                    day:
+                      weekday: FRIDAY
+                    isForAllZones: false
+                    timeZoneId: Europe/Warsaw
+                    deliveryDayShift: 0
+                    slots:
+                      - shippingMethod: method1
+                        deliveryTimeRange:
+                          timeFrom: '10:00'
+                          timeTo: '12:00'
+                        cutOffTime:
+                          time: '2023-06-12T06:00:00.000Z'
+                          deliveryCycleName: morning
+                        capacity: 100
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+  '/shipping/{tenant}/delivery-times/{deliveryTimeId}':
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: deliveryTimeId
+        in: path
+        required: true
+    get:
+      summary: Getting a delivery time
+      tags:
+        - Delivery Times Management
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryTime'
+              examples:
+                Sample response:
+                  value:
+                    id: 648700f2d23c990ec006fd06
+                    siteCode: main
+                    name: deliverytime3
+                    isDeliveryDay: true
+                    zoneId: zone3
+                    day:
+                      singleDate: '2023-06-12T10:00:00.000Z'
+                    isForAllZones: false
+                    timeZoneId: Europe/Warsaw
+                    deliveryDayShift: 0
+                    slots:
+                      - id: 5bb01144-7c72-4659-9ca2-f1f435108c63
+                        shippingMethod: method1
+                        deliveryTimeRange:
+                          timeFrom: '10:00'
+                          timeTo: '12:00'
+                        cutOffTime:
+                          time: '2023-06-12T06:00:00.000Z'
+                          cutOffDayShift: 1
+                          deliveryCycleName: morning
+                        capacity: 100
+                    metadata:
+                      createdAt: '2023-06-12T11:26:42.250Z'
+                      modifiedAt: '2023-06-12T11:26:42.250Z'
+                      version: 1
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: GET-shipping-retrieve-delivery-time
+      description: |-
+        Retrieves a specific delivery time.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist in the system
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+
+      security:
+        - oAuth2:
+            - shipping.shipping_read
+    put:
+      summary: Updating a delivery time
+      tags:
+        - Delivery Times Management
+      operationId: PUT-shipping-update-delivery-time
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Updates a single delivery time with a given information. Optimistic locking is validated only if the 'metadata' property is provided.
+
+        The endpoint has a validation which checks:
+          - if the `zoneId` belongs to the site
+          - if provided slots id are not duplicated
+          - if the site exists in the system
+          - if the `timeFrom` is before `timeTo`
+
+        Note: Depending on a case, a different set of fields is allowed.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400001**: Non-delivery day cannot have declared `slots` property
+        - **DELIVERY-TIME-400002**: Provided id from the payload must match id from the url
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400008**: 'ZoneId' cannot be provided when `isForAllZones` flag is active 
+        - **DELIVERY-TIME-400009**: Provided zone not exist in provided site
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400012**: Delivery time `dateFrom` cannot be after `dateTo`
+        - **DELIVERY-TIME-400013**: `isForAllZones` flag cannot be active for delivery day
+        - **DELIVERY-TIME-400014**: Zone id must be provided for delivery day
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400016**: Provided `timeZoneId` is incorrect
+        - **DELIVERY-TIME-400017**: Timezone indicates different time shift than provided delivery time 
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404001**: Provided site does not exist
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist in the system
+        - **DELIVERY-TIME-409001**: Delivery time with given id already exists in the system
+        - **DELIVERY-TIME-409002**: Optimistic locking - provided metadata.version does not match 
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request        
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeliveryTime'
+            examples:
+              sample payload for weekday delivery time:
+                value:
+                  siteCode: main
+                  name: deliverytime1
+                  isDeliveryDay: true
+                  zoneId: zone1
+                  day:
+                    weekday: FRIDAY
+                  isForAllZones: false
+                  timeZoneId: Europe/Warsaw
+                  deliveryDayShift: 0
+                  slots:
+                    - shippingMethod: method1
+                      deliveryTimeRange:
+                        timeFrom: '10:00'
+                        timeTo: '12:00'
+                      cutOffTime:
+                        time: '2023-06-12T06:00:00.000Z'
+                        deliveryCycleName: morning
+                      capacity: 100
+                  metadata:
+                    version: 1
+              sample payload for concrete day delivery time:
+                value:
+                  siteCode: main
+                  name: deliverytime3
+                  isDeliveryDay: true
+                  zoneId: zone3
+                  day:
+                    singleDate: '2023-06-12T10:00:00.000Z'
+                  isForAllZones: false
+                  timeZoneId: Europe/Warsaw
+                  deliveryDayShift: 1
+                  slots:
+                    - shippingMethod: method1
+                      deliveryTimeRange:
+                        timeFrom: '10:00'
+                        timeTo: '12:00'
+                      cutOffTime:
+                        time: '2023-06-12T06:00:00.000Z'
+                        cutOffDayShift: 1
+                        deliveryCycleName: morning
+                      capacity: 100
+                  metadata:
+                    version: 1
+              sample payload for non delivery day:
+                value:
+                  siteCode: main
+                  name: deliverytime3
+                  isDeliveryDay: false
+                  isForAllZones: false
+                  timeZoneId: Europe/Warsaw
+                  zoneId: zone3
+                  day:
+                    singleDate: '2023-06-12T10:00:00.000Z'
+                  metadata:
+                    version: 1
+              sample payload for non delivery day for all zones:
+                value:
+                  siteCode: main
+                  name: deliverytime3
+                  isDeliveryDay: false
+                  isForAllZones: true
+                  timeZoneId: Europe/Warsaw
+                  day:
+                    singleDate: '2023-06-12T12:00:00.000Z'
+                  metadata:
+                    version: 1
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    patch:
+      summary: Partial updating of a delivery time
+      tags:
+        - Delivery Times Management
+      operationId: PATCH-shipping-update-delivery-time
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Partially updates a single delivery time with a given information.  
+        ### Note:
+        Depending on a case, a different set of fields is allowed.
+
+        The endpoint has a validation which checks:
+          - if the `zoneId` belongs to the site
+          - if provided slots id are not duplicated
+          - if the site exists in the system
+          - if the `timeFrom` is before `timeTo`
+
+        The patch request consists of set of operation, that should be defined according to RFC-6902 standard
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400001**: Non-delivery day cannot have declared `slots` property
+        - **DELIVERY-TIME-400002**: Provided id from the payload must match id from the url
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400008**: 'ZoneId' cannot be provided when `isForAllZones` flag is active 
+        - **DELIVERY-TIME-400009**: Provided zone not exist in provided site
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400012**: Delivery time `dateFrom` cannot be after `dateTo`
+        - **DELIVERY-TIME-400013**: `isForAllZones` flag cannot be active for delivery day
+        - **DELIVERY-TIME-400014**: Zone id must be provided for delivery day
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400016**: Provided `timeZoneId` is incorrect
+        - **DELIVERY-TIME-400017**: Timezone indicates different time shift than provided delivery time 
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404001**: Provided site does not exist
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist in the system
+        - **DELIVERY-TIME-409001**: Delivery time with given id already exists in the system
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set        
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patch'
+            examples:
+              sample patch payload:
+                value:
+                  - op: replace
+                    path: /name
+                    value: newdeliverytime
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      summary: Deleting a delivery time
+      tags:
+        - Delivery Times Management
+      operationId: DELETE-shipping-remove-delivery-time
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Deletes a specific delivery time with all slots that it had created.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-404001**: Provided site does not exist
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist in the system
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+  '/shipping/{tenant}/delivery-times/{deliveryTimeId}/slots':
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: deliveryTimeId
+        in: path
+        required: true
+    get:
+      summary: Getting all the delivery time slots
+      tags:
+        - Delivery Times Slots Management
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlotCreation'
+              examples:
+                sample response:
+                  value:
+                    - id: 5bb01144-7c72-4659-9ca2-f1f435108c63
+                      shippingMethod: method1
+                      deliveryTimeRange:
+                        timeFrom: '10:00'
+                        timeTo: '12:00'
+                      cutOffTime:
+                        time: '2023-06-12T06:00:00.000Z'
+                        cutOffDayShift: 1
+                        deliveryCycleName: morning
+                      capacity: 100
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: GET-shipping-retrieve-delivery-time-slots
+      description: |-
+        Retrieves all the slots for a given delivery time.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+
+      security:
+        - oAuth2:
+            - shipping.shipping_read
+    post:
+      summary: Creating a delivery time slot
+      tags:
+        - Delivery Times Slots Management
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      operationId: POST-shipping-create-delivery-time-slot
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+              examples:
+                Sample response:
+                  value:
+                    id: 800c4f51-035d-43b4-bbbb-b9ba0c630242
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Creates a new time slot for the given delivery time.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404001**: Delivery time with given id does not exist
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request
+        - **DELIVERY-TIME-SLOT-400002**: The slot id from the payload must match the id from the url
+        - **DELIVERY-TIME-SLOT-400003**: Slot with provided id already exists in the given delivery time
+        - **DELIVERY-TIME-SLOT-400004**: Duplicated time ranges and cutOff time in the existing slots
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotCreation'
+            examples:
+              Sample request payload:
+                value:
+                  shippingMethod: method2
+                  deliveryTimeRange:
+                    timeFrom: '10:00'
+                    timeTo: '12:00'
+                  cutOffTime:
+                    time: '2023-06-12T06:00:00.000Z'
+                    cutOffDayShift: 1
+                    deliveryCycleName: evening
+                  capacity: 100
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      summary: Deleting all the delivery time slots
+      tags:
+        - Delivery Times Slots Management
+      operationId: DELETE-shipping-remove-all-delivery-times-slots
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Deletes all the time slots for the given delivery time.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+  '/shipping/{tenant}/delivery-times/{deliveryTimeId}/slots/{slotId}':
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: deliveryTimeId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: slotId
+        in: path
+        required: true
+    get:
+      summary: Getting a delivery time slot
+      tags:
+        - Delivery Times Slots Management
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotCreation'
+              examples:
+                Sample response:
+                  value:
+                    id: 800c4f51-035d-43b4-bbbb-b9ba0c630242
+                    shippingMethod: method2
+                    deliveryTimeRange:
+                      timeFrom: '10:00'
+                      timeTo: '12:00'
+                    cutOffTime:
+                      time: '2023-06-12T06:00:00.000Z'
+                      cutOffDayShift: 1
+                      deliveryCycleName: evening
+                    capacity: 100
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: get-tenant-delivery-times-deliveryTimeId-slots-slotId
+      description: |-
+        Retrieves the given delivery time slot's details.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-404002**: Delivery time with given id doesn't exists in the system
+        - **DELIVERY-TIME-SLOT-404001**: Slot with provided id doesn't exists in the given delivery time
+
+      security:
+        - oAuth2:
+            - shipping.shipping_read
+    put:
+      summary: Updating a delivery time slot
+      tags:
+        - Delivery Times Slots Management
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      operationId: PUT-shipping-update-delivery-time-slot
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '409':
+          $ref: '#/components/responses/resourceConflict_409'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Updates a single delivery time slot with given information.  
+        ### Note:
+        Depending on a case, a different set of fields is allowed.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request
+        - **DELIVERY-TIME-SLOT-400002**: The slot id from the payload must match the id from the url
+        - **DELIVERY-TIME-SLOT-400003**: Slot with provided id already exists in the given delivery time
+        - **DELIVERY-TIME-SLOT-400004**: Duplicated time ranges and cutOff time in the existing slots
+        - **DELIVERY-TIME-SLOT-404001**: Slot with provided id doesn't exists in the given delivery time
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotCreation'
+            examples:
+              Sample request payload:
+                value:
+                  shippingMethod: method2
+                  deliveryTimeRange:
+                    timeFrom: '10:00'
+                    timeTo: '12:00'
+                  cutOffTime:
+                    time: '2023-06-12T06:00:00.000Z'
+                    cutOffDayShift: 1
+                    deliveryCycleName: evening
+                  capacity: 100
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    patch:
+      summary: Partial updating of a delivery time slot
+      tags:
+        - Delivery Times Slots Management
+      parameters:
+        - $ref: '#/components/parameters/validateOverlapQuery'
+      operationId: PATCH-shipping-update-delivery-time-slot
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/yaasAware_400'
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Partially updates a single delivery time slot with given information.  
+        Note: Depending on a case, a different set of fields is allowed.
+
+        The patch request consists of a set of operations, that should be defined according to RFC-6902 standard
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-400003**: Delivery time of `weekday` type overlaps on existing one
+        - **DELIVERY-TIME-400004**: Delivery time of `singleDay` type overlaps on existing one
+        - **DELIVERY-TIME-400005**: Slot overlaps delivery time of another slots in given delivery time
+        - **DELIVERY-TIME-400006**: Delivery time of `datePeriod` type overlaps on existing one
+        - **DELIVERY-TIME-400007**: Duplicated time ranges and cutOff time different slots
+        - **DELIVERY-TIME-400010**: Provided shipping method does not belong to the given zone
+        - **DELIVERY-TIME-400011**: Delivery 'timeFrom' cannot be after 'timeTo'
+        - **DELIVERY-TIME-400015**: There are duplicated slot ids in the slots array
+        - **DELIVERY-TIME-400018**: Delivery `cutOffTime` cannot be after 'timeTo'
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-400001**: There are overlapping slot id in the request
+        - **DELIVERY-TIME-SLOT-400002**: The slot id from the payload must match the id from the url
+        - **DELIVERY-TIME-SLOT-400003**: Slot with provided id already exists in the given delivery time
+        - **DELIVERY-TIME-SLOT-400004**: Duplicated time ranges and cutOff time in the existing slots
+        - **DELIVERY-TIME-SLOT-404001**: Slot with provided id doesn't exists in the given delivery time
+        - **DELIVERY-TIME-SLOT-400005**: The slot cut off day is set when the delivery time date or period is set
+        - **DELIVERY-TIME-SLOT-400006**: The slot cut off day is set when the delivery day shift is set
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patch'
+            examples:
+              Sample request:
+                value:
+                  - op: replace
+                    path: /shippingMethod
+                    value: testMethod
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+    delete:
+      summary: Deleting a delivery time slot
+      tags:
+        - Delivery Times Slots Management
+      operationId: DELETE-shipping-remove-delivery-times-slot
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      description: |-
+        Deletes a single delivery time slot.
+
+        In case of any validation problem, the below `errorCodes` can be returned:
+        - **DELIVERY-TIME-404002**: Delivery time with given id does not exist
+        - **DELIVERY-TIME-500001**: Internal problem with the service
+        - **DELIVERY-TIME-SLOT-404001**: Slot with provided id doesn't exists in the given delivery time
+
+      security:
+        - oAuth2:
+            - shipping.shipping_manage
+  '/shipping/{tenant}/delivery-cycles/generate':
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+    post:
+      summary: Generating a delivery cycle
+      tags:
+        - Delivery Cycles
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/unauthorized_401'
+        '403':
+          $ref: '#/components/responses/yaasAware_403'
+        '404':
+          $ref: '#/components/responses/notFound_404'
+        '500':
+          $ref: '#/components/responses/internalError_500'
+      operationId: POST-shipping-generate-delivery-cycle
+      description: |-
+        Generates a delivery cycle.
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryCycle'
+            examples:
+              Sample request payload:
+                value:
+                  deliveryTimeId: 64a80cf4c123c90e6c263789
+                  slotId: bdf61ee4-25f4-48af-94c3-ccea8612aefa
+                  deliveryDate: '2020-12-08T12:00:00.000Z'
+components:
+  schemas:
+    ActualDeliveryWindows:
+      title: Collection of actual delivery windows
+      type: array
+      items:
+        $ref: '#/components/schemas/ActualDeliveryWindow'
+    Patch:
+      type: array
+      items:
+        type: object
+        properties:
+          op:
+            type: string
+            description: 'Indicates an operation which should be done. Available operations: `add`, `remove` and `replace`'
+          path:
+            type: string
+            description: 'Indicates a path for which the value should be applied. For example: `/shippingMethod`, `/cutOffTime/day`'
+          value:
+            description: 'Indicates a value that should be changed or added. The value can be of a primitive type, like string, number, boolean or it can be an object or an array.'
+            oneOf:
+              - type: string
+              - type: object
+    ActualDeliveryWindow:
+      title: Actual delivery window
+      description: Delivery window is a range of times when the shipment can be delivered to the customers.
+      type: object
+      properties:
+        id:
+          description: Delivery window’s unique identifier.
+          type: string
+        deliveryDate:
+          description: Delivery date compliant with the ISO 8601 standard.
+          type: string
+        deliveryTimeRange:
+          $ref: '#/components/schemas/TimeRange'
+        deliveryCycle:
+          description: Delivery cycle.
+          type: string
+        zoneId:
+          description: Delivery zone’s unique identifier.
+          type: string
+        deliveryMethod:
+          description: Delivery method name.
+          type: string
+        cutOffTime:
+          description: This denotes the latest point in time by which an action (such as an order or request) must be completed for a specific Delivery Time. Date is compliant with the ISO 8601 standard.
+          type: string
+        slotId:
+          description: Delivery time slot's unique identifier.
+          type: string
+        metadata:
+          $ref: '#/components/schemas/MetaData'
+      required:
+        - deliveryDate
+    BasicDeliveryTime:
+      title: Delivery Time
+      description: ''
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'Delivery Time ID: Autogenerated (if not provided in request) or User-Defined'
+        name:
+          type: string
+          description: Optional name for Delivery Time
+        siteCode:
+          type: string
+          description: Site code for which the Delivery Time is assigned
+        isDeliveryDay:
+          type: boolean
+          description: '`true` indicates that the Delivery Time holds delivery date information, whereas `false` represents that the Delivery Time configuration has disabled delivery for a specific date or time period.'
+        zoneId:
+          type: string
+          description: ID of the delivery zone for which the Delivery Time is valid
+        day:
+          $ref: '#/components/schemas/DeliveryDay'
+        slots:
+          type: array
+          description: This attribute holds information about the established timeslots and cut-off times that are set up for a specific Delivery Time
+          items:
+            $ref: '#/components/schemas/SlotCreation'
+        isForAllZones:
+          type: boolean
+          description: 'Flag which indicates if the non-delivery time is defined for the same day, period or weekday for all zones of the site'
+        timeZoneId:
+          type: string
+          description: Id of the time zone for which the Delivery Time should be created (e.g. Europe/Warsaw).
+        deliveryDayShift:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Indicates in how many days the order has been delivered when the order has been completed before cut-off time.
+      required:
+        - siteCode
+        - isDeliveryDay
+        - day
+        - timeZoneId
+    DeliveryTime:
+      title: Delivery Time
+      description: ''
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BasicDeliveryTime'
+        - properties:
+            metadata:
+              $ref: '#/components/schemas/MetaData'
+    UpdateDeliveryTime:
+      title: Delivery Time
+      description: ''
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BasicDeliveryTime'
+        - properties:
+            metadata:
+              type: object
+              description: metadata of the document
+              properties:
+                version:
+                  type: number
+                  description: version of the document
+              required:
+                - version
+    SlotCreation:
+      title: Slot
+      description: ''
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'Delivery Time Slot ID: Autogenerated (if not provided in request) or User-Defined'
+        shippingMethod:
+          description: Selected shipping method which is available for the Delivery Time in the given Time Slot
+          type: string
+        deliveryTimeRange:
+          $ref: '#/components/schemas/DeliveryTimeRange'
+        cutOffTime:
+          $ref: '#/components/schemas/CutOffTIme'
+        capacity:
+          type: integer
+          description: A capacity determines how many orders the given Delivery Time Slot can handle
+      required:
+        - shippingMethod
+        - deliveryTimeRange
+        - cutOffTime
+        - capacity
+    DeliveryCycle:
+      title: Delivery Cycle
+      type: object
+      description: Object which encapsulates all the fields needed to generate delivery cycle.
+      properties:
+        deliveryTimeId:
+          type: string
+          description: A unique identifier for the overall delivery time period or range.
+        slotId:
+          type: string
+          description: A unique identifier that represents a specific delivery slot within the delivery time.
+        deliveryDate:
+          type: string
+          description: The selected delivery date.
+      required:
+        - deliveryTimeId
+        - slotId
+        - deliveryDate
+    DeliveryDay:
+      title: Delivery Day
+      type: object
+      description: This attribute holds the time configuration for which the Delivery Time is valid. Only a single attribute can be set at any given moment.
+      properties:
+        weekday:
+          description: 'Enum containing names of weekdays, possible values: `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, `SUNDAY`'
+          type: string
+        singleDate:
+          type: string
+          description: 'Date for which the delivery time is valid, compliant with the ISO 8601 standard. Dates should be provided at 12:00:00 local time and send in ISO 8601 standard (e.g. For Europe/Warsaw timezone, the 10:00 should be sent - 2023-06-12T10:00:00.000Z).'
+        datePeriod:
+          type: object
+          description: 'Date period for which the Delivery Time is valid. Dates should be provided at 12:00:00 local time and send in ISO 8601 standard (e.g. For Europe/Warsaw timezone, the 10:00 should be sent - 2023-06-12T10:00:00.000Z).'
+          properties:
+            dateFrom:
+              type: string
+              description: 'Date from which the delivery time is valid, compliant with the ISO 8601 standard.'
+            dateTo:
+              type: string
+              description: 'Date to which the delivery time is valid, compliant with the ISO 8601 standard.'
+          required:
+            - dateFrom
+            - dateTo
+    CutOffTIme:
+      title: Cut-Off Time
+      description: This denotes the latest point in time by which an action (such as an order or request) must be completed for a specific Delivery Time. This attribute is key in determining the end of a time window for certain operations and helps maintain efficiency in the delivery process.
+      type: object
+      properties:
+        time:
+          type: string
+          description: 'The cut-off time refers to the deadline by which an order must be placed to be eligible for same-day processing and shipping. Date is compliant with the ISO 8601 standard, but only time is taking into account.'
+        cutOffDayShift:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Indicates in how many days the order has been delivered when the order has been completed before cut-off time. Property is only available for delivery times of weekday type.
+        deliveryCycleName:
+          type: string
+          description: An optional suffix that is added to delivery cycle name
+      required:
+        - time
+    TimeRange:
+      title: Time range
+      description: A `from` to `to` time range for which the object is valid
+      type: object
+      properties:
+        startTime:
+          pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$'
+          type: string
+          description: 'Time from which the object is valid, provided in local time (e.g. 10:00)'
+        endTime:
+          pattern: '^(2[0-4]|[01]?[0-9]):([0-5]?[0-9])$'
+          type: string
+          description: 'Time to which the object is valid, provided in local time (e.g. 10:00).'
+      required:
+        - startTime
+        - endTime
+    DeliveryTimeRange:
+      title: Time range
+      description: A `from` to `to` time range for which the object is valid
+      type: object
+      properties:
+        timeFrom:
+          pattern: '^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$'
+          type: string
+          description: 'Time from which the object is valid, provided in local time (e.g. 10:00)'
+        timeTo:
+          pattern: '^(2[0-4]|[01]?[0-9]):([0-5]?[0-9])$'
+          type: string
+          description: 'Time to which the object is valid, provided in local time (e.g. 10:00).'
+      required:
+        - timeFrom
+        - timeTo
+    MetaData:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          description: 'Date and time when the object was created, compliant with the ISO 8601 format.'
+          pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?$'
+        modifiedAt:
+          type: string
+          description: 'Date and time when the object was last modified, compliant with the ISO 8601 format.'
+          pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?$'
+        version:
+          minimum: 1
+          type: integer
+    Sites:
+      title: Collection of sites.
+      type: array
+      items:
+        $ref: '#/components/schemas/Site'
+      description: ''
+    Site:
+      title: Site
+      description: A site is a specific virtual or real shop.
+      type: object
+      properties:
+        id:
+          description: Site unique identifier.
+          type: string
+        defaultZoneId:
+          description: Default shippingzone’s unique identifier. A shipping zone is an area where shipments can be delivered.
+          type: string
+        zones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZoneWithActualDeliveryWindows'
+        metadata:
+          $ref: '#/components/schemas/MetaData'
+    Zones:
+      title: Collection of zones
+      type: array
+      items:
+        $ref: '#/components/schemas/Zone'
+    Zone:
+      title: Zone
+      description: The zone is an area where shipments can be delivered.
+      type: object
+      properties:
+        id:
+          description: Delivery zone's unique identifier.
+          type: string
+        default:
+          description: Flag indicating whether the zone is the default delivery zone for the site.
+          type: boolean
+        name:
+          $ref: '#/components/schemas/LocalizedValue'
+        shipTo:
+          $ref: '#/components/schemas/ShipTo'
+        methods:
+          $ref: '#/components/schemas/Methods'
+      required:
+        - id
+        - name
+        - shipTo
+    ZoneWithActualDeliveryWindows:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Zone'
+        - type: object
+          properties:
+            actualDeliveryWindows:
+              $ref: '#/components/schemas/ActualDeliveryWindows'
+    ResourceCreatedResponse:
+      title: Resource created
+      description: Link to created resource with unique resource identifier.
+      type: object
+      properties:
+        id:
+          type: string
+          description: Created resource’s unique identifier.
+    Methods:
+      title: Collection of shipping methods
+      type: array
+      items:
+        $ref: '#/components/schemas/Method'
+    Method:
+      title: Shipping method
+      description: Shipping methods define the types of deliveries and properties such as delivery fees.
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedValue'
+        maxOrderValue:
+          $ref: '#/components/schemas/MonetaryAmount'
+        active:
+          description: Flag indicating whether the shipping method is active.
+          type: boolean
+        fees:
+          $ref: '#/components/schemas/Fees'
+        shippingTaxCode:
+          description: Shipping method's tax code.
+          type: string
+        shippingGroupId:
+          description: Shipping groups unique identifier.
+          type: string
+      required:
+        - id
+        - name
+        - fees
+    Fees:
+      title: Collection of fees
+      type: array
+      items:
+        $ref: '#/components/schemas/Fee'
+    Fee:
+      title: Fee
+      description: Fee is a shipping cost for a given shipping method and parameters.
+      type: object
+      properties:
+        cost:
+          $ref: '#/components/schemas/MonetaryAmount'
+        minOrderValue:
+          $ref: '#/components/schemas/MonetaryAmount'
+        shippingGroupId:
+          description: Shipping group unique identifier.
+          type: string
+      required:
+        - cost
+        - minOrderValue
+    MonetaryAmount:
+      title: Monetary amount
+      description: Amount of money in a given currency.
+      type: object
+      properties:
+        currency:
+          description: 'Three-letter currency code, compliant with the ISO 4217 standard.'
+          type: string
+        amount:
+          type: number
+          minimum: 0
+          description: Amount in specified currency.
+      required:
+        - currency
+        - amount
+    FindSiteRequest:
+      title: Find site request payload
+      description: Payload with parameters for price finding.
+      type: object
+      properties:
+        postalCode:
+          type: string
+          description: Postal code containing numbers and/or letters.
+        country:
+          type: string
+          description: ISO2 or ISO3 formatted country code.
+      required:
+        - postalCode
+    ShipTo:
+      title: ShipTo
+      description: Collection of shipping destinations
+      type: array
+      items:
+        $ref: '#/components/schemas/ShipToItem'
+    ShipToItem:
+      title: shipToItem
+      description: Shipping destination containing country and postal code.
+      type: object
+      properties:
+        country:
+          type: string
+          description: ISO2 or ISO3 formatted country code.
+        postalCode:
+          type: string
+          description: PostalCode containing numbers and/or letters. Can be incomplete and followed by single '*' to match all the postalCodes starting with the same numbers/letters.
+      required:
+        - country
+    QuotePayload:
+      title: Quote request payload
+      description: Example of payload for shipping cost calculation.
+      type: object
+      properties:
+        customerId:
+          description: Customer unique identifier.
+          type: string
+        cartTotal:
+          description: Total amount for the given cart.
+          type: object
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              description: Amount in specified currency.
+              type: number
+              minimum: 0
+            currency:
+              type: string
+              description: 'Three-letter currency code, compliant with the ISO 4217 standard.'
+              pattern: '[A-Z]{3}'
+        shipFromAddress:
+          $ref: '#/components/schemas/Address'
+        shipToAddress:
+          $ref: '#/components/schemas/Address'
+      required:
+        - cartTotal
+        - shipToAddress
+    QuoteSlot:
+      title: Quote slot request schema
+      description: Example of payload for shipping cost calculation.
+      type: object
+      properties:
+        customerId:
+          description: Customer unique identifier.
+          type: string
+        cartTotal:
+          description: Total amount for the given cart.
+          type: object
+          required:
+            - amount
+            - currency
+          properties:
+            amount:
+              description: Amount in specified currency.
+              type: number
+              minimum: 0
+            currency:
+              type: string
+              description: 'Three-letter currency code, compliant with the ISO 4217 standard.'
+              pattern: '[A-Z]{3}'
+        shipFromAddress:
+          $ref: '#/components/schemas/Address'
+        shipToAddress:
+          $ref: '#/components/schemas/Address'
+        slotId:
+          type: string
+          description: The `slotId`` which the quote should be calculated for.
+        deliveryWindowId:
+          type: string
+          description: The delivery window id which the slot with selected shipping method exists for.
+      required:
+        - cartTotal
+        - slotId
+        - deliveryWindowId
+    Address:
+      title: Address
+      description: 'Address of billing or delivery that contains customer or company name and location including street, street number, zipcode, and country.'
+      type: object
+      properties:
+        street:
+          description: Name of the street.
+          type: string
+        streetNumber:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          maxLength: 9
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+      required:
+        - zipCode
+        - country
+    QuoteResponse:
+      title: Quote response
+      description: Example quote response which contains a list of fees for various methods and delivery zone.
+      type: array
+      items:
+        $ref: '#/components/schemas/QuoteResponseItem'
+    QuoteResponseItem:
+      title: Quote response item
+      type: object
+      description: Example quote response which contains fee for specific method and zone.
+      properties:
+        zone:
+          type: object
+          properties:
+            id:
+              description: Delivery zone's unique identifier.
+              type: string
+            name:
+              $ref: '#/components/schemas/LocalizedValue'
+        methods:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuoteResponseMethods'
+    QuoteResponseMethods:
+      title: Quote response shipping methods
+      type: object
+      description: Example quote response which contains fee for specific method.
+      properties:
+        id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedValue'
+        fee:
+          $ref: '#/components/schemas/MonetaryAmount'
+        shippingTaxCode:
+          type: string
+    LocalizedValue:
+      oneOf:
+        - type: string
+          description: String value in the specified language.
+          example: FedEx 2Day
+        - type: object
+          additionalProperties:
+            type: string
+          description: |-
+            Map of translations in form of language:translation pairs.
+            The keys (languages) should be ISO language codes.
+          example:
+            en: FedEx 2Day
+    MinimumFee:
+      title: Minimum fee
+      type: object
+      description: Minimum available delivery fee for given parameters.
+      properties:
+        fee:
+          $ref: '#/components/schemas/MonetaryAmount'
+    Group:
+      title: Group
+      type: object
+      description: Shipping groups can be used for customer grouping with use customer group relations.
+      properties:
+        id:
+          description: Delivery group unique identifier.
+          type: string
+        description:
+          $ref: '#/components/schemas/LocalizedValue'
+      required:
+        - id
+    GroupList:
+      title: Collection of groups
+      description: Collection of shipping groups.
+      type: array
+      items:
+        $ref: '#/components/schemas/Group'
+    CGRelation:
+      title: Customer-group relation
+      description: Customer-group relation allows to assign user for specific group.
+      type: object
+      properties:
+        customerId:
+          description: Customer unique identifier.
+          type: string
+        groupId:
+          description: Group's unique identifier.
+          type: string
+    CGRelationList:
+      title: Collection of customer-group relation
+      type: array
+      items:
+        $ref: '#/components/schemas/CGRelation'
+    DeliveryWindowValidationDto:
+      title: DeliveryWindowValidationDto
+      type: object
+      properties:
+        deliveryWindowId:
+          type: string
+          description: The selected delivery window
+        deliveryDate:
+          type: string
+          description: The selected delivery date
+        slotId:
+          type: string
+          description: The slot that was selected for the delivery.
+      required:
+        - deliveryWindowId
+        - deliveryDate
+    errorMessage:
+      title: error
+      description: Schema for API specified errors.
+      type: object
+      properties:
+        status:
+          minimum: 100
+          maximum: 599
+          description: 'original HTTP error code, should be consistent with the response HTTP code'
+          type: integer
+        type:
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: 'classification of the error type, lower case with underscore eg validation_failure'
+          type: string
+        message:
+          description: descriptive error message for debugging
+          type: string
+        moreInfo:
+          type: string
+          description: link to documentation to investigate further and finding support
+        errorCode:
+          type: string
+          description: The error code which specify the problem
+        details:
+          description: list of problems causing this error
+          type: array
+          items:
+            title: errorDetail
+            description: schema for specific error cause
+            anyOf:
+              - type: string
+              - type: object
+                properties:
+                  field:
+                    description: 'a bean notation expression specifying the element in request data causing the error, eg shipTo[0].country, this can be empty if violation was not field specific'
+                    type: string
+                  type:
+                    pattern: '[a-z]+[a-z_]*[a-z]+'
+                    description: 'classification of the error detail type, lower case with underscore eg missing_value, this value must be always interpreted in context of the general error type.'
+                    type: string
+                  message:
+                    description: descriptive error detail message for debugging
+                    type: string
+                  moreInfo:
+                    type: string
+                    description: link to documentation to investigate further and finding support for error detail
+      required:
+        - status
+        - type
+  responses:
+    yaasAware_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Bad request:
+              value:
+                status: 400
+                message: 'There are validation problems, see details section for more information'
+                moreInfo: ''
+                type: validation_violation
+                details:
+                  - field: tenant
+                    message: size must be between 2 and 16
+                    type: invalid_header
+    zone_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Bad request:
+              value:
+                status: 400
+                message: The request violates validation constraints.
+                type: validation_violation
+                errorCode: ENTITY-400001
+                details:
+                  - field: 'shipTo[0].country'
+                    message: 'shipTo[0].country Provided value is not a valid country code'
+                    type: invalid_field
+    quote_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Bad request:
+              value:
+                status: 400
+                message: validation_violation.
+                type: validation_violation
+                details:
+                  - field: shipToAddress
+                    message: 'shipToAddress: must not be null, cartTotal: must not be null'
+                    type: missing_field
+                  - field: cartTotal
+                    message: cartTotal must not be null
+                    type: missing_field
+    method_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Bad request:
+              value:
+                status: 400
+                message: validation_violation.
+                type: validation_violation
+                details:
+                  - field: name
+                    message: name This field is required. Please provide either value in the content language or a translation map.
+                    type: invalid_field
+                  - field: id
+                    message: id must not be null
+                    type: missing_field
+                  - field: fees
+                    message: fees may not be empty
+                    type: invalid_field
+    group_400:
+      description: Request syntactically incorrect. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Bad request:
+              value:
+                status: 400
+                message: The request violates validation constraints.
+                type: validation_violation
+                details:
+                  - field: description
+                    message: Cannot specify multiple localizations when 'Content-Language' header is set.
+                    type: invalid_field
+    deliveryDate_400:
+      description: DeliveryDate is not valid!.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Bad request:
+              value:
+                status: 400
+                message: 'DeliveryDate: 2021-01-15T12:00:00.000Z is not in future"'
+                moreInfo: ''
+                type: validation_violation
+                details:
+                  - field: tenant
+                    message: size must be between 1 and 36
+                    type: invalid_header
+    yaasAware_403:
+      description: |
+        Given authorization scopes are not sufficient and do not match required scopes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Forbidden:
+              value:
+                status: 403
+                message: User not authorized.
+                type: Forbidden
+                details:
+                  - Missing required scopes
+    notFound_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Not Found:
+              value:
+                status: 404
+                message: The requested URI does not map to a single element resource.
+                errorCode: ENTITY-GET-404001
+                moreInfo: ''
+                type: element_resource_non_existing
+    zone_notFound_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Not Found:
+              value:
+                status: 404
+                message: A zone with id 'zone5' does not exist.
+                type: resource_not_found
+    method_notFound_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Not Found:
+              value:
+                status: 404
+                message: A method with id 'fedex-2dayground' does not exist.
+                type: resource_not_found
+    group_notFound_404:
+      description: |
+        The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Not Found:
+              value:
+                status: 404
+                message: A group with id 'group1' does not exist.
+                type: resource_not_found
+    unauthorized_401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+    resourceConflict_409:
+      description: |
+        Creation failed because there was a conflict with another resource. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Conflict:
+              value:
+                status: 409
+                message: The requested resource could not be updated due to server-side validation.
+                moreInfo: ''
+                type: conflict_resource
+    zone_409:
+      description: |
+        Creation failed because there was a conflict with another resource. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Conflict:
+              value:
+                status: 409
+                message: A zone with id 'zone1' already exists.
+                errorCode: ENTITY-409001
+                type: conflict_resource
+    method_409:
+      description: |
+        Creation failed because there was a conflict with another resource. Details of the error are included in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Conflict:
+              value:
+                status: 409
+                message: A method with id 'fedex-42dayground' already exists.
+                type: conflict_resource
+    internalError_500:
+      description: |
+        Some server side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Internal Server Error:
+              value:
+                status: 500
+                message: Something went wrong while processing the request. Please contact the administrator.
+                errorCode: ENTITY-500001
+                moreInfo: ''
+                type: internal_service_error
+  parameters:
+    site:
+      description: |
+        Site unique identifier. A site is a specific shop.
+
+        If the tenant owns only one shop, the value should be set to `main`.
+      name: site
+      in: path
+      required: true
+      schema:
+        type: string
+    methodId:
+      description: Delivery method's unique identifier.
+      name: methodId
+      in: path
+      required: true
+      schema:
+        type: string
+    activeMethods:
+      description: |-
+        * If set to `true`, only active methods are included.
+        * If set to `false`, only inactive methods are included.
+        * If not specified, all expanded shipping methods are included.
+      name: activeMethods
+      in: query
+      required: false
+      schema:
+        type: string
+    active:
+      description: |-
+        If set to `true`, only active methods are returned. If set to `false`, only the inactive methods are returned.
+        If not specified, both active and inactive methods are returned.
+      name: active
+      in: query
+      required: false
+      schema:
+        type: string
+    expand:
+      description: |-
+        * **methods**: To return zones with expanded shipping methods.
+        * **fees**: To expand the configured fees for those shipping methods.
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+        example: 'methods,fees'
+    zoneId:
+      description: Shipping zone's unique identifier.
+      name: zoneId
+      in: path
+      required: true
+      schema:
+        type: string
+    deliveryAreaId:
+      description: Delivery area’s unique identifier.
+      name: deliveryAreaId
+      in: path
+      required: true
+      schema:
+        type: string
+    cartId:
+      description: Customer cart’s unique identifier generated when a cart is created through the Cart Service.
+      name: cartId
+      in: path
+      required: true
+      schema:
+        type: string
+    postalCodeQuery:
+      description: If provided, the endpoint searches for delivery windows using this postal code (zip code) instead of the one from the cart.
+      name: postalCode
+      in: query
+      required: false
+      schema:
+        type: string
+    siteCodeQuery:
+      description: Store’s site code. The default site code is `main`.
+      name: siteCode
+      in: query
+      required: false
+      schema:
+        type: string
+    afterCutOffTimeQuery:
+      name: afterCutOffTime
+      description: 'If set to `true`, only the delivery windows available after taking the store’s cutoff time into account are retrieved.'
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    validateOverlapQuery:
+      name: validateOverlap
+      description: The flag allows to enable or disable the validation which checks if the delivery time ranges from slots of the same shipping method overlap each other.
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    accept-language:
+      in: header
+      name: Accept-Language
+      required: false
+      description: |-
+        The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred.
+        It can be a priority list working as a fallback mechanism.
+        If the Accept-Language header is empty, all languages for localized fields are returned in a map format where the key is language code and the value is a translation.
+      schema:
+        type: string
+        example: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7'
+    content-language:
+      in: header
+      name: Content-Language
+      required: false
+      description: |-
+        The Content-Language request HTTP header defines language of the payload.
+        When the Content-Language header is empty, all localized fields in a payload should be in a map format,
+        where the key is a language code and the value is a translation.
+      schema:
+        type: string
+        example: fr
+    windowsLimit:
+      description: |-
+        * The **windowsLimit** parameter is optional.
+        * The **windowsLimit** parameter determines the maximum amount of the nearest delivery windows that should be returned for each zone in retrieved sites.
+        * If you do not set the **windowsLimit** parameter, there will be no delivery window arrays in the response.
+        * If you set the **windowsLimit** parameter to 0, there will be empty delivery window arrays in the response.
+      name: windowsLimit
+      in: query
+      required: false
+      schema:
+        type: number
+        minimum: 0
+    groupId:
+      description: Delivery group unique identifier.
+      name: groupId
+      in: path
+      required: true
+      schema:
+        type: string
+    customerId:
+      description: Customer unique identifier generated when the customer's account is created through the Customer Service.
+      name: customerId
+      in: path
+      required: true
+      schema:
+        type: string
+  examples:
+    ZoneCreateString:
+      value:
+        shipTo:
+          - country: DE
+            postalCode: '70190'
+        name: Zone 1
+        id: zone1
+        default: true
+    ZoneCreateMap:
+      value:
+        shipTo:
+          - country: DE
+            postalCode: '70190'
+        name:
+          en: zone 1
+          de: Zone 1
+        id: zone1
+        default: true
+    ZoneStringList:
+      value:
+        - id: zone1
+          name: Zone 1
+          shipTo:
+            - country: DE
+              postalCode: '70190'
+          default: true
+        - id: zone2
+          name: Zone 2
+          shipTo:
+            - country: DE
+              postalCode: '70192'
+          default: false
+    ZoneMapList:
+      value:
+        - id: zone1
+          shipTo:
+            - country: DE
+              postalCode: '70190'
+          name:
+            en: zone 1
+            de: Zone 1
+          default: true
+        - id: zone2
+          shipTo:
+            - country: DE
+              postalCode: '70192'
+          name:
+            en: zone 2
+            de: Zone 2
+          default: false
+    ZoneNameAsString:
+      value:
+        id: zone1
+        name: Zone 1
+        shipTo:
+          - country: DE
+            postalCode: '70190'
+        default: true
+    ZoneNameAsMap:
+      value:
+        id: zone1
+        name:
+          en: zone 1
+          de: Zone 1
+        shipTo:
+          - country: DE
+            postalCode: '70190'
+        default: true
+    ZoneCreationResponse:
+      value:
+        id: zone1
+    QuotePayload:
+      value:
+        customerId: C001
+        cartTotal:
+          amount: 100.34
+          currency: USD
+        shipFromAddress:
+          street: Patterson Fork Road
+          streetNumber: '2095'
+          zipCode: '60606'
+          city: Chicago
+          country: US
+          state: IL
+        shipToAddress:
+          street: Cheng Xiang Zhen Guan Tang Lu
+          streetNumber: '1031'
+          extraLine1: No. 2058
+          extraLine2: Suzhou City
+          zipCode: '201202'
+          city: Taicang City
+          state: Jiangsu Province
+          country: CN
+    QuoteSlotPayload:
+      value:
+        customerId: C0012
+        cartTotal:
+          amount: 100.34
+          currency: USD
+        deliveryWindowId: '123'
+        slotId: '456'
+    QuoteResponse:
+      value:
+        - zone:
+            id: europe
+            name:
+              en: Europe
+              de: Europa
+          methods:
+            - id: fedex-2dayground
+              name:
+                en: FedEx 2Day
+                de: FedEx 2 Tage
+              fee:
+                amount: 4.99
+                currency: EUR
+            - id: dhl
+              name: DHL
+              fee:
+                amount: 2.99
+                currency: EUR
+        - zone:
+            id: northamerica
+            name:
+              en: North America
+              de: Nord Amerika
+          methods:
+            - id: dhl-air
+              name:
+                en: DHL Air
+                de: DHL Flug
+              fee:
+                amount: 9.99
+                currency: EUR
+            - id: dhl-normal
+              name: DHL Normal
+              fee:
+                amount: 5.99
+                currency: EUR
+    MinimumFee:
+      value:
+        fee:
+          amount: 4.99
+          currency: EUR
+    MethodsString:
+      value:
+        - id: fedex-2dayground
+          name: FedEx 2Day
+          active: true
+          maxOrderValue:
+            amount: 5000
+            currency: EUR
+          fees:
+            - minOrderValue:
+                amount: 0
+                currency: EUR
+              cost:
+                amount: 10
+                currency: EUR
+            - minOrderValue:
+                amount: 50
+                currency: EUR
+              cost:
+                amount: 9
+                currency: EUR
+              shippingGroupId: group1
+            - minOrderValue:
+                amount: 200
+                currency: EUR
+              cost:
+                amount: 8
+                currency: EUR
+              shippingGroupId: group2
+        - id: ups-standard
+          name: UPS Standard
+          fees:
+            - minOrderValue:
+                amount: 0
+                currency: EUR
+              cost:
+                amount: 5
+                currency: EUR
+            - minOrderValue:
+                amount: 50
+                currency: EUR
+              cost:
+                amount: 2
+                currency: EUR
+              shippingGroupId: group3
+    MethodsMap:
+      value:
+        - id: fedex-2dayground
+          name:
+            en: FedEx 2Day
+            de: FedEx 2Tage
+          active: true
+          maxOrderValue:
+            amount: 5000
+            currency: EUR
+          fees:
+            - minOrderValue:
+                amount: 0
+                currency: EUR
+              cost:
+                amount: 10
+                currency: EUR
+            - minOrderValue:
+                amount: 50
+                currency: EUR
+              cost:
+                amount: 9
+                currency: EUR
+              shippingGroupId: group1
+            - minOrderValue:
+                amount: 200
+                currency: EUR
+              cost:
+                amount: 8
+                currency: EUR
+              shippingGroupId: group2
+        - id: ups-standard
+          name:
+            en: ups-standard
+            de: Ups-Standard
+          fees:
+            - minOrderValue:
+                amount: 0
+                currency: EUR
+              cost:
+                amount: 5
+                currency: EUR
+            - minOrderValue:
+                amount: 50
+                currency: EUR
+              cost:
+                amount: 2
+                currency: EUR
+              shippingGroupId: group3
+    MethodString:
+      value:
+        id: fedex-2dayground
+        name: FedEx 2Day
+        active: true
+        maxOrderValue:
+          amount: 5000
+          currency: EUR
+        fees:
+          - minOrderValue:
+              amount: 0
+              currency: EUR
+            cost:
+              amount: 10
+              currency: EUR
+          - minOrderValue:
+              amount: 50
+              currency: EUR
+            cost:
+              amount: 9
+              currency: EUR
+            shippingGroupId: group1
+          - minOrderValue:
+              amount: 200
+              currency: EUR
+            cost:
+              amount: 8
+              currency: EUR
+            shippingGroupId: group2
+    MethodMap:
+      value:
+        id: fedex-2dayground
+        name:
+          en: FedEx 2Day
+          de: FedEx 2Tage
+        active: true
+        maxOrderValue:
+          amount: 5000
+          currency: EUR
+        fees:
+          - minOrderValue:
+              amount: 0
+              currency: EUR
+            cost:
+              amount: 10
+              currency: EUR
+          - minOrderValue:
+              amount: 50
+              currency: EUR
+            cost:
+              amount: 9
+              currency: EUR
+            shippingGroupId: group1
+          - minOrderValue:
+              amount: 200
+              currency: EUR
+            cost:
+              amount: 8
+              currency: EUR
+            shippingGroupId: group2
+    MethodCreationResponse:
+      value:
+        id: fedex-2dayground
+    GroupCreateMap:
+      value:
+        id: group1
+        description:
+          en: This is the description for the group group1.
+          de: Dies ist die Beschreibung für die Gruppe group1.
+    GroupCreateString:
+      value:
+        id: group1
+        description: This is the description for the group group1.
+    GroupCreationResponse:
+      value:
+        id: group1
+    GroupList:
+      value:
+        - id: group1
+          description:
+            en: This is the description for the group group1.
+            de: Dies ist die Beschreibung für die Gruppe group1.
+        - id: group2
+          description:
+            en: This is the description for the group group2.
+            de: Dies ist die Beschreibung für die Gruppe group2.
+    Group:
+      value:
+        id: group1
+        description:
+          en: This is the description for the group group1.
+          de: Dies ist die Beschreibung für die Gruppe group1.
+    CGRelation:
+      value:
+        customerId: C001
+        groupId: group1
+    CGRelationList:
+      value:
+        - customerId: C001
+          groupId: group1
+        - customerId: C002
+          groupId: group2
+  requestBodies: {}
+  headers: {}
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            shipping.shipping_manage: Needed to manage shipping settings.
+            shipping.shipping_read: Needed to read shipping settings.
+  links: {}
+  callbacks: {}
+security:
+  - oAuth2: []

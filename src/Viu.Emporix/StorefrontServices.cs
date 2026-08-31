@@ -1,0 +1,506 @@
+using System.Globalization;
+using Microsoft.Extensions.Options;
+
+namespace Viu.Emporix;
+
+/// <summary>
+/// Product availability per site.
+/// </summary>
+public sealed class AvailabilityService
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal AvailabilityService(EmporixHttpClient http, IOptions<EmporixOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _http = http;
+        _tenant = options.Value.Tenant;
+    }
+
+    private string BasePath => $"/availability/{_tenant}/availability";
+
+    /// <summary>
+    /// Fetches the availability of one product at one site.
+    /// </summary>
+    /// <param name="productId">The product id.</param>
+    /// <param name="siteCode">The site code.</param>
+    /// <param name="treatMissingAsAvailable">
+    /// Treats «no stock record» as available rather than raising.
+    /// </param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixNotFoundException">
+    /// No stock record exists and <paramref name="treatMissingAsAvailable"/> is off.
+    /// </exception>
+    /// <remarks>
+    /// Emporix keeps stock records only for products that are actually tracked.
+    /// For a catalog where most products are always in stock, a missing record
+    /// means «available», not «unknown» — which is what the flag is for. It is
+    /// off by default because assuming availability is the more expensive
+    /// mistake.
+    /// </remarks>
+    public async Task<AvailabilityModels.Availability?> GetAsync(
+        string productId,
+        string siteCode,
+        bool treatMissingAsAvailable = false,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
+
+        try
+        {
+            return await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Get,
+                    Path = $"{BasePath}/{Uri.EscapeDataString(productId)}/{Uri.EscapeDataString(siteCode)}",
+                    Auth = Defaults.Anonymous(auth),
+                },
+                AvailabilityJsonContext.Default.Availability,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (EmporixNotFoundException) when (treatMissingAsAvailable)
+        {
+            return new AvailabilityModels.Availability
+            {
+                ProductId = productId,
+                Site = siteCode,
+                Available = true,
+            };
+        }
+    }
+
+    /// <summary>Lists everything tracked at a site.</summary>
+    /// <param name="siteCode">The site code.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<IReadOnlyList<AvailabilityModels.Availability>> ListForSiteAsync(
+        string siteCode,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/site/{Uri.EscapeDataString(siteCode)}",
+                Auth = Defaults.Anonymous(auth),
+            },
+            AvailabilityJsonContext.Default.ListAvailability,
+            cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Records or replaces the availability of a product.</summary>
+    /// <param name="availability">The record to store.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task CreateAsync(
+        AvailabilityModels.AvailabilityDto availability,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(availability);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    availability,
+                    AvailabilityJsonContext.Default.AvailabilityDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Removes the availability record of a product at a site.</summary>
+    /// <param name="productId">The product id.</param>
+    /// <param name="siteCode">The site code.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task DeleteAsync(
+        string productId,
+        string siteCode,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/{Uri.EscapeDataString(productId)}/{Uri.EscapeDataString(siteCode)}",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
+}
+
+/// <summary>
+/// Turning a cart into an order.
+/// </summary>
+/// <remarks>
+/// The one call that must never be repeated on its own. A server error can
+/// arrive after Emporix already placed the order, so this is deliberately not
+/// declared repeatable — see <see cref="EmporixRetryHandler"/>.
+/// </remarks>
+public sealed class CheckoutService
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal CheckoutService(EmporixHttpClient http, IOptions<EmporixOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _http = http;
+        _tenant = options.Value.Tenant;
+    }
+
+    /// <summary>
+    /// Places the order.
+    /// </summary>
+    /// <param name="checkout">The checkout request, built from the cart.</param>
+    /// <param name="auth">The customer or anonymous context that owns the cart. Required.</param>
+    /// <param name="saasToken">
+    /// The second token from <see cref="CustomerSession.SaasToken"/>, where the
+    /// tenant's checkout requires it.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixValidationException">
+    /// Emporix rejected the checkout — an invalid cart, a failed payment
+    /// authorisation, or stock that ran out in the meantime.
+    /// </exception>
+    /// <remarks>
+    /// <b>Not repeated automatically.</b> If this call fails with a server error
+    /// or a timeout, whether the order exists is unknown — check before retrying,
+    /// or you may charge twice.
+    /// </remarks>
+    public async Task<CheckoutModels.ResponseCheckout?> PlaceOrderAsync(
+        CheckoutModels.RequestCheckout checkout,
+        AuthContext auth,
+        string? saasToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(checkout);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"/checkout/{_tenant}/order",
+                Auth = RequireShopper(auth),
+                Content = EmporixJsonContent.Create(
+                    checkout,
+                    CheckoutJsonContext.Default.RequestCheckout),
+                Headers = saasToken is { Length: > 0 } ? [new("saas-token", saasToken)] : null,
+
+                // Deliberately absent: Idempotent. Placing an order twice is the
+                // failure this whole guard exists to prevent.
+            },
+            CheckoutJsonContext.Default.ResponseCheckout,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static AuthContext RequireShopper(AuthContext auth)
+        => auth.Kind is AuthKind.Customer or AuthKind.Anonymous or AuthKind.Raw
+            ? auth
+            : throw new EmporixConfigurationException(
+                "Checkout acts on a cart and therefore requires the customer or anonymous "
+                + "context that owns it.");
+}
+
+/// <summary>
+/// Customer orders.
+/// </summary>
+public sealed class OrderService
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal OrderService(EmporixHttpClient http, IOptions<EmporixOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _http = http;
+        _tenant = options.Value.Tenant;
+    }
+
+    private string BasePath => $"/order/{_tenant}/salesorders";
+
+    /// <summary>Fetches an order by its id.</summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="auth">What to authorise with. Required.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixNotFoundException">No order exists with this id.</exception>
+    public async Task<OrderV2Models.Order?> GetAsync(
+        string orderId,
+        AuthContext auth,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}",
+                Auth = auth,
+            },
+            OrderJsonContext.Default.Order,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Lists the signed-in customer's own orders.
+    /// </summary>
+    /// <param name="auth">The customer's own context. Required.</param>
+    /// <param name="query">An optional Emporix filter.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Which orders come back follows from the token — there is no customer
+    /// parameter, and there must not be one.
+    /// </remarks>
+    public async Task<PaginatedItems<OrderV2Models.Order>> ListMineAsync(
+        AuthContext auth,
+        string? query = null,
+        int pageNumber = 1,
+        int pageSize = 60,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        List<KeyValuePair<string, string?>> parameters =
+        [
+            new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
+            new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+        ];
+
+        if (query is { Length: > 0 })
+        {
+            parameters.Add(new KeyValuePair<string, string?>("q", query));
+        }
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = RequireCustomer(auth),
+                Query = parameters,
+            },
+            OrderJsonContext.Default.ListOrder,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Moves an order to another status.
+    /// </summary>
+    /// <param name="orderId">The order id.</param>
+    /// <param name="status">The target status.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixValidationException">
+    /// The transition is not allowed from the order's current status.
+    /// </exception>
+    public Task ChangeStatusAsync(
+        string orderId,
+        string status,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(status);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(orderId)}/status"
+                    + $"/{Uri.EscapeDataString(status)}",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
+
+    private static AuthContext RequireCustomer(AuthContext auth)
+        => auth.Kind is AuthKind.Customer or AuthKind.Raw
+            ? auth
+            : throw new EmporixConfigurationException(
+                "Listing a customer's own orders derives them from the token and therefore "
+                + "requires that customer's own context.");
+}
+
+/// <summary>
+/// Media assets.
+/// </summary>
+/// <remarks>
+/// Every call here needs a service token. Storefronts read images through the
+/// product they belong to, not through this service — its scopes are
+/// server-side only.
+/// </remarks>
+public sealed class MediaService
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal MediaService(EmporixHttpClient http, IOptions<EmporixOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(options);
+
+        _http = http;
+        _tenant = options.Value.Tenant;
+    }
+
+    private string BasePath => $"/media/{_tenant}/assets";
+
+    /// <summary>Fetches an asset's metadata.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<MediaModels.GetAsset?> GetAsync(
+        string assetId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
+                Auth = Defaults.Service(auth),
+            },
+            MediaJsonContext.Default.GetAsset,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Fetches one page of assets.</summary>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<PaginatedItems<MediaModels.GetAsset>> ListAsync(
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Query =
+                [
+                    new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
+                    new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+                ],
+            },
+            MediaJsonContext.Default.ListGetAsset,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Registers an asset that lives at an external address.</summary>
+    /// <param name="asset">The asset to register.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<MediaModels.GetAssetLink?> CreateLinkAsync(
+        MediaModels.AssetCreateLink asset,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(asset);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    asset,
+                    MediaJsonContext.Default.AssetCreateLink),
+            },
+            MediaJsonContext.Default.GetAssetLink,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Downloads an asset's bytes.
+    /// </summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>
+    /// The raw response. The caller owns it and has to dispose it.
+    /// </returns>
+    /// <remarks>
+    /// Returns the response unread rather than a byte array: an asset can be
+    /// large, and buffering it in memory should be the caller's decision. For a
+    /// public asset Emporix answers with a redirect instead of the bytes.
+    /// </remarks>
+    public Task<HttpResponseMessage> DownloadAsync(
+        string assetId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+
+        return _http.SendRawAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}/download",
+                Auth = Defaults.Service(auth),
+            },
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+    }
+
+    /// <summary>Deletes an asset.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task DeleteAsync(
+        string assetId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
+}

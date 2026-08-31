@@ -1,0 +1,1796 @@
+openapi: 3.0.0
+info:
+  title: Customer Service (tenant-managed)
+  version: ''
+  description: |-
+    Create, manage, and delete customer profiles.
+  contact:
+    name: Emporix
+    url: 'https://emporix.com'
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Account and profile
+  - name: Addresses
+  - name: Import and migration
+  # - name: Assisted buying login
+paths:
+  '/customer/{tenant}/customers':
+    get:
+      summary: Retrieving a list of customers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerForSellerDto'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/CustomerResponseExample'
+          headers:
+            Count:
+              schema:
+                type: integer
+              description: Number of retrieved customers.
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Retrieves a list of customer profiles.
+      operationId: GET-customer-tenant-list-customers
+      parameters:
+        - $ref: '#/components/parameters/query_q'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/expand'
+      security:
+        - OAuth2:
+            - customer.customer_read
+            - customer.customer_read_own
+      tags:
+        - Account and profile
+    post:
+      summary: Creating a customer
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Response example:
+                  value:
+                    id: '34751075'
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '409':
+          $ref: '#/components/responses/409_conflict'
+      description: |-
+        Creates a new customer.
+      operationId: POST-customer-tenant-create-customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerSignupBySellerDto'
+            examples:
+              Request example:
+                value:
+                  contactEmail: john.doe@emporix.com
+                  title: MR
+                  firstName: John
+                  lastName: Doe
+                  contactPhone: '123456789'
+                  company: Emporix
+                  preferredLanguage: en_US
+                  preferredCurrency: EUR
+                  preferredSite: main
+                  b2b:
+                    companyRegistrationId: 123-456-789
+        required: false
+        description: ''
+      parameters:
+        - $ref: '#/components/parameters/sendPasswordResetNotifications'
+      security:
+        - OAuth2:
+            - customer.customer_manage
+            - customer.customer_manage_own
+      tags:
+        - Account and profile
+    parameters:
+      - $ref: '#/components/parameters/Api_Tenant'
+  '/customer/{tenant}/customers/search':
+    post:
+      summary: Searching for customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                q:
+                  type: string
+                  description:  |
+                    A standard query parameter is used to search for specific values. 
+
+                    See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+            examples:
+              search for products:
+                value:
+                  q: "firstName:John"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerForSellerDto'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/CustomerResponseExample'
+          headers:
+            Count:
+              schema:
+                type: integer
+              description: Number of retrieved customers.
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Searches for customer profiles.
+      operationId: POST-customer-tenant-search
+      parameters:
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/tenant'
+      security:
+        - OAuth2:
+            - customer.customer_read
+            - customer.customer_read_own
+      tags:
+        - Account and profile
+  '/customer/{tenant}/customers/{customerNumber}':
+    put:
+      summary: Upserting a customer profile
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Response example:
+                  value:
+                    id: '34751075'
+        '204':
+          description: No Content - update has been successful
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '409':
+          $ref: '#/components/responses/409_conflict'
+      description: |
+        Updates a specified customer profile or creates a new one if it doesn't exist yet.
+      operationId: PUT-customer-tenant-update-customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateBySellerDto'
+            examples:
+              Request example:
+                value:
+                  contactEmail: example@customer.com
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateDto'
+        required: false
+        description: ''
+      parameters:
+        - $ref: '#/components/parameters/sendPasswordResetNotifications'
+      security:
+        - OAuth2:
+            - customer.customer_manage
+            - customer.customer_manage_own
+      tags:
+        - Account and profile
+    patch:
+      summary: Updating a customer profile
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_customer'
+      description: |
+        Updates a specified customer profile.
+      operationId: PATCH-customer-tenant-update-customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchBySellerDto'
+            examples:
+              Request example:
+                value:
+                  contactEmail: example@customer.com
+                  active: true
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchDto'
+        required: false
+        description: ''
+      parameters: []
+      security:
+        - OAuth2:
+            - customer.customer_manage
+            - customer.customer_manage_own
+      tags:
+        - Account and profile
+    get:
+      summary: Retrieving a customer profile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerForSellerDto'
+              examples:
+                Response example:
+                  value:
+                    title: MR
+                    firstName: John
+                    lastName: Doe
+                    contactPhone: '123456789'
+                    company: Emporix
+                    preferredLanguage: en_US
+                    preferredCurrency: EUR
+                    preferredSite: main
+                    metadata:
+                      version: 6
+                    customerNumber: '13869000'
+                    id: '13869000'
+                    contactEmail: example@customer.com
+                    active: true
+                    onHold: false
+                    businessModel: B2B
+                    b2b:
+                      companyRegistrationId: 123-456-789
+                      legalEntities:
+                        - id: D165356
+                          name: Emporix
+                          contactAssignmentId: D436432
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_customer'
+      description: |-
+        Retrieves a specified customer profile.
+      operationId: GET-customer-tenant-retrieve-customer
+      parameters:
+        - $ref: '#/components/parameters/expand'
+      security:
+        - OAuth2:
+            - customer.customer_read
+            - customer.customer_read_own
+      tags:
+        - Account and profile
+    delete:
+      summary: Deleting a customer profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_customer'
+      description: |
+        Deletes a specified customer profile and accounts associated with it.     
+      operationId: DELETE-customer-tenant-remove-customer
+      parameters: []
+      security:
+        - OAuth2:
+            - customer.customer_manage
+            - customer.customer_manage_own
+      tags:
+        - Account and profile
+    parameters:
+      - $ref: '#/components/parameters/customerNumber'
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/customers/{customerNumber}/addresses':
+    get:
+      summary: Retrieving customer addresses
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+              examples:
+                Response example:
+                  value:
+                    - contactName: John Doe
+                      companyName: Emporix
+                      street: Platz der Republik
+                      streetNumber: '1'
+                      streetAppendix: ''
+                      extraLine1: ''
+                      extraLine2: ''
+                      extraLine3: ''
+                      extraLine4: ''
+                      zipCode: '11011'
+                      city: Berlin
+                      country: DE
+                      state: Berlin
+                      contactPhone: '123456789'
+                      tags:
+                        - BILLING
+                        - SHIPPING
+                      id: b05c20e034
+                      isDefault: true
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          description: Not Found
+      description: |-
+        Retrieves a list of addresses for a specified customer.
+      operationId: GET-customer-tenant-list-customer-addresses
+      parameters: []
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_read
+    post:
+      summary: Adding a customer address
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Response example:
+                  value:
+                    id: e6eae2c789
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_customer'
+        '409':
+          $ref: '#/components/responses/409_conflict'
+      description: |
+        Adds an address to a specified customer profile.
+      operationId: POST-customer-tenant-add-customer-address
+      parameters: []
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address_2'
+            examples:
+              Request example:
+                value:
+                  contactName: John Doe
+                  companyName: Emporix
+                  street: Platz der Republik
+                  streetNumber: '1'
+                  streetAppendix: ''
+                  extraLine1: ''
+                  extraLine2: ''
+                  extraLine3: ''
+                  extraLine4: ''
+                  zipCode: '11011'
+                  city: Berlin
+                  country: DE
+                  state: Berlin
+                  contactPhone: '123456789'
+                  tags:
+                    - BILLING
+                    - SHIPPING
+                  isDefault: true
+        description: ''
+    parameters:
+      - $ref: '#/components/parameters/customerNumber'
+      - $ref: '#/components/parameters/Api_Tenant'
+  '/customer/{tenant}/customers/{customerNumber}/addresses/{addressId}':
+    put:
+      summary: Upserting a customer address
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Response example:
+                  value:
+                    id: e6eae2c789
+        '204':
+          description: No Content - update has been successful
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Updates a specified customer address or creates a new one if it doesn't exist yet.
+      operationId: PUT-customer-tenant-update-customer-address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressUpdateDto'
+            examples:
+              Request example:
+                value:
+                  contactName: John Doe
+                  companyName: Emporix
+                  street: Platz der Republik
+                  streetNumber: '1'
+                  streetAppendix: ''
+                  extraLine1: ''
+                  extraLine2: ''
+                  extraLine3: ''
+                  extraLine4: ''
+                  zipCode: '11011'
+                  city: Berlin
+                  country: DE
+                  state: Berlin
+                  contactPhone: '123456789'
+                  tags:
+                    - BILLING
+                    - SHIPPING
+                  isDefault: true
+        required: false
+        description: ''
+      parameters: [ ]
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_manage
+    patch:
+      summary: Partially updating a customer address
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Updates a specified customer address.
+      operationId: PATCH-customer-tenant-update-customer-address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressUpdateDto'
+            examples:
+              Request example:
+                value:
+                  contactName: John Doe
+                  companyName: Emporix
+                  street: Platz der Republik
+                  streetNumber: '1'
+                  streetAppendix: ''
+                  extraLine1: ''
+                  extraLine2: ''
+                  extraLine3: ''
+                  extraLine4: ''
+                  zipCode: '11011'
+                  city: Berlin
+                  country: DE
+                  state: Berlin
+                  contactPhone: '123456789'
+                  tags:
+                    - BILLING
+                    - SHIPPING
+                  isDefault: true
+        required: false
+        description: ''
+      parameters: []
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_manage
+    get:
+      summary: Retrieving a customer address
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+              examples:
+                Response example:
+                  value:
+                    contactName: John Doe
+                    companyName: Emporix
+                    street: Platz der Republik
+                    streetNumber: '1'
+                    streetAppendix: ''
+                    extraLine1: ''
+                    extraLine2: ''
+                    extraLine3: ''
+                    extraLine4: ''
+                    zipCode: '11011'
+                    city: Berlin
+                    country: DE
+                    state: Berlin
+                    contactPhone: '123456789'
+                    tags:
+                      - BILLING
+                      - SHIPPING
+                    id: b05c20e034
+                    isDefault: true
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Retrieves a specified customer address and its details.
+      operationId: GET-customer-tenant-retrieve-customer-address-by-id
+      parameters: []
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_read
+    delete:
+      summary: Deleting a customer address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Deletes a specified customer address.
+      operationId: DELETE-customer-tenant-remove-customer-address
+      parameters: []
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_manage
+    parameters:
+      - $ref: '#/components/parameters/addressId'
+      - $ref: '#/components/parameters/customerNumber'
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/customers/{customerNumber}/addresses/{addressId}/tags':
+    post:
+      summary: Adding tags to a customer address
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Adds tags to a specified customer address.
+      operationId: POST-customer-tenant-add-address-tags
+      parameters:
+        - $ref: '#/components/parameters/tags'
+      tags:
+        - Addresses
+    delete:
+      summary: Deleting tags from a customer address
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Deletes tags from a specified customer address.
+      operationId: DELETE-customer-tenant-remove-address-tags
+      parameters:
+        - $ref: '#/components/parameters/tags'
+      tags:
+        - Addresses
+      security:
+        - OAuth2:
+            - customer.customer_manage
+    parameters:
+      - $ref: '#/components/parameters/addressId'
+      - $ref: '#/components/parameters/customerNumber'
+      - $ref: '#/components/parameters/tenant'
+  # Hiding the assisted-buying endpoint as it's used only internally
+  # '/customer/{tenant}/assisted-buying-login':
+  #   parameters:
+  #     - schema:
+  #         type: string
+  #       name: tenant
+  #       in: path
+  #       required: true
+  #   post:
+  #     summary: Generating a customer token
+  #     operationId: POST-customer-tenant-assisted-buying-login
+  #     responses:
+  #       '200':
+  #         $ref: '#/components/responses/AssistedBuyingLogin'
+  #       '400':
+  #         $ref: '#/components/responses/400_bad_request'
+  #       '401':
+  #         $ref: '#/components/responses/401_unauthorized'
+  #       '403':
+  #         $ref: '#/components/responses/403_forbidden'
+  #     tags:
+  #       - Assisted buying login
+  #     description: |-
+  #       The login feature is crucial for assistant buying functionality whenever a customer token has to be generated by an employee.
+
+  #       **Required scopes**
+  #       * `customer.assistedBuying_manage`
+
+  #       **Note**: Please note that the `employee token` is required to complete this request to assure that an authorized person logs in as a customer. The endpoint doesn't work with API key.
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             $ref: '#/components/schemas/AssistedBuyingLoginDto'
+  #           examples:
+  #             Assistant Login:
+  #               value:
+  #                 customerNumber: C412344
+  '/customer/{tenant}/config/password-migration-retention':
+    parameters:
+      - $ref: '#/components/parameters/Api_Tenant'
+    get:
+      summary: Retrieving password migration retention configuration
+      operationId: GET-customer-tenant-retrieve-password-migration-retention
+      tags:
+        - Import and migration
+      description: |-
+        Retrieves the password migration retention configuration for the tenant.
+      security:
+        - OAuth2:
+            - customer.import_read
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordMigrationRetentionConfigResponse'
+              examples:
+                Response example:
+                  value:
+                    retentionEndDate: '2027-01-31'
+                    emailReminderDate: '2027-01-24'
+                    emailNotificationsEnabled: true
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          description: Password migration retention configuration is not set for the tenant.
+    post:
+      summary: Configuring password migration retention
+      operationId: POST-customer-tenant-configure-password-migration-retention
+      tags:
+        - Import and migration
+      description: |-
+        Creates or updates the password migration retention configuration for the tenant.
+
+        Use this configuration before importing customers with `legacyAuth`.
+        For customers with `legacyAuth`, legacy password hashes are silently migrated to Emporix hashes on the first successful login.
+        When the retention period ends, remaining unmigrated accounts require a password reset and legacy credentials are cleared. A password reset email is sent to affected customers when `emailNotificationsEnabled` is `true`.
+        An email reminder requesting a single login is sent on `emailReminderDate` to all unmigrated customers when `emailNotificationsEnabled` is `true`, asking them to log in once so their accounts can be migrated.
+
+        If `emailReminderDate` is omitted, the service defaults to 7 days before `retentionEndDate`, or to tomorrow when that default would fall on or before today.
+        If `emailNotificationsEnabled` is omitted, the service defaults to `true`. When `false`, customers do not receive any emails regarding the migration.
+
+        If emails should include links to the storefront (password reset or login page), or a non-standard email template is required, please contact Emporix support.
+      security:
+        - OAuth2:
+            - customer.import_manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordMigrationRetentionConfigRequest'
+            examples:
+              Request example:
+                value:
+                  retentionEndDate: '2027-01-31'
+                  emailReminderDate: '2027-01-24'
+                  emailNotificationsEnabled: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordMigrationRetentionConfigResponse'
+              examples:
+                Response example:
+                  value:
+                    retentionEndDate: '2027-01-31'
+                    emailReminderDate: '2027-01-24'
+                    emailNotificationsEnabled: true
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '500':
+          description: Configuration could not be saved.
+    delete:
+      summary: Removing password migration retention configuration
+      operationId: DELETE-customer-tenant-remove-password-migration-retention
+      tags:
+        - Import and migration
+      description: |-
+        Removes the password migration retention configuration for the tenant.
+
+        To avoid indefinite storage of potentially sensitive legacy password hashes, the configuration removal is blocked while any customer account still contains a `legacyAuth` record.
+        Complete the migration window first. The configuration may still be updated to move the `retentionEndDate` earlier and complete migration sooner.
+      security:
+        - OAuth2:
+            - customer.import_manage
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Configuration removal is not possible until password migration is concluded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+  '/customer/{tenant}/customers/import':
+    parameters:
+      - $ref: '#/components/parameters/Api_Tenant'
+    post:
+      summary: Importing customers in bulk
+      operationId: POST-customer-tenant-import-customers
+      tags:
+        - Import and migration
+      description: |-
+        Imports multiple customer profiles in a single request. The maximum batch size is 200.
+
+        Each item must include an `account` object with exactly one of:
+        * `passwordHash` — a precomputed password hash compatible with the Emporix password hashing strategy. In order to determine if your existing strategy is compatible, please contact Emporix support.
+        * `legacyAuth` — a legacy password hash (incompatible with the Emporix password hashing strategy) and algorithm metadata for lazy rehash on first successful login. In order to establish the required algorithm metadata for your case, please contact Emporix support.
+
+        To avoid indefinite storage of potentially sensitive legacy password hashes, importing customers with `legacyAuth` requires an active password migration retention configuration for the tenant.
+
+        Response for a particular customer is returned at the same position (index) at which that customer is located in the request body.
+      security:
+        - OAuth2:
+            - customer.import_manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              maxItems: 200
+              items:
+                $ref: '#/components/schemas/CustomerImportDto'
+            examples:
+              Import with native password hash:
+                value:
+                  - contactEmail: john.doe@emporix.com
+                    firstName: John
+                    lastName: Doe
+                    preferredLanguage: en_US
+                    preferredCurrency: EUR
+                    preferredSite: main
+                    account:
+                      email: john.doe@emporix.com
+                      passwordHash: '1:10000:abcdefgh:ijklmnop'
+              Import with legacyAuth:
+                value:
+                  - contactEmail: jane.doe@emporix.com
+                    firstName: Jane
+                    lastName: Doe
+                    preferredLanguage: en_US
+                    preferredCurrency: EUR
+                    preferredSite: main
+                    account:
+                      email: jane.doe@emporix.com
+                      legacyAuth:
+                        algorithm: hybris-sha512-uid-salt
+                        hash: tBRzNZ+h9FRRm8K1qzDz3aWMgyTlgBihHviEdr+9T82BEODJakLPogHkhkGKF4FGzrhFWMYh6aZ6g5XNN1pmrg==
+                        context:
+                          originalUid: '15TE2000007AE9TOUEILLE 61359'
+      responses:
+        '207':
+          description: Multi-Status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerBulkItemResponse'
+              examples:
+                Multi-Status response example:
+                  value:
+                    - index: 0
+                      id: '13869000'
+                      code: 201
+                      status: Created
+                    - index: 1
+                      code: 400
+                      status: Bad Request
+                      message: Exactly one of 'passwordHash' or 'legacyAuth' must be provided in the account
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+components:
+  schemas:
+    AccountId:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Customer email address.
+        providerId:
+          type: string
+          description: |-
+            Customer account unique identifier generated by an external identity provider.
+
+            **Note**: This field is only applicable if the user has been registered through social login.
+    Address:
+      type: object
+      description: Customer address information.
+      properties:
+        id:
+          type: string
+          description: Customer address unique identifier generated when the address is added to the customer account.
+        contactName:
+          type: string
+        companyName:
+          type: string
+        street:
+          type: string
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+          maxLength: 2
+          minLength: 2
+        state:
+          type: string
+        contactPhone:
+          type: string
+        isDefault:
+          type: boolean
+          default: false
+          description: Flag indicating whether the address is the customer default address.
+        tags:
+          type: array
+          description: ''
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/DefaultDtoMetadata'
+        mixins:
+          type: object
+          description: Customer address additional properties.
+          additionalProperties: true
+      required:
+        - contactName
+    AddressCommonDto:
+      title: AddressCommonDto
+      type: object
+      properties:
+        contactName:
+          type: string
+        companyName:
+          type: string
+        street:
+          type: string
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+          description: '2 letter country code compliant with the ISO 3166-1 alpha-2 standard.'
+        state:
+          type: string
+        contactPhone:
+          type: string
+        tags:
+          type: array
+          description: ''
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/DefaultDtoMetadata'
+        mixins:
+          type: object
+          description: Customer address additional properties.
+          additionalProperties: true
+    AddressUpdateDto:
+      allOf:
+        - $ref: '#/components/schemas/AddressCommonDto'
+        - type: object
+          properties:
+            isDefault:
+              type: boolean
+              description: Flag indicating whether the address is the customer default address.
+            contactName:
+              type: string
+              description: Required if address does not exist and should be created in upsert operation.
+    B2BCreate:
+      type: object
+      description: Additional properties for B2B customer.
+      properties:
+        companyRegistrationId:
+          type: string
+          description: Registration number of the company.
+    B2BGet:
+      allOf:
+        - $ref: '#/components/schemas/B2BCreate'
+      properties:
+        legalEntities:
+          type: array
+          items:
+            properties:
+              id:
+                type: string
+                description: ID of legal entity.
+              name:
+                type: string
+                description: Name of legal entity.
+              contactAssignmentId:
+                type: string
+                description: ID of contact assignment.
+    Restriction:
+      type: string
+      nullable: true
+      description: |
+        Access control identifier that determines who can view or manage the customer.
+
+        **Purpose**: Restricts customer visibility based on scope permissions. Only users/applications 
+        with matching restriction scopes can access customers with a specific restriction value.
+
+        **Access Control**:
+        - *Reading*: Users can only query and view customers with the `restriction` value that matches one of their authorized restrictions.
+
+        **Validation**: The value must exist in the tenant's configured list of valid restrictions.
+
+        **Site Synchronization**: If the `restriction` property is not set with tenant configuration property `enableSyncBetweenRestrictionsAndSiteCodes` set to `true`, the `restriction` field automatically syncs with `preferredSite` property.
+      example: "DE"
+    CustomerCreateDto:
+      type: object
+      properties:
+        title:
+          type: string
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        contactPhone:
+          type: string
+        company:
+          type: string
+        preferredLanguage:
+          type: string
+          default: en_US
+          description: Customer preferred language.
+        preferredCurrency:
+          type: string
+          default: USD
+          description: 'Customer preferred currency, compliant with the ISO 4217 standard.'
+          minLength: 3
+          maxLength: 3
+        preferredSite:
+          type: string
+          default: main
+          description: Customer preferred site.
+        type:
+          type: string
+          description: 'User type. Supported values are: `CUSTOMER` and `CONTACT`. If the field is empty then the user is considered as a customer.'
+        photoUrl:
+          type: string
+          description: Url of a picture.
+        b2b:
+          allOf:
+            - $ref: '#/components/schemas/B2BCreate'
+        metadata:
+          $ref: '#/components/schemas/BasicMetadataDto'
+        mixins:
+          type: object
+          description: 'Customer account''s additional properties. The property is not returned by default. In order to return the mixins property use `expand=mixin:*` query param.'
+          additionalProperties: true
+        restriction:
+          $ref: '#/components/schemas/Restriction'
+    CustomerCommonDto:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CustomerCreateDto'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/DefaultDtoMetadata'
+    CustomerForSellerDto:
+      title: CustomerForSellerDto
+      allOf:
+        - $ref: '#/components/schemas/CustomerCommonDto'
+        - type: object
+          properties:
+            customerNumber:
+              type: string
+              description: Customer unique number generated when the customer profile is created.
+            id:
+              type: string
+              description: Customer unique identifier generated when the customer profile is created.
+            defaultAddress:
+              $ref: '#/components/schemas/Address'
+            accounts:
+              type: array
+              description: List of accounts associated with the customer profile.
+              items:
+                $ref: '#/components/schemas/AccountId'
+            addresses:
+              type: array
+              description: List of customer addresses.
+              items:
+                $ref: '#/components/schemas/Address'
+            contactEmail:
+              type: string
+            active:
+              type: boolean
+              description: Flag indicating whether the customer profile is active.
+            onHold:
+              type: boolean
+              description: Flag indicating whether the customer profile is suspended.
+            email:
+              type: string
+              description: Customer email address.
+            b2b:
+              allOf:
+                - $ref: '#/components/schemas/B2BGet'
+            businessModel:
+              type: string
+              enum: [B2B, B2C]
+              description: Property indicating business model of customer. When customer is assigned to any company then it is `B2B`. Otherwise it is `B2C`.
+            metadataCreatedAt:
+              type: string
+              description: Customer creation date.
+    CustomerSignupBySellerDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerCreateDto'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Custom customer identifier. If not provided, it is automatically generated.
+              minLength: 1
+              maxLength: 66
+              pattern: ^[a-zA-Z0-9_-]$
+            contactEmail:
+              type: string
+            password:
+              type: string
+              description: Initial password for customer
+    CustomerImportDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerCreateDto'
+        - type: object
+          required:
+            - account
+          properties:
+            id:
+              type: string
+              description: Custom customer identifier. If not provided, it is automatically generated.
+              minLength: 1
+              maxLength: 66
+              pattern: '^[\w-]{1,66}$'
+            contactEmail:
+              type: string
+              description: |
+                Optional contact email. When provided, it must match `account.email` (case-insensitive).
+                If omitted, `account.email` is used as the contact email.
+            account:
+              $ref: '#/components/schemas/CustomerImportAccountDto'
+    CustomerImportAccountDto:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          description: Customer account email address. Used as the account identifier.
+        passwordHash:
+          type: string
+          description: |
+            Precomputed Emporix native password hash.
+
+            Provide exactly one of `passwordHash` or `legacyAuth`.
+            Please, contact Emporix support to determine if your existing password hashing strategy is compatible with the Emporix native password hashing strategy.
+        legacyAuth:
+          $ref: '#/components/schemas/LegacyAuth'
+          description: |
+            Legacy authentication data used for password migration.
+
+            Provide exactly one of `passwordHash` or `legacyAuth`. Requires an active password migration retention configuration for the tenant.
+    LegacyAuth:
+      type: object
+      required:
+        - algorithm
+        - hash
+      properties:
+        algorithm:
+          type: string
+          description: Identifier of the legacy password verifier to use during login. Please, contact Emporix support to determine the correct value for your case.
+          enum:
+            - hybris-sha512-uid-salt
+        hash:
+          type: string
+          description: Raw password hash exported from the source system. Stored only in `legacyAuth`, never in the native password field.
+        context:
+          type: object
+          description: |
+            Algorithm-specific metadata required for verification.
+            Please, contact Emporix support to determine the correct values for your case.
+          additionalProperties:
+            type: string
+          example:
+            originalUid: '15TE2000007AE9TOUEILLE 61359'
+    PasswordMigrationRetentionConfigRequest:
+      type: object
+      required:
+        - retentionEndDate
+      properties:
+        retentionEndDate:
+          type: string
+          format: date
+          description: Future date when the password migration retention window ends.
+        emailReminderDate:
+          type: string
+          format: date
+          description: |
+            Optional date on or after today and before `retentionEndDate` when reminder emails are sent to unmigrated customers.
+            When omitted, defaults to 7 days before `retentionEndDate`, or to tomorrow when that default would fall on or before today.
+        emailNotificationsEnabled:
+          type: boolean
+          default: true
+          description: |
+            Optional flag indicating whether customers receive email notifications about the migration process.
+            When `true`, customers receive reminder and password reset emails. When `false`, customers do not receive any emails regarding the migration.
+            When omitted, defaults to `true`.
+    PasswordMigrationRetentionConfigResponse:
+      type: object
+      properties:
+        retentionEndDate:
+          type: string
+          format: date
+          description: Date when the password migration retention window ends.
+        emailReminderDate:
+          type: string
+          format: date
+          description: Date when reminder emails are sent to unmigrated customers.
+        emailNotificationsEnabled:
+          type: boolean
+          description: |
+            Flag indicating whether customers receive email notifications about the migration process.
+            When `true`, customers receive reminder and password reset emails. When `false`, customers do not receive any emails regarding the migration.
+    CustomerBulkItemResponse:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Index of the processed item, matching the item position in the request body.
+        id:
+          type: string
+          description: Customer number generated for a successfully imported customer.
+        code:
+          type: integer
+          description: HTTP status code for the processed item.
+        status:
+          type: string
+          description: HTTP status description for the processed item.
+        message:
+          type: string
+          description: Error message when the item failed.
+        details:
+          type: array
+          description: List of problems causing the error.
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+    CustomerUpdateBySellerDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerCommonDto'
+        - type: object
+          properties:
+            contactEmail:
+              type: string
+            active:
+              type: boolean
+            onHold:
+              type: boolean
+    CustomerUpdateDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerCommonDto'
+        - type: object
+          properties:
+            contactEmail:
+              type: string
+    CustomerPatchBySellerDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerUpdateBySellerDto'
+        - type: object
+          properties:
+            contactEmail:
+              type: string
+              description: Contact email address. Cannot be unset once a value is present.
+    CustomerPatchDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerUpdateDto'
+        - type: object
+          properties:
+            contactEmail:
+              type: string
+              description: Contact email address. Cannot be unset once a value is present.
+    BasicMetadataDto:
+      title: DefaultDtoMetadata
+      type: object
+      properties:
+        mixins:
+          type: object
+          additionalProperties: true
+      description: Links to mixin schemas.
+    DefaultDtoMetadata:
+      title: DefaultDtoMetadata
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BasicMetadataDto'
+        - type: object
+          properties:
+            version:
+              type: integer
+    ErrorMessage:
+      title: ''
+      description: Schema for API-specific errors.
+      type: object
+      properties:
+        status:
+          minimum: 100
+          maximum: 599
+          description: Original HTTP error code. It should be consistent with the HTTP response code.
+          type: integer
+        type:
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: |-
+            Classification of the error type.
+            **Note:** The error type should be written in lowercase and include underscores, for example `validation_failure`.
+          type: string
+        message:
+          description: Descriptive error message for debugging purposes.
+          type: string
+        moreInfo:
+          type: string
+          description: More information (such as a link to the documentation) for investigating further and getting support.
+        details:
+          description: List of problems causing the error.
+          type: array
+          items:
+            title: errorDetail
+            description: Specific error cause.
+            type: object
+            properties:
+              field:
+                description: |-
+                  Element in request data which is causing the error, for example `category.name`.
+                  If the violation was not field-specific, this field will be empty.
+                type: string
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: |-
+                  Classification of the specific error cause. This value should always be interpreted within the context of the general error type.
+                  **Note:** The error type should be written in lowercase and include underscores, for example `missing_value`.
+                type: string
+              message:
+                description: Descriptive error message for debugging purposes.
+                type: string
+              moreInfo:
+                type: string
+                description: More information (such as a link to the documentation) for investigating further and getting support.
+    ResourceLocation:
+      type: object
+      title: Resource Location
+      description: Schema for showing location of the new resource.
+      properties:
+        id:
+          description: Resource identifier.
+          type: string
+    Address_2:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Custom customer address identifier. If not provided, it is automatically generated.
+        contactName:
+          type: string
+        companyName:
+          type: string
+        street:
+          type: string
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+          maxLength: 2
+          minLength: 2
+        state:
+          type: string
+        contactPhone:
+          type: string
+        isDefault:
+          type: boolean
+          default: false
+          description: Flag indicating whether the address is the customer default address.
+        tags:
+          type: array
+          description: ''
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: false
+          description: Links to mixin schemas.
+          properties:
+            mixins:
+              type: object
+              additionalProperties: true
+        mixins:
+          type: object
+          description: Customer address additional properties.
+          additionalProperties: true
+      required:
+        - contactName
+      description: ''
+    CustomerLogin:
+      title: CustomerLogin
+      type: object
+      properties:
+        accessToken:
+          type: string
+          minLength: 1
+        saasToken:
+          type: string
+          minLength: 1
+        expiresIn:
+          type: number
+        refreshToken:
+          type: string
+          minLength: 1
+        refreshTokenExpiresIn:
+          type: number
+    AssistedBuyingLoginDto:
+      title: AssistedBuyingLoginDto
+      type: object
+      properties:
+        customerNumber:
+          type: string
+          description: The customer number for which the token should be generated
+      required:
+        - customerNumber
+  responses:
+    409_conflict:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Account already exists:
+              type: conflict_resource
+              status: 409
+              message: 'Duplicate account ''{email}'' for tenant ''{tenant}''.'
+    400_bad_request:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Invalid tenant:
+              value:
+                type: bad_request
+                status: 400
+                message: The tenant information provided with the request is not valid.
+    401_unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    403_forbidden:
+      description: |
+        Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Missing required scopes:
+              value:
+                type: Forbidden
+                status: 403
+                message: User not authorized.
+    404_customer:
+      description: Customer with the specified `customerNumber` doesn't exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Customer not found:
+              value:
+                status: 404
+                type: application/json
+                message: Customer not Found
+                details:
+                  - message: "Couldn't find a customer with customerNumber '{customerNumber}'"
+    404_address:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Address not found:
+              value:
+                type: resource_not_found
+                status: 404
+                message: 'Address {addressId} of customer {customerNumber} not found.'
+            Customer not found:
+              value:
+                status: 404
+                type: application/json
+                message: Customer not Found
+                details:
+                  - message: "Couldn't find a customer with customerNumber '{customerNumber}'"
+    AssistedBuyingLogin:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomerLogin'
+          examples:
+            Customer Token:
+              value:
+                accessToken: y3dOPGUUtOsasyQHsplHScfhZd5H
+                saasToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzNjM2MzMzMSIsImV4cCI6MTY5NzcwMzAwNn0.dYKDDPDccRPsyoSTecnl-2pJZ_TbMr66dG_iC-tjfrI
+                expiresIn: 2591999
+                refreshToken: eOVLm7LPxwyH4rP43VREXmJVA4sGVqSe
+                refreshTokenExpiresIn: 86399
+  parameters:
+    pageNumber:
+      name: pageNumber
+      in: query
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+
+        **Note:** If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    pageSize:
+      name: pageSize
+      in: query
+      description: |
+        Number of customers to be retrieved per page.
+      schema:
+        default: 60
+        minimum: 1
+        type: integer
+    sort:
+      name: sort
+      in: query
+      description: |
+        List of properties used to sort the results, separated by colons.
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        By default, the fields are sorted in ascending order.
+      schema:
+        type: string
+    query_q:
+      name: q
+      in: query
+      description: |
+        A standard query parameter used to search for specific values.
+      schema:
+        type: string
+        example: 'contactEmail:{email}'
+    tenant:
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      name: tenant
+      in: path
+      required: true
+      schema:
+        type: string
+    expand:
+      name: expand
+      description: |
+        List of additional attributes to be retrieved, separated by commas.
+        Possible values to be passed in this parameter are:
+        * `addresses`
+        * `accounts`
+        * `mixin``
+        * The order of the attributes has no influence on the response.
+      in: query
+      required: false
+      schema:
+        type: string
+    customerNumber:
+      name: customerNumber
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Customer unique identifier generated when the customer profile is created.
+    addressId:
+      name: addressId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Address unique identifier generated when the address is added to a customer profile.
+    tags:
+      name: tags
+      in: query
+      required: true
+      schema:
+        type: string
+        example: 'BILLING,SHIPPING'
+      description: 'List of address tags, separated by commas.'
+    sendPasswordResetNotifications:
+      name: sendPasswordResetNotifications
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
+      description: |
+        Flag indicating whether the customer should receive an email with a password reset link once their account is created.
+    Api_Tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          refreshUrl: ''
+          scopes:
+            customer.customer_read: Needed to retrieve customer profiles.
+            customer.customer_read_own: Needed by customer to retrieve customer profiles from the same company.
+            customer.customer_manage: Needed to manage customer profiles.
+            customer.customer_manage_own: Needed by customer to manage customer profiles from the same company.
+            customer.import_read: Needed to retrieve password migration retention configuration.
+            customer.import_manage: Needed to configure password migration retention and import customers in bulk.
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+  examples:
+    CustomerResponseExample:
+      value:
+        - title: MR
+          firstName: John
+          lastName: Doe
+          contactPhone: '123456789'
+          company: Emporix
+          preferredLanguage: en_US
+          preferredCurrency: EUR
+          preferredSite: main
+          mixins: {}
+          metadata:
+            mixins: {}
+            version: 6
+          customerNumber: '13869000'
+          id: '13869000'
+          contactEmail: example@customer.com
+          active: true
+          onHold: false
+          businessModel: B2B
+          b2b:
+            companyRegistrationId: 123-456-789
+            legalEntities:
+              - id: D165356
+                name: Emporix
+                contactAssignmentId: D436432
+security:
+  - OAuth2: []

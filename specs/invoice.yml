@@ -1,0 +1,235 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Invoice Service
+  contact:
+    email: documentation@emporix.com
+  description: |
+    The Emporix Invoice Service can be used for invoices generation based on provided order IDs.  
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Invoice Jobs
+x-topics:
+  - title: Tutorials - Authorization
+    content: |
+      Authorization:
+
+       To gain the access token we have to execute POST request with parameters:
+
+      - **URL**: https://api.emporix.io/oauth/token
+      - **CLIENT_ID**: `{SET_ME}`
+      - **CLIENT_SECRET**: `{SET_ME}`
+      - **SCOPES**: `{SET_ME}`
+
+      *The required scopes can be found in the description of each endpoint,
+      each client will get their individual CLIENT_ID and CLIENT_SECRET*
+    example: |
+      Example Curl request:
+
+      ```
+      curl --location --request POST 'https://api.emporix.io/oauth/token' \
+      --header 'Content-Type: application/x-www-form-urlencoded' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id={SET_ME}' \
+      --data-urlencode 'client_secret={SET_ME}' \
+      --data-urlencode 'scope={SET_ME}'
+      ```
+
+      Response:
+
+        ```
+        {
+         "refresh_token": "",
+         "refresh_token_expires_in": 0,
+         "session_idle_time": 120,
+         "token_type": "Bearer",
+         "access_token": "{TOKEN}",
+         "expires_in": 14399,
+         "scope": "{SCOPES}"
+        }
+        ```
+paths:
+  '/invoice/{tenant}/jobs/invoices':
+    post:
+      summary: Creating a job that starts an invoice creation
+      tags:
+        - Invoice Jobs
+      description: |
+        Endpoint for creating a job that triggers invoice creation. There are two types of jobs: manual and automatic.
+        * Manual - takes `orderIds` from which the invoices should be created. The `orderIds` come from the request payload.
+        * Automatic - performs a query to find orders that are ready for invoice generation based on configured parameters. The query parameters are defined in configuration service.
+      operationId: POST-invoice-create-job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobRequest'
+            example:
+              orderIds:
+                - sampleOrderId1
+                - sampleOrderId2
+              jobType: MANUAL
+      responses:
+        '201':
+          description: Invoices job created. The job ID is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreationResponse'
+              example:
+                jobId: sampleJobId
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+  '/invoice/{tenant}/jobs/invoices/{jobId}':
+    get:
+      summary: Returning a job status and order details
+      tags:
+        - Invoice Jobs
+      description: Returns the job status and details about the processed orders.
+      operationId: GET-invoice-retrieve-job-and-order
+      responses:
+        '200':
+          description: Returned when job exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+              example:
+                status: IN_PROGRESS
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Returned when a job doesn't exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_jobId'
+components:
+  schemas:
+    JobRequest:
+      type: object
+      properties:
+        orderIds:
+          type: array
+          description: A list of order IDs for which the invoices should be created.
+          items:
+            type: string
+        jobType:
+          enum:
+            - AUTOMATIC
+            - MANUAL
+          type: string
+          description: A job type determines if the orders are searched automatically based on parameters configured in configuration service or are manually provided in orderIds array.
+      required:
+        - jobType
+    JobCreationResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: The created job ID.
+    JobStatusResponse:
+      type: object
+      properties:
+        jobStatus:
+          description: 'Status of the processed job. Possible values: `DONE`,` IN_PROGRESS`'
+          enum:
+            - DONE
+            - IN_PROGRESS
+          type: string
+        jobType:
+          description: Job type determines if the orders are provided manually or searched by a parametrized query.
+          enum:
+            - AUTOMATIC
+            - MANUAL
+          type: string
+        orders:
+          type: array
+          items:
+            type: object
+            properties:
+              orderId:
+                description: The ID of the processed order.
+                type: string
+              orderStatus:
+                description: Status determining if the order was processed successfully.
+                enum:
+                  - SUCCESS
+                  - FAILURE
+                  - PENDING
+                type: string
+              message:
+                description: Information about the result of order processing.
+                type: string
+              downloadLink:
+                description: URL to the generated invoice PDF.
+                type: string
+              invoiceNumber:
+                description: Number of the generated invoice.
+                type: string
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A descriptive error message for debugging.
+        code:
+          type: string
+          description: Original HTTP error code. It should be consistent with the HTTP response code.
+        detailInfo:
+          type: string
+          description: More details about the error (if available).
+  parameters:
+    trait_jobId:
+      name: jobId
+      description: |
+        Unique identifier of an invoice job.
+      in: path
+      required: true
+      schema:
+        type: string
+    trait_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        The tenant that the caller is acting upon.
+
+        Please note that this value is always lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string

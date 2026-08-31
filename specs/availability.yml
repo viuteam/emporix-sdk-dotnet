@@ -1,0 +1,1528 @@
+openapi: 3.0.0
+info:
+  title: Availability Service
+  version: ''
+  description: |-
+    Manage the availability and physical location of a product.
+
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Locations
+  - name: Availabilities
+paths:
+  /availability/{tenant}/locations/{site}:
+    parameters:
+      - $ref: '#/components/parameters/tenant-path'
+      - $ref: '#/components/parameters/site-path'
+    get:
+      tags:
+        - Locations
+      deprecated: true
+      summary: Retrieving all locations for a site
+      description: |-
+        Retrieves all locations for a specified site.
+      security:
+        - OAuth2:
+            - availability.availability_view
+      responses:
+        '200':
+          description: The request was successful. A list of locations is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationList'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/LocationList'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: GET-availability-retrieve-locations-site
+    post:
+      tags:
+        - Locations
+      deprecated: true
+      summary: Adding a new location to a site
+      description: |-
+        Adds a new location to a specified site.
+      security:
+        - OAuth2:
+            - availability.availability_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Location'
+            examples:
+              Request example:
+                $ref: '#/components/examples/Location'
+      responses:
+        '201':
+          description: ' The request was successful. The location has been added to the site.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: 'Successfully created location with id: shop1:1234'
+                code: 201
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '409':
+          $ref: '#/components/responses/ConflictResponse409'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: POST-availability-add-locations-site
+    put:
+      tags:
+        - Locations
+      deprecated: true
+      summary: Updating locations
+      description: |-
+        Updates locations for a specified site.
+      security:
+        - OAuth2:
+            - availability.availability_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationOrderList'
+            examples:
+              Request example:
+                $ref: '#/components/examples/LocationOrderList'
+      responses:
+        '200':
+          description: ' The request was successful. The locations have been updated.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: Successfully modified 5 location(s)
+                code: 200
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PUT-availability-update-locations-site
+  /availability/{tenant}/locations/{location}:
+    description: Availability service
+    parameters:
+      - $ref: '#/components/parameters/tenant-path'
+    delete:
+      tags:
+        - Locations
+      deprecated: true
+      summary: Deleting a location
+      description: |-
+        Deletes a specified location.
+      security:
+        - OAuth2:
+            - availability.availability_manage
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+        - $ref: '#/components/parameters/location-path'
+      responses:
+        '200':
+          description: ' The request was successful. The location has been deleted.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: Successfully deleted 5 location(s)
+                code: 200
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: DELETE-availability-remove-location
+  /availability/{tenant}/search/locations:
+    description: Availability service
+    post:
+      deprecated: true
+      summary: Retrieving product locations
+      description: |-
+        Retrieves locations of specified products.
+      security:
+        - OAuth2:
+            - availability.availability_view
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationSearch'
+            examples:
+              Request example:
+                $ref: '#/components/examples/LocationSearch'
+      responses:
+        '200':
+          description: The request was successful. A list of locations is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductLocationList'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/ProductLocationList'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: POST-availability-search-locations
+      tags:
+        - Locations
+    parameters:
+      - $ref: '#/components/parameters/tenant-path'
+  /availability/{tenant}/availability/site/{site}:
+    description: Availability service
+    parameters:
+      - $ref: '#/components/parameters/tenant-path'
+      - $ref: '#/components/parameters/site-path'
+      - $ref: '#/components/parameters/page-size'
+      - $ref: '#/components/parameters/page-number'
+    get:
+      summary: Retrieving all availability information for a site
+      description: |-
+        Retrieves all availability information for a specified site.
+
+        **Note**: When a product bundle is retrieved, availability is returned both for its particular products and for the bundle as a whole. The bundle availability is equal to the lowest availability found in its products.
+
+        ***
+
+        ### **Additional scope information**
+        * The `availability.availability_view_by_vendor` scope is required only when fetching availabilities for a specific vendor. 
+
+        ***
+      security:
+        - OAuth2: 
+            - availability.availability_view_by_vendor
+      responses:
+        '200':
+          description: The request was successful. A list of availabilities is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of availabilities matching the query criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityList'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/AvailabilityList'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: GET-availability-retrieve-availability-site
+      parameters:
+        - $ref: '#/components/parameters/page-size'
+        - $ref: '#/components/parameters/page-number'
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/sort'
+      tags:
+        - Availabilities
+  '/availability/{tenant}/availability/search':
+    post:
+      tags:
+        - Availabilities
+      summary: Retrieving product availabilities
+      description: |-
+        Retrieves availabilities for specified products. The request body accepts one of two mutually exclusive formats:
+
+        * **List of product IDs** — retrieves availabilities for the specified products. If the product ID refers to a product bundle, availability information for the entire bundle is returned. The `site` query parameter is optional.
+        * **Q-param object** — retrieves availabilities matching the provided query criteria. The response will **not** include avaialbilities for product bundles. The `site` query parameter must **not** be provided together with the Q-param body.
+
+        ***
+
+        ### **Additional scope information**
+        * The `availability.availability_view_by_vendor` scope is required only when fetching availabilities for a specific vendor. 
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_view_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/tenant-path'
+        - $ref: '#/components/parameters/site'
+        - $ref: '#/components/parameters/page-size'
+        - $ref: '#/components/parameters/page-number'
+        - $ref: '#/components/parameters/sort'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: array
+                  description: IDs of products for which availabilities should be retrieved.
+                  items:
+                    type: string
+                - type: object
+                  description: Query criteria for filtering availabilities.
+                  properties:
+                    q:
+                      type: string
+                      description: |
+                        A standard query parameter used to search for specific values.
+
+                        See: [Standard Practices - Query parameter](https://developer.emporix.io/docs/content/q-param)
+                  required:
+                    - q
+            examples:
+              Product IDs:
+                value:
+                  - 5f7c996173fc281cdd412345
+                  - 5f7c996173fc281cdd412346
+              Q-param:
+                value:
+                  q: 'popularity:>10'
+      responses:
+        '200':
+          description: The request was successful. A list of availabilities is returned.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total number of availabilities matching the query criteria. Does not include availabilities for product bundles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityWithBundleList'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/AvailabilityWithBundleList'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: POST-availability-search-products-site
+  /availability/{tenant}/availability/{productId}/{site}:
+    description: Availability service
+    parameters:
+      - $ref: '#/components/parameters/tenant-path'
+      - $ref: '#/components/parameters/product-id'
+      - $ref: '#/components/parameters/site-path'
+    get:
+      tags:
+        - Availabilities
+      summary: Retrieving a product availability
+      description: |-
+        Retrieves a specified product availability details.
+
+        ***
+
+        ### **Additional scope information**
+        * The `availability.availability_view_by_vendor` scope is required only when fetching availabilities for a specific vendor. 
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_view_by_vendor
+      responses:
+        '200':
+          description: The request was successful. The product availability details are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityWithBundle'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/AvailabilityWithBundle'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: GET-availability-retrieve-product
+    post:
+      tags:
+        - Availabilities
+      summary: Creating a new availability for a product
+      description: |-
+        Creates a new availability for a specified product.
+
+        **Note**: We recommend not to create a new product availability for a site named `main`. A site named `main` works as an aggregator of availability data from other sites. It's not possible to later retrieve availability for a single site when it's called `main`.
+
+        ***
+
+        **Additional scope information**
+        * The `availability.availability_manage_by_vendor` scope allows to create availabilities for products belonging to the vendor.
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_manage
+            - availability.availability_manage_by_vendor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityDto'
+            examples:
+              Availability:
+                $ref: '#/components/examples/AvailabilityDto'
+      responses:
+        '201':
+          description: The request was successful. The availability has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                id: 5f7c996173fc281cdd412345.
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '409':
+          $ref: '#/components/responses/ConflictResponse409'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: POST-availability-add-product
+    put:
+      tags:
+        - Availabilities
+      summary: Upserting availability information of a product
+      description: |-
+        Updates a specified product availability details, or crates a new availability if it doesn't exist yet. 
+
+        **Note**: There is no possibility to update a product bundle availability - it is always equal to the lowest availability found in the bundled products.
+
+        ***
+
+        **Additional scope information**
+        * The `availability.availability_manage_by_vendor` scope is only required when updating or creating availabilities belonging to the vendor.
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_manage
+            - availability.availability_manage_by_vendor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityDto'
+            examples:
+              Availability:
+                $ref: '#/components/examples/AvailabilityDto'
+      responses:
+        '201':
+          description: The request was successful. The availability has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                id: 5f7c996173fc281cdd412345.
+        '204':
+          description: The request was successful. The availability has been updated.
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PUT-availability-update-product
+    delete:
+      tags:
+        - Availabilities
+      summary: Deleting availability information of a product
+      description: |-
+        Deletes a specified product availability.
+
+        **Note**: There is no possibility to delete a product bundle availability - it is always equal to the lowest availability found in the bundled products.
+
+        ***
+
+        **Additional scope information**
+        * The `availability.availability_manage_by_vendor` scope is only required when deleting availabilities belonging to the vendor.
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_manage
+            - availability.availability_manage_by_vendor
+      responses:
+        '204':
+          description: The request was successful. The availability has been deleted.
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: DELETE-availability-remove-product
+  /availability/{tenant}/availability/bulk:
+    parameters:
+      - $ref: '#/components/parameters/tenant-path'
+      - $ref: '#/components/parameters/vendor-id'
+    post:
+      tags:
+        - Availabilities
+      summary: Creating multiple product availabilities
+      description: |-
+        Creates availability records for a product based on its ID and site. A product can have different availability across sites, so each record is uniquely defined by the combination of `productId` and `site`. The maximum batch size is 200.
+
+        **Note**: We recommend not to create new product availabilities for a site named `main`. A site named `main` works as an aggregator of availability data from other sites. It's not possible to later retrieve availability for a single site when it's called `main`.
+
+        ***
+
+        ### **Additional scope information**
+        * The `availability.availability_manage_by_vendor` scope is only required when creating availabilities belonging to the vendor.
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_manage
+            - availability.availability_manage_by_vendor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvailabilityBulkDto'
+            examples:
+              Availability:
+                $ref: '#/components/examples/AvailabilityBulkDto'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Multi-status creation example:
+                  $ref: '#/components/examples/BulkCreateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: POST-availability-tenant-availability-bulk
+    put:
+      tags:
+        - Availabilities
+      summary: Upserting multiple availabilities information of a product
+      description: |-
+        Creates or updates product availability records based on product ID and site. If an availability does not yet exist for a given `productId` and `site`, it is created. If it already exists, it is updated. The maximum batch size is 200.
+
+        **Note**: We recommend not to create new product availabilities for a site named `main`. A site named `main` works as an aggregator of availability data from other sites. It's not possible to later retrieve availability for a single site when it's called `main`.
+
+        ***
+
+        **Additional scope information**
+        * The `availability.availability_manage_by_vendor` scope is only required when creating or updating availabilities belonging to the vendor.
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_manage
+            - availability.availability_manage_by_vendor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvailabilityBulkDto'
+            examples:
+              Availability:
+                $ref: '#/components/examples/AvailabilityBulkDto'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Multi-status upsertion example:
+                  $ref: '#/components/examples/BulkUpsertResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PUT-availability-tenant-availability-bulk
+    delete:
+      tags:
+        - Availabilities
+      summary: Deleting multiple availabilities information of a product
+      description: |-
+        Deletes product availability records identified by the combination of `productId` and `site`. The maximum batch size is 200.
+
+        **Note**: There is no possibility to delete a product bundle availability - it is always equal to the lowest availability found in the bundled products.
+
+        ***
+
+        **Additional scope information**
+        * The `availability.availability_manage_by_vendor` scope is only required when deleting availabilities belonging to the vendor.
+
+        ***
+      security:
+        - OAuth2:
+            - availability.availability_manage
+            - availability.availability_manage_by_vendor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvailabilityDeleteBulkDto'
+            examples:
+              Availability:
+                $ref: '#/components/examples/AvailabilityDeleteBulkDto'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Multi-status deletion example:
+                  $ref: '#/components/examples/BulkDeleteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: DELETE-availability-tenant-availability-bulk
+components:
+  parameters:
+    tenant-path:
+      in: path
+      name: tenant
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant name should always be provided in lowercase.
+      schema:
+        type: string
+        example: testtenant
+    product-id:
+      in: path
+      name: productId
+      required: true
+      description: 'Product unique identifier, generated when the product is created through the Product Service.'
+      schema:
+        type: string
+        example: 5f7c996173fc281cdd412345
+    site-path:
+      in: path
+      name: site
+      required: true
+      description: 'Site code, defined when the site is created.'
+      schema:
+        type: string
+        example: shop1
+    vendor-id:
+      in: header
+      name: venodr-id
+      required: false
+      description: 'Unique identifier of the vendor. The presence of this header will limit the operation to products assigned to the provided vendor.'
+      schema:
+        type: string
+        example: 68ad7d45c42fc8121a611fec
+    location-path:
+      in: path
+      name: location
+      required: true
+      description: Location unique identifier.
+      schema:
+        type: string
+        example: 'shop1:1234'
+    site:
+      in: query
+      name: site
+      description: "Site code, defined when the site is created. If it's not provided, then availabilities for all sites are returned."
+      schema:
+        type: string
+        example: shop1
+    page-size:
+      in: query
+      name: pageSize
+      required: false
+      description: |
+        Number of items to be retrieved per page.
+      schema:
+        type: number
+        example: 100
+        default: 20000
+    page-number:
+      in: query
+      name: pageNumber
+      required: false
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+
+        **Note:** If the `pageNumber` parameter is passed, size of the pages must be specified in the `pageSize` parameter.
+      schema:
+        type: number
+        example: 5
+        default: 1
+    all-sites:
+      in: query
+      name: allSites
+      required: false
+      description: Flag indicating whether the results should be retrieved from all sites.
+      schema:
+        type: boolean
+        example: true
+        default: false
+    q:
+      in: query
+      name: q
+      required: false
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        See: [Standard Practices - Query parameter](https://developer.emporix.io/docs/content/q-param)
+      schema:
+        type: string
+    sort:
+      in: query
+      name: sort
+      required: false
+      description: |
+        List of properties used to sort the results, separated by colons.
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+      schema:
+        type: string
+  schemas:
+    AvailabilityDto:
+      type: object
+      properties:
+        stockLevel:
+          type: number
+          description: 'Stock level of the product, expressed as a number.'
+          example: 10
+        available:
+          type: boolean
+          description: Flag indicating whether the product is available.
+          example: true
+        popularity:
+          type: integer
+          description: 'Popularity of the product, expressed as a number.'
+          example: 5
+        distributionChannel:
+          $ref: '#/components/schemas/DistributionChannel'
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties:
+                type: string
+              example:
+                productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+    AvailabilityBulkDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          description: 'Unique identifier of the product.'
+          example: '12345'
+        site:
+          type: string
+          description: 'Unique identifier of the site.'
+          example: 'shop1'
+        stockLevel:
+          type: number
+          description: 'Stock level of the product, expressed as a number.'
+          example: 10
+        available:
+          type: boolean
+          description: 'Flag indicating whether the product is available.'
+          example: true
+        popularity:
+          type: integer
+          description: 'Popularity of the product, expressed as a number.'
+          example: 5
+        distributionChannel:
+          $ref: '#/components/schemas/DistributionChannel'
+        mixins:
+          type: object
+          description: 'The field contains mixins values.'
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            mixins:
+              type: object
+              description: 'Links to the mixin schemas.'
+              additionalProperties:
+                type: string
+              example:
+                productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+    AvailabilityDeleteBulkDto:
+      type: object
+      properties:
+        productId:
+          type: string
+          description: 'Unique identifier of the product.'
+          example: '12345'
+        site:
+          type: string
+          description: 'Unique identifier of the site.'
+          example: 'shop1'
+    Availability:
+      description: Availability details.
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            Unique identifier of the availability.
+
+            **Note**: The value should be provided in the `site`:`productId` format.
+          example: 'shop1:12345'
+        site:
+          type: string
+          description: 'Site code, defined when the site is created. The value should match the `site` query/path parameter value.'
+          example: shop1
+        stockLevel:
+          type: number
+          description: 'Stock level of the product, expressed as a number.'
+          example: 10
+        available:
+          type: boolean
+          description: Flag indicating whether the product is available.
+          example: true
+        productId:
+          type: string
+          description: 'Unique identifier of the product, generated when the product is created through the Product Service.'
+          example: 5f7c996173fc281cdd412345
+        vendorId:
+          type: string
+          description: Id of a vendor to which the availability belongs.
+        popularity:
+          type: integer
+          description: 'Popularity of the product, expressed as a number.'
+          example: 5
+        distributionChannel:
+          $ref: '#/components/schemas/DistributionChannel'
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties:
+                type: string
+              example:
+                productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+            createdAt:
+              type: string
+              format: date-time
+              description: Date and time when the availability was created.
+              example: '2022-02-22T02:02:02.222Z'
+            modifiedAt:
+              type: string
+              format: date-time
+              description: Date and time when the availability was last updated.
+              example: '2022-02-22T02:02:02.222Z'
+    AvailabilityWithBundle:
+      description: Availability details.
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            Unique identifier of the availability.
+
+            **Note**: The value should be provided in the `site`:`productId` format.
+          example: 'shop1:12345'
+        site:
+          type: string
+          description: 'Site code, defined when the site is created. The value should match the `site` query/path parameter value.'
+          example: shop1
+        stockLevel:
+          type: number
+          description: 'Stock level of the product, expressed as a number.'
+          example: 10
+        available:
+          type: boolean
+          description: Flag indicating whether the product is available.
+          example: true
+        productId:
+          type: string
+          description: 'Unique identifier of the product, generated when the product is created through the Product Service.'
+          example: 5f7c996173fc281cdd412345
+        vendorId:
+          type: string
+          description: Id of a vendor to which the availability belongs.
+        popularity:
+          type: integer
+          description: 'Popularity of the product, expressed as a number.'
+          example: 5
+        distributionChannel:
+          $ref: '#/components/schemas/DistributionChannel'
+        bundleAvailabilities:
+          $ref: '#/components/schemas/AvailabilityList'
+        mixins:
+          type: object
+          description: |-
+            The field contains mixins values.
+          additionalProperties: true
+        metadata:
+          type: object
+          properties:
+            mixins:
+              type: object
+              description: Links to the mixin schemas.
+              additionalProperties:
+                type: string
+              example:
+                productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+            createdAt:
+              type: string
+              format: date-time
+              description: Date and time when the availability was created.
+              example: '2022-02-22T02:02:02.222Z'
+            modifiedAt:
+              type: string
+              format: date-time
+              description: Date and time when the availability was last updated.
+              example: '2022-02-22T02:02:02.222Z'
+    AvailabilityList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Availability'
+    AvailabilityWithBundleList:
+      type: array
+      items:
+        $ref: '#/components/schemas/AvailabilityWithBundle'
+    BulkResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'ID of the affected availability (in the format <site>:&lt;<productId>).'
+          example: 'shop1:12345'
+        index:
+          type: integer
+          description: 'Index of the processed item, matching the item position in request body.'
+          example: 1
+        code:
+          type: integer
+          description: 'HTTP Status Code.'
+          example: 204
+        status:
+          type: string
+          description: 'HTTP Status description.'
+          example: 'No Content'
+        message:
+          type: string
+          description: 'Error message. Present only when an error occurs (HTTP status code from groups `4xx` or `5xx`)'
+          example: 'There is no availability for productId: 12345 and site: shop1'
+    DistributionChannel:
+      type: string
+      description: Name of the product distribution channel.
+      enum:
+        - ASSORTMENT
+        - HOME_DELIVERY
+        - PICKUP
+      example: ASSORTMENT
+    Location:
+      description: Physical location of the product.
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            Unique identifier of the location. 
+
+            **Note**: The value should be provided in the `site`:`rack` format.
+          example: 'shop1:1234'
+        site:
+          type: string
+          description: 'Site code, defined when the site is created. The value should match the `site` query/path parameter value.'
+          example: shop1
+        rack:
+          type: string
+          description: Rack number.
+          example: '1234'
+        rackName:
+          type: string
+          description: Name of the rack.
+          example: Tools
+        order:
+          type: number
+          description: 'Order of the location, expressed as a number.'
+          example: 1
+          minimum: 0
+      required:
+        - id
+        - site
+        - order
+    LocationList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Location'
+    LocationOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the location.
+          example: 'shop1:1234'
+        order:
+          type: number
+          description: 'Order of the location, expressed as a number.'
+          example: 1
+    LocationOrderList:
+      type: array
+      items:
+        $ref: '#/components/schemas/LocationOrder'
+    LocationSearch:
+      type: object
+      properties:
+        site:
+          type: string
+          description: 'Site code, defined when the site is created.'
+          example: shop1
+        productIds:
+          type: array
+          description: List of product IDs. A product IDs is generated when the product is created through the Product Service.
+          example:
+            - 5f7c996173fc281cdd412345
+            - 5f7c996173fc281cdd412345
+          items:
+            type: string
+    GenericLocation:
+      type: object
+      properties:
+        site:
+          type: string
+          description: 'Site code, defined when the site is created.'
+          example: shop1
+        zone:
+          type: string
+          description: Unique identifier of the zone.
+          example: zone1
+        rack:
+          type: string
+          description: Rack number.
+          example: '1'
+        rackName:
+          type: string
+          description: Name of the rack.
+          example: Tools
+        shelf:
+          type: string
+          description: Unique identifier of the shelf.
+          example: shelf1
+        section:
+          type: string
+          description: Unique identifier of the section.
+          example: section1
+        bin:
+          type: string
+          description: Unique identifier of the bin.
+          example: bin1
+        order:
+          type: number
+          description: 'Order of the location, expressed as a number.'
+          example: 1
+    ProductLocation:
+      type: object
+      properties:
+        productId:
+          type: string
+          description: 'Unique identifier of the product, generated when the product is created through the Product Service.'
+          example: 5f7c996173fc281cdd412345
+        locations:
+          type: array
+          description: List of product physical locations.
+          items:
+            $ref: '#/components/schemas/GenericLocation'
+    ProductLocationList:
+      type: array
+      items:
+        $ref: '#/components/schemas/ProductLocation'
+      description: ''
+    IdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the created resource.
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The response message of the operation.
+          example: 'Successfully created location with id: shop1:1234'
+        code:
+          type: number
+          description: The result code of the operation.
+          example: 201
+    BadRequest400:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 400
+        status:
+          type: string
+          description: HTTP Status Description.
+          example: Bad Request
+        message:
+          type: string
+          description: Error message.
+          example: There is a validation error. Please check the details.
+        _embedded:
+          type: object
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  message:
+                    description: Detailed message of the exception.
+                    type: string
+    Unauthorized401:
+      properties:
+        fault:
+          type: object
+          properties:
+            faultstring:
+              type: string
+              example: Invalid access token
+            detail:
+              type: object
+              properties:
+                errorcode:
+                  type: string
+                  example: oauth.v2.InvalidAccessToken
+    Forbidden403:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 403
+        status:
+          type: string
+          description: HTTP Status Description.
+          example: Forbidden
+        message:
+          type: string
+          description: Error message.
+          example: User not authorized.
+    NotFound404:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 404
+        message:
+          type: string
+          description: Detailed error message.
+          example: The unit with code g has not been found.
+    Conflict409:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 409
+        message:
+          type: string
+          description: Detailed error message.
+          example: There is already availability for product.
+    UnexpectedError:
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+          example: 500
+        status:
+          type: string
+          description: HTTP Status.
+          example: Internal server error.
+        message:
+          type: string
+          description: Detailed error message
+          example: There is internal server error.
+  responses:
+    BadRequestResponse400:
+      description: The request was syntactically incorrect. Details are provided in the response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest400'
+          example:
+            code: 400
+            status: Bad Request
+            message: There is a validation error. Please check the details.
+            _embedded:
+              errors:
+                - message: Required field missing. Check API documentation.
+    UnauthorizedResponse401:
+      description: The authorization token is invalid or has expired. Details are provided in the response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Unauthorized401'
+          examples:
+            Expired access token:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+    ForbiddenResponse403:
+      description: Provided authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden403'
+          examples:
+            insufficient_permissions:
+              value:
+                type: insufficient_permissions
+                status: '403'
+                message: User not authorized.
+    ConflictResponse409:
+      description: Resource already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Conflict409'
+          examples:
+            Conflict:
+              value:
+                status: '409'
+                message: Resource already exists.
+    NotFoundResponse404:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound404'
+          examples:
+            Availability not found:
+              $ref: '#/components/examples/AvailabilityNotFound404'
+    ServerErrorResponse500:
+      description: Some server-side error occurred. Details are provided in the response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnexpectedError'
+  examples:
+    AvailabilityDto:
+      value:
+        stockLevel: 10
+        available: true
+        popularity: 5
+        distributionChannel: ASSORTMENT
+        metadata:
+          mixins:
+            productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+        mixins:
+          productCustomAttributes:
+            minOrderQuantity: 2
+    AvailabilityBulkDto:
+      value:
+        - productId: '12345'
+          site: 'shop1'
+          stockLevel: 10
+          available: true
+          popularity: 5
+          distributionChannel: ASSORTMENT
+          metadata:
+            mixins:
+              productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+          mixins:
+            productCustomAttributes:
+              minOrderQuantity: 2
+    AvailabilityDeleteBulkDto:
+      value:
+        - productId: '12345'
+          site: 'shop1'
+    Availability:
+      value:
+        id: 'shop1:12345'
+        site: shop1
+        stockLevel: 10
+        available: true
+        productId: 5f7c996173fc281cdd412345
+        popularity: 5
+        distributionChannel: ASSORTMENT
+        metadata:
+          mixins:
+            productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+          createdAt: '2022-02-22T02:02:02.222Z'
+          modifiedAt: '2022-02-22T02:02:02.222Z'
+        mixins:
+          productCustomAttributes:
+            minOrderQuantity: 2
+    AvailabilityWithBundle:
+      value:
+        id: 'shop1:12345'
+        site: shop1
+        stockLevel: 10
+        available: true
+        productId: 5f7c996173fc281cdd412345
+        popularity: 5
+        distributionChannel: ASSORTMENT
+        metadata:
+          mixins:
+            productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+          createdAt: '2022-02-22T02:02:02.222Z'
+          modifiedAt: '2022-02-22T02:02:02.222Z'
+        mixins:
+          productCustomAttributes:
+            minOrderQuantity: 2
+        bundleAvailabilities:
+          - id: 'shop1:678'
+            site: shop1
+            stockLevel: 10
+            available: true
+            productId: 5f7c996173fc281cdd412345
+            popularity: 5
+            distributionChannel: ASSORTMENT
+            metadata:
+              mixins:
+                productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+              createdAt: '2022-02-22T02:02:02.222Z'
+              modifiedAt: '2022-02-22T02:02:02.222Z'
+            mixins:
+              productCustomAttributes:
+                minOrderQuantity: 2
+    AvailabilityList:
+      value:
+        - id: 'shop1:12345'
+          site: shop1
+          stockLevel: 10
+          available: true
+          productId: 5f7c996173fc281cdd412345
+          popularity: 5
+          distributionChannel: ASSORTMENT
+          metadata:
+            mixins:
+              productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+            createdAt: '2022-02-22T02:02:02.222Z'
+            modifiedAt: '2022-02-22T02:02:02.222Z'
+          mixins:
+            productCustomAttributes:
+              minOrderQuantity: 2
+    AvailabilityWithBundleList:
+      value:
+        - id: 'shop1:12345'
+          site: shop1
+          stockLevel: 10
+          available: true
+          productId: 5f7c996173fc281cdd412345
+          popularity: 5
+          distributionChannel: ASSORTMENT
+          metadata:
+            mixins:
+              productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+            createdAt: '2022-02-22T02:02:02.222Z'
+            modifiedAt: '2022-02-22T02:02:02.222Z'
+          mixins:
+            productCustomAttributes:
+              minOrderQuantity: 2
+          bundleAvailabilities:
+            - id: 'shop1:678'
+              site: shop1
+              stockLevel: 10
+              available: true
+              productId: 5f7c996173fc281cdd412345
+              popularity: 5
+              distributionChannel: ASSORTMENT
+              metadata:
+                createdAt: '2022-02-22T02:02:02.222Z'
+                modifiedAt: '2022-02-22T02:02:02.222Z'
+
+    AvailabilityNotFound404:
+      value:
+        message: 'There is no availability for productId: 5f7c996173fc281cdd412345 and site: shop1'
+        code: 404
+    BulkCreateResponse:
+      value:
+        - id: "shop1:12345"
+          index: 0
+          code: 201
+          status: Created
+        - id: "shop2:98765"
+          index: 1
+          code: 400
+          status: Bad Request
+          message: "Product: '98765' does not belong to vendor: '68ad7d45c42fc8121a611fec'"
+    BulkUpsertResponse:
+      value:
+        - id: "shop1:12345"
+          index: 0
+          code: 201
+          status: Created
+        - id: "shop2:98765"
+          index: 1
+          code: 204
+          status: No Content
+        - id: "shop3:98765"
+          index: 2
+          code: 400
+          status: Bad Request
+          message: "Product: '98765' does not belong to vendor: '68ad7d45c42fc8121a611fec'"
+    BulkDeleteResponse:
+      value:
+        - id: "shop1:12345"
+          index: 0
+          code: 204
+          status: No Content
+        - id: "shop2:98765"
+          index: 1
+          code: 204
+          status: No Content
+    Location:
+      value:
+        id: 'shop1:1234'
+        site: shop1
+        rack: '1234'
+        rackName: Tools
+        order: 1
+    LocationList:
+      value:
+        - id: 'shop1:1234'
+          site: shop1
+          rack: '1234'
+          rackName: Tools
+          order: 1
+    LocationOrderList:
+      value:
+        - id: 'shop1:1234'
+          order: 1
+        - id: 'secondary:4321'
+          order: 10
+    LocationSearch:
+      value:
+        site: shop1
+        productIds:
+          - 5f7c996173fc281cdd412345
+          - 5f7c996173fc281cdd412345
+    ProductLocationList:
+      value:
+        - productId: 5f7c996173fc281cdd412345
+          locations:
+            - site: shop1
+              zone: zone1
+              rack: '1'
+              rackName: Tools
+              shelf: shelf1
+              section: section1
+              bin: bin1
+              order: 1
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            availability.availability_view: Needed to view availabilities.
+            availability.availability_manage: Needed to manage availabilities.
+            availability.availability_view_by_vendor: Needed to view availabilities belonging to the vendor.
+            availability.availability_manage_by_vendor: Needed to manage availabilities belonging to the vendor.
+security:
+  - OAuth2: []

@@ -1,0 +1,82 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,md,csproj,props,targets,slnx}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# --- Language conventions ---
+csharp_style_namespace_declarations = file_scoped:error
+csharp_using_directive_placement = outside_namespace:warning
+csharp_prefer_braces = when_multiline:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+dotnet_style_readonly_field = true:warning
+csharp_prefer_static_local_function = true:warning
+dotnet_sort_system_directives_first = true
+
+# --- Naming ---
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+dotnet_naming_style.underscore_camel.required_prefix = _
+
+# --- Library discipline: warnings become errors ---
+# ConfigureAwait(false) in every library method.
+dotnet_diagnostic.CA2007.severity = error
+# Forward the CancellationToken to every async call.
+dotnet_diagnostic.CA2016.severity = error
+# No sync-over-async blocking.
+dotnet_diagnostic.CA1849.severity = error
+# State StringComparison explicitly.
+dotnet_diagnostic.CA1310.severity = error
+# No ArgumentException without a parameter name.
+dotnet_diagnostic.CA2208.severity = error
+
+# Log lines go through the LoggerMessage generator (see Log.cs) — allocation-free
+# and reflection-free, both requirements from ADR-0004.
+dotnet_diagnostic.CA1848.severity = error
+
+# --- Deliberately disabled ---
+# CA1707 (no underscores in names) — clashes with test method names.
+dotnet_diagnostic.CA1707.severity = none
+
+# CA1708 (names differing only in casing) is evaluated for the whole assembly,
+# not per file — so the exemption for generated code below does not apply.
+# Emporix ships both «MetaData» and «Metadata» in one specification; those names
+# are not ours to choose.
+dotnet_diagnostic.CA1708.severity = none
+
+# --- Generated code: analyzers off (ADR-0001) ---
+[src/Viu.Emporix/Generated/**.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+
+# --- Tools and samples: relaxed ---
+# Both are console applications without a synchronization context, so
+# ConfigureAwait changes nothing there. In a sample it would also distract from
+# what is being shown.
+[{tools,samples}/**/*.cs]
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA1849.severity = none
+
+# --- Tests: relaxed ---
+[tests/**/*.cs]
+# Public test classes need no XML documentation.
+dotnet_diagnostic.CS1591.severity = none
+# ConfigureAwait is irrelevant in tests (no synchronization context).
+dotnet_diagnostic.CA2007.severity = none

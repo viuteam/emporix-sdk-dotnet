@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Viu.Emporix.Sample</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    The sample doubles as the AOT check: it publishes with PublishAot. If that
+    fails, the SDK violates ADR-0004.
+  -->
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Viu.Emporix/Viu.Emporix.csproj" />
+  </ItemGroup>
+
+</Project>

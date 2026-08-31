@@ -1,0 +1,2073 @@
+openapi: 3.0.0
+info:
+  title: Customer Segment Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |-
+    The Customer Segment Service allows you to define segments for different customers so that you can prepare customer specific marketing campaigns, or prepare personalized content for different customers in each segment.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Segments
+    description: Manage segments
+  - name: Customers Assignments
+    description: Manage customer assignments to segments
+  - name: Items Assignments
+    description: Manage item assignments to segments
+paths:
+  '/customer-segment/{tenant}/segments':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      summary: Creating a customer segment
+      tags:
+        - Segments
+      operationId: POST-customer-segment-create-segment
+      description: |
+
+        Creates a new customer segment.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentCreation'
+            examples:
+              Segment Creation:
+                $ref: '#/components/examples/SegmentCreation'
+      responses:
+        '201':
+          description: Customer segment was successfully created.
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: string
+              example:
+                id: 628cd20c6e8b2432b6346ca6
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Common_response_Conflict_409'
+      parameters:
+        - $ref: '#/components/parameters/contentLanguage'
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+    get:
+      summary: 'Retrieving all customer segments'
+      tags:
+        - Segments
+      operationId: GET-customer-segment-retrieve-segments
+      responses:
+        '200':
+          description: Customer segments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SegmentResponse'
+              examples:
+                Segments Response:
+                  $ref: '#/components/examples/SegmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      description: |
+
+        Retrieves all customer segments.
+      parameters:
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+        - $ref: '#/components/parameters/customerId'
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+  '/customer-segment/{tenant}/segments/search':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      summary: 'Searching with parameters for customer segments'
+      tags:
+        - Segments
+      operationId: POST-customer-segment-search-segments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentsSearch'
+            examples:
+              Search Segments:
+                $ref: '#/components/examples/SegmentsSearch'
+      responses:
+        '200':
+          description: Customer segments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SegmentResponse'
+              examples:
+                Segments Response:
+                  $ref: '#/components/examples/SegmentsResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      description: |
+
+        Returns all customer segments that match provided criteria.
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+        - $ref: '#/components/parameters/customerId'
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+  '/customer-segment/{tenant}/segments/{segmentId}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    get:
+      summary: 'Retrieving a customer segment'
+      tags:
+        - Segments
+      responses:
+        '200':
+          description: Customer segment successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentResponse'
+              examples:
+                Segment Response:
+                  $ref: '#/components/examples/SegmentResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Common_response_NotFound_404'
+      operationId: GET-customer-segment-retrieve-segment
+      description: |
+
+        Retrieves segment with specified ID.
+      parameters:
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+    put:
+      summary: Upserting a customer segment
+      tags:
+        - Segments
+      operationId: PUT-customer-segment-update-segment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentUpdate'
+            examples:
+              Segment Update:
+                $ref: '#/components/examples/SegmentUpdate'
+      responses:
+        '201':
+          description: Customer segment wasn't found. A new customer segment was successfully created.
+          content:
+            application/json:
+              schema:
+                properties:
+                  id:
+                    type: string
+              example:
+                id: 628cd20c6e8b2432b6346ca6
+        '204':
+          description: Customer segment was successfully updated.
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Common_response_Conflict_409'
+      parameters:
+        - $ref: '#/components/parameters/contentLanguage'
+      description: |
+
+        Performs the `UPSERT` operation. If a segment with specified ID exists in the system, then it is updated. If it doesn't exist, a new customer segment is created.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+    patch:
+      summary: Patching a customer segment
+      tags:
+        - Segments
+      operationId: PATCH-customer-segment-update-segment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchOperation'
+            examples:
+              Update a status:
+                value:
+                  - op: replace
+                    path: /status
+                    value: INACTIVE
+              Update a name:
+                value:
+                  - op: replace
+                    path: /name
+                    value:
+                      en: New name
+              Remove a description:
+                value:
+                  - op: remove
+                    path: /description
+              Update mixins:
+                value:
+                  - op: replace
+                    path: /mixins/productCustomAttributes/pricingMeasurePrice
+                    value: 15
+      responses:
+        '204':
+          description: Customer segment was successfully updated.
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Common_response_NotFound_404'
+      parameters:
+        - $ref: '#/components/parameters/contentLanguage'
+      description: |
+
+        Performs partial update of a segment.
+
+        The patch request consists of set of operation, that should be defined according to [RFC-6902](https://datatracker.ietf.org/doc/html/rfc6902) standard.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+    delete:
+      summary: 'Deleting a customer segment'
+      tags:
+        - Segments
+      parameters:
+        - $ref: '#/components/parameters/forceDelete'
+      operationId: DELETE-customer-segment-remove-segment
+      responses:
+        '204':
+          description: Customer segment was successfully deleted.
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      description: |
+
+        Removes segment with specified ID.
+
+        **Important**: If you want to delete a segment that has items or customers assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all items and customers assignments will be deleted as well.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+  '/customer-segment/{tenant}/segments/bulk':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      summary: 'Creating customer segments in bulk'
+      tags:
+        - Segments
+      operationId: POST-customer-segment-create-segments-bulk
+      description: |
+
+        Creates multiple customer segments. The maximum batch size is 200.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/SegmentCreation'
+            examples:
+              Segment Creation:
+                $ref: '#/components/examples/SegmentsCreation'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Segments Creations:
+                  $ref: '#/components/examples/BulkCreationResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      parameters:
+        - $ref: '#/components/parameters/contentLanguage'
+    put:
+      summary: Upserting customer segments in bulk
+      tags:
+        - Segments
+      operationId: PUT-customer-segment-update-segments-bulk
+      description: |
+
+        Performs the `UPSERT` operation for multiple customer segments. If a segment with specified ID exists in the system, then it is updated. If it doesn't exist, a new customer segment is created.
+
+        The maximum batch size is 200.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/SegmentUpdateBulk'
+            examples:
+              Segment Creation:
+                $ref: '#/components/examples/SegmentsUpdate'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Segments Update:
+                  $ref: '#/components/examples/BulkUpdateResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      parameters:
+        - $ref: '#/components/parameters/contentLanguage'
+    delete:
+      summary: 'Deleting customer segments in bulk'
+      tags:
+        - Segments
+      operationId: DELETE-customer-segment-remove-segments-bulk
+      parameters:
+        - $ref: '#/components/parameters/forceDelete'
+      description: |
+
+        Removes multiple customer segments. The maximum batch size is 200.
+
+        ### The IDs of customer segments for deletion should be defined in the request body as an array of strings.
+        #### Example: `["firstId", "secondId", "thirdId"]`
+
+
+        **Important**: If you want to delete a segment that has items or customers assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all items and customers assignments will be deleted as well.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Segments Deletion:
+                  $ref: '#/components/examples/BulkDeletionResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/match':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      summary: Checking which items belong to segment
+      tags:
+        - Segments
+      operationId: POST-customer-segment-check-match
+      description: |
+
+
+        Checks if the provided items match specified criteria - if ids of the products are assigned directly to one of the provided segments or indirectly through the category assignment. Only items assigned to the active segments will be returned.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Match'
+            examples:
+              Match:
+                value:
+                  siteCode: "main"
+                  items:
+                    - id: p1234
+                    - id: p2345
+                  segmentIds:
+                    - S1234
+                    - S2456
+      responses:
+        '200':
+          description: Id of the products which match criteria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchItem'
+              example:
+                - id: p1234
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/customers':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    get:
+      summary: 'Retrieving all customer assignments for a customer segment'
+      tags:
+        - Customers Assignments
+      description: |
+
+        Retrieves all customer assignments for a given customer segment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+      responses:
+        '200':
+          description: Customer assignments for a customer segment were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerAssignmentResponse'
+              examples:
+                Customer Assignments:
+                  $ref: '#/components/examples/CustomerAssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      operationId: GET-customer-segment-retrieve-customers
+      parameters:
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+  '/customer-segment/{tenant}/segments/{segmentId}/customers/search':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    post:
+      summary: 'Searching with parameters for customer assignments'
+      tags:
+        - Customers Assignments
+      description: |
+
+        Returns all customer assignments that match provided criteria.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentsSearch'
+            examples:
+              Search Segments:
+                value:
+                  q: "assignmentType:MANUAL"
+      responses:
+        '200':
+          description: Customer assignments for a customer segment were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerAssignmentResponse'
+              examples:
+                Customer Assignments:
+                  $ref: '#/components/examples/CustomerAssignmentsResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      operationId: POST-customer-segment-search-customers
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+  '/customer-segment/{tenant}/segments/{segmentId}/customers/{customerId}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+      - schema:
+          type: string
+        name: customerId
+        in: path
+        description: Unique identifier of the customer which is added to a customer segment.
+        required: true
+    get:
+      summary: '[B2C] Retrieving a customer assignment for a customer segment'
+      tags:
+        - Customers Assignments
+      description: |
+
+        Retrieves a customer with specified customerId assigned to a customer segment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+      responses:
+        '200':
+          description: Customer assignment for a customer segment was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAssignmentB2CResponse'
+              examples:
+                Customer Assignment Response:
+                  $ref: '#/components/examples/CustomerAssignmentB2CResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Common_response_NotFound_404'
+      operationId: GET-customer-segment-retrieve-customer-by-customerId
+      parameters:
+        - $ref: '#/components/parameters/fields'
+    put:
+      summary: '[B2C] Updating a customer assignment for a customer segment'
+      tags:
+        - Customers Assignments
+      operationId: PUT-customer-segment-update-customer-by-customerId
+      description: |
+
+        Performs `UPSERT` operation. Updates a customer assigned to a customer segment. A new customer assignment is created if it's not present in the system.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerAssignmentUpsert'
+            examples:
+              Customer Assignment Update:
+                $ref: '#/components/examples/CustomerAssignmentUpsert'
+      responses:
+        '201':
+          description: A new customer assignment was successfully created.
+        '204':
+          description: Customer assignment was successfully updated.
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Common_response_Conflict_409'
+    delete:
+      summary: '[B2C] Removing a customer from customer segment'
+      tags:
+        - Customers Assignments
+      operationId: DELETE-customer-segment-remove-customer-by-customerId
+      description: |
+
+        Removes customer assignment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      responses:
+        '204':
+          description: Customer assignment was successfully removed.
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/customers/{customerId}/{legalEntityId}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+      - schema:
+          type: string
+        name: customerId
+        in: path
+        description: Unique identifier of the customer which is added to a customer segment.
+        required: true
+      - schema:
+          type: string
+        name: legalEntityId
+        in: path
+        description: Unique identifier of the legal entity which customer is assigned to.
+        required: true
+    get:
+      summary: '[B2B] Retrieving a customer assignment for a customer segment'
+      tags:
+        - Customers Assignments
+      description: |
+
+        Retrieves a customer with specified customerId and companyId assigned to a customer segment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+      responses:
+        '200':
+          description: Customer assignment for a customer segment was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAssignmentResponse'
+              examples:
+                Customer Assignment Response:
+                  $ref: '#/components/examples/CustomerAssignmentResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Common_response_NotFound_404'
+      operationId: GET-customer-segment-retrieve-customer
+      parameters:
+        - $ref: '#/components/parameters/fields'
+    put:
+      summary: '[B2B] Updating a customer assignment for a customer segment'
+      tags:
+        - Customers Assignments
+      operationId: PUT-customer-segment-update-customer
+      description: |
+
+        Performs `UPSERT` operation. Updates a customer assigned to a customer segment. A new customer assignment is created if it's not present in the system.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerAssignmentUpsert'
+            examples:
+              Customer Assignment Update:
+                $ref: '#/components/examples/CustomerAssignmentUpsert'
+      responses:
+        '201':
+          description: A new customer assignment was successfully created.
+        '204':
+          description: Customer assignment was successfully updated.
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Common_response_Conflict_409'
+    delete:
+      summary: '[B2B] Removing a customer from customer segment'
+      tags:
+        - Customers Assignments
+      operationId: DELETE-customer-segment-remove-customer
+      description: |
+
+        Removes customer assignment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      responses:
+        '204':
+          description: Customer assignment was successfully removed.
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/customers/bulk':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    put:
+      summary: 'Updating customer assignments for a customer segment in bulk'
+      tags:
+        - Customers Assignments
+      operationId: PUT-customer-segment-update-customers-bulk
+      description: |
+
+        Performs `UPSERT` operation. Updates multiple customer assignments to a customer segment. The maximum batch size is 200.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CustomerAssignmentUpsertBulk'
+            examples:
+              Customer Assignment Update:
+                $ref: '#/components/examples/CustomerAssignmentsUpsert'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkAssignmentResponse'
+              examples:
+                Customer Assignments Update:
+                  $ref: '#/components/examples/BulkAssignmentUpdateResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+    delete:
+      summary: 'Removing customers from customer segment in bulk'
+      tags:
+        - Customers Assignments
+      operationId: DELETE-customer-segment-remove-customers-bulk
+      description: |
+
+        Removes multiple customer assignments to a customer segment. The maximum batch size is 200.
+
+        ### The request body for this endpoint is array of objects with `customerId` and `legalEntityId` fields.
+        #### Example: `[{"customerId": "firstCustomerId", "legalEntityId": "firstLegalEntityId"}, {"customerId": "secondCustomerId", "legalEntityId": "secondLegalEntityId"}, {"customerId": "thirdCustomerId", "legalEntityId": "thirdLegalEntityId"}]`
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkAssignmentResponse'
+              examples:
+                Customer Assignments Deletion:
+                  $ref: '#/components/examples/BulkAssignmentDeletionResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/items/category-trees':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: 'Retrieving category trees for a customer segments'
+      tags:
+        - Items Assignments
+      description: |
+
+        Retrieves category trees for the customer segments. Category trees are built based on only `active` segments.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read_own
+      responses:
+        '200':
+          description: Customer categories assignments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryTreeResponse'
+              examples:
+                Item Assignments:
+                  $ref: '#/components/examples/CategoryTreeResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      operationId: GET-customer-segment-retrieve-category-trees
+      parameters:
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+        - $ref: '#/components/parameters/siteCode'
+  '/customer-segment/{tenant}/segments/items':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: 'Retrieving all items assignments for all customer segments'
+      tags:
+        - Items Assignments
+      description: |
+
+        Retrieves all items assignments for all customer segments.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read_own
+            - customersegment.segment_read
+      responses:
+        '200':
+          description: Customer items assignments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemAssignmentResponse'
+              examples:
+                Item Assignments:
+                  $ref: '#/components/examples/ItemAssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      operationId: GET-customer-segment-retrieve-segments-items
+      parameters:
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+        - $ref: '#/components/parameters/siteCode'
+        - $ref: '#/components/parameters/onlyActive'
+  '/customer-segment/{tenant}/segments/{segmentId}/items':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    get:
+      summary: 'Retrieving all item assignments for a customer segment'
+      tags:
+        - Items Assignments
+      description: |
+
+        Retrieves all item assignments for a given customer segment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+      responses:
+        '200':
+          description: Customer segment assignments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemAssignmentResponse'
+              examples:
+                Item Assignments:
+                  $ref: '#/components/examples/ItemAssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      operationId: GET-customer-segment-retrieve-segment-items
+      parameters:
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+  '/customer-segment/{tenant}/segments/{segmentId}/items/search':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    post:
+      summary: 'Retrieving all item assignments for a customer segment'
+      tags:
+        - Items Assignments
+      description: |
+
+        Retrieves all item assignments for a given customer segment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentsSearch'
+            example:
+              q: "type:PRODUCT"
+      responses:
+        '200':
+          description: Customer segment assignments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItemAssignmentResponse'
+              examples:
+                Item Assignments:
+                  $ref: '#/components/examples/ItemAssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      operationId: POST-customer-segment-search-items
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+  '/customer-segment/{tenant}/segments/{segmentId}/items/{type}/{itemId}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+      - $ref: '#/components/parameters/type'
+      - schema:
+          type: string
+        name: itemId
+        in: path
+        description: Unique identifier of an item which will be assigned to a customer segment.
+        required: true
+    get:
+      summary: 'Retrieving an item assignment'
+      tags:
+        - Items Assignments
+      description: |
+
+        Retrieves an item assignment by specified ID for a given customer segment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_read
+            - customersegment.segment_read_own
+      responses:
+        '200':
+          description: Customer segment item assignment was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemAssignmentResponse'
+              examples:
+                Item Assignment Response:
+                  $ref: '#/components/examples/ItemAssignmentResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Common_response_NotFound_404'
+      operationId: GET-customer-segment-retrieve-item
+      parameters:
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/acceptLanguage'
+        - $ref: '#/components/parameters/legalEntityId'
+    put:
+      summary: 'Updating an item assignment'
+      tags:
+        - Items Assignments
+      operationId: PUT-customer-segment-update-item
+      description: |
+
+        Performs `UPSERT` operation. Updates an item assignment to a customer segment. A new item assignment is created if it's not present in the system.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemAssignmentUpsert'
+            examples:
+              Item Assignment Update:
+                $ref: '#/components/examples/ItemAssignmentUpsert'
+      responses:
+        '201':
+          description: A new assignment was successfully created.
+        '204':
+          description: Item assignment was successfully updated.
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Common_response_Conflict_409'
+    delete:
+      summary: 'Removing an assignment'
+      tags:
+        - Items Assignments
+      operationId: DELETE-customer-segment-remove-item
+      description: |
+
+        Removes an item assignment.
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      responses:
+        '204':
+          description: Item assignment was successfully removed.
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/items/{type}/bulk':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+      - $ref: '#/components/parameters/type'
+    put:
+      summary: 'Updating item assignments to a customer segment in bulk'
+      tags:
+        - Items Assignments
+      operationId: PUT-customer-segment-update-items-bulk
+      description: |
+
+        Performs `UPSERT` operation. Updates multiple item assignments to a customer segments. The maximum batch size is 200.
+
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ItemAssignmentUpsertBulk'
+            examples:
+              Item Assignment Update:
+                $ref: '#/components/examples/ItemAssignmentsUpsert'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkAssignmentResponse'
+              examples:
+                Item Assignments Update:
+                  $ref: '#/components/examples/BulkAssignmentUpdateResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+    delete:
+      summary: 'Deleting item assignments to a customer segment in bulk'
+      tags:
+        - Items Assignments
+      operationId: DELETE-customer-segment-remove-items-bulk
+      description: |
+
+        Removes multiple customer segments item assignments. The maximum batch size is 200.
+
+        * The IDs of items should be defined in the request body as an array of strings.
+        Example: `["firstItemId", "secondItemId", "thirdItemId"]`
+      security:
+        - CustomerAccessToken: 
+            - customersegment.segment_manage
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkAssignmentResponse'
+              examples:
+                Customer Assignments Deletion:
+                  $ref: '#/components/examples/BulkAssignmentDeletionResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+components:
+  schemas:
+    CommonSegment:
+      type: object
+      description: |
+
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: object
+              description: Localized name of the customer segment.
+              additionalProperties:
+                type: string
+            description:
+              type: object
+              description: Localized description of the customer segment.
+              additionalProperties:
+                type: string
+            validity:
+              type: object
+              description: Determines the time frame in which the customer segment is valid.
+              properties:
+                from:
+                  type: string
+                  format: date-time
+                to:
+                  type: string
+                  format: date-time
+            status:
+              type: string
+              description: Determines whether the customer segment is active or not. If not provided the value is set to `INACTIVE`
+              enum:
+                - ACTIVE
+                - INACTIVE
+            siteCode:
+              type: string
+              description: Determines for which site the customer segment is available.
+            mixins:
+              type: object
+              description: A key-value map of additional attributes.
+              additionalProperties: true
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/MetadataCreate'
+      required:
+        - name
+        - siteCode
+    SegmentCreation:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the customer segment. It will be auto-generated if not provided.
+        - $ref: '#/components/schemas/CommonSegment'
+    SegmentsSearch:
+      type: object
+      properties:
+        q:
+          type: string
+          description: |
+            A standard query parameter is used to search for specific values. 
+
+            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param/)
+    SegmentUpdate:
+      allOf:
+        - $ref: '#/components/schemas/CommonSegment'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/MetadataUpdate'
+    SegmentUpdateBulk:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the customer segment.
+        - $ref: '#/components/schemas/SegmentUpdate'
+    SegmentResponse:
+      allOf:
+        - $ref: '#/components/schemas/SegmentUpdateBulk'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    MatchItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of the product.
+    Match:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchItem'
+        segmentIds:
+          type: array
+          items:
+            type: string
+        site:
+          type: string
+      required:
+        - items
+        - segmentIds
+        - site
+    CustomerAssignmentUpsert:
+      type: object
+      description: |
+
+      properties:
+        mixins:
+          type: object
+          description: A key-value map of additional attributes.
+          additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/MetadataUpdate'
+    CustomerAssignmentUpsertBulk:
+      allOf:
+        - $ref: '#/components/schemas/CustomerAssignmentUpsert'
+        - type: object
+          properties:
+            customerId:
+              type: string
+              description: Unique identifier of an existing customer.
+            legalEntityId:
+              type: string
+              description: Unique identifier of an existing legal entity. It should be omitted for B2C.
+    CustomerAssignmentB2CResponse:
+      allOf:
+        - type: object
+          properties:
+            customer:
+              $ref: '#/components/schemas/Customer'
+        - type: object
+          properties:
+            assignmentType:
+              type: string
+              enum:
+                - MANUAL
+                - AUTOMATIC
+        - $ref: '#/components/schemas/CustomerAssignmentUpsert'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    CustomerAssignmentResponse:
+      allOf:
+        - type: object
+          properties:
+            legalEntity:
+              $ref: '#/components/schemas/LegalEntity'
+        - $ref: '#/components/schemas/CustomerAssignmentB2CResponse'
+    ItemAssignmentUpsert:
+      type: object
+      description: |
+
+      allOf:
+        - type: object
+          properties:
+            mixins:
+              type: object
+              description: A key-value map of additional attributes.
+              additionalProperties: true
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/MetadataUpdate'
+    ItemAssignmentUpsertBulk:
+      allOf:
+        - $ref: '#/components/schemas/ItemAssignmentUpsert'
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an existing product/category (itemId).
+      required:
+        - id
+    ItemAssignmentResponse:
+      allOf:
+        - type: object
+          properties:
+            segmentId:
+              type: string
+              description: Unique identifier of the customer segment.
+            item:
+              properties:
+                id:
+                  type: string
+                  description: Unique identifier of an existing product/category.
+                code:
+                  type: string
+                  description: Unique code of an existing product/category.
+                name:
+                  type: object
+                  description: Localized name of the product/category
+                  additionalProperties:
+                    type: string
+            type:
+              type: string
+              description: Determines whether item is a `PRODUCT` or `CATEGORY`
+              enum:
+                - PRODUCT
+                - CATEGORY
+        - $ref: '#/components/schemas/ItemAssignmentUpsert'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    CategoryTreeResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: Unique identifier of an existing category.
+          code:
+            type: string
+            description: Unique code of an existing category.
+          name:
+            type: object
+            description: Localized name of the category.
+            additionalProperties:
+              type: string
+          localizedDescription:
+            type: object
+            description: Localized description of the category.
+            additionalProperties:
+              type: string
+          localizedSlug:
+            type: object
+            description: Localized category name or code without diacritics for the URL.
+            additionalProperties:
+              type: string
+          ecn:
+            type: array
+            description: List of external category numbers (ECNs) unique for every category.
+            items:
+              type: string
+          validity:
+            type: object
+            description: Indicates the time frame in which the category is valid.
+            properties:
+              from:
+                type: string
+                format: date-time
+              to:
+                type: string
+                format: date-time
+          position:
+            type: integer
+            description: Category's position, set in relation to the categories on the same level (sharing the same parent) in the tree.
+          published:
+            type: boolean
+            description: Indicates whether the category has been published or not.
+          isSegmentAssigned:
+            type: boolean
+            description: Indicates if the category is assigned to any segment.
+          subcategories:
+            type: array
+            items:
+              type: object
+              description: Subcategories of this category.
+        required:
+          - id
+          - code
+          - name
+          - isSegmentAssigned
+    MetadataCreate:
+      type: object
+      properties:
+        mixins:
+          type: object
+          description: A key-value map, where key is a mixin name and value is a link to the mixin schema.
+          additionalProperties: true
+    MetadataUpdate:
+      allOf:
+        - type: object
+          properties:
+            version:
+              type: integer
+              description: The document version number.
+        - $ref: '#/components/schemas/MetadataCreate'
+    MetadataResponse:
+      allOf:
+        - type: object
+          properties:
+            createdAt:
+              description: The creation date.
+              type: string
+              format: date-time
+            modifiedAt:
+              description: The modification date.
+              type: string
+              format: date-time
+        - $ref: '#/components/schemas/MetadataUpdate'
+    PatchOperation:
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+            - add
+            - remove
+            - replace
+          description: 'Indicates an operation which should be done on a return. Available operations: `add` `remove` and `replace`'
+        path:
+          type: string
+          description: 'Indicates a path for which the value should be applied. For example:`/mixins/additionalAttributes/externalId`, `/name`, `/status`'
+        value:
+          oneOf:
+            - type: object
+            - type: string
+            - type: number
+          description: 'Indicates a value that should be changed or added. The value can be of a primitive type, like string, number, boolean or it can be an object or an array.'
+      required:
+        - op
+        - path
+    BulkAssignmentResponse:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: |
+            Index of the processed item, matching the item position in request body.
+        code:
+          type: integer
+          description: HTTP Status Code.
+        status:
+          type: string
+          description: HTTP Status description.
+        message:
+          type: string
+          description: Error message.
+    BulkResponse:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Item's unique identifier.
+        - $ref: '#/components/schemas/BulkAssignmentResponse'
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+        status:
+          type: string
+          description: HTTP Status.
+        message:
+          type: string
+          description: Error message.
+        resourceId:
+          type: string
+          description: An ID of the resource which caused the error.
+        details:
+          type: object
+          description: Error details
+          properties:
+            field:
+              type: string
+            type:
+              type: string
+            message:
+              type: string
+            moreInfo:
+              type: string
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an existing customer.
+        firstName:
+          type: string
+          description: Customer's first name.
+        lastName:
+          type: string
+          description: Customer's last name.
+        email:
+          type: string
+          description: Customer's e-mail address.
+    LegalEntity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an existing legal entity.
+        name:
+          type: string
+          description: Name of a legal entity.
+  responses:
+    Common_response_BadRequest_400:
+      description: 'Bad request due to validation, incorrect parameters, etc.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Validation Error:
+              $ref: '#/components/examples/Response_BadRequest_400'
+    Common_response_Unauthorized_401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+    Common_response_Forbidden_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Forbidden:
+              $ref: '#/components/examples/Response_Forbidden_403'
+    Common_response_NotFound_404:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Not Found:
+              $ref: '#/components/examples/Response_NotFound_404'
+    Common_response_Conflict_409:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Conflict - resource exists:
+              $ref: '#/components/examples/Response_Conflict_409_exists'
+            Conflict - resource has changed:
+              $ref: '#/components/examples/Response_Conflict_409_changed'
+  parameters:
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: Always write the tenant name in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    segmentId:
+      name: segmentId
+      in: path
+      required: true
+      description: Unique identifier of the customer segment.
+      schema:
+        type: string
+    type:
+      name: type
+      in: path
+      required: true
+      description: Determines whether item is a product or category.
+      schema:
+        type: string
+    qParam:
+      in: query
+      name: q
+      description:  |
+        A standard query parameter is used to search for specific values. 
+
+        See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+      schema:
+        type: string
+    pageSize:
+      schema:
+        type: string
+      in: query
+      name: pageSize
+      description: The number of documents to be retrieved per page.
+    pageNumber:
+      schema:
+        type: string
+      in: query
+      name: pageNumber
+      description: The page number to be retrieved. The size of the pages should be specified by the pageSize parameter.
+    sort:
+      schema:
+        type: string
+      in: query
+      name: sort
+      description: List of properties used to sort the results, separated by colons.
+    fields:
+      schema:
+        type: string
+      in: query
+      name: fields
+      description: Fields to be returned in the response.
+    xTotalCount:
+      schema:
+        type: boolean
+      in: header
+      name: X-Total-Count
+      description: Flag indicating whether the total number of retrieved results should be returned.
+    acceptLanguage:
+      schema:
+        type: string
+      in: header
+      name: Accept-Language
+      description: The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If empty, the default system language is assumed. It can be a priority list working as a fallback mechanism.
+    contentLanguage:
+      schema:
+        type: string
+      in: header
+      name: Content-Language
+      description: The Content-Language request HTTP header defines language(s) of the payload.
+      example: en
+    forceDelete:
+      schema:
+        type: boolean
+        default: false
+      in: query
+      name: forceDelete
+      required: false
+      description: |
+        - If set to `true` and the segment has items or customers assigned to it, both the segment and the segment assignments will be deleted.
+        - If set to `false` or not specified and the segment has items or customers assigned to it, the endpoint will respond with the 400 error.
+    legalEntityId:
+      schema:
+        type: string
+      in: query
+      name: legalEntityId
+      required: false
+      description: |
+        The parameter is utilized for searching in relation to the legalEntityId. Parameter is only taken into account when customer is assigned to more than one Legal Entity.
+    siteCode:
+      schema:
+        type: string
+      in: query
+      name: siteCode
+      required: false
+      description: |
+        The parameter is utilized for searching in relation to the siteCode. Only items will be returned which are assigned to segment from given siteCode.
+    onlyActive:
+      schema:
+        type: boolean
+        default: false
+      in: query
+      name: onlyActive
+      required: false
+      description: |
+        The parameter is utilized for filtering items which belong only to `active` segments. The parameter is always `true` for users with `customersegment.segment_read_own` scope.
+    customerId:
+      schema:
+        type: string
+      in: query
+      name: customerId
+      required: false
+      description: |
+        The parameter is utilized for retrieving customer segments for a provided customer.
+
+        **NOTE**: This parameter can only be used with `customersegment.segment_read` scope.
+  examples:
+    Response_BadRequest_400:
+      value:
+        code: 400
+        status: Bad Request
+        message: Validation problem with request body.
+    Response_Forbidden_403:
+      value:
+        code: 403
+        status: Forbidden
+        message: The access to the requested resource has been forbidden by the server.
+    Response_NotFound_404:
+      value:
+        code: 404
+        status: Not Found
+        message: The resource with id 628cd20c6e8b2432b6346ca6 has not been found.
+    Response_Conflict_409_exists:
+      value:
+        code: 409
+        status: Conflict
+        message: The resource already exists.
+    Response_Conflict_409_changed:
+      value:
+        code: 409
+        status: Conflict
+        message: The resource you are attempting to access has changed.
+    SegmentCreation:
+      value: &segmentCreation
+        id: 628cd20c6e8b2432b6346ca6
+        name:
+          en: Golden Segment
+        description:
+          en: Golden Segment
+        validity:
+          from: 2024-04-17T08:00:00.000Z
+          to: 2025-04-17T08:00:00.000Z
+        status: ACTIVE
+        siteCode: main
+    SegmentsCreation:
+      value:
+        - *segmentCreation
+        - id: 61ge81e13562e22001h6cf456
+          name:
+            en: Platinum Segment
+          description:
+            en: Platinum Segment
+          validity:
+            from: 2024-07-20T08:00:00.000Z
+            to: 2025-07-20T08:00:00.000Z
+          status: INACTIVE
+          siteCode: main
+    SegmentUpdate:
+      value:
+        name:
+          en: Golden Segment
+        description:
+          en: Golden Segment
+        validity:
+          from: 2024-04-17T08:00:00.000Z
+          to: 2025-04-17T08:00:00.000Z
+        status: ACTIVE
+        siteCode: main
+        metadata:
+          version: 1
+    SegmentsUpdate:
+      value:
+        - id: 628cd20c6e8b2432b6346ca6
+          name:
+            en: Golden Segment
+          description:
+            en: Golden Segment
+          validity:
+            from: 2024-04-17T08:00:00.000Z
+            to: 2025-04-17T08:00:00.000Z
+          status: ACTIVE
+          siteCode: main
+          metadata:
+            version: 1
+        - id: 61ge81e13562e22001h6cf456
+          name:
+            en: Platinum Segment
+          description:
+            en: Platinum Segment
+          validity:
+            from: 2024-07-20T08:00:00.000Z
+            to: 2025-07-20T08:00:00.000Z
+          status: INACTIVE
+          siteCode: main
+          metadata:
+            version: 2
+    SegmentResponse:
+      value: &segmentResponse
+        id: 628cd20c6e8b2432b6346ca6
+        name:
+          en: Golden Segment
+        description:
+          en: Golden Segment
+        validity:
+          from: 2024-04-17T08:00:00.000Z
+          to: 2025-04-17T08:00:00.000Z
+        status: ACTIVE
+        siteCode: main
+        metadata:
+          createdAt: 2024-05-14T12:00:00.000Z
+          modifiedAt: 2024-05-14T12:00:00.000Z
+          version: 1
+    SegmentsResponse:
+      value:
+        - *segmentResponse
+        - id: 61ge81e13562e22001h6cf456
+          name:
+            en: Platinum Segment
+          description:
+            en: Platinum Segment
+          validity:
+            from: 2024-07-20T08:00:00.000Z
+            to: 2025-07-20T08:00:00.000Z
+          status: INACTIVE
+          siteCode: main
+          metadata:
+            createdAt: 2024-05-14T12:00:00.000Z
+            modifiedAt: 2024-05-14T12:00:00.000Z
+            version: 1
+    BulkCreationResponse:
+      value:
+        - index: 1
+          id: 628cd20c6e8b2432b6346ca6
+          code: 201
+          status: Created
+        - index: 2
+          code: 400
+          status: Bad Request
+          message: Validation problem with request body.
+    BulkAssignmentUpdateResponse:
+      value:
+        - index: 1
+          code: 204
+          status: OK
+        - index: 2
+          code: 400
+          status: Bad Request
+          message: Validation problem with request body.
+    BulkAssignmentDeletionResponse:
+      value:
+        - index: 1
+          code: 204
+          status: OK
+        - index: 2
+          code: 204
+          status: OK
+    BulkUpdateResponse:
+      value:
+        - index: 1
+          id: 628cd20c6e8b2432b6346ca6
+          code: 204
+          status: OK
+        - index: 2
+          code: 400
+          status: Bad Request
+          message: Validation problem with request body.
+    BulkDeletionResponse:
+      value:
+        - index: 1
+          id: 628cd20c6e8b2432b6346ca6
+          code: 204
+          status: OK
+        - index: 2
+          id: 61ge81e13562e22001h6cf456
+          code: 204
+          status: OK
+    ItemAssignmentResponse:
+      value: &itemResponse
+        segmentId: segmentId
+        item:
+          id: "12468504"
+          code: "123"
+          name:
+            en: Hammer
+        type: PRODUCT
+        metadata:
+          createdAt: 2024-10-12T12:00:00.000Z
+          modifiedAt: 2024-10-12T12:00:00.000Z
+          version: 1
+    ItemAssignmentsResponse:
+      value:
+        - *itemResponse
+        - segmentId: segmentId
+          item:
+            id: "12849186"
+            code: "456"
+            name:
+              en: Screwdriver
+          type: PRODUCT
+          metadata:
+            createdAt: 2024-10-12T12:00:00.000Z
+            modifiedAt: 2024-10-12T12:00:00.000Z
+            version: 1
+    CategoryTreeResponse:
+      value:
+        - id: "12468504"
+          code: "123"
+          name:
+            en: Tools
+          position: 0
+          published: true
+          isSegmentAssigned: false
+          subcategories:
+            - id: "12468505"
+              parentId: "12468504"
+              code: "234"
+              name:
+                en: Hammer
+              localizedDescription:
+                en: 'Basic and professional-grade hammers for construction and home improvement tasks.'
+              validity:
+                from: 2024-04-17T08:00:00.000Z
+                to: 2026-04-17T08:00:00.000Z
+              position: 1
+              published: true
+              isSegmentAssigned: true
+              subcategories:
+                - id: "12468506"
+                  parentId: "12468505"
+                  code: "345"
+                  name:
+                    en: Sledgehammers
+                  position: 2
+                  published: true
+                  isSegmentAssigned: true
+    Mixins:
+      value: &mixins
+        mixins:
+          segmentAttributes:
+            membershipStatus: PREMIUM
+        metadata:
+          mixins:
+            segmentAttributes: https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/69537caeb3fd5d378296ae42_segmentAttributes.json
+    ItemAssignmentUpsert:
+      value:
+        *mixins
+    ItemAssignmentsUpsert:
+      value:
+        - id: "12468504"
+          mixins:
+            segmentAttributes:
+              membershipStatus: PREMIUM
+          metadata:
+            mixins:
+              segmentAttributes: https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/69537caeb3fd5d378296ae42_segmentAttributes.json
+        - id: "12849186"
+          metadata:
+            version: 2
+    SegmentsSearch:
+      value:
+        q: "siteCode:main"
+    CustomerAssignmentResponse:
+      value: &customerResponse
+        customer:
+          id: "98029737"
+          firstName: John
+          lastName: Doe
+          email: john.doe@email.com
+        legalEntity:
+          id: 660af2af69babe3cf6e40771
+          name: SomeCompany
+        assignmentType: MANUAL
+        metadata:
+          createdAt: 2024-10-12T12:00:00.000Z
+          modifiedAt: 2024-10-12T12:00:00.000Z
+          version: 1
+    CustomerAssignmentB2CResponse:
+      value:
+        customer:
+          id: "98029737"
+          firstName: John
+          lastName: Doe
+          email: john.doe@email.com
+        assignmentType: MANUAL
+        metadata:
+          createdAt: 2024-10-12T12:00:00.000Z
+          modifiedAt: 2024-10-12T12:00:00.000Z
+          version: 1
+    CustomerAssignmentsResponse:
+      value:
+        - *customerResponse
+        - customer:
+            customerId: "18249883"
+            firstName: Jack
+            lastName: Smith
+            email: jack.smith@email.com
+          legalEntity:
+            id: 448gh29h1d0b5453g6346df6
+            department: AnotherCompany
+          assignmentType: MANUAL
+          metadata:
+            createdAt: 2024-10-16T12:00:00.000Z
+            modifiedAt: 2024-10-16T12:00:00.000Z
+            version: 1
+    CustomerAssignmentUpsert:
+      value:
+        *mixins
+    CustomerAssignmentsUpsert:
+      value:
+        - customerId: "98029737"
+          legalEntityId: 660af2af69babe3cf6e40771
+          mixins:
+            segmentAttributes:
+              membershipStatus: PREMIUM
+          metadata:
+            mixins:
+              segmentAttributes: https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/69537caeb3fd5d378296ae42_segmentAttributes.json
+        - customerId: "18249883"
+          legalEntityId: 628cd20c6e8b2432b6346ca6
+          metadata:
+            version: 1
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            customersegment.segment_manage: Needed to create or update customer segments.
+            customersegment.segment_read: Needed to read customer segments.
+            customersegment.segment_read_own: Needed to read own customer segments.
+  links: {}
+  callbacks: {}
+security:
+  - OAuth2: []

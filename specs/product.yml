@@ -1,0 +1,3870 @@
+openapi: 3.0.0
+info:
+  title: Product Service
+  version: ''
+  contact:
+    email: documentation@emporix.com
+  description: |
+    Manage structured product information.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Products
+    description: |
+      Manage products. Supported product types include:
+      - `BASIC` — standalone products
+      - `BUNDLE` — groups of products sold together
+      - `PARENT_VARIANT` — products with automatically generated variants defined by a template
+      - `VARIANT` — individual variants of a `PARENT_VARIANT` product
+      - `DYNAMIC_VARIANT` — products forming a flexible variant hierarchy of up to 4 levels. Each variant stores its own `ownVariantAttributes` (the attributes that distinguish it from its parent). A root `DYNAMIC_VARIANT` product stores a denormalized flat map of all descendants in its `variants` field with accumulated attributes. Use the `/recalculate` endpoint to rebuild variant trees after bulk imports.
+  - name: Product Templates
+    description: Manage product templates. Product templates define a set of attributes which are common for all product instances based on that template.
+paths:
+  /product/{tenant}/products/search:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      responses:
+        '200':
+          $ref: '#/components/responses/products_get_response_OK_200'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |
+        Search a list of products.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_read_unpublished` scope is only required if the response should contain unpublished products.
+        * The `product.product_read_by_vendor` scope is only required to fetch products belonging to the vendor.
+
+        ***
+      operationId: POST-product-search-products
+      requestBody:
+        $ref: '#/components/requestBodies/productsSearchBody'
+      security:
+        - OAuth2:
+            - product.product_read_by_vendor
+            - product.product_read_unpublished
+      parameters:
+        - $ref: '#/components/parameters/header_x_total_count'
+        - $ref: '#/components/parameters/query_page_number'
+        - $ref: '#/components/parameters/query_page_size'
+        - $ref: '#/components/parameters/query_sort_product'
+        - $ref: '#/components/parameters/query_product_fields'
+        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/query_expand_product'
+        - $ref: '#/components/parameters/query_raw_value_product'
+      summary: Searching for products
+      tags:
+        - Products
+  /product/{tenant}/products:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/products_get_response_OK_200'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |
+        Retrieves a list of products.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_read_unpublished` scope is only required if the response should contain unpublished products.
+        * The `product.product_read_by_vendor` scope is only required to fetch products belonging to the vendor.
+        * The `product.product_manage_by_vendor` scope is only required to manage products belonging to the vendor.
+
+        ***
+      operationId: GET-product-list-products
+      security:
+        - OAuth2:
+            - product.product_read_by_vendor
+            - product.product_read_unpublished
+            - product.product_manage_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/header_x_total_count'
+        - $ref: '#/components/parameters/query_page_number'
+        - $ref: '#/components/parameters/query_page_size'
+        - $ref: '#/components/parameters/query_sort_product'
+        - $ref: '#/components/parameters/query_q_product'
+        - $ref: '#/components/parameters/query_product_fields'
+        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/query_expand_product'
+        - $ref: '#/components/parameters/query_raw_value_product'
+      summary: Retrieving all products
+      tags:
+        - Products
+    post:
+      responses:
+        '201':
+          description: |
+            The resource has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceLocation'
+              examples:
+                Product successfully created:
+                  $ref: '#/components/examples/product_post_Created_201'
+                Variant successfully created:
+                  $ref: '#/components/examples/variant_post_Created_201'
+        '400':
+          $ref: '#/components/responses/products_post_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/common_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |-
+        Creates a new product.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employeesto manage products belonging to the vendor.
+        * The `product.product_publish` scope is only required if you want to publish the product when creating it.
+
+        ***
+      operationId: POST-product-create-product
+      requestBody:
+        $ref: '#/components/requestBodies/productCreateBody'
+      security:
+        - OAuth2:
+            - product.product_manage
+            - product.product_manage_by_vendor
+            - product.product_publish
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - $ref: '#/components/parameters/header_content_language'
+        - $ref: '#/components/parameters/query_skip_variants_generation'
+        - $ref: '#/components/parameters/query_do_index'
+        - $ref: '#/components/parameters/query_skip_related_items_validation'
+      summary: Creating a new product
+      tags:
+        - Products
+  /product/{tenant}/products/bulk:
+    parameters:
+      - schema:
+          type: string
+        name: tenant
+        in: path
+        required: true
+        description: 'Your Emporix tenant''s name.**Note**: The tenant should always be written in lowercase.'
+    post:
+      summary: Creating multiple products
+      operationId: POST-product-create-bulk-products
+      responses:
+        '207':
+          $ref: '#/components/responses/products_create_in_bulk_response'
+        '400':
+          $ref: '#/components/responses/products_post_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/common_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Products
+      description: |-
+        Creates products in a bulk. The maximum batch size is 200.
+
+        Response for a particular product is returned at the same position (index) at which that price is located in the request body.
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employees to manage products belonging to the vendor.
+        * The `product.product_publish` scope is only required if you want to publish the product when creating it.
+
+        ***
+      security:
+        - OAuth2:
+            - product.product_manage
+            - product.product_manage_by_vendor
+            - product.product_publish
+      requestBody:
+        $ref: '#/components/requestBodies/productBulkCreateBody'
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+        - $ref: '#/components/parameters/query_skip_variants_generation'
+        - $ref: '#/components/parameters/query_do_index'
+        - $ref: '#/components/parameters/query_skip_related_items_validation'
+    put:
+      responses:
+        '207':
+          $ref: '#/components/responses/products_update_in_bulk_response'
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |-
+        Updates or creates products in a bulk. The maximum batch size is 200.
+
+        Response for a particular product is returned at the same position (index) at which it is located in the request body.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employees to manage products belonging to the vendor.
+        * The `product.product_publish` scope is only required if you want to publish the product when updating it.
+        * The `product.product_unpublish` scope is only required if you want to unpublish the product when updating it.
+
+        ***
+      operationId: PUT-product-update-bulk-products
+      requestBody:
+        $ref: '#/components/requestBodies/productBulkUpdateBody'
+      security:
+        - OAuth2:
+            - product.product_manage
+            - product.product_manage_by_vendor
+            - product.product_publish
+            - product.product_unpublish
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+        - $ref: '#/components/parameters/query_skip_variants_generation'
+        - $ref: '#/components/parameters/query_do_index'
+        - $ref: '#/components/parameters/query_skip_related_items_validation'
+      summary: Upserting multiple products
+      tags:
+        - Products
+  /product/{tenant}/products/recalculate:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Triggering dynamic variant recalculation
+      operationId: POST-product-trigger-dynamic-variant-recalculation
+      tags:
+        - Products
+      description: |-
+        Triggers asynchronous recalculation of the variant tree for one or more `DYNAMIC_VARIANT` products. Accepts up to 1000 product IDs at any hierarchy level — the system automatically resolves the root for each ID and creates one recalculation job per unique root product.
+
+        This endpoint is intended to be called **after** a batch of products has been fully ingested, not per individual product write. For single product writes, the variant tree is updated synchronously inline.
+
+        If a recalculation job for a given root is already `PENDING` or `PROCESSING`, the corresponding IDs are returned in `skippedProductIds` and the existing job is referenced in the `jobs` list.
+      security:
+        - OAuth2:
+            - product.product_manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dynamicVariantRecalculationRequest'
+            examples:
+              Trigger recalculation for multiple products:
+                value:
+                  productIds:
+                    - mobile-15-pro-l1
+                    - mobile-15-pro-l2-retail
+                    - mobile-16-pro-l1
+      responses:
+        '202':
+          description: |
+            Recalculation jobs accepted. One job is created per unique root product resolved from the submitted IDs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dynamicVariantRecalculationResponse'
+              examples:
+                Recalculation accepted:
+                  value:
+                    jobs:
+                      - id: job-a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                        parentRoot: mobile-15-pro
+                        requestedByIds:
+                          - mobile-15-pro-l1
+                          - mobile-15-pro-l2-retail
+                        status: PENDING
+                        createdAt: '2024-01-15T10:10:00.000Z'
+                        processingStartedAt: null
+                        finishedAt: null
+                        error: null
+                        attempts: 0
+                      - id: job-b2c3d4e5-f6a7-8901-bcde-f12345678901
+                        parentRoot: mobile-16-pro
+                        requestedByIds:
+                          - mobile-16-pro-l1
+                        status: PENDING
+                        createdAt: '2024-01-15T10:10:00.000Z'
+                        processingStartedAt: null
+                        finishedAt: null
+                        error: null
+                        attempts: 0
+                    skippedProductIds: []
+                Partial skip - job already active:
+                  value:
+                    jobs:
+                      - id: job-existing-c3d4e5f6-a7b8-9012-cdef-123456789012
+                        parentRoot: mobile-15-pro
+                        requestedByIds:
+                          - mobile-15-pro-l1
+                        status: PROCESSING
+                        createdAt: '2024-01-15T09:55:00.000Z'
+                        processingStartedAt: '2024-01-15T09:55:05.000Z'
+                        finishedAt: null
+                        error: null
+                        attempts: 1
+                    skippedProductIds:
+                      - mobile-15-pro-l2-retail
+        '400':
+          $ref: '#/components/responses/products_post_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+  /product/{tenant}/products/recalculate/jobs:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Listing recalculation jobs
+      operationId: GET-product-list-recalculation-jobs
+      tags:
+        - Products
+      description: |-
+        Retrieves a list of dynamic variant recalculation jobs for the tenant. Optionally filtered by job status.
+
+        Jobs are retained for approximately 30 days after reaching a terminal state (`FINISHED`, `FAILED`, or `FAILED_PERMANENT`) and are then automatically removed by a TTL index.
+      security:
+        - OAuth2:
+            - product.product_manage
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter jobs by status. If omitted, all jobs are returned.
+          schema:
+            $ref: '#/components/schemas/dynamicVariantRecalculationJobStatus'
+      responses:
+        '200':
+          description: Jobs retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/dynamicVariantRecalculationJobResponse'
+              examples:
+                List of jobs:
+                  value:
+                    - id: job-a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                      parentRoot: mobile-15-pro
+                      requestedByIds:
+                        - mobile-15-pro-l1
+                        - mobile-15-pro-l2-retail
+                      status: FINISHED
+                      createdAt: '2024-01-15T10:10:00.000Z'
+                      processingStartedAt: '2024-01-15T10:10:03.000Z'
+                      finishedAt: '2024-01-15T10:10:07.000Z'
+                      error: null
+                      attempts: 1
+                    - id: job-b2c3d4e5-f6a7-8901-bcde-f12345678901
+                      parentRoot: mobile-16-pro
+                      requestedByIds:
+                        - mobile-16-pro-l1
+                      status: PENDING
+                      createdAt: '2024-01-15T10:10:00.000Z'
+                      processingStartedAt: null
+                      finishedAt: null
+                      error: null
+                      attempts: 0
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+  /product/{tenant}/products/recalculate/jobs/{jobId}:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Unique identifier of the recalculation job.
+    get:
+      summary: Retrieving a recalculation job
+      operationId: GET-product-get-recalculation-job
+      tags:
+        - Products
+      description: |-
+        Retrieves the current status and details of a specific dynamic variant recalculation job. Use this endpoint to poll for job completion after triggering recalculation.
+      security:
+        - OAuth2:
+            - product.product_manage
+      responses:
+        '200':
+          description: Job retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dynamicVariantRecalculationJobResponse'
+              examples:
+                Job finished successfully:
+                  value:
+                    id: job-a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                    parentRoot: mobile-15-pro
+                    requestedByIds:
+                      - mobile-15-pro-l1
+                      - mobile-15-pro-l2-retail
+                    status: FINISHED
+                    createdAt: '2024-01-15T10:10:00.000Z'
+                    processingStartedAt: '2024-01-15T10:10:03.000Z'
+                    finishedAt: '2024-01-15T10:10:07.000Z'
+                    error: null
+                    attempts: 1
+                Job pending:
+                  value:
+                    id: job-b2c3d4e5-f6a7-8901-bcde-f12345678901
+                    parentRoot: mobile-16-pro
+                    requestedByIds:
+                      - mobile-16-pro-l1
+                    status: PENDING
+                    createdAt: '2024-01-15T10:10:00.000Z'
+                    processingStartedAt: null
+                    finishedAt: null
+                    error: null
+                    attempts: 0
+                Job failed:
+                  value:
+                    id: job-c3d4e5f6-a7b8-9012-cdef-123456789012
+                    parentRoot: mobile-17-pro
+                    requestedByIds:
+                      - mobile-17-pro-l1
+                    status: FAILED
+                    createdAt: '2024-01-15T10:08:00.000Z'
+                    processingStartedAt: '2024-01-15T10:08:05.000Z'
+                    finishedAt: '2024-01-15T10:08:12.000Z'
+                    error: 'Database write timeout during variant tree update'
+                    attempts: 3
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/product_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+  /product/{tenant}/products/{productId}:
+    parameters:
+      - $ref: '#/components/parameters/path_productId'
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      responses:
+        '200':
+          description: |
+            Product successfully retrieved.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/basicProductWithId'
+                  - $ref: '#/components/schemas/bundleProductWithId'
+                  - $ref: '#/components/schemas/parentVariantProductWithId'
+                  - $ref: '#/components/schemas/variantProductWithId'
+                  - $ref: '#/components/schemas/dynamicVariantProductWithId'
+              examples:
+                BASIC Product:
+                  value:
+                    name: Smartphone X2
+                    code: SmartphoneX21415269949943
+                    description: The world's best camera and camcorder in a waterproof smartphone.
+                    id: 545b4e3dfaee4c10def3db24
+                    productType: BASIC
+                    yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                    taxClasses:
+                      EN: STANDARD
+                    published: false
+                    template:
+                      id: 633d774f37937d425ce5570f
+                      version: 1
+                    relatedItems:
+                      - refId: 631c6adac2d4ea73be34f0d1
+                        type: ACCESSORY
+                    customerSegmentIds:
+                      - 689591c74ac99162678ae78f
+                      - 689591c74ac99162678ae78g
+                    categoryIds:
+                      - 631c6adac2d4ea73be34f0d4
+                      - 631c6adac2d4ea73be34f0d5
+                    mixins:
+                      productCustomAttributes:
+                        pricingMeasurePrice: 13
+                        unitPricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        unitPricingBaseMeasure:
+                          value: 133
+                          unitCode: GRM
+                        pricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        orderUnit: H87
+                        minOrderQuantity: 2
+                        maxOrderQuantity: 10
+                        defaultOrderQuantity: 2
+                        taxClass: Vat_23
+                    metadata:
+                      version: 1
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:52:15.423Z'
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                        productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+                BUNDLE Product:
+                  value:
+                    name: Smartphone X2 with headset
+                    code: SmartphoneX21415269949943
+                    description: The world's best camera and camcorder in a waterproof smartphone with headset.
+                    id: 545b4e3dfaee4c10def3db24
+                    productType: BUNDLE
+                    yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                    published: false
+                    template:
+                      id: 633d774f37937d425ce5570f
+                      version: 1
+                    taxClasses:
+                      EN: STANDARD
+                    relatedItems:
+                      - refId: 631c6adac2d4ea73be34f0d1
+                        type: ACCESSORY
+                    bundledProducts:
+                      - id: 53a358901b2e9dd2718b5c12
+                        amount: 1
+                      - id: 53a358901b2e9dd2718b5c13
+                        amount: 1
+                    customerSegmentIds:
+                      - 689591c74ac99162678ae78f
+                      - 689591c74ac99162678ae78g
+                    categoryIds:
+                      - 631c6adac2d4ea73be34f0d4
+                      - 631c6adac2d4ea73be34f0d5
+                    mixins:
+                      productCustomAttributes:
+                        pricingMeasurePrice: 13
+                        unitPricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        unitPricingBaseMeasure:
+                          value: 133
+                          unitCode: GRM
+                        pricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        orderUnit: H87
+                        minOrderQuantity: 2
+                        maxOrderQuantity: 10
+                        defaultOrderQuantity: 2
+                        taxClass: Vat_23
+                    metadata:
+                      version: 1
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:52:15.423Z'
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                        productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+                PARENT VARIANT Product:
+                  value:
+                    name: Smartphone X2
+                    code: SmartphoneX21415269949943
+                    description: The world's best camera and camcorder in a waterproof smartphone.
+                    id: 545b4e3dfaee4c10def3db24
+                    productType: PARENT_VARIANT
+                    yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                    published: false
+                    taxClasses:
+                      EN: STANDARD
+                    template:
+                      id: 633d774f37937d425ce5570f
+                      version: 1
+                    relatedItems:
+                      - refId: 631c6adac2d4ea73be34f0d1
+                        type: ACCESSORY
+                    variantAttributes:
+                      color:
+                        - key: RED
+                        - key: GREEN
+                        - key: BLUE
+                      size:
+                        - key: XS
+                        - key: S
+                        - key: M
+                        - key: L
+                        - key: XL
+                    customerSegmentIds:
+                      - 689591c74ac99162678ae78f
+                      - 689591c74ac99162678ae78g
+                    categoryIds:
+                      - 631c6adac2d4ea73be34f0d4
+                      - 631c6adac2d4ea73be34f0d5
+                    mixins:
+                      productCustomAttributes:
+                        pricingMeasurePrice: 13
+                        unitPricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        unitPricingBaseMeasure:
+                          value: 133
+                          unitCode: GRM
+                        pricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        orderUnit: H87
+                        minOrderQuantity: 2
+                        maxOrderQuantity: 10
+                        defaultOrderQuantity: 2
+                        taxClass: Vat_23
+                    metadata:
+                      version: 1
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:52:15.423Z'
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                        productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+                VARIANT Product:
+                  value:
+                    name: Smartphone X2 black
+                    code: SmartphoneX21415269949943
+                    description: The world's best camera and camcorder in a waterproof smartphone.
+                    id: 545b4e3dfaee4c10def3db24--545b4e3dfaee4c10def3db25
+                    yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                    published: false
+                    taxClasses:
+                      EN: STANDARD
+                    parentVariantId: 545b4e3dfaee4c10def3db24
+                    productType: VARIANT
+                    relatedItems:
+                      - refId: 631c6adac2d4ea73be34f0d1
+                        type: ACCESSORY
+                    customerSegmentIds:
+                      - 689591c74ac99162678ae78f
+                      - 689591c74ac99162678ae78g
+                    categoryIds:
+                      - 631c6adac2d4ea73be34f0d4
+                      - 631c6adac2d4ea73be34f0d5
+                    mixins:
+                      productTemplateAttributes:
+                        color: RED
+                        size: XL
+                      productCustomAttributes:
+                        pricingMeasurePrice: 13
+                        unitPricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        unitPricingBaseMeasure:
+                          value: 133
+                          unitCode: GRM
+                        pricingMeasure:
+                          value: 133
+                          unitCode: GRM
+                        orderUnit: H87
+                        minOrderQuantity: 2
+                        maxOrderQuantity: 10
+                        defaultOrderQuantity: 2
+                        taxClass: Vat_23
+                    metadata:
+                      version: 1
+                      overridden:
+                        - published
+                        - name
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:52:15.423Z'
+                      schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                        productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+                DYNAMIC_VARIANT Root Product:
+                  value:
+                    id: mobile-15-pro
+                    yrn: 'urn:yaas:saasag:caasproduct:product:myshop;mobile-15-pro'
+                    code: MOBILE-15-PRO
+                    name:
+                      en: Mobile Phone 15 Pro
+                      de: Mobile Phone 15 Pro
+                    description:
+                      en: Flagship smartphone with titanium design and advanced camera system.
+                      de: Flaggschiff-Smartphone mit Titan-Design und fortschrittlichem Kamerasystem.
+                    productType: DYNAMIC_VARIANT
+                    published: true
+                    sellable: false
+                    taxClasses:
+                      EN: STANDARD
+                    variants:
+                      mobile-15-pro-l1:
+                        version: 1
+                        code: MOBILE-15-PRO-L1
+                        name:
+                          en: Mobile Phone 15 Pro – 256 GB Blue
+                          de: Mobile Phone 15 Pro – 256 GB Blau
+                        parentVariantId: mobile-15-pro
+                        sellable: false
+                        dynamicVariantType: H1_L1
+                        variantAttributes:
+                          storageCapacity:
+                            name:
+                              en: Storage
+                              de: Speicher
+                            value:
+                              type: STRING
+                              qualifier: 256_GB
+                              name:
+                                en: 256 GB
+                                de: 256 GB
+                          colorFinish:
+                            name:
+                              en: Color
+                              de: Farbe
+                            value:
+                              type: STRING
+                              qualifier: BLUE
+                              name:
+                                en: Blue Titanium
+                                de: Blau Titan
+                          displaySize:
+                            name:
+                              en: Display size
+                              de: Displaygröße
+                            value:
+                              type: DECIMAL
+                              qualifier: 6.1
+                              unit: INH
+                              name:
+                                en: 6.1 in
+                                de: 6,1 Zoll
+                      mobile-15-pro-l2-retail:
+                        version: 1
+                        code: MOBILE-15-PRO-L2-RETAIL
+                        name:
+                          en: Mobile Phone 15 Pro – 256 GB Blue – Retail box
+                          de: Mobile Phone 15 Pro – 256 GB Blau – Einzelhandelsbox
+                        parentVariantId: mobile-15-pro-l1
+                        sellable: true
+                        dynamicVariantType: H1_L2
+                        variantAttributes:
+                          storageCapacity:
+                            name:
+                              en: Storage
+                              de: Speicher
+                            value:
+                              type: STRING
+                              qualifier: 256_GB
+                              name:
+                                en: 256 GB
+                                de: 256 GB
+                          colorFinish:
+                            name:
+                              en: Color
+                              de: Farbe
+                            value:
+                              type: STRING
+                              qualifier: BLUE
+                              name:
+                                en: Blue Titanium
+                                de: Blau Titan
+                          displaySize:
+                            name:
+                              en: Display size
+                              de: Displaygröße
+                            value:
+                              type: DECIMAL
+                              qualifier: 6.1
+                              unit: INH
+                              name:
+                                en: 6.1 in
+                                de: 6,1 Zoll
+                          bundleType:
+                            name:
+                              en: Bundle
+                              de: Bundle
+                            value:
+                              type: STRING
+                              qualifier: RETAIL_BOX
+                              name:
+                                en: Retail box
+                                de: Einzelhandelsbox
+                    metadata:
+                      version: 1
+                      createdAt: '2024-01-15T10:00:00.000Z'
+                      modifiedAt: '2024-01-15T10:00:00.000Z'
+                DYNAMIC_VARIANT Child Product (L2 leaf):
+                  value:
+                    id: mobile-15-pro-l2-retail
+                    yrn: 'urn:yaas:saasag:caasproduct:product:myshop;mobile-15-pro-l2-retail'
+                    code: MOBILE-15-PRO-L2-RETAIL
+                    name:
+                      en: Mobile Phone 15 Pro – 256 GB Blue – Retail box
+                      de: Mobile Phone 15 Pro – 256 GB Blau – Einzelhandelsbox
+                    productType: DYNAMIC_VARIANT
+                    published: true
+                    taxClasses:
+                      EN: STANDARD
+                    parentVariantId: mobile-15-pro-l1
+                    parentVariantPath:
+                      - mobile-15-pro-l1
+                      - mobile-15-pro
+                    dynamicVariantType: H1_L2
+                    sellable: true
+                    ownVariantAttributes:
+                      bundleType:
+                        name:
+                          en: Bundle
+                          de: Bundle
+                        value:
+                          type: STRING
+                          qualifier: RETAIL_BOX
+                          name:
+                            en: Retail box
+                            de: Einzelhandelsbox
+                    inheritedVariantAttributes:
+                      storageCapacity:
+                        name:
+                          en: Storage
+                          de: Speicher
+                        value:
+                          type: STRING
+                          qualifier: 256_GB
+                          name:
+                            en: 256 GB
+                            de: 256 GB
+                      colorFinish:
+                        name:
+                          en: Color
+                          de: Farbe
+                        value:
+                          type: STRING
+                          qualifier: BLUE
+                          name:
+                            en: Blue Titanium
+                            de: Blau Titan
+                      displaySize:
+                        name:
+                          en: Display size
+                          de: Displaygröße
+                        value:
+                          type: DECIMAL
+                          qualifier: 6.1
+                          unit: INH
+                          name:
+                            en: 6.1 in
+                            de: 6,1 Zoll
+                    metadata:
+                      version: 1
+                      createdAt: '2024-01-15T10:05:00.000Z'
+                      modifiedAt: '2024-01-15T10:05:00.000Z'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/product_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |-
+        Retrieves a specified product details.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_read_unpublished` scope is only required if the product has not been published.
+        * The `product.product_read_by_vendor` scope is only required to fetch products belonging to the vendor.
+        * The `product.product_manage_by_vendor` scope is only required to manage products belonging to the vendor.
+
+        ***
+      operationId: GET-product-retrieve-product
+      security:
+        - OAuth2:
+            - product.product_read_by_vendor
+            - product.product_read_unpublished
+            - product.product_manage_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - $ref: '#/components/parameters/path_productId'
+        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/query_product_fields'
+        - $ref: '#/components/parameters/query_expand_product'
+        - $ref: '#/components/parameters/query_raw_value_product'
+      summary: Retrieving a product
+      tags:
+        - Products
+    put:
+      responses:
+        '201':
+          description: |
+            The resource has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resourceLocation'
+              examples:
+                Product successfully created:
+                  $ref: '#/components/examples/product_post_Created_201'
+                Variant successfully created:
+                  $ref: '#/components/examples/variant_post_Created_201'
+
+        '204':
+          description: |
+            The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/product_NotFound_404'
+        '409':
+          $ref: '#/components/responses/common_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |-
+        Updates or creates a specified product by replacing all of its existing data with data from the request body.
+        If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employees to manage products belonging to the vendor.
+        * The `product.product_publish` scope is only required if you want to publish the product when updating it.
+        * The `product.product_unpublish` scope is only required if you want to unpublish the product when updating it.
+
+        ***
+      operationId: PUT-product-update-product
+      requestBody:
+        $ref: '#/components/requestBodies/productUpdateBody'
+      security:
+        - OAuth2:
+            - product.product_manage
+            - product.product_manage_by_vendor
+            - product.product_publish
+            - product.product_unpublish
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - $ref: '#/components/parameters/path_productId'
+        - $ref: '#/components/parameters/header_content_language'
+        - $ref: '#/components/parameters/query_partial_product'
+        - $ref: '#/components/parameters/query_skip_variants_generation'
+        - $ref: '#/components/parameters/query_do_index'
+        - $ref: '#/components/parameters/query_skip_related_items_validation'
+      summary: Upserting a product
+      tags:
+        - Products
+    patch:
+      responses:
+        '204':
+          description: |
+            The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          description: |
+            The requested resource does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/coreErrorMessage'
+        '409':
+          $ref: '#/components/responses/common_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |-
+        Partially updates a specified product.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employees to manage products belonging to the vendor.
+        * The `product.product_publish` scope is only required if you want to publish the product when updating it.
+        * The `product.product_unpublish` scope is only required if you want to unpublish the product when updating it.
+
+        ***
+      operationId: PATCH-product-update-product
+      requestBody:
+        $ref: '#/components/requestBodies/productPartialUpdateBody'
+      security:
+        - OAuth2:
+            - product.product_manage
+            - product.product_manage_by_vendor
+            - product.product_publish
+            - product.product_unpublish
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - $ref: '#/components/parameters/path_productId'
+        - $ref: '#/components/parameters/header_content_language'
+        - $ref: '#/components/parameters/query_skip_variants_generation'
+        - $ref: '#/components/parameters/query_do_index'
+        - $ref: '#/components/parameters/query_skip_related_items_validation'
+      summary: Partially updating a product
+      tags:
+        - Products
+    delete:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: |
+            The resource has been successfully deleted.
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      description: |-
+        Deletes a specified product.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employees to delete products belonging to the vendor.
+
+        ***
+      operationId: DELETE-product-remove-product
+      security:
+        - OAuth2:
+            - product.product_manage
+            - product.product_manage_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - $ref: '#/components/parameters/path_productId'
+        - $ref: '#/components/parameters/query_force_product'
+        - $ref: '#/components/parameters/query_do_index'
+      summary: Deleting a product
+      tags:
+        - Products
+  /product/{tenant}/product-templates:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving all product templates
+      tags:
+        - Product Templates
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/productTemplatesResponse'
+              examples:
+                Product template with enum attribute:
+                  value:
+                    - id: 634cea2740033d7c2e7b03a8
+                      name:
+                        en: T-shirt
+                      attributes:
+                        - key: color
+                          name:
+                            en: Color
+                            pl: Kolor
+                          type: TEXT
+                          metadata:
+                            mandatory: false
+                            variantAttribute: true
+                            defaultValue: GREEN
+                          values:
+                            - key: GREEN
+                            - key: RED
+                      metadata:
+                        variantAttributesSchema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/634cea2740033d7c2e7b03a8-variantAttributes_v1.json'
+                        templateAttributesSchema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/634cea2740033d7c2e7b03a8-templateAttributes_v1.json'
+                        createdAt: '2022-03-31T09:52:15.423Z'
+                        modifiedAt: '2022-03-31T09:52:15.423Z'
+                        version: 1
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      operationId: GET-product-list-templates
+      security:
+        - OAuth2:
+            - product.product_template_read
+      description: |-
+        Retrieves all product templates. You can filter the results with query parameters.
+
+        A product template defines a set of attributes which are common for all product instances based on that template.
+      parameters:
+        - $ref: '#/components/parameters/header_x_total_count'
+        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/query_page_number'
+        - $ref: '#/components/parameters/query_page_size'
+        - $ref: '#/components/parameters/query_sort'
+        - $ref: '#/components/parameters/query_q_param_product_template'
+    post:
+      summary: Creating a new product template
+      operationId: POST-product-create-template
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Identifier of the newly created product template.
+              examples:
+                Product template response:
+                  value:
+                    id: 624c3e7c3406122baacc7e93
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Product Templates
+      security:
+        - OAuth2:
+            - product.product_template_manage
+      description: |-
+        Creates a new product template. 
+
+        A product template defines a set of attributes which are common for all product instances based on that template.
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/productTemplateCreation'
+            examples:
+              Product template:
+                value:
+                  id: 545b4e3dfaee4c10def3db24
+                  name:
+                    en: T-shirt
+                  attributes:
+                    - key: color
+                      name:
+                        en: Color
+                        pl: Kolor
+                      type: TEXT
+                      metadata:
+                        mandatory: false
+                        variantAttribute: true
+                        defaultValue: GREEN
+                      values:
+                        - key: GREEN
+                        - key: RED
+  /product/{tenant}/product-templates/{product-template-id}:
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_productTemplateId'
+    get:
+      summary: Retrieving a product template
+      tags:
+        - Product Templates
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/productTemplateResponse'
+              examples:
+                Product template:
+                  value:
+                    id: 634cea2740033d7c2e7b03a8
+                    name:
+                      en: T-shirt
+                    attributes:
+                      - key: color
+                        name:
+                          en: Color
+                          pl: Kolor
+                        type: TEXT
+                        metadata:
+                          mandatory: false
+                          variantAttribute: false
+                          defaultValue: GREEN
+                        values:
+                          - key: GREEN
+                          - key: RED
+                    metadata:
+                      variantAttributesSchema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/634cea2740033d7c2e7b03a8-variantAttributes_v1.json'
+                      templateAttributesSchema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/634cea2740033d7c2e7b03a8-templateAttributes_v1.json'
+                      createdAt: '2022-03-31T09:52:15.423Z'
+                      modifiedAt: '2022-03-31T09:52:15.423Z'
+                      version: 1
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/product_NotFound_404'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      operationId: GET-product-retrieve-template
+      parameters:
+        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/query_version_parameter_product_template'
+      security:
+        - OAuth2:
+            - product.product_template_read
+      description: |-
+        Retrieves a specified product template's details.
+
+        A product template defines a set of attributes which are common for all product instances based on that template.
+    put:
+      summary: Updating a product template
+      operationId: PUT-product-update-template
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/product_NotFound_404'
+        '409':
+          $ref: '#/components/responses/common_response_Conflict_409'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Product Templates
+      security:
+        - OAuth2:
+            - product.product_template_manage
+      description: |-
+        Updates a specified product template by replacing all of its existing data with data from the request body. 
+
+        **Note**: Every product template update creates a new version of the template. Products based on previous versions are not automatically updated. In order to see the changes (for example new attributes) on the product level, you need to update the template version in applicable products.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/productTemplateUpdate'
+            examples:
+              Product template:
+                value:
+                  name:
+                    en: T-shirt
+                  attributes:
+                    - key: color
+                      name:
+                        en: Color
+                        pl: Kolor
+                      type: TEXT
+                      metadata:
+                        mandatory: false
+                        variantAttribute: true
+                        defaultValue: GREEN
+                      values:
+                        - key: GREEN
+                        - key: RED
+                  metadata:
+                    version: 1
+        description: ''
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+    delete:
+      summary: Deleting a product template
+      operationId: DELETE-product-remove-template
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: false
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
+      tags:
+        - Product Templates
+      security:
+        - OAuth2:
+            - product.product_template_manage
+      description: |-
+        Deletes a specified product template. Only product templates which are not used in products and parent variants can be deleted.
+components:
+  responses:
+    common_response_BadRequest_400:
+      description: 'Bad request due to validation, incorrect parameters, etc.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Validation Error:
+              $ref: '#/components/examples/common_response_validation_exception_BadRequest_400'
+    common_response_Unauthorized_401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    common_response_Forbidden_403:
+      description: Access forbidden. The caller is not allowed to access this resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    common_response_Conflict_409:
+      description: |
+        There are three possible reasons:
+        1. Product with given code already exists, please choose unique code for your product
+        2. Optimistic locking failed. If user sends metadata/version attribute which is outdated (someone else updated product in the time user was performing his changes). User should retrieve the latest product data and retry the request.
+        3. Optimistic locking failed. User did not provide metadata/version attribute in update request, but someone else updated product while it was internally handled by product service. Resending the same request can result in successful update, but the update can override recently persisted changes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessageWithDetails'
+          examples:
+            Conflict:
+              value:
+                code: 409
+                status: Conflict
+                message: Conflict - a resource with given code or id has already exist.
+    common_response_InternalServerError_500:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Internal Server Error:
+              value:
+                code: 500
+                status: Internal Server Error
+                message: Problem encountered while trying to connect to the database.
+    products_post_response_BadRequest_400:
+      description: Resources cannot be created due to an error.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Product with a given code already exists:
+              $ref: '#/components/examples/product_response_validation_exception_BadRequest_400'
+    products_get_response_OK_200:
+      description: Resources have been retrieved successfully.
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/basicProductsArray'
+              - $ref: '#/components/schemas/bundleProductsArray'
+              - $ref: '#/components/schemas/parentVariantProductsArray'
+              - $ref: '#/components/schemas/variantProductsArray'
+              - $ref: '#/components/schemas/dynamicVariantProductsArray'
+          examples:
+            BASIC Product:
+              value:
+                - id: 545b4e3dfaee4c10def3db24
+                  yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                  code: SmartphoneX21415269949943
+                  name: Smartphone X2
+                  description: The world's best camera and camcorder in a waterproof smartphone.
+                  published: false
+                  template:
+                    id: 633d774f37937d425ce5570f
+                    version: 1
+                  taxClasses:
+                    EN: STANDARD
+                  productType: BASIC
+                  relatedItems:
+                    - refId: 631c6adac2d4ea73be34f0d1
+                      type: ACCESSORY
+                  customerSegmentIds:
+                    - 689591c74ac99162678ae78f
+                    - 689591c74ac99162678ae78g
+                  categoryIds:
+                    - 631c6adac2d4ea73be34f0d4
+                    - 631c6adac2d4ea73be34f0d5
+                  mixins:
+                    productCustomAttributes:
+                      pricingMeasurePrice: 13
+                      unitPricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      unitPricingBaseMeasure:
+                        value: 133
+                        unitCode: GRM
+                      pricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      orderUnit: H87
+                      minOrderQuantity: 2
+                      maxOrderQuantity: 10
+                      defaultOrderQuantity: 2
+                      taxClass: Vat_23
+                  metadata:
+                    version: 1
+                    createdAt: '2022-03-31T09:52:15.423Z'
+                    modifiedAt: '2022-03-31T09:52:15.423Z'
+                    schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                      productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+            BUNDLE Product:
+              value:
+                - id: 545b4e3dfaee4c10def3db24
+                  yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                  code: SmartphoneX21415269949943
+                  name: Smartphone X2 with headset
+                  description: The world's best camera and camcorder in a waterproof smartphone.
+                  published: false
+                  template:
+                    id: 633d774f37937d425ce5570f
+                    version: 1
+                  taxClasses:
+                    EN: STANDARD
+                  productType: BUNDLE
+                  relatedItems:
+                    - refId: 631c6adac2d4ea73be34f0d1
+                      type: ACCESSORY
+                  bundledProducts:
+                    - id: 53a358901b2e9dd2718b5c12
+                      amount: 1
+                    - id: 53a358901b2e9dd2718b5c13
+                      amount: 1
+                  customerSegmentIds:
+                    - 689591c74ac99162678ae78f
+                    - 689591c74ac99162678ae78g
+                  categoryIds:
+                    - 631c6adac2d4ea73be34f0d4
+                    - 631c6adac2d4ea73be34f0d5
+                  mixins:
+                    productCustomAttributes:
+                      pricingMeasurePrice: 13
+                      unitPricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      unitPricingBaseMeasure:
+                        value: 133
+                        unitCode: GRM
+                      pricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      orderUnit: H87
+                      minOrderQuantity: 2
+                      maxOrderQuantity: 10
+                      defaultOrderQuantity: 2
+                      taxClass: Vat_23
+                  metadata:
+                    version: 1
+                    createdAt: '2022-03-31T09:52:15.423Z'
+                    modifiedAt: '2022-03-31T09:52:15.423Z'
+                    schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                      productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+            PARENT VARIANT Product:
+              value:
+                - id: 545b4e3dfaee4c10def3db24
+                  yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                  code: SmartphoneX21415269949943
+                  name: Smartphone X2
+                  description: The world's best camera and camcorder in a waterproof smartphone.
+                  published: false
+                  taxClasses:
+                    EN: STANDARD
+                  productType: PARENT_VARIANT
+                  template:
+                    id: 633d774f37937d425ce5570f
+                    version: 1
+                  relatedItems:
+                    - refId: 631c6adac2d4ea73be34f0d1
+                      type: ACCESSORY
+                  variantAttributes:
+                    color:
+                      - key: RED
+                      - key: GREEN
+                      - key: BLUE
+                    size:
+                      - key: XS
+                      - key: S
+                      - key: M
+                      - key: L
+                      - key: XL
+                  customerSegmentIds:
+                    - 689591c74ac99162678ae78f
+                    - 689591c74ac99162678ae78g
+                  categoryIds:
+                    - 631c6adac2d4ea73be34f0d4
+                    - 631c6adac2d4ea73be34f0d5
+                  mixins:
+                    productCustomAttributes:
+                      pricingMeasurePrice: 13
+                      unitPricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      unitPricingBaseMeasure:
+                        value: 133
+                        unitCode: GRM
+                      pricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      orderUnit: H87
+                      minOrderQuantity: 2
+                      maxOrderQuantity: 10
+                      defaultOrderQuantity: 2
+                      taxClass: Vat_23
+                  metadata:
+                    version: 1
+                    createdAt: '2022-03-31T09:52:15.423Z'
+                    modifiedAt: '2022-03-31T09:52:15.423Z'
+                    schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                      productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+            VARIANT Product:
+              value:
+                - id: 545b4e3dfaee4c10def3db24--545b4e3dfaee4c10def3db25
+                  yrn: 'urn:yaas:saasag:caasproduct:product:myshop;545b4e3dfaee4c10def3db24'
+                  code: SmartphoneX21415269949943
+                  name: Smartphone X2 black
+                  description: The world's best camera and camcorder in a waterproof smartphone.
+                  published: false
+                  taxClasses:
+                    EN: STANDARD
+                  productType: VARIANT
+                  relatedItems:
+                    - refId: 631c6adac2d4ea73be34f0d1
+                      type: ACCESSORY
+                  parentVariantId: 545b4e3dfaee4c10def3db24
+                  customerSegmentIds:
+                    - 689591c74ac99162678ae78f
+                    - 689591c74ac99162678ae78g
+                  categoryIds:
+                    - 631c6adac2d4ea73be34f0d4
+                    - 631c6adac2d4ea73be34f0d5
+                  mixins:
+                    productVariantAttributes:
+                      color: RED
+                      size: XL
+                    productCustomAttributes:
+                      pricingMeasurePrice: 13
+                      unitPricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      unitPricingBaseMeasure:
+                        value: 133
+                        unitCode: GRM
+                      pricingMeasure:
+                        value: 133
+                        unitCode: GRM
+                      orderUnit: H87
+                      minOrderQuantity: 2
+                      maxOrderQuantity: 10
+                      defaultOrderQuantity: 2
+                      taxClass: Vat_23
+                  metadata:
+                    version: 1
+                    overridden:
+                      - published
+                      - name
+                    createdAt: '2022-03-31T09:52:15.423Z'
+                    modifiedAt: '2022-03-31T09:52:15.423Z'
+                    schema: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/product.v2'
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      productTemplateAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_templateAttributes_v1.json'
+                      productVariantAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/633d774f37937d425ce5570f_variantAttributes_v1.json'
+    product_NotFound_404:
+      description: Resource has not been found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/productErrorMessage'
+          examples:
+            Product not found:
+              $ref: '#/components/examples/product_NotFound_404'
+    products_create_in_bulk_response:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/bulkResponse'
+          examples:
+            Multi-Status response example:
+              value:
+                - index: 0
+                  id: 62d65a15088ed94ebf093d7d
+                  code: 201
+                  status: CREATED
+                - index: 1
+                  id: 62d65a15088ed94ebf093d8d
+                  code: 201
+                  status: CREATED
+        application/xml:
+          schema:
+            type: object
+            properties: {}
+    products_update_in_bulk_response:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/bulkResponse'
+          examples:
+            Multi-Status response example:
+              value:
+                - index: 0
+                  id: 62d65a15088ed94ebf093d7d
+                  code: 204
+                  status: NO_CONTENT
+                - index: 1
+                  id: 62d65a15088ed94ebf093d8d
+                  code: 204
+                  status: NO_CONTENT
+  requestBodies:
+    productsSearchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/searchProducts'
+          examples:
+            search for products:
+              value:
+                q: "code:(A705197727 OR A705197726)"
+    productCreateBody:
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/basicProductCreation'
+              - $ref: '#/components/schemas/bundleProductCreation'
+              - $ref: '#/components/schemas/parentVariantProductCreation'
+              - $ref: '#/components/schemas/variantProductCreation'
+              - $ref: '#/components/schemas/dynamicVariantProductCreation'
+          examples:
+            BASIC Product Creation - simple:
+              value:
+                name: Smartphone X2
+                code: BASIC001
+                description: The world best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                productType: BASIC
+            BASIC Product Creation - wtih additional attributes:
+              value:
+                name: Smartphone X2
+                code: BASIC001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                productType: BASIC
+                template:
+                  id: 634cea2740033d7c2e7b03a8
+                  version: 1
+                relatedItems:
+                  - refId: 634cea2740033d7c2e7b03a9
+                    type: CONSUMABLE
+                vendor:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: VND001
+                    name:
+                      type: string
+                      example: Vendor1
+                mixins:
+                  salePricesData:
+                    - salePriceStart: '2021-07-20T22:00:00.000+0000'
+                      salePriceAmount: 6.7
+                      salePriceEnd: '2021-07-25T21:59:59.000+0000'
+                      enabled: false
+                  productCustomAttributes:
+                    pricingMeasurePrice: 13
+                    unitPricingMeasure:
+                      value: 133
+                      unitCode: GRM
+                    unitPricingBaseMeasure:
+                      value: 100
+                      unitCode: GRM
+                    pricingMeasure:
+                      value: 100
+                      unitCode: GRM
+                    orderUnit: H87
+                    minOrderQuantity: 2
+                    maxOrderQuantity: 10
+                    defaultOrderQuantity: 5
+                metadata:
+                  mixins:
+                    productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+                    salePricesData: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/salePriceData.json'
+            BUNDLE Product Creation:
+              value:
+                name: Smartphone X2 with headset
+                code: BUNDLE001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                bundledProducts:
+                  - productId: 53a358901b2e9dd2718b5c12
+                    amount: 1
+                  - productId: 53a358901b2e9dd2718b5c13
+                    amount: 1
+                productType: BUNDLE
+            PARENT VARIANT Product Creation:
+              value:
+                name: Smartphone X2 with headset
+                code: PARENT001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                productType: PARENT_VARIANT
+                template:
+                  id: 634cea2740033d7c2e7b03a8
+                  version: 1
+                variantAttributes:
+                  color:
+                    - key: RED
+                    - key: GREEN
+                    - key: BLUE
+                  size:
+                    - key: XS
+                    - key: S
+                    - key: M
+                    - key: L
+                    - key: XL
+            VARIANT Product Creation:
+              value:
+                name: Smartphone X2 black
+                code: VARIANT001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: true
+                taxClasses:
+                  EN: STANDARD
+                productType: VARIANT
+                parentVariantId: 5c335acea9812100098ffde0
+                relatedItems:
+                  - refId: 634cea2740033d7c2e7b03a9
+                    type: CONSUMABLE
+                metadata:
+                  overridden:
+                    - published
+                    - taxClasses
+                mixins:
+                  productVariantAttributes:
+                    color: RED
+                    size: XS
+            DYNAMIC_VARIANT Root Product Creation:
+              value:
+                id: mobile-15-pro
+                name:
+                  en: Mobile Phone 15 Pro
+                  de: Mobile Phone 15 Pro
+                code: MOBILE-15-PRO
+                description:
+                  en: Flagship smartphone with titanium design and advanced camera system.
+                  de: Flaggschiff-Smartphone mit Titan-Design und fortschrittlichem Kamerasystem.
+                published: true
+                sellable: false
+                taxClasses:
+                  EN: STANDARD
+                productType: DYNAMIC_VARIANT
+            DYNAMIC_VARIANT Child Product Creation (L1 variant):
+              value:
+                id: mobile-15-pro-l1
+                name:
+                  en: Mobile Phone 15 Pro – 256 GB Blue
+                  de: Mobile Phone 15 Pro – 256 GB Blau
+                code: MOBILE-15-PRO-L1
+                published: true
+                taxClasses:
+                  EN: STANDARD
+                productType: DYNAMIC_VARIANT
+                parentVariantId: mobile-15-pro
+                dynamicVariantType: H1_L1
+                sellable: false
+                ownVariantAttributes:
+                  storageCapacity:
+                    name:
+                      en: Storage
+                      de: Speicher
+                    value:
+                      type: STRING
+                      qualifier: 256_GB
+                      name:
+                        en: 256 GB
+                        de: 256 GB
+                  colorFinish:
+                    name:
+                      en: Color
+                      de: Farbe
+                    value:
+                      type: STRING
+                      qualifier: BLUE
+                      name:
+                        en: Blue Titanium
+                        de: Blau Titan
+                  displaySize:
+                    name:
+                      en: Display size
+                      de: Displaygröße
+                    value:
+                      type: DECIMAL
+                      qualifier: 6.1
+                      unit: INH
+                      name:
+                        en: 6.1 in
+                        de: 6,1 Zoll
+            DYNAMIC_VARIANT Child Product Creation (L2 leaf):
+              value:
+                id: mobile-15-pro-l2-retail
+                name:
+                  en: Mobile Phone 15 Pro – 256 GB Blue – Retail box
+                  de: Mobile Phone 15 Pro – 256 GB Blau – Einzelhandelsbox
+                code: MOBILE-15-PRO-L2-RETAIL
+                published: true
+                taxClasses:
+                  EN: STANDARD
+                productType: DYNAMIC_VARIANT
+                parentVariantId: mobile-15-pro-l1
+                dynamicVariantType: H1_L2
+                sellable: true
+                ownVariantAttributes:
+                  bundleType:
+                    name:
+                      en: Bundle
+                      de: Bundle
+                    value:
+                      type: STRING
+                      qualifier: RETAIL_BOX
+                      name:
+                        en: Retail box
+                        de: Einzelhandelsbox
+    productUpdateBody:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/basicProductUpdate'
+              - $ref: '#/components/schemas/bundleProductUpdate'
+              - $ref: '#/components/schemas/parentVariantProductUpdate'
+              - $ref: '#/components/schemas/variantProductUpdate'
+              - $ref: '#/components/schemas/dynamicVariantProductUpdate'
+          examples:
+            BASIC Product Update:
+              value:
+                name: Smartphone X2
+                code: TESTDOC000
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                template:
+                  id: 634cea2740033d7c2e7b03a8
+                  version: 1
+                relatedItems:
+                  - refId: 634cea2740033d7c2e7b03a9
+                    type: CONSUMABLE
+                mixins:
+                  salePricesData:
+                    - salePriceStart: '2021-07-20T22:00:00.000+0000'
+                      salePriceAmount: 6.7
+                      salePriceEnd: '2021-07-25T21:59:59.000+0000'
+                      enabled: false
+                  productCustomAttributes:
+                    pricingMeasurePrice: 13
+                    unitPricingMeasure:
+                      value: 133
+                      unitCode: GRM
+                    unitPricingBaseMeasure:
+                      value: 100
+                      unitCode: GRM
+                    pricingMeasure:
+                      value: 100
+                      unitCode: GRM
+                    orderUnit: H87
+                    minOrderQuantity: 2
+                    maxOrderQuantity: 10
+                    defaultOrderQuantity: 5
+                metadata:
+                  version: 1
+                  mixins:
+                    productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn.v29.json'
+                    salePricesData: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/salePriceData.json'
+            BUNDLE Product Update:
+              value:
+                name: Smartphone X2 with headset
+                code: TESTDOC001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                productType: BUNDLE
+                bundledProducts:
+                  - productId: 53a358901b2e9dd2718b5c12
+                    amount: 1
+                  - productId: 53a358901b2e9dd2718b5c13
+                    amount: 1
+                metadata:
+                  version: 1
+            PARENT VARIANT Product Update:
+              value:
+                name: Smartphone X2
+                code: PARENT001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: false
+                taxClasses:
+                  EN: STANDARD
+                template:
+                  id: 634cea2740033d7c2e7b03a8
+                  version: 1
+                productType: PARENT_VARIANT
+                variantAttributes:
+                  color:
+                    - key: RED
+                    - key: GREEN
+                    - key: BLUE
+                  size:
+                    - key: XS
+                    - key: S
+                    - key: M
+                    - key: L
+                    - key: XL
+                metadata:
+                  version: 1
+            VARIANT Product Update:
+              value:
+                name: Smartphone X2 black
+                code: VARIANT001
+                description: The world's best camera and camcorder in a waterproof smartphone.
+                published: true
+                taxClasses:
+                  EN: STANDARD
+                productType: VARIANT
+                parentVariantId: 214cah2245033d9d2a2b17f1
+                relatedItems:
+                  - refId: 634cea2740033d7c2e7b03a9
+                    type: CONSUMABLE
+                metadata:
+                  version: 1
+                  overridden:
+                    - published
+                    - taxClasses
+                mixins:
+                  productVariantAttributes:
+                    color: RED
+                    size: XS
+            DYNAMIC_VARIANT Product Update:
+              value:
+                name:
+                  en: Mobile Phone 15 Pro – 256 GB Blue
+                  de: Mobile Phone 15 Pro – 256 GB Blau
+                code: MOBILE-15-PRO-L1
+                published: true
+                taxClasses:
+                  EN: STANDARD
+                productType: DYNAMIC_VARIANT
+                dynamicVariantType: H1_L1
+                sellable: false
+                ownVariantAttributes:
+                  storageCapacity:
+                    name:
+                      en: Storage
+                      de: Speicher
+                    value:
+                      type: STRING
+                      qualifier: 256_GB
+                      name:
+                        en: 256 GB
+                        de: 256 GB
+                  colorFinish:
+                    name:
+                      en: Color
+                      de: Farbe
+                    value:
+                      type: STRING
+                      qualifier: BLUE
+                      name:
+                        en: Blue Titanium
+                        de: Blau Titan
+                  displaySize:
+                    name:
+                      en: Display size
+                      de: Displaygröße
+                    value:
+                      type: DECIMAL
+                      qualifier: 6.1
+                      unit: INH
+                      name:
+                        en: 6.1 in
+                        de: 6,1 Zoll
+                  batteryCapacityMah:
+                    name:
+                      en: Battery capacity
+                      de: Akku-Kapazität
+                    value:
+                      type: NUMBER
+                      qualifier: 3274
+                      unit: MAH
+                      name:
+                        en: 3274 mAh
+                        de: 3274 mAh
+                metadata:
+                  version: 2
+    productPartialUpdateBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/productPartialUpdate'
+          example:
+            published: true
+    productBulkUpdateBody:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - $ref: '#/components/schemas/basicProductBulkUpdate'
+                - $ref: '#/components/schemas/bundleProductBulkUpdate'
+                - $ref: '#/components/schemas/parentVariantProductBulkUpdate'
+                - $ref: '#/components/schemas/variantProductBulkUpdate'
+                - $ref: '#/components/schemas/dynamicVariantProductBulkUpdate'
+          examples:
+            Update multiple products in bulk:
+              value:
+                - id: "abc-123"
+                  code: "532432412331"
+                  name: "Product 1"
+                  metadata:
+                    version: 1
+                - id: "abc-124"
+                  code: "532432412332"
+                  name: "Product 2"
+                  metadata:
+                    version: 1
+                - id: "abc-125"
+                  code: "532432412333"
+                  name: "Product 3"
+                  metadata:
+                    version: 1
+
+
+    productBulkCreateBody:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              oneOf:
+                - $ref: '#/components/schemas/basicProductCreation'
+                - $ref: '#/components/schemas/bundleProductCreation'
+                - $ref: '#/components/schemas/parentVariantProductCreation'
+                - $ref: '#/components/schemas/variantProductCreation'
+                - $ref: '#/components/schemas/dynamicVariantProductCreation'
+          examples:
+            Create multiple products in bulk:
+              value:
+                - id: abc-123
+                  code: '532432412331'
+                  name: Product 1
+                  productType: BASIC
+                - id: abc-124
+                  code: '532432412332'
+                  name: Product 2
+                  productType: BASIC
+                - id: abc-125
+                  code: '532432412333'
+                  name: Product 3
+                  productType: BASIC
+      description: A list of product create requests
+  schemas:
+    localizedValue:
+      description: Localized value which can have different structure which depends on provided `Content-Language` header.
+      oneOf:
+        - type: string
+        - type: object
+          additionalProperties:
+            type: string
+          example:
+            en: Product
+            pl: Produkt
+    coreErrorMessage:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP Status Code.
+        status:
+          type: string
+          description: HTTP Status.
+        message:
+          type: string
+          description: Error message.
+    coreErrorMessageWithDetails:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/coreErrorMessage'
+        - type: object
+          properties:
+            details:
+              type: array
+              description: Error message details.
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  type:
+                    type: string
+                  message:
+                    type: string
+                  moreInfo:
+                    type: string
+    productErrorMessage:
+      allOf:
+        - $ref: '#/components/schemas/coreErrorMessage'
+        - type: object
+          properties:
+            productId:
+              type: string
+              description: Identifier of the product.
+    productTemplateBase:
+      type: object
+      properties:
+        name:
+          type: object
+          description: Localized product template name in a form of a map of translations.
+          additionalProperties:
+            type: string
+        attributes:
+          type: array
+          description: List of attributes related to the product template.
+          items:
+            $ref: '#/components/schemas/productTemplateAttribute'
+      required:
+        - name
+        - attributes
+    productTemplateCreation:
+      title: productTemplateCreation
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/productTemplateBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Identifier of the product template.
+    productTemplateAttribute:
+      title: productTemplateAttribute
+      type: object
+      properties:
+        key:
+          type: string
+          description: 'An identifier of the attribute. The key is used as a field name in a product instance created based on the product template. The key can contain only alphanumeric characters. '
+        name:
+          type: object
+          additionalProperties:
+            type: string
+          description: Localized resource name in a form of a map of translations.
+        type:
+          type: string
+          description: 'Attribute type. Correct values: `TEXT`, `NUMBER`, `BOOLEAN`, `DATETIME`. Regardless of the chosen type, the defaultValue and values fields are validated. The DATETIME values must be compliant with the ISO 8601 standard, for example: 2022-03-31T09:52:15.423Z.'
+        metadata:
+          type: object
+          description: Metadata contains additional information about the attribute.
+          properties:
+            mandatory:
+              type: boolean
+              description: Indicates whether the attribute should be treated as a mandatory.
+            variantAttribute:
+              type: boolean
+              description: |-
+                Indicates whether the attribute is a variant-specific attribute. Variant attributes are taken into account during variants creation.
+                If the value is set to true, then the 'values' array cannot be null.
+            defaultValue:
+              description: The attribute stores a default value for the attribute.
+              oneOf:
+                - type: string
+                - type: boolean
+                - type: number
+        values:
+          allOf:
+            - $ref: '#/components/schemas/values'
+            - type: object
+              description: |-
+                If the values are populated then the attribute behaves as an enum property. In other words, the attribute in a product instance can contain only values mentioned in this array. For each
+                attribute the value should consist of object with key and localized names.
+      required:
+        - key
+        - name
+        - type
+        - metadata
+    productTemplateMetadata:
+      title: productTemplateMetadata
+      type: object
+      properties:
+        variantAttributesSchema:
+          type: string
+          description: Schema url of the variant attributes.
+        templateAttributesSchema:
+          type: string
+          description: Schema url of the template attributes.
+        createdAt:
+          type: string
+          description: 'Date and time when the object was created, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+        modifiedAt:
+          type: string
+          description: 'Date and time when the object was last modified, compliant with the ISO 8601 standard. For example: `2022-03-31T09:52:15.423Z`'
+        version:
+          type: number
+          description: Version of the object. The value is required during update operation.
+    productTemplateResponse:
+      allOf:
+        - $ref: '#/components/schemas/productTemplateCreation'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productTemplateMetadata'
+    productTemplatesResponse:
+      title: productTemplatesResponse
+      type: array
+      items:
+        $ref: '#/components/schemas/productTemplateResponse'
+    productTemplateUpdate:
+      title: productTemplateUpdate
+      allOf:
+        - $ref: '#/components/schemas/productTemplateBase'
+        - type: object
+          properties:
+            metadata:
+              type: object
+              properties:
+                version:
+                  type: number
+                  description: Version of the object. The value is required while product template update.
+              required:
+                - version
+      required:
+        - name
+        - attributes
+        - metadata
+    productType:
+      type: string
+      description: |
+        Indicates the product type, which is immutable. Once the product type is set, it cannot be updated.
+      default: BASIC
+      enum:
+        - BASIC
+        - BUNDLE
+        - PARENT_VARIANT
+        - VARIANT
+        - DYNAMIC_VARIANT
+    productTypeUpdate:
+      type: string
+      description: |
+        Indicates the product type, which is immutable. This property is taken into account only for insert operations.
+      default: BASIC
+      enum:
+        - BASIC
+        - BUNDLE
+        - PARENT_VARIANT
+        - VARIANT
+        - DYNAMIC_VARIANT
+    template:
+      type: object
+      description: |
+        Indicates the template that has been used during the product creation. After assigning a template to the product, the new attributes can be defined under the `productTemplateAttributes` key in the `mixins` field. In case of variant attributes, the attributes should be defined under `productVariantAttributes`. The attributes are then validated in accordance with their definition in the template. 
+
+        **Note:** The template with defined variant attributes can be used only in PARENT_VARIANT and VARIANT types of product.
+      properties:
+        id:
+          type: string
+          description: Identifier of the product template.
+        version:
+          type: string
+          description: Product template version.
+      required:
+        - id
+        - version
+    bundledProducts:
+      type: array
+      description: 'List of bundled products'
+      items:
+        type: object
+        properties:
+          productId:
+            type: string
+            description: Identifier of the bundled product.
+          amount:
+            type: integer
+            description: Amount of bundled products. Must be a positive number.
+        required:
+          - productId
+          - amount
+    value:
+      type: object
+      properties:
+        key:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+    values:
+      type: array
+      items:
+        $ref: '#/components/schemas/value'
+    variantAttributes:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/values'
+      description: |-
+        This field contains all information about attributes and their values that are used for creating variants. It is presented in the form of a map, where 'key' is the name of the attribute and 'value' is the list of values of that attribute. The attributes and their values are based on their definitions in the `template` element assigned to the parent variant. Each attribute defined in the product template is flagged as a `variantAttribute`. Only the attributes that have this flag set as `true` can be used in the `variantAttributes` field.
+    resourceLocation:
+      type: object
+      properties:
+        id:
+          type: string
+        yrn:
+          $ref: '#/components/schemas/YRN'
+    YRN:
+      title: YRN (attribute)
+      type: string
+      description: |-
+        In YaaS, a global resource identifier is a Uniform Resource Name (URN) with a custom YaaS schema and is called a YaaS Resource Name, or YRN.
+
+        It is a unique identifier, which stores information about a resource, such as its type, ID or name of the tenant.
+    taxClasses:
+      type: object
+      additionalProperties:
+        type: string
+      description: |-
+        Map of key-value pairs that associates tax classes with locations (countries). The key of the map should be specified as the existing location/country identifier (see the country-service). The value of the map entry should contain a tax class code (see the tax-service).
+        Information about the association is required for price matching mechanism (see the price-service#MatchPrice).
+    published:
+      type: boolean
+      description: Flag indicating whether the product has been published or not.
+      default: false
+    salePricesData:
+      type: array
+      items:
+        description: Mixins of the `salePricesData`.
+        properties:
+          salePricesAmount:
+            type: number
+            description: The sale price for the product.
+          salePriceStart:
+            type: string
+            format: date-time
+            description: The start date of the sale price.
+          salePriceEnd:
+            type: string
+            format: date-time
+            description: The end date of the sale price.
+          enabled:
+            type: boolean
+            description: Marks the enabled sale price. Only one price should be marked.
+    productCustomAttributes:
+      type: object
+      description: Mixins of the `productCustomAttributes`.
+      properties:
+        pricingMeasurePrice:
+          type: number
+          description: Product price per specified order unit.
+        unitPricingMeasure:
+          type: object
+          description: Information about the value and measurement unit per one order unit.
+          properties:
+            value:
+              type: number
+              description: |-
+                Quantity of the measurement unit.
+
+                For example, if one piece weighs around 180 g, the value should be set to `180`.
+            unitCode:
+              type: string
+              description: |-
+                Code of the measurement unit. The possible values for the `unitCode` field are explained in the table below:
+                |     |     |
+                | --- | --- |
+                | **Value** | **Measurement unit** |
+                | `H87` | Pieces |
+                | `KGM` | Kilograms |
+                | `GRM` | Grams |
+                | `LTR` | Liters |
+                | `MLT` | Milliliters |
+                | `MTR` | Meters |
+                | `RO` | Rolls |
+
+                For example, if one piece weighs around 180 g, the value should be set to `GRM`.
+        unitPricingBaseMeasure:
+          type: object
+          description: Information about the value and measurement unit of the base price.
+          properties:
+            value:
+              type: number
+              description: |-
+                Quantity of the base price measurement unit.
+
+                For example, if the base price is calculated for 1 kg, the value should be set to `1`.
+            unitCode:
+              type: string
+              description: |-
+                Code of the measurement unit. The possible values for the `unitCode` field are explained in the table below:
+                |     |     |
+                | --- | --- |
+                | **Value** | **Measurement unit** |
+                | `H87` | Pieces |
+                | `KGM` | Kilograms |
+                | `GRM` | Grams |
+                | `LTR` | Liters |
+                | `MLT` | Milliliters |
+                | `MTR` | Meters |
+                | `RO` | Rolls |
+
+                For example, if the base price is calculated per 1 kg, the value should be set to `KGM`.
+        pricingMeasure:
+          type: object
+          description: Information about the product price per specified measurement unit.
+          properties:
+            value:
+              type: number
+              description: |-
+                Quantity of the price measurement unit.
+
+                For example, if the price is calculated for 100 g, the value should be set to `100`.
+            unitCode:
+              type: string
+              description: |-
+                Code of the measurement unit. The possible values for the `unitCode` field are explained in the table below:
+                |     |     |
+                | --- | --- |
+                | **Value** | **Measurement unit** |
+                | `H87` | Pieces |
+                | `KGM` | Kilograms |
+                | `GRM` | Grams |
+                | `LTR` | Liters |
+                | `MLT` | Milliliters |
+                | `MTR` | Meters |
+                | `RO` | Rolls |
+
+                For example, if the price is calculated per 100 g, the value should be set to `GRM`.
+        orderUnit:
+          type: string
+          description: |-
+            Code of the measurement unit by which the customer can order the product. The possible values for the `unitCode` field are explained in the table below:
+            |     |     |
+            | --- | --- |
+            | **Value** | **Measurement unit** |
+            | `H87` | Pieces |
+            | `KGM` | Kilograms |
+            | `GRM` | Grams |
+            | `LTR` | Liters |
+            | `MLT` | Milliliters |
+            | `MTR` | Meters |
+            | `RO` | Rolls |
+
+            For example, if the customer can order a product by pieces, the value should be set to `H87`.
+        minOrderQuantity:
+          type: number
+          description: Minimum quantity which can be ordered.
+        maxOrderQuantity:
+          type: number
+          description: Maximum quantity which can be ordered.
+        defaultOrderQuantity:
+          type: number
+          description: Default order quantity which appears on the product page.
+    productTemplateAttributes:
+      type: object
+      description: |-
+        Mixins of the `productTemplateAttributes` which contains information about the attributes used from the product template in the form of a map, where 'key' is an attribute name and 'value' is the attribute value.
+    productVariantAttributes:
+      type: object
+      description: |-
+        Mixins of the `productVariantAttributes` which contains information about the variant attributes used from the product template in the form of a map, where 'key' is an attribute name and 'value' is the attribute value.
+    productMixins:
+      type: object
+      description: Mixins request.
+      additionalProperties: true
+    productVariantMixins:
+      type: object
+      description: Mixins request.
+      additionalProperties: true
+    productMetadataCore:
+      type: object
+      description: Metadata request.
+      additionalProperties: false
+      properties:
+        mixins:
+          type: object
+          description: Links to the mixin schemas.
+          additionalProperties: true
+    productMetadataWithVersion:
+      type: object
+      description: Metadata with the version information.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productMetadataCore'
+        - type: object
+          properties:
+            version:
+              type: number
+              description: Version of the document
+    productMetadataGet:
+      type: object
+      description: Metadata for GET requests.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productMetadataWithVersion'
+        - type: object
+          properties:
+            classificationMixins:
+              type: array
+              description: List of mixin schemas used for classification.
+              items:
+                type: object
+                description: Mixin schema.
+                properties:
+                  name:
+                    type: string
+                    description: Name of the mixin
+                    pattern: '^[a-zA-Z0-9_]\S*$'
+                  mixinPath:
+                    type: string
+                    description: The mixins path that should be used when defining attributes on a product. It's built based on the following pattern - `class_<sourceCategory.code>_<name>`.
+                  schemaUrl:
+                    type: string
+                    description: URL of the mixin schema defined on the category level.
+                    pattern: '^https?://[^\s/$.?#].\S*$'
+                  usedSchemaUrl:
+                    type: string
+                    description: If given mixin has been already used in the product, then this field contains the URL of the used mixin schema.
+                    pattern: '^https?://[^\s/$.?#].\S*$'
+                  obsoleteSchemaUrlUsed:
+                    type: boolean
+                    description: Indicates whether the used mixin schema is obsolete - `usedSchemaUrl` differs from `schemaUrl`.
+                  required:
+                    type: boolean
+                    description: Indicates whether the mixin is required.
+                  sourceCategoryId:
+                    type: string
+                    description: Unique identifier of the category from which the mixin comes from. Can be this category ID or one of the parent categories IDs.
+            createdAt:
+              type: string
+              description: Creation date in the ISO 8601 standard.
+            modifiedAt:
+              type: string
+              description: Modification date in the ISO 8601 standard.
+    variantProductMetadataGet:
+      type: object
+      description: Variant metadata response.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productMetadataGet'
+        - $ref: '#/components/schemas/variantProductMetadataWithVersion'
+    variantProductMetadataCore:
+      type: object
+      description: Metadata request.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productMetadataCore'
+        - type: object
+          properties:
+            overridden:
+              type: array
+              description: |-
+                By default, all variant products inherit their attributes from the parent variant. You need to include the name of the attribute in the `metadata.overridden` field to be able to replace the attribute values. For the `mixins` and `metadata` fields, you can provide a nested path so that only a single mixin attribute is overridden, for example `mixins.productCustomAttributes.pricingMeasurePrice`. The same rule is valid for providing the mixins schema, as you can override just this particular field with the provided schema, for example metadata.mixins.yourCustomAttributes.
+
+                **Note:**You cannot override the following attributes: `id`, `code`, `template`, `variantAttributes`.
+              items:
+                type: string
+                description: 'Name of overridden product field, for example `published`.'
+    variantProductMetadataWithVersion:
+      type: object
+      description: Metadata with the version information.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/variantProductMetadataCore'
+        - type: object
+          properties:
+            version:
+              type: number
+              description: Version of the document.
+    id:
+      type: string
+      description: Unique resource identifier.
+    productMedia:
+      type: array
+      uniqueItems: false
+      description: Media files attached to the product.
+      items:
+        type: object
+        additionalProperties: false
+        properties:
+          id:
+            type: string
+          yrn:
+            $ref: '#/components/schemas/YRN'
+          contentType:
+            type: string
+          createdAt:
+            type: string
+          uploadLink:
+            type: string
+          url:
+            type: string
+          cloudinaryUrl:
+            type: string
+          uncommittedMedia:
+            type: boolean
+          tags:
+            type: array
+            items:
+              type: string
+          customAttributes:
+            type: object
+          mixins:
+            type: object
+            additionalProperties: true
+            description: Custom media attributes.
+    productCore:
+      type: object
+      properties:
+        name:
+          $ref: '#/components/schemas/localizedValue'
+          description: Product name.
+        code:
+          type: string
+          minLength: 1
+          description: 'Unique product identifier, defined by the user.'
+        description:
+          $ref: '#/components/schemas/localizedValue'
+          description: Product description.
+        vendor:
+          $ref: '#/components/schemas/vendor'
+        taxClasses:
+          $ref: '#/components/schemas/taxClasses'
+        published:
+          $ref: '#/components/schemas/published'
+        weightDependent:
+          type: boolean
+          description: 'Mark the product as weight-dependent if the line item price could change after packaging, as this is necessary to ensure that credit card payments can be authorized.'
+        mixins:
+          $ref: '#/components/schemas/productMixins'
+        relatedItems:
+          description: |
+            List of items in a relationship with the main product. Assuming that in the system the following relation types are defined: `ACCESSORY` and `CONSUMABLE`, the two products: `Printer` and `Ink` exist, then the `Ink` product can be used as a related item with type `CONSUMABLE` for the Printer product.
+            In order to find all printers for which the ink is defined as a `CONSUMABLE` then `q-param` can be used:
+            `products?q=relatedItems.type:CONSUMABLE relatedItems.refId:Ink_Id`
+          type: array
+          items:
+            $ref: '#/components/schemas/relatedItem'
+        brandId:
+          type: string
+          description: 'ID of brand.'
+        brand:
+          $ref: '#/components/schemas/brand'
+        labelIds:
+          type: array
+          items:
+            type: string
+          description: 'Collection of label IDs.'
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/label'
+    brand:
+      type: object
+      description: Brand data expanded from `brandId`.
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        localizedName:
+          type: object
+          additionalProperties:
+            type: string
+        localizedDescription:
+          type: object
+          additionalProperties:
+            type: string
+        image:
+          type: string
+          format: uri
+        cloudinaryUrl:
+          type: string
+          format: uri
+        mediaId:
+          type: string
+    labelOverlay:
+      type: object
+      description: Overlay metadata for a label.
+      additionalProperties: false
+      properties:
+        isTrue:
+          type: boolean
+        position:
+          type: number
+    label:
+      type: object
+      description: Label data expanded from `labelIds`.
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          $ref: '#/components/schemas/localizedValue'
+        image:
+          type: string
+          format: uri
+        cloudinaryUrl:
+          type: string
+          format: uri
+        mediaId:
+          type: string
+        overlay:
+          $ref: '#/components/schemas/labelOverlay'
+    basicProduct:
+      type: object
+      description: Products of the BASIC type.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productCore'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataCore'
+            template:
+              $ref: '#/components/schemas/template'
+          required:
+            - name
+            - code
+    basicProductCreation:
+      type: object
+      description: Creating products of the BASIC type.
+      allOf:
+        - $ref: '#/components/schemas/basicProduct'
+        - type: object
+          properties:
+            id:
+              type: string
+              maxLength: 32
+              description: Custom product identifier. If not provided, it is automatically generated.
+            productType:
+              $ref: '#/components/schemas/productType'
+    basicProductWithId:
+      type: object
+      description: Products of the BASIC type.
+      allOf:
+        - $ref: '#/components/schemas/basicProductCreation'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+            yrn:
+              $ref: '#/components/schemas/YRN'
+            media:
+              $ref: '#/components/schemas/productMedia'
+            metadata:
+              $ref: '#/components/schemas/productMetadataGet'
+            customerSegmentIds:
+              type: array
+              description: Customer segment IDs assigned to the product.
+              items:
+                type: string
+            categoryIds:
+              type: array
+              description: Category IDs assigned to the product.
+              items:
+                type: string
+    basicProductsArray:
+      type: array
+      description: List of products of the BASIC type.
+      items:
+        $ref: '#/components/schemas/basicProductWithId'
+    basicProductUpdate:
+      type: object
+      description: Updating products of the BASIC type.
+      allOf:
+        - $ref: '#/components/schemas/basicProduct'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataWithVersion'
+            productType:
+              $ref: '#/components/schemas/productTypeUpdate'
+    basicProductBulkUpdate:
+      type: object
+      description: Updating products of the BASIC type in bulk.
+      allOf:
+        - $ref: '#/components/schemas/basicProductUpdate'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+          required:
+            - id
+    bundleProduct:
+      type: object
+      description: Products of the BUNDLE type.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productCore'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataCore'
+            template:
+              $ref: '#/components/schemas/template'
+            bundledProducts:
+              $ref: '#/components/schemas/bundledProducts'
+            productType:
+              $ref: '#/components/schemas/productTypeUpdate'
+          required:
+            - name
+            - code
+            - bundledProducts
+            - productType
+    bundleProductCreation:
+      type: object
+      description: Creating products of the BUNDLE type.
+      allOf:
+        - $ref: '#/components/schemas/bundleProduct'
+        - type: object
+          properties:
+            id:
+              type: string
+              maxLength: 32
+              description: Custom product identifier. If not provided, it is automatically generated.
+            productType:
+              $ref: '#/components/schemas/productType'
+    bundleProductWithId:
+      type: object
+      description: Products of the BUNDLE type.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/bundleProductCreation'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+            yrn:
+              $ref: '#/components/schemas/YRN'
+            media:
+              $ref: '#/components/schemas/productMedia'
+            metadata:
+              $ref: '#/components/schemas/productMetadataGet'
+            customerSegmentIds:
+              type: array
+              description: Customer segment IDs assigned to the product.
+              items:
+                type: string
+            categoryIds:
+              type: array
+              description: Category IDs assigned to the product.
+              items:
+                type: string
+    bundleProductsArray:
+      type: array
+      description: List of products of the BUNDLE type.
+      items:
+        $ref: '#/components/schemas/bundleProductWithId'
+    bundleProductUpdate:
+      type: object
+      description: Updating products of the BUNDLE type.
+      allOf:
+        - $ref: '#/components/schemas/bundleProduct'
+        - type: object   # explicitly define this inline schema as an object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataWithVersion'
+    bundleProductBulkUpdate:
+      type: object
+      description: Updating products of the BUNDLE type in bulk.
+      allOf:
+        - $ref: '#/components/schemas/bundleProductUpdate'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+          required:
+            - id
+    parentVariantProduct:
+      type: object
+      description: Products of the PARENT_VARIANT type.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productCore'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataCore'
+            template:
+              $ref: '#/components/schemas/template'
+            variantAttributes:
+              $ref: '#/components/schemas/variantAttributes'
+          required:
+            - name
+            - code
+            - template
+            - productType
+            - variantAttributes
+    parentVariantProductCreation:
+      type: object
+      description: Creating products of the PARENT_VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/parentVariantProduct'
+        - type: object
+          properties:
+            id:
+              type: string
+              maxLength: 32
+              description: Custom product identifier. If not provided, it is automatically generated.
+            productType:
+              $ref: '#/components/schemas/productType'
+    parentVariantProductWithId:
+      type: object
+      description: Products of the PARENT_VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/parentVariantProductCreation'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+            yrn:
+              $ref: '#/components/schemas/YRN'
+            media:
+              $ref: '#/components/schemas/productMedia'
+            metadata:
+              $ref: '#/components/schemas/productMetadataGet'
+            customerSegmentIds:
+              type: array
+              description: Customer segment IDs assigned to the product.
+              items:
+                type: string
+            categoryIds:
+              type: array
+              description: Category IDs assigned to the product.
+              items:
+                type: string
+    parentVariantProductsArray:
+      type: array
+      description: List of products of the PARENT_VARIANT type.
+      items:
+        $ref: '#/components/schemas/parentVariantProductWithId'
+    parentVariantProductUpdate:
+      type: object
+      description: Updating products of the PARENT_VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/parentVariantProduct'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataWithVersion'
+            productType:
+              $ref: '#/components/schemas/productTypeUpdate'
+    parentVariantProductBulkUpdate:
+      type: object
+      description: Updating products of the PARENT_VARIANT type in bulk.
+      allOf:
+        - $ref: '#/components/schemas/parentVariantProductUpdate'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+          required:
+            - id
+    variantProduct:
+      type: object
+      description: Products of the VARIANT type.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productCore'
+        - type: object
+          properties:
+            mixins:
+              $ref: '#/components/schemas/productVariantMixins'
+          required:
+            - name
+            - code
+    variantProductCreation:
+      type: object
+      description: Creating products of the VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/variantProduct'
+        - type: object
+          properties:
+            id:
+              type: string
+              maxLength: 32
+              description: Custom product identifier. If not provided, it is automatically generated.
+            metadata:
+              $ref: '#/components/schemas/variantProductMetadataCore'
+            parentVariantId:
+              type: string
+              description: Identifier of the PARENT_VARIANT product.
+            productType:
+              $ref: '#/components/schemas/productType'
+    variantProductWithId:
+      type: object
+      description: Products of the VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/variantProductCreation'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+            yrn:
+              $ref: '#/components/schemas/YRN'
+            media:
+              $ref: '#/components/schemas/productMedia'
+            metadata:
+              $ref: '#/components/schemas/variantProductMetadataGet'
+            customerSegmentIds:
+              type: array
+              description: Customer segment IDs assigned to the product.
+              items:
+                type: string
+            categoryIds:
+              type: array
+              description: Category IDs assigned to the product.
+              items:
+                type: string
+    variantProductsArray:
+      type: array
+      description: List of products of the VARIANT type.
+      items:
+        $ref: '#/components/schemas/variantProductWithId'
+    variantProductUpdate:
+      type: object
+      description: Updating products of the VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/variantProduct'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/variantProductMetadataWithVersion'
+            productType:
+              $ref: '#/components/schemas/productTypeUpdate'
+            parentVariantId:
+              type: string
+              description: Identifier of the PARENT_VARIANT product. This property is taken into account only for insert operations.
+    variantProductBulkUpdate:
+      type: object
+      description: Updating products of the VARIANT type in bulk.
+      allOf:
+        - $ref: '#/components/schemas/variantProductUpdate'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+          required:
+            - id
+    dynamicVariantAttributeValue:
+      type: object
+      description: |
+        The value part of a dynamic variant attribute. Holds the canonical qualifier used for matching, an optional localized display label, and an optional unit code for measurement attributes.
+      required:
+        - type
+        - qualifier
+      properties:
+        type:
+          type: string
+          description: |
+            Data type of the qualifier value.
+          enum:
+            - STRING
+            - NUMBER
+            - DECIMAL
+            - BOOLEAN
+        qualifier:
+          description: |
+            The canonical value used for variant matching. The JSON type must match `type`: a string for `STRING`, a number for `NUMBER` or `DECIMAL`, or a boolean for `BOOLEAN`.
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+        name:
+          $ref: '#/components/schemas/localizedValue'
+        unit:
+          type: string
+          description: |
+            Optional unit code for measurement attributes (for example, `"MMT"` for millimetres, `"PCE"` for pieces). Unit translations are resolved by the frontend from a separate dictionary.
+    dynamicVariantAttribute:
+      type: object
+      description: |
+        A single dynamic variant attribute. Combines a localized display name for the attribute itself with a typed, optionally localized value.
+      required:
+        - value
+      properties:
+        name:
+          $ref: '#/components/schemas/localizedValue'
+        value:
+          $ref: '#/components/schemas/dynamicVariantAttributeValue'
+    ownVariantAttributes:
+      type: object
+      description: |
+        Map of variant attributes defined directly on this product. Keys are attribute identifiers (for example, `storageCapacity`). These are the attributes the caller can set by create/update requests. On responses they represent what is stored on this specific product.
+      additionalProperties:
+        $ref: '#/components/schemas/dynamicVariantAttribute'
+    inheritedVariantAttributes:
+      type: object
+      description: |
+        Read-only map of variant attributes inherited from ancestor products in the hierarchy. These cannot be modified on this product — to change an inherited attribute, update the ancestor that owns it.
+      additionalProperties:
+        $ref: '#/components/schemas/dynamicVariantAttribute'
+    variantMapEntry:
+      type: object
+      description: |
+        A single entry in the root product's `variants` map. In API responses the `variantAttributes` field contains **accumulated** attributes — the entry's own delta attributes merged with all ancestor attributes up the chain, so storefront clients receive a ready-to-use combination without additional API calls. The `published` flag is included only when the caller has the `product.product_read_unpublished` scope.
+      properties:
+        version:
+          type: integer
+          description: Version of the source variant product at the time of the last recalculation.
+        code:
+          type: string
+          description: Code of the source variant product.
+        name:
+          $ref: '#/components/schemas/localizedValue'
+        parentVariantId:
+          type: string
+          description: Identifier of the immediate parent product in the variant hierarchy.
+        sellable:
+          type: boolean
+          description: Indicates whether this variant can be sold directly.
+        published:
+          type: boolean
+          description: |
+            Publication state of this variant. Only included in responses when the caller has the `product.product_read_unpublished` scope; entries with `published: false` are otherwise omitted from the map.
+        dynamicVariantType:
+          type: string
+          description: Optional label identifying the variant level or kind (for example, `"H1_L1"`).
+        variantAttributes:
+          type: object
+          description: |
+            Accumulated variant attributes for this entry. For leaf variants this includes all ancestor attributes merged with the entry's own delta. Keys are attribute identifiers.
+          additionalProperties:
+            $ref: '#/components/schemas/dynamicVariantAttribute'
+    variantsMap:
+      type: object
+      description: |
+        Denormalized flat map of all descendant variants stored on the root product. Keys are variant product identifiers. In API responses each entry's `variantAttributes` contains accumulated attributes.
+      additionalProperties:
+        $ref: '#/components/schemas/variantMapEntry'
+    dynamicVariantInfo:
+      type: object
+      description: |
+        Hierarchy integrity information populated when the variant tree has structural problems. Present only when an issue is detected.
+      properties:
+        missingAncestorId:
+          type: string
+          description: Identifier of an ancestor product that could not be found, indicating a broken hierarchy chain.
+        cycleDetected:
+          type: boolean
+          description: Indicates that a circular reference was detected in the `parentVariantId` chain.
+    dynamicVariantProductMetadataGet:
+      type: object
+      description: Metadata for GET responses on DYNAMIC_VARIANT products. Extends the standard product metadata with hierarchy integrity information.
+      allOf:
+        - $ref: '#/components/schemas/productMetadataGet'
+        - type: object
+          properties:
+            dynamicVariantInfo:
+              $ref: '#/components/schemas/dynamicVariantInfo'
+    dynamicVariantProduct:
+      type: object
+      description: Base schema for products of the DYNAMIC_VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/productCore'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataCore'
+            parentVariantId:
+              type: string
+              description: |
+                Identifier of the immediate parent product in the variant hierarchy. Omit or leave empty for root-level dynamic variant products.
+            dynamicVariantType:
+              type: string
+              description: |
+                Optional label identifying the variant level or kind within the hierarchy (for example, `"H1_L1"`). Used for display and filtering purposes.
+            sellable:
+              type: boolean
+              description: |
+                Indicates whether this variant can be sold directly, if it's a leaf in the hierarchy that a customer can add to a cart. This value is **not inherited** from parent variants — it must be set explicitly on each product. Root products and intermediate-level variants are typically `false`. Leaf variants are typically `true`.
+            ownVariantAttributes:
+              $ref: '#/components/schemas/ownVariantAttributes'
+          required:
+            - name
+            - code
+    dynamicVariantProductCreation:
+      type: object
+      description: Creating products of the DYNAMIC_VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/dynamicVariantProduct'
+        - type: object
+          properties:
+            id:
+              type: string
+              maxLength: 32
+              description: Custom product identifier. If not provided, it is automatically generated.
+            productType:
+              $ref: '#/components/schemas/productType'
+    dynamicVariantProductWithId:
+      type: object
+      description: |
+        Response schema for products of the DYNAMIC_VARIANT type.
+
+        - **`sellable`** — not inherited from parents; must be set explicitly on each product. Root and intermediate variants are typically `false`; leaf variants are typically `true`.
+        - **Root products** include a `variants` map containing all descendants with accumulated attributes.
+        - **Child products** include `ownVariantAttributes` (attributes defined on this product) and `inheritedVariantAttributes` (read-only, merged from ancestors).
+        - `parentVariantPath` is an ordered array of ancestor IDs from direct parent (index 0) to root (last index). Empty for root products.
+        - `metadata.dynamicVariantInfo` is present only when a hierarchy integrity issue is detected.
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        yrn:
+          $ref: '#/components/schemas/YRN'
+        code:
+          type: string
+          minLength: 1
+          description: 'Unique product identifier, defined by the user.'
+        name:
+          $ref: '#/components/schemas/localizedValue'
+        description:
+          $ref: '#/components/schemas/localizedValue'
+        productType:
+          $ref: '#/components/schemas/productType'
+        published:
+          $ref: '#/components/schemas/published'
+        sellable:
+          type: boolean
+          description: |
+            Indicates whether this variant can be sold directly (i.e. it is a leaf in the hierarchy that a customer can add to a cart). This value is **not inherited** from parent variants — it must be set explicitly on each product. Root products and intermediate-level variants are typically `false`; leaf variants are typically `true`.
+        parentVariantId:
+          type: string
+          description: Identifier of the immediate parent product in the variant hierarchy. Absent for root-level products.
+        parentVariantPath:
+          type: array
+          description: |
+            Ordered array of ancestor product identifiers, from the direct parent (index 0) to the root (last index). Empty for root-level products.
+          items:
+            type: string
+        dynamicVariantType:
+          type: string
+          description: Optional label identifying the variant level or kind within the hierarchy (for example, `"H1_L1"`).
+        ownVariantAttributes:
+          $ref: '#/components/schemas/ownVariantAttributes'
+        inheritedVariantAttributes:
+          $ref: '#/components/schemas/inheritedVariantAttributes'
+        variants:
+          $ref: '#/components/schemas/variantsMap'
+        taxClasses:
+          $ref: '#/components/schemas/taxClasses'
+        vendor:
+          $ref: '#/components/schemas/vendor'
+        brandId:
+          type: string
+          description: ID of brand.
+        brand:
+          $ref: '#/components/schemas/brand'
+        labelIds:
+          type: array
+          items:
+            type: string
+          description: Collection of label IDs.
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/label'
+        categoryIds:
+          type: array
+          description: Category IDs assigned to the product.
+          items:
+            type: string
+        customerSegmentIds:
+          type: array
+          description: Customer segment IDs assigned to the product.
+          items:
+            type: string
+        relatedItems:
+          type: array
+          description: List of items in a relationship with this product.
+          items:
+            $ref: '#/components/schemas/relatedItem'
+        weightDependent:
+          type: boolean
+          description: Mark the product as weight-dependent if the line item price could change after packaging.
+        mixins:
+          $ref: '#/components/schemas/productMixins'
+        media:
+          $ref: '#/components/schemas/productMedia'
+        metadata:
+          $ref: '#/components/schemas/dynamicVariantProductMetadataGet'
+      required:
+        - id
+        - code
+        - name
+        - productType
+    dynamicVariantProductsArray:
+      type: array
+      description: List of products of the DYNAMIC_VARIANT type.
+      items:
+        $ref: '#/components/schemas/dynamicVariantProductWithId'
+    dynamicVariantProductUpdate:
+      type: object
+      description: Updating products of the DYNAMIC_VARIANT type.
+      allOf:
+        - $ref: '#/components/schemas/dynamicVariantProduct'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/productMetadataWithVersion'
+            productType:
+              $ref: '#/components/schemas/productTypeUpdate'
+    dynamicVariantProductBulkUpdate:
+      type: object
+      description: Updating products of the DYNAMIC_VARIANT type in bulk.
+      allOf:
+        - $ref: '#/components/schemas/dynamicVariantProductUpdate'
+        - type: object
+          properties:
+            id:
+              $ref: '#/components/schemas/id'
+          required:
+            - id
+    dynamicVariantRecalculationRequest:
+      type: object
+      description: |
+        Request body for triggering dynamic variant recalculation. Accepts up to 1000 product IDs at any level of the hierarchy — the system resolves the root for each ID automatically. Intended to be called after a batch of products has been fully ingested, not per individual product write.
+      required:
+        - productIds
+      properties:
+        productIds:
+          type: array
+          description: |
+            List of product IDs (variants at any hierarchy level) for which recalculation should be triggered. The system groups IDs by their root product and creates one job per unique root.
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: string
+    dynamicVariantRecalculationJobStatus:
+      type: string
+      description: Current status of a dynamic variant recalculation job.
+      enum:
+        - PENDING
+        - PROCESSING
+        - FINISHED
+        - FAILED
+        - FAILED_PERMANENT
+    dynamicVariantRecalculationJobResponse:
+      type: object
+      description: |
+        Represents a single dynamic variant recalculation job. One job is created per unique root product. Jobs remain queryable until automatically removed approximately 30 days after reaching a terminal state.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the recalculation job.
+        parentRoot:
+          type: string
+          description: Identifier of the root product whose variant tree is being recalculated.
+        requestedByIds:
+          type: array
+          description: List of product IDs that were submitted in the recalculation request and resolved to this root.
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/dynamicVariantRecalculationJobStatus'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the job was created.
+        processingStartedAt:
+          type: string
+          format: date-time
+          description: Timestamp when a subscriber picked up the job and started processing. Null while the job is still PENDING.
+        finishedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the job reached a terminal state (FINISHED, FAILED, or FAILED_PERMANENT).
+        error:
+          type: string
+          description: Error message if the job failed. Null for successful jobs.
+        attempts:
+          type: integer
+          description: Number of processing attempts made for this job. Incremented on each delivery from the pub/sub subscription.
+    dynamicVariantRecalculationResponse:
+      type: object
+      description: |
+        Response returned when recalculation is triggered. Contains one job per unique root product resolved from the submitted IDs, plus any IDs that were skipped (for example, because a job for that root is already PENDING or PROCESSING).
+      properties:
+        jobs:
+          type: array
+          description: List of recalculation jobs created or referenced for each unique root product.
+          items:
+            $ref: '#/components/schemas/dynamicVariantRecalculationJobResponse'
+        skippedProductIds:
+          type: array
+          description: |
+            Product IDs that were not processed because a recalculation job for their root is already active (PENDING or PROCESSING). The existing job ID is available in the `jobs` list.
+          items:
+            type: string
+    productPartialUpdate:
+      type: object
+      description: Partially updating a product.
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/productCore'
+        - type: object
+          properties:
+            template:
+              $ref: '#/components/schemas/template'
+            bundledProducts:
+              $ref: '#/components/schemas/bundledProducts'
+            variantAttributes:
+              $ref: '#/components/schemas/variantAttributes'
+            metadata:
+              $ref: '#/components/schemas/productMetadataWithVersion'
+    vendor:
+      type: object
+      properties:
+        id:
+          type: string
+          description: An identifier of a vendor to whom the product belongs.
+        name:
+          type: string
+          description: Vendor name.
+      required:
+        - id
+    searchProducts:
+      type: object
+      properties:
+        q:
+          type: string
+          description:  |
+            A standard query parameter is used to search for specific values. 
+
+            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+    searchQuery:
+      type: object
+      additionalProperties: false
+      properties:
+        yrns:
+          description: List of YRNs. Each YRN identifies a separate product.
+          type: array
+          items:
+            $ref: '#/components/schemas/YRN'
+        params:
+          description: Optional query parameters.
+          type: object
+          properties:
+            product:
+              description: Optional query parameters for products.
+              type: object
+              properties:
+                fields:
+                  description: Optional projection for product.
+                  type: array
+                  items:
+                    type: string
+      required:
+        - yrns
+    relatedItem:
+      title: relatedItem
+      type: object
+      properties:
+        refId:
+          type: string
+          description: 'Identifier of a product which is in the relationship with the main product. The product identifier has to exist. '
+        type:
+          type: string
+          description: A relation type. The type has to exist in the system. All relation types are defined in configuration service under `relation_types` key.
+      required:
+        - refId
+        - type
+    bulkResponse:
+      title: bulkResponse
+      type: object
+      properties:
+        index:
+          type: integer
+          description: |
+            Index of the processed product, matching the price position in request body.
+        id:
+          type: string
+          description: Product unique identifier.
+        code:
+          type: integer
+          description: HTTP Status Code.
+        errorCode:
+          type: string
+          description: Error specific errorCode.
+        status:
+          type: string
+          description: HTTP Status description.
+        message:
+          type: string
+          description: Error message.
+        details:
+          type: array
+          description: Error message details.
+          items:
+            type: string
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    query_page_number:
+      name: pageNumber
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: The page number to be retrieved where the size of the pages must be specified by the pageSize parameter. The number of the first page is 1.
+    query_page_size:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 60
+      description: The number of documents being retrieved on the page.
+    query_sort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Fields to sort the response data by following order of the parameters from left to right.
+        Can contain multiple fields in format: `field name:sort direction` separated by a comma.
+        The colon with `sort direction` parameter is redundant and descending order is taken only if it is equal to `desc` or `DESC`.
+        Ascending order is considered in any other case.
+        While sorting by a localised field the following rule is taken into account:
+          1. If a localized field contains information about a language, then the language should be used. For example `name.en:ASC`. In that case en language is used for sorting the name property. The language suffix takes precedence over `Accept-Language` header.
+          2. If a localized field does not contain information about a language, then the `Accept-Language` header is used. For example `name:ASC` and `Accept-Language: de`. In that case `de` is used for sorting the name property.
+          3. If a localized field does not contain information about language and `Accept-Language` header contains `*`, then the default language from configuration service is used as a language. For example `name:ASC` and `Accept-Language: *` and default language is pl then pl is used as a language for name property.
+          4. If a localized field does not contains information about language and `Accept-Language` header does not exists in the request, then the default language from configuration service is used.  "
+    header_content_language:
+      name: Content-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        The Content-Language request HTTP header defines a language or multiple languages of the request body.
+
+        * If the `Content-Language` header is set to `*`, the localized fields should be provided as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the `Content-Language` header is set to a specific language, the localized fields should be provided as strings.
+        * If the `Content-Language` header is empty, the endpoint interprets the localized fields as being provided in the default language or the languages defined in the Configuration Service.
+
+        **Note**: You can provide the localized fields only in languages defined in the Configuration Service. In case the fields are provided in languages that are not defined in the Configuration Service, the request is rejected.
+    header_accept_language:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: 'The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If empty, the default system language is assumed. It can be a priority list working as a fallback mechanism.'
+    header_x_total_count:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+      description: Flag indicating whether the total number of retrieved results should be returned.
+    path_productId:
+      in: path
+      name: productId
+      schema:
+        type: string
+      required: true
+      description: Product unique identifier generated when the product is created.
+    query_q_product:
+      name: q
+      in: query
+      description:  |
+        A standard query parameter is used to search for specific values. 
+
+        See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+      schema:
+        type: string
+        example: 'name:{productName}'
+    query_sort_product:
+      name: sort
+      in: query
+      description: |
+        List of properties used to sort the results, separated by colons.
+
+        Possible values:
+        * `{fieldName}`
+        * `{fieldName}:asc`
+        * `{fieldName}:desc`
+
+        **Note:** If you want to sort the results by localized properties, the possible values are:
+          * `{fieldName}.{language}`
+          * `{fieldName}.{language}:asc`
+          * `{fieldName}.{language}:desc`
+
+        By default, the fields are sorted in ascending order.
+      schema:
+        type: string
+    query_partial_product:
+      name: partial
+      in: query
+      required: false
+      description: |
+        | Option  | Description |
+        |---|---|
+        | `true` | A partial product update is performed. |
+        | `false` | A full product replacement is performed.|
+      schema:
+        type: boolean
+        default: false
+    query_raw_value_product:
+      in: query
+      name: rawValue
+      schema:
+        type: boolean
+      required: false
+      description: |
+        Flag indicating whether product variant(s) should include their parent variants' attribute values.
+        * If set to `true`, the result contains values from both the variant and its parent variant.
+        * If set to `false`, the result contains only variant values.
+    query_expand_search:
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Fields that should be expanded with additional information in the response body. Expressed as strings separated by commas.
+
+        Possible values:
+          * `template`
+    query_expand_product:
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Fields that should be expanded with additional information in the response body. Expressed as strings separated by commas. You can combine multiple values, for example `expand=template,parentVariant,brand,labels`.
+
+        Possible values:
+          * `template`
+          * `parentVariant`
+          * `brand`
+          * `labels`
+    query_force_product:
+      name: force
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: |
+        Removing a parent variant product also removes all of its child variants. This applies to both `PARENT_VARIANT` roots with `VARIANT` children and `DYNAMIC_VARIANT` parent products with all descendant dynamic variants in the tree. This operation has to be confirmed by setting `force=true`.
+    path_productTemplateId:
+      name: product-template-id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique identifier of the product template.
+    query_q_param_product_template:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Standard query parameter used to search for specific values.   
+        * Searching for an item by string property: `q=id:31065d5b-b62e`, where `id` is the field name and `31065d5b-b62e` is its required value.   
+        * Searching for an item by localized field property: `q=name.en:T-s` where `name` is the name of the field, `en` is a language code and `T-s` is a required value of this field.   This query works only for localized fields, which are stored in a Map format where `key` is a language code and `value` is translation to particular language.   + Searching for items by date property. All numer-based property queries are valid also for dates. In that case the date should be placed within double quotes: `q=metadata.createdAt:(>="2021-05-18T07:27:27.455Z" AND <"2021-05-20T07:27:27.455Z")`   + Searching for items with non existing or empty property: `q=name.en:null` where `name.en` is a name of fields that has value `null`.   + Searching for items with existing property: `q=attributes:exists` where `attributes` is a name of field that has `non null` value.   + Searching for items by multiple specific values: `q=id:(5c3325baa9812100098ff48f,5c3325d1a9812100098ff494)` where `id` is name of field and strings within a bracket are it''s required value.   + Searching for items by multiple fields: `q=id:5c3325baa9812100098ff48f name.en:T-s` where `id` and ''name.en'' are the names of fields. All documents that contain given values of these fields are returned. Multiple fields separated by space can be specified. Multiple values for each field can be also specified in a format presented above.   + Searching for items with string fields conforming to a regex: `q=name.en:~ABCD12` or `q=name.en:(~AB CD)` - in case of searching for strings with space, where `name` is the name of field and `ABCD12` or `AB CD` is it''s querying regex.'
+    query_version_parameter_product_template:
+      name: version
+      in: query
+      required: false
+      schema:
+        type: string
+      description: 'Version of the product template. If the parameter is not provided, the latest version of product template is returned.'
+    query_product_fields:
+      name: fields
+      in: query
+      required: false
+      description: |
+        Fields to be returned in the response.
+
+        When this parameter is passed, only the `id`, `yrn` and `{fieldName}` are retrieved for each product.
+
+        You can specify multiple fields by separating them with commas.
+      schema:
+        type: string
+        example: 'name,code'
+    query_skip_variants_generation:
+      name: skipVariantGeneration
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: The parameter is valid only for `PARENT_VARIANT` type. If true then variants are not automatically generated for the parent variant configuration.
+    query_do_index:
+      name: doIndex
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: true
+      description: Allows to control whether the change of the state should cause reindexing or not.
+    query_skip_related_items_validation:
+      name: skipRelatedItemsValidation
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: If set to `true`, the validation that checks whether related products exist is skipped. This is useful during data loading, where related products may not yet exist and will be created later. This parameter is only respected when the `allowToSkipRelatedProductsValidation` system setting is set to `true`. Otherwise, it is disregarded.
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            product.product_manage: Needed to manage products.
+            product.product_publish: Needed to publish products.
+            product.product_unpublish: Needed to unpublish products.
+            product.product_read_unpublished: Needed to retrieve unpublished products.
+            product.product_read_by_vendor: The scope allows vendor to read products with assigned vendor.
+            product.product_manage_by_vendor: The scope allows vendor to manage products with assigned vendor.
+            product.price_manage: Needed to manage product prices.
+            product.product_template_read: Needed for reading product templates.
+            product.product_template_manage: Needed for updating and removing a product template.
+  examples:
+    product_response_validation_exception_BadRequest_400:
+      value:
+        code: 400
+        status: Bad Request
+        message: Validation problem with request body.
+    common_response_validation_exception_BadRequest_400:
+      value:
+        code: 400
+        status: Bad Request
+        message: Validation problem with request body.
+    product_post_Created_201:
+      value:
+        id: 631b4bfe61f5e1663c745ffd
+        yrn: 'urn:yaas:saasag:caasproduct:product:apistage;631b4bfe61f5e1663c745ffd'
+    variant_post_Created_201:
+      value:
+        id: 5c335acea9812100098ffde0--631b4bfe61f5e1663c745ffd
+        yrn: 'urn:yaas:saasag:caasproduct:product:apistage;5c335acea9812100098ffde0--631b4bfe61f5e1663c745ffd'
+    product_NotFound_404:
+      value:
+        productId: 628cd20c6e8b2432b6346ca6
+        code: 404
+        status: Not Found
+        message: The product with id 628cd20c6e8b2432b6346ca6 has not been found.
+security:
+  - OAuth2: []

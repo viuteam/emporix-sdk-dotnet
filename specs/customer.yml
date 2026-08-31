@@ -1,0 +1,1969 @@
+openapi: 3.0.0
+info:
+  title: Customer Service (customer-managed)
+  version: ''
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+  description: |
+    Customer Service (customer-managed) allows you to create, manage, and delete customer profiles. It allows you to generate relevant access tokens to log in an anonymous or registered customers on a storefront.
+servers:
+  - url: 'https://api.emporix.io'
+tags:
+  - name: Authentication and authorization
+    description: Create and manage customer access tokens.
+  - name: Account and profile
+    description: Manage customer account details.
+  - name: Addresses
+    description: Manage customer address information.
+  - name: Credentials
+    description: Manage customer credentials.
+  - name: Double opt-in
+    description: Allow option for double opt-in.
+paths:
+  /customerlogin/auth/anonymous/login:
+    get:
+      tags:
+        - Authentication and authorization
+      summary: Requesting an anonymous token
+      description: |
+        Sends an authentication request and returns an anonymous token. This operation causes creation of a new session-context document.
+
+        Anonymous token is valid for one hour. After that time it should be refreshed in order to keep the same session ID associated.
+      operationId: GET-oauth-generate-anonymous-access-token
+      parameters:
+      - name: tenant
+        in: query
+        description: "Name of the tenant.\n\n**Note**: Name of the tenant is always\
+          \ written in lowercase.\n"
+        required: true
+        schema:
+          type: string
+          example: "{tenant}"
+      - name: client_id
+        in: query
+        description: Your Emporix API key - client ID.
+        required: true
+        schema:
+          type: string
+          example: "{client_id}"
+      - name: currency
+        in: query
+        description: Three-letter currency code to set in the session context.
+        required: false
+        schema:
+          type: string
+          example: EUR
+      - name: siteCode
+        in: query
+        description: Code of the site to set in the session context, as defined in the Site Settings Service.
+        required: false
+        schema:
+          type: string
+          example: main
+      - name: language
+        in: query
+        description: Language to set in the session context.
+        required: false
+        schema:
+          type: string
+          example: EN
+      - name: targetLocation
+        in: query
+        description: Country code to set in the session context, as defined in the Country Service.
+        required: false
+        schema:
+          type: string
+          example: DE
+      responses:
+        "200":
+          description: The request was successful. An anonymous token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymousAccessToken'
+              examples:
+                Response example:
+                  value:
+                    token_type: Bearer
+                    access_token: tpYgJPZqddEQ2zwfzNtx79noBP65
+                    expires_in: 3599
+                    refresh_token: 7FnviYrxvQWYdzUVBVTvXeNAA4Jy1HPe
+                    refresh_token_expires_in: 86399
+                    sessionId: 6d4d4d5e-04b9-40c5-9074-4df1405c6081
+                    scope: "tenant={tenant}"
+      servers:
+      - url: https://api.emporix.io
+        description: Production
+  /customerlogin/auth/anonymous/refresh:
+    get:
+      tags:
+        - Authentication and authorization
+      summary: Refreshing an anonymous token
+      description: "Sends an authentication request and returns new anonymous token\
+        \ with same session ID attached.\n\nThis operation causes update of a session-context\
+        \ document with given session ID.\n\nAnonymous token is valid for one hour.\
+        \ After that time, another refresh anonymous token request should be sent.\n"
+      operationId: GET-oauth-refresh-anonymous-access-token
+      parameters:
+      - name: tenant
+        in: query
+        description: "Name of the tenant.\n\n**Note**: Name of the tenant is always\
+          \ written in lowercase.\n"
+        required: true
+        schema:
+          type: string
+          example: "{tenant}"
+      - name: anonymous_token
+        in: query
+        description: "NOTE: It's recommended to use `refresh_token` parameter instead. <br>Anonymous token that needs to be refreshed so that the same session ID will be kept. Provide the value of the `access_token` you get in response to requesting a token request."
+        required: true
+        deprecated: true
+        schema:
+          type: string
+          example: "{GOToGKaEKFyR8DokPBwHH0Y3AKCo}"
+      - name: refresh_token
+        in: query
+        description: "A refresh token generated when the anonymous token is created."
+        required: true
+        schema:
+          type: string
+          example: "{7FnviYrxvQWYdzUVBVTvXeNAA4Jy1HPe}"
+      - name: client_id
+        in: query
+        description: Your Emporix API key - client ID.
+        required: true
+        schema:
+          type: string
+          example: "{client_id}"
+      responses:
+        "200":
+          description: The request was successful. An anonymous token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymousAccessToken'
+              examples:
+                Response example - Anonymous Token:
+                  value:
+                    token_type: Bearer
+                    access_token: tpYgJPZqddEQ2zwfzNtx79noBP65
+                    expires_in: 3599
+                    refresh_token: 7FnviYrxvQWYdzUVBVTvXeNAA4Jy1HPe
+                    refresh_token_expires_in: 86399
+                    sessionId: 6d4d4d5e-04b9-40c5-9074-4df1405c6081
+                    scope: "tenant={tenant}"
+                Response example - Refresh Token (deprecated):
+                  value:
+                    token_type: Bearer
+                    access_token: Zq91ySuLxLIzQ0vd0QxiC7imAIHi
+                    expires_in: 3599
+                    sessionId: 5b7ae416-5d88-4dd9-bbe9-6b262f45b4e8
+                    scope: "tenant={tenant}"
+      servers:
+      - url: https://api.emporix.io
+        description: Production
+  '/customer/{tenant}/signup':
+    post:
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Response example:
+                  value:
+                    id: '13730481'
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '409':
+          $ref: '#/components/responses/409_conflict'
+      description: |-
+        Creates a new customer account.
+
+        **Note**: The request needs to be authorized with an anonymous access token.
+      operationId: POST-customer-create-customer-account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerSignup'
+            examples:
+              Create account:
+                value:
+                  email: example@customer.com
+                  password: password123
+                  customerDetails:
+                    title: MR
+                    firstName: John
+                    middleName: ''
+                    lastName: Doe
+                    contactEmail: example@customer.com
+                    contactPhone: '123456789'
+                    company: Emporix
+                    preferredLanguage: en_US
+                    preferredCurrency: EUR
+                    preferredSite: main
+                    b2b:
+                      companyRegistrationId: 123-456-789
+                  customerAddress:
+                    contactName: John Doe
+                    companyName: Emporix
+                    street: Platz der Republik
+                    streetNumber: '1'
+                    streetAppendix: ''
+                    extraLine1: ''
+                    extraLine2: ''
+                    zipCode: '11011'
+                    city: Berlin
+                    country: DE
+                    state: Berlin
+                    contactPhone: '123456789'
+                    tags:
+                      - BILLING
+                      - SHIPPING
+              Create account with separate sign-up credentials:
+                value:
+                  email: example@customer.com
+                  password: password123
+                  customerDetails:
+                    title: MR
+                    firstName: Jane
+                    middleName: ''
+                    lastName: Doe
+                    contactEmail: example@customer.com
+                    contactPhone: '123456789'
+                    company: Emporix
+                    preferredLanguage: en_US
+                    preferredCurrency: EUR
+                    preferredSite: main
+                    b2b:
+                      companyRegistrationId: 123-456-789
+                  customerAddress:
+                    contactName: Jane Doe
+                    companyName: Emporix
+                    street: Platz der Republik
+                    streetNumber: '1'
+                    streetAppendix: ''
+                    extraLine1: ''
+                    extraLine2: ''
+                    zipCode: '11011'
+                    city: Berlin
+                    country: DE
+                    state: Berlin
+                    contactPhone: '123456789'
+                    tags:
+                      - BILLING
+                      - SHIPPING
+                  signup:
+                    email: signup-example@customer.com
+                    password: password1234
+        required: false
+        description: ''
+      security:
+        - AnonymousAccessToken: []
+      summary: Creating a new customer
+      tags:
+        - Authentication and authorization
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/login':
+    post:
+      responses:
+        '200':
+          description: The request was successful. A customer token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerToken'
+              examples:
+                Response example:
+                  value:
+                    access_token: aYR3Lu3rpsQ9ODhBIR83b3txTr5K
+                    saas_token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMzg2OTAwMCIsImV4cCI6MTY0MDQ0NDAzMn0.lvxFOeCOk-DWi3kqwJwR8eKal3ON2rr53e9I6Pha5rI
+                    expires_in: 2591999
+                    refresh_token: 94tKQ2Tsvlf9dYbmyccA7X1Rqe54B6dH
+                    refresh_token_expires_in: 86399
+                    token_type: Bearer
+                    session_id: 45c9726e-77c8-4bd0-b29d-61ab56f59726
+                    initialPassword: false
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+      description: |-
+        Logs in a customer and sends an authentication request.  
+        Returns two customer tokens:
+          - Customer access token
+          - Customer SaaS token
+
+          **Note**: The request needs to be authorized with an anonymous access token.
+      operationId: POST-customer-authenticate-customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordAuthentication'
+            examples:
+              Request example:
+                value:
+                  email: customer@customer.com
+                  password: password123
+        required: true
+      security:
+        - AnonymousAccessToken: []
+      summary: Logging in a customer
+      tags:
+        - Authentication and authorization
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/logout':
+    get:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+      description: |-
+        Logs out a customer and invalidates their customer token.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: GET-customer-logout-customer
+      security:
+        - CustomerAccessToken: []
+      parameters:
+        - name: accessToken
+          in: query
+          required: true
+          description: Customer access token to be invalidated.
+          schema:
+            type: string
+      tags:
+        - Authentication and authorization
+      summary: Logging out a customer
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/refreshauthtoken':
+    get:
+      responses:
+        '200':
+          description: The request was successful. A refresh token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshCustomerToken'
+              examples:
+                Response example:
+                  value:
+                    access_token: 2yXy8H7sByl4JSWrr7GRqxiCRMUm
+                    expires_in: 2591999
+                    refresh_token: iwXAFjGwboaehJar1qNOkV05phDw1god
+                    refresh_token_expires_in: 86390
+                    token_type: Bearer
+                    session_id: 45c9726e-77c8-4bd0-b29d-61ab56f59726
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+      description: |-
+        Sends an authentication request and returns a refresh token.
+
+        **Note**: The request needs to be authorized with an anonymous access token.
+      operationId: GET-customer-refresh-authtoken
+      tags:
+        - Authentication and authorization
+      parameters:
+        - name: tenant
+          in: path
+          description: "Name of the tenant.\n\n**Note**: Name of the tenant is always\
+            \ written in lowercase.\n"
+          required: true
+          schema:
+            type: string
+          example: "{tenant}"
+        - name: Authorization
+          in: header
+          description: Customer access token generated when the customer token is
+            created.
+          required: true
+          schema:
+            type: string
+          example: "Bearer {{CUSTOMER_ACCESS_TOKEN}}"
+        - name: refreshToken
+          in: query
+          description: Customer refresh token generated when a customer token is requested.
+          required: true
+          schema:
+            type: string
+            example: "{customer_refresh_token}"
+        - name: legalEntityId
+          in: query
+          description: Identifier of the legal entity associated with the user session.
+          schema:
+            type: string
+      summary: Refreshing a customer token
+      security: 
+        -  AnonymousAccessToken: []
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  /customer/{tenant}/validateauthtoken:
+    get:
+      tags:
+        - Authentication and authorization
+      summary: Validate a token
+      description: "Checks whether a token is valid. If the token is invalid, it returns a 401 status code. If the token is valid, it provides the token details."
+      operationId: GET-customer-validate-token
+      parameters:
+        - name: tenant
+          in: path
+          description: |
+            Name of the tenant.
+
+            **Note**: Name of the tenant is always written in lowercase.
+          required: true
+          schema:
+            type: string
+          example: "{tenant}"
+        - name: Authorization
+          in: header
+          description: Customer access token generated upon the customer token creation.
+          required: true
+          schema:
+            type: string
+          example: "Bearer {{CUSTOMER_ACCESS_TOKEN}}"
+      responses:
+        "200":
+          description: The request was successful. A token details are returned.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidateTokenResponse"
+              examples:
+                Validation response:
+                  value:
+                    token_type: Bearer
+                    expires_in: 2591974
+                    scope: approval.approval_read_own customermanagement.legalentity_read_own customer.customer_read_own quote.quote_read_own returns.returns_read_own iam.scope_read_own iam.user_read_own customersegment.segment_read_own iam.group_read_own order.order_readascustomer coupon.coupon_redeem customer.customerprofile_edit quote.quote_manage_own returns.returns_manage_own customer.customer_manage_own approval.approval_manage_own order.order_updateascustomer iam.assignment_delete_own customer.consent_view customer.customerprofile_view order.history_view iam.assignment_create_own customer.consent_manage tenant=test
+                    sessionId: 415c340b-5996-4112-bb3b-38139a409f93
+                    email: customer@example.com
+                    legalEntityId: 53ac81fd0cce8b26b36f3492
+        "401":
+          description: Unauthorized
+      security: 
+        -  CustomerAccessToken: []
+      servers:
+        - url: https://api.emporix.io
+          description: Production
+  '/customer/{tenant}/exchangeauthtoken':
+    post:
+      tags:
+        - Authentication and authorization
+      summary: Exchanging an external access token for an Emporix customer token
+      description: |-
+        Exchanges an external access token (for example, from an identity provider such as Keycloak) for an Emporix customer access token.
+
+        **Note**: The request needs to be authorized with an anonymous token.
+      operationId: POST-customer-exchange-authtoken
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - name: subjectAccessToken
+          in: query
+          description: The subject access token (JWT) to exchange for a customer token.
+          required: true
+          schema:
+            type: string
+          example: "{subject_access_token}"
+        - name: config
+          in: query
+          description: |
+            Configuration identifier (for example, `site_PL`). If not provided, the default configuration is used.
+            If a non-existing configuration is provided, the request returns 400 Bad Request.
+          required: false
+          schema:
+            type: string
+          example: site_PL
+        - name: Authorization
+          in: header
+          description: Anonymous token used to authorize the exchange.
+          required: true
+          schema:
+            type: string
+          example: "Bearer {anonymous_token}"
+      responses:
+        '200':
+          description: The request was successful. A customer token is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeAuthTokenResponse'
+              examples:
+                Response example:
+                  value:
+                    subject_access_token: "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJqTEF2MmJINlhaVHNpZHBEZUNsNjFrNEJWTlREckRHRDV3Um1ETlQxNmpvIn0..."
+                    access_token: dEKATUWeewkraTlIzjVZBbGg7BQQ
+                    saas_token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJDMDAzMyIsImV4cCI6MTc3MTI3MzEwNiwiaWF0IjoxNzcxMjU4NzA2LCJqdGkiOiI0NTU0NzMzYS01NDY4LTRjYzctYjRiZS01OGZiMzA2Y2FhMGEifQ.5536UTfZ3KmNPbMDp5ZLRIeYwMV-P1jN5DUT2ZLu2qc"
+                    refresh_token: QtvQi9UAYS9GIbEGu73ERUmfdC569MBE
+                    refresh_token_expires_in: 15551999
+                    session_idle_time: 120
+                    token_type: Bearer
+                    expires_in: 14399
+                    scope: "customer.customerprofile_edit approval.approval_manage_own returns.returns_manage_own iam.scope_read_own customersegment.segment_read_own customer.consent_view quote.quote_read_own customermanagement.legalentity_read_own approval.approval_read_own ai.agentexecution_manage_own returns.returns_read_own order.order_readascustomer order.order_updateascustomer customer.consent_manage quote.quote_manage_own order.history_view coupon.coupon_redeem customer.customerprofile_view tenant=cockpitsdev"
+                    session_id: 14ccc133-5731-4d6c-8f38-ca82443e4e4e
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      security: []
+  '/customer/{tenant}/socialLogin':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    post:
+      summary: Logging in a customer with social login
+      operationId: POST-customer-login-customer-by-auth0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: ''
+                type: object
+                properties:
+                  social_access_token:
+                    type: string
+                  social_id_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  refresh_token_expires_in:
+                    type: string
+                  session_idle_time:
+                    type: integer
+                  token_type:
+                    type: string
+                  access_token:
+                    type: string
+                  saas_token:
+                    type: string
+                  expires_in:
+                    type: string
+                  scope:
+                    type: string
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: session-id
+          description: Anonymous customer unique session identifier.
+          required: false
+        - schema:
+            type: string
+          in: query
+          name: code
+          description: The authorization code received from the identity provider.
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: redirect_uri
+          description: The redirect URI that was used in the initial authorization request.
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: code_verifier
+          description: Required only if using PKCE (Proof Key for Code Exchange) flow.
+          required: false
+      description: |-
+        Logs in a customer using an authentication code from Auth0 and retrieves a standard customer token.
+      tags:
+        - Authentication and authorization
+      security:
+        - AnonymousAccessToken: []
+  '/customer/{tenant}/me':
+    patch:
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |
+        Updates a customer profile.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: PATCH-customer-update-customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchDto'
+            examples:
+              Request example:
+                value:
+                  title: MR
+                  firstName: John
+                  lastName: Doe
+                  contactEmail: example@customer.com
+                  contactPhone: '123456789'
+                  company: Emporix
+                  preferredLanguage: en_US
+                  preferredCurrency: EUR
+                  preferredSite: main
+                  b2b:
+                    companyRegistrationId: 123-456-789
+                  metadata:
+                    version: 1
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchDto'
+        required: false
+      security:
+        - CustomerAccessToken: []
+      summary: Updating a customer profile
+      tags:
+        - Account and profile
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              examples:
+                Logged in customer:
+                  value:
+                    title: MR
+                    firstName: John
+                    lastName: Doe
+                    contactPhone: '123456789'
+                    company: Emporix
+                    preferredLanguage: en_US
+                    preferredCurrency: USD
+                    preferredSite: default
+                    metadata:
+                      mixins: {}
+                      version: 2
+                    mixins: {}
+                    customerNumber: '13869000'
+                    id: '13869000'
+                    accounts:
+                      - id: example@customer.com
+                    contactEmail: example@customer.com
+                    businessModel: B2B
+                    b2b:
+                      companyRegistrationId: 123-456-789
+                      legalEntities:
+                        - id: D165356
+                          name: Emporix
+                          contactAssignmentId: D436432
+                Anonymous customer:
+                  value:
+                    firstName: Anonymous
+                    lastName: Anonymous
+                    preferredSite: default
+                    customerNumber: '00000000'
+                    id: '00000000'
+                    accounts: []
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Retrieves a customer profile.
+
+        **Note**: The request needs to be authorized with a customer access token or an anonymous access token. 
+      operationId: GET-customer-retrieve-customer-profile
+      security:
+        - CustomerAccessToken: []
+        - AnonymousAccessToken: []
+      summary: Retrieving a customer profile
+      parameters:
+        - $ref: '#/components/parameters/expand'
+      tags:
+        - Account and profile
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/me/addresses':
+    post:
+      responses:
+        '201':
+          description: Created
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceLocation'
+              examples:
+                Response example:
+                  value:
+                    id: b05c20e034
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Adds an address to a customer profile.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: POST-customer-add-address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressCreateDto'
+            examples:
+              Request example:
+                value:
+                  contactName: John Doe
+                  companyName: Emporix
+                  street: Platz der Republik
+                  streetNumber: '1'
+                  streetAppendix: ''
+                  extraLine1: ''
+                  extraLine2: ''
+                  extraLine3: ''
+                  extraLine4: ''
+                  zipCode: '11011'
+                  city: Berlin
+                  country: DE
+                  state: Berlin
+                  contactPhone: '123456789'
+                  tags:
+                    - BILLING
+                    - SHIPPING
+        required: false
+      security:
+        - CustomerAccessToken: []
+      summary: Adding a customer address
+      tags:
+        - Addresses
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AddressDto'
+              examples:
+                Response example:
+                  value:
+                    - contactName: John Doe
+                      companyName: Emporix
+                      street: Platz der Republik
+                      streetNumber: '1'
+                      streetAppendix: ''
+                      extraLine1: ''
+                      extraLine2: ''
+                      extraLine3: ''
+                      extraLine4: ''
+                      zipCode: '11011'
+                      city: Berlin
+                      country: DE
+                      state: Berlin
+                      contactPhone: '123456789'
+                      tags:
+                        - BILLING
+                        - SHIPPING
+                      id: b05c20e034
+                      isDefault: true
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Retrieves a list of addresses for a customer.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: GET-customer-list-customer-addresses
+      security:
+        - CustomerAccessToken: []
+      summary: Retrieving customer addresses
+      tags:
+        - Addresses
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/me/addresses/{addressId}':
+    patch:
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |
+        Updates a specified customer address.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: PATCH-customer-update-customer-address
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressUpdateDto'
+            examples:
+              Request example:
+                value:
+                  contactName: John Doe
+                  companyName: Emporix
+                  street: Platz der Republik
+                  streetNumber: '1'
+                  streetAppendix: ''
+                  extraLine1: ''
+                  extraLine2: ''
+                  extraLine3: ''
+                  extraLine4: ''
+                  zipCode: '11011'
+                  city: Berlin
+                  country: DE
+                  state: Berlin
+                  contactPhone: '123456789'
+                  tags:
+                    - BILLING
+                    - SHIPPING
+                  isDefault: true
+        required: false
+      security:
+        - CustomerAccessToken: []
+      summary: Updating a customer address
+      tags:
+        - Addresses
+    get:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressDto'
+              examples:
+                Response example:
+                  value:
+                    contactName: John Doe
+                    companyName: Emporix
+                    street: Platz der Republik
+                    streetNumber: '1'
+                    streetAppendix: ''
+                    extraLine1: ''
+                    extraLine2: ''
+                    extraLine3: ''
+                    extraLine4: ''
+                    zipCode: '11011'
+                    city: Berlin
+                    country: DE
+                    state: Berlin
+                    contactPhone: '123456789'
+                    tags:
+                      - BILLING
+                      - SHIPPING
+                    id: b05c20e034
+                    isDefault: true
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |-
+        Retrieves a specified customer address and its details.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: GET-customer-retrieve-address-by-id
+      security:
+        - CustomerAccessToken: []
+      summary: Retrieving a customer address
+      tags:
+        - Addresses
+    delete:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      description: |-
+        Deletes a specified customer address and accounts associated with it.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: DELETE-customer-remove-customer-address-by-id
+      security:
+        - CustomerAccessToken: []
+      summary: Deleting a customer address
+      tags:
+        - Addresses
+    parameters:
+      - $ref: '#/components/parameters/addressId'
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/me/addresses/{addressId}/tags':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/addressId'
+    post:
+      summary: Adding tags to a customer address
+      operationId: POST-customer-add-address-tags
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      tags:
+        - Addresses
+      security:
+        - CustomerAccessToken: []
+      parameters:
+        - $ref: '#/components/parameters/tags'
+      description: |-
+        Adds tags to a specified customer address.
+
+        **Note**: The request needs to be authorized with a customer access token.
+    delete:
+      summary: Deleting tags from a customer address
+      operationId: DELETE-customer-remove-address-tags
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+        '404':
+          $ref: '#/components/responses/404_address'
+      tags:
+        - Addresses
+      security:
+        - CustomerAccessToken: []
+      parameters:
+        - $ref: '#/components/parameters/tags'
+      description: |-
+        Deletes tags from a specified customer address.
+
+        **Note**: The request needs to be authorized with a customer access token.
+  '/customer/{tenant}/me/accounts/internal/email/change':
+    post:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |
+        Sends a request to change a customer email address. As a result, the customer receives a unique token through email.
+
+        **Note**: The request needs to be authorized with a customer access token.
+
+        Request for changing login email token using current email id and password requires the `customer.customerprofile_edit` scope assigned with the customer access token.
+      operationId: POST-customer-change-customer-login-email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequestDto'
+            examples:
+              Request example:
+                value:
+                  email: example@customer.com
+                  password: password123
+                  newEmail: example@emporix.com
+                  syncContactEmail: true
+        required: false
+      security:
+        - CustomerAccessToken: []
+      summary: Sending a request to update a customer email address
+      tags:
+        - Credentials
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/me/accounts/internal/email/change/confirm':
+    post:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Updates a customer email address using the token received through email.
+
+        **Note**: The request needs to be authorized with a anonymous access token.
+      operationId: POST-customer-confirm-customer-login-email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmail'
+            examples:
+              Request example:
+                value:
+                  token: beExUmshJC5gnuXk1kET5dCLyQWkrAfKRGFOxVXLcJI13R1fn5USjaWku5G71whM
+        required: false
+      security:
+        - AnonymousAccessToken: []
+      tags:
+        - Credentials
+      summary: Updating a customer email address
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The tenant string is the project's Identifier from the Builder.
+  '/customer/{tenant}/password/reset':
+    post:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |
+        Sends a request to reset a Customer account password. As a result, the customer receives a unique token through email.
+
+        **Note**: The request needs to be authorized with a anonymous access token.
+      operationId: POST-customer-request-reset-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestDto'
+            examples:
+              Request example:
+                value:
+                  email: example@customer.com
+        required: false
+      security:
+        - AnonymousAccessToken: []
+      summary: Sending a request to reset a customer password
+      tags:
+        - Credentials
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/password/reset/update':
+    post:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Resets a customer password using the token received through email and sets a new password.
+
+        **Note**: The request needs to be authorized with a anonymous access token.
+      operationId: POST-customer-reset-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordUpdate'
+            examples:
+              Request example:
+                value:
+                  token: beExUmshJC5gnuXk1kET5dCLyQWkrAfKRGFOxVXLcJI13R1fn5USjaWku5G71whM
+                  password: P@ssw0rd123
+        required: false
+      security:
+        - AnonymousAccessToken: []
+      tags:
+        - Credentials
+      summary: Resetting a customer password
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/password/change':
+    post:
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+        '403':
+          $ref: '#/components/responses/403_forbidden'
+      description: |-
+        Changes a Customer account password.
+
+        **Note**: The request needs to be authorized with a customer access token.
+      operationId: POST-customer-change-account-password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeDto'
+            examples:
+              Request example:
+                value:
+                  currentPassword: password123
+                  newPassword: P@ssw0rd123
+        required: false
+      security:
+        - CustomerAccessToken: []
+      tags:
+        - Credentials
+      summary: Changing a customer password
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/signup/optin/{token}':
+    get:
+      operationId: GET-customer-signup-customer-optin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerToken'
+              examples:
+                Customer has been automatically logged in:
+                  value:
+                    access_token: HzcnecB5l6STzXhRqU0Zp6hxS0Ay
+                    saas_token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4NzQxMzI1MCIsImV4cCI6MTYzMjA1NDEzN30.p6g_G5ZbhjlvnObVC2OWGslLWWktxBw8onionfFvm4c
+                    expires_in: 2591999
+                    refresh_token: tMhLYc8pfAqb1g10Z1o7BxABArxXe3db
+                    refresh_token_expires_in: 86399
+                    token_type: Bearer
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+      description: |-
+        Creates a customer account using the token obtained through double opt-in.
+
+        **Note**: The request needs to be authorized with an anonymous access token.
+      security:
+        - AnonymousAccessToken: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: |
+            The token sent in email to customer during account creation.
+          schema:
+            type: string
+      summary: Creating a customer account with double opt-in
+
+
+      tags:
+        - Double opt-in
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+  '/customer/{tenant}/signup/optin/refresh_token':
+    post:
+      operationId: POST-customer-refresh-token
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          $ref: '#/components/responses/400_bad_request'
+        '401':
+          $ref: '#/components/responses/401_unauthorized'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshToken'
+            examples:
+              Request example:
+                value:
+                  email: example@customer.com
+        required: true
+      description: |
+        Resends an account activation link to the customer.
+
+        **Note**: The request needs to be authorized with an anonymous access token.
+      security:
+        - AnonymousAccessToken: []
+      summary: Resending an account activation link to a customer
+      tags:
+        - Double opt-in
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+components:
+  schemas:
+    AccountId:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Customer email address.
+        providerId:
+          type: string
+          description: |-
+            Customer account unique identifier generated by an external identity provider.
+
+            **Note**: This field is only applicable if the user has been registered through social login.
+    Address:
+      type: object
+      description: Customer address information.
+      properties:
+        id:
+          type: string
+          description: Customer address' unique identifier generated when the address is added to the customer account.
+        contactName:
+          type: string
+        companyName:
+          type: string
+        street:
+          type: string
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+          maxLength: 2
+          minLength: 2
+        state:
+          type: string
+        contactPhone:
+          type: string
+        isDefault:
+          type: boolean
+          default: false
+          description: Flag indicating whether the address is the customer default address.
+        tags:
+          type: array
+          description: ''
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/DefaultDtoMetadata'
+        mixins:
+          type: object
+          description: Customer address' additional properties.
+          additionalProperties: true
+      required:
+        - contactName
+    AddressCommonDto:
+      title: AddressCommonDto
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AddressCreateDto'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/DefaultDtoMetadata'
+    AddressCreateDto:
+      title: AddressCommonDto
+      type: object
+      properties:
+        contactName:
+          type: string
+        companyName:
+          type: string
+        street:
+          type: string
+        streetNumber:
+          type: string
+        streetAppendix:
+          type: string
+        extraLine1:
+          type: string
+        extraLine2:
+          type: string
+        extraLine3:
+          type: string
+        extraLine4:
+          type: string
+        zipCode:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        state:
+          type: string
+        contactPhone:
+          type: string
+        tags:
+          type: array
+          description: ''
+          items:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/BasicMetadataDto'
+        mixins:
+          type: object
+          description: Customer address' additional properties.
+          additionalProperties: true
+    AddressDto:
+      title: AddressDto
+      allOf:
+        - $ref: '#/components/schemas/AddressCommonDto'
+        - properties:
+            id:
+              type: string
+              description: Customer address' unique identifier generated when the address is added to the customer account.
+            isDefault:
+              type: boolean
+              description: Flag indicating whether the address is the customer default address.
+          type: object
+    AddressUpdateDto:
+      allOf:
+        - $ref: '#/components/schemas/AddressCommonDto'
+        - type: object
+          properties:
+            isDefault:
+              type: boolean
+              description: Flag indicating whether the address is the customer default address.
+    AnonymousAccessToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: integer
+          format: int32
+        sessionId:
+          type: string
+        scope:
+          type: string
+    ChangeEmailRequestDto:
+      title: ChangeEmailRequestDto
+      type: object
+      properties:
+        email:
+          type: string
+          description: Customer email address currently used for logging in.
+        password:
+          type: string
+          description: Customer account password.
+        newEmail:
+          type: string
+          description: Customer new email address.
+        syncContactEmail:
+          type: boolean
+          default: false
+          description: Flag indicating whether the `contactEmail` should be changed to the new email address.
+    Customer:
+      type: object
+      description: Customer profile.
+      properties:
+        id:
+          type: string
+          description: Customer unique identifier generated when the customer profile is created.
+        customerNumber:
+          type: string
+          description: Customer unique number generated when the customer profile is created.
+        title:
+          type: string
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        company:
+          type: string
+        preferredLanguage:
+          type: string
+          default: en_US
+          description: Customer preferred language.
+        preferredCurrency:
+          type: string
+          default: USD
+          minLength: 3
+          maxLength: 3
+          description: 'Customer''s preferred currency, compliant with the ISO 4217 standard.'
+        preferredSite:
+          type: string
+          default: main
+          description: Customer preferred site.
+        accounts:
+          type: array
+          description: List of accounts associated with the customer profile.
+          items:
+            $ref: '#/components/schemas/AccountId'
+        addresses:
+          type: array
+          description: List of customer addresses.
+          items:
+            $ref: '#/components/schemas/Address'
+        defaultAddress:
+          $ref: '#/components/schemas/Address'
+        businessModel:
+          type: string
+          enum: [B2B, B2C]
+          description: Property indicating business model of customer. When customer is assigned to any company then it is `B2B`. Otherwise it is `B2C`.
+        b2b:
+          $ref: '#/components/schemas/B2BGet'
+        mixins:
+          type: object
+          description: Customer account additional properties.
+          additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/DefaultDtoMetadata'
+        lastLogin:
+          type: string
+          description: 'Customer last login date. '
+          format: date-time
+    CustomerCommonDto:
+      title: CustomerCommonDto
+      type: object
+      properties:
+        title:
+          type: string
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+        contactPhone:
+          type: string
+        company:
+          type: string
+        preferredLanguage:
+          type: string
+          default: en_US
+          description: Customer preferred language.
+        preferredCurrency:
+          type: string
+          default: USD
+          description: 'Customer''s preferred currency, compliant with the ISO 4217 standard.'
+          minLength: 3
+          maxLength: 3
+        preferredSite:
+          type: string
+          default: main
+          description: Customer preferred site.
+        b2b:
+          $ref: '#/components/schemas/B2BCreate'
+        metadata:
+          $ref: '#/components/schemas/DefaultDtoMetadata'
+        mixins:
+          type: object
+          description: Customer account additional properties.
+          additionalProperties: true
+    B2BCreate:
+      type: object
+      description: Additional properties for B2B customer. If the `companyRegistrationId` property is provided, an additional validation for customer details executes - `firstName`, `lastName` and `company` values have to be provided.
+      properties:
+        companyRegistrationId:
+          type: string
+          description: Registration number of the company.
+    B2BGet:
+      type: object
+      description: Additional properties for B2B customer. If the `companyRegistrationId` property is provided, an additional validation for customer details executes - `firstName`, `lastName` and `company` values have to be provided.
+      properties:
+        companyRegistrationId:
+          type: string
+          description: Registration number of the company.
+        legalEntities:
+          type: array
+          items:
+            properties:
+              id:
+                type: string
+                description: ID of legal entity.
+              name:
+                type: string
+                description: Name of legal entity.
+              contactAssignmentId:
+                type: string
+                description: ID of contact assignment.
+    CustomerSignup:
+      type: object
+      properties:
+        email:
+          minLength: 1
+          example: john.doe@emporix.com
+          type: string
+          description: Customer email address.
+        password:
+          minLength: 1
+          type: string
+          description: Customer account password.
+        customerDetails:
+          $ref: '#/components/schemas/CustomerUpdateDto'
+          description: If customer details are provided, the `contactEmail` value has to be the same as in the `email` property of the contact. 
+        customerAddress:
+          $ref: '#/components/schemas/Address'
+        signup:
+          $ref: '#/components/schemas/PasswordAuthentication'
+          description: Customer email and password used for separate login credentials to the frontend. Use these if you want to log in with a different email than the main contact email.
+      required:
+        - email
+        - password
+    CustomerToken:
+      description: ''
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RefreshCustomerToken'
+      properties:
+        saasToken:
+          type: string
+          minLength: 1
+          deprecated: true
+        saas_token:
+          type: string
+          minLength: 1
+        initialPassword:
+          type: string
+          description: Indicates if login was performed with password created by an employee
+    RefreshCustomerToken:
+      description: ''
+      type: object
+      properties:
+        accessToken:
+          type: string
+          minLength: 1
+          deprecated: true
+        expiresIn:
+          type: number
+          format: int32
+          deprecated: true
+        refreshToken:
+          type: string
+          minLength: 1
+          deprecated: true
+        refreshTokenExpiresIn:
+          type: number
+          format: int32
+          deprecated: true
+        access_token:
+          type: string
+          minLength: 1
+        expires_in:
+          type: number
+          format: int32
+        refresh_token:
+          type: string
+          minLength: 1
+        refresh_token_expires_in:
+          type: number
+          format: int32
+        token_type:
+          type: string
+        session_id:
+          type: string
+    ExchangeAuthTokenResponse:
+      description: Response returned when exchanging an external subject access token for an Emporix customer token.
+      type: object
+      properties:
+        subject_access_token:
+          type: string
+          description: The subject access token (JWT) that was exchanged.
+        access_token:
+          type: string
+          minLength: 1
+          description: Customer access token.
+        saas_token:
+          type: string
+          minLength: 1
+          description: SaaS token for the session.
+        refresh_token:
+          type: string
+          minLength: 1
+          description: Token used to refresh the customer access token.
+        refresh_token_expires_in:
+          type: integer
+          format: int32
+          description: Expiration time of the refresh token in seconds.
+        session_idle_time:
+          type: integer
+          format: int32
+          description: Session idle time in seconds.
+        token_type:
+          type: string
+          description: Type of the token. Usually `Bearer`.
+        expires_in:
+          type: integer
+          format: int32
+          description: Expiration time of the access token in seconds.
+        scope:
+          type: string
+          description: List of scopes assigned to the customer.
+        session_id:
+          type: string
+          description: Session identifier.
+    CustomerUpdateDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerCommonDto'
+        - type: object
+          properties:
+            contactEmail:
+              type: string
+    CustomerPatchDto:
+      allOf:
+        - $ref: '#/components/schemas/CustomerUpdateDto'
+        - type: object
+          properties:
+            contactEmail:
+              type: string
+              description: Contact email address. Cannot be unset once a value is present.
+    BasicMetadataDto:
+      title: DefaultDtoMetadata
+      type: object
+      properties:
+        mixins:
+          type: object
+          additionalProperties: true
+      description: Links to mixin schemas.
+    DefaultDtoMetadata:
+      title: DefaultDtoMetadata
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BasicMetadataDto'
+        - type: object
+          properties:
+            version:
+              type: integer
+    ErrorMessage:
+      title: ''
+      description: Schema for API-specific errors.
+      type: object
+      properties:
+        status:
+          minimum: 100
+          maximum: 599
+          description: Original HTTP error code. It should be consistent with the HTTP response code.
+          type: integer
+        type:
+          pattern: '[a-z]+[a-z_]*[a-z]+'
+          description: |-
+            Classification of the error type.
+            **Note:** The error type should be written in lowercase and include underscores, for example `validation_failure`.
+          type: string
+        message:
+          description: Descriptive error message for debugging purposes.
+          type: string
+        moreInfo:
+          type: string
+          description: More information (such as a link to the documentation) for investigating further and getting support.
+        details:
+          description: List of problems causing the error.
+          type: array
+          items:
+            title: errorDetail
+            description: Specific error cause.
+            type: object
+            properties:
+              field:
+                description: |-
+                  Element in request data which is causing the error, for example `category.name`.
+                  If the violation was not field-specific, this field will be empty.
+                type: string
+              type:
+                pattern: '[a-z]+[a-z_]*[a-z]+'
+                description: |-
+                  Classification of the specific error cause. This value should always be interpreted within the context of the general error type.
+                  **Note:** The error type should be written in lowercase and include underscores, for example `missing_value`.
+                type: string
+              message:
+                description: Descriptive error message for debugging purposes.
+                type: string
+              moreInfo:
+                type: string
+                description: More information (such as a link to the documentation) for investigating further and getting support.
+    PasswordAuthentication:
+      type: object
+      properties:
+        email:
+          minLength: 1
+          type: string
+          description: Customer email address.
+        password:
+          minLength: 6
+          type: string
+          description: Customer account password.
+      required:
+        - email
+        - password
+    PasswordChangeDto:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          description: Customer current account password.
+        newPassword:
+          type: string
+          description: Customer new account password.
+      required:
+        - currentPassword
+        - newPassword
+    PasswordResetRequestDto:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Customer email address.
+        site:
+          type: string
+          description: Site from which password reset request was sent
+      required:
+        - email
+    PasswordUpdate:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token received by the customer through email.
+        password:
+          type: string
+          description: Customer new account password.
+      required:
+        - token
+        - password
+    RefreshToken:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Customer email address.
+      required:
+        - email
+    ResourceLocation:
+      type: object
+      title: Resource Location
+      description: Schema for showing location of the new resource.
+      properties:
+        id:
+          description: Resource identifier.
+          type: string
+    UpdateEmail:
+      title: UpdateEmail
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token received by the customer through email.
+    ValidateTokenResponse:
+      type: object
+      x-stoplight:
+        id: rjgbt7z8oqzgq
+      properties:
+        token_type:
+          type: string
+          description: Type of the token. Usually it's `Bearer`.
+        expires_in:
+          type: integer
+          format: int32
+          description: 'Specifies the token''s expiration time, represented in seconds.'
+        scope:
+          type: string
+          description: A list of scopes assigned to the user.
+        sessionId:
+          type: string
+          x-stoplight:
+            id: g9aiqlhvwrw1k
+          description: Identifier of the user session.
+        email:
+          type: string
+          description: Customer email used to login (generate the token).
+        legalEntityId:
+          type: string
+          description: Legal Entity ID.
+  responses:
+    409_conflict:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Account already exists:
+              type: conflict_resource
+              status: 409
+              message: 'Duplicate account ''{email}'' for tenant ''{tenant}''.'
+    400_bad_request:
+      description: Request was syntactically incorrect. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Invalid tenant:
+              value:
+                type: bad_request
+                status: 400
+                message: The tenant information provided with the request is not valid.
+    401_unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    403_forbidden:
+      description: |
+        Given authorization scopes are not sufficient and do not match scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Missing required scopes:
+              type: Forbidden
+              status: 403
+              message: User not authorized.
+    404_address:
+      description: Address with the specified `addressId` doesn't exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example:
+            Address not found:
+              type: resource_not_found
+              status: 404
+              message: 'Address {addressId} of customer {customerNumber} not found.'
+  parameters:
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+    addressId:
+      name: addressId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+      description: Address unique identifier generated when the address is added to a customer profile.
+    tags:
+      name: tags
+      in: query
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        example: 'BILLING,SHIPPING'
+      description: List of address tags, separated by commas.
+    token:
+      name: token
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Token received by the customer through email.
+    expand:
+      name: expand
+      description: |
+        List of additional attributes to be retrieved, separated by commas.
+        Possible value to be passed in this parameter is `addresses`.
+        To expand mixins, use the `*` character: `mixin:*`.
+      in: query
+      required: false
+      schema:
+        type: string
+        example: addresses,mixin:*
+  securitySchemes:
+    CustomerAccessToken:
+      type: http
+      scheme: bearer
+      description: To generate a customer access token, go to the [Logging in a customer](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login) endpoint.
+    AnonymousAccessToken:
+      type: http
+      scheme: bearer
+      description: To generate an anonymous token, check out the [Requesting an anonymous token](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#get-customerlogin-auth-anonymous-login) endpoint.

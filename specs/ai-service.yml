@@ -1,0 +1,5348 @@
+openapi: 3.0.0
+info:
+  title: AI Service
+  version: ''
+  description: The service facilitates and streamlines e-commerce processes of product marketing.
+  contact:
+    name: Emporix
+    url: https://emporix.com
+    email: documentation@emporix.com
+tags:
+  - name: Agent
+    description: Manage Agents
+  - name: Agent Chat
+    description: Chat With Agents
+  - name: Agent Logs
+    description: Read Agent Logs
+  - name: Agent Analytics
+    description: Agent analytics and execution metrics
+  - name: Agent Template
+    description: Manage Agent Templates
+  - name: AI Completions
+    description: AI Completions
+  - name: Commerce Events
+    description: Read Commerce Events
+  - name: Import/Export
+    description: Import & Export Agents
+  - name: Job
+    description: Manage Jobs
+  - name: MCP Server
+    description: Manage MCP Servers
+  - name: Model
+    description: Read LLM models from supported providers
+  - name: OAuth
+    description: Manage OAuth configurations (Preview)
+  - name: Text Generation
+    description: AI Text Generation
+  - name: Token
+    description: Manage Tokens
+  - name: Tool
+    description: Manage Tools
+  - name: Conversation
+    description: Manage Agent Conversations (Preview)
+servers:
+  - url: https://api.emporix.io
+paths:
+  '/ai-service/{tenant}/texts':
+    parameters:
+      - name: tenant
+        in: path
+        required: true
+        schema:
+          type: string
+        description: |
+          Your Emporix tenant name.
+
+          **Note**: The tenant name should always be provided in lowercase.
+    post:
+      summary: Generating text for an object description
+      operationId: POST-ai-generate-description
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_text_generation'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+      description: |-
+        Generates a text based on a prompt. 
+        Currently, the supported AI engine for the text generation is https://platform.openai.com/.
+
+        ***
+        Prerequisite: Using the AI service requires an API token, you have to either configure your own OpenAI account, or use the Emporix one. To configure your own OpenAI token, use the configuration service by storing the token under `openAiApiToken` key.  
+
+        If you don't provide your own OpenAI token, the Emporix one is used with the following limits: 3 mln input tokens and 1 mln output tokens. When you reach the limit, the next requests are rejected and you have to provide your own OpenAI token.
+        Emporix uses the gpt-4o-mini model by default.
+        If you want to use your own OpenAI account with a different AI model please contact our [Emporix Support Team](mailto:support@emporix.com) to negotiate the model and usage.
+      security:
+        - OAuth2:
+            - ai.text_manage
+      requestBody:
+        $ref: '#/components/requestBodies/TextGeneration'
+      tags:
+        - Text Generation
+  '/ai-service/{tenant}/completions':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Generating AI Completions
+      operationId: POST-ai-completions
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_text_generation'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+      description: |-
+        Generates a completion based on chat history. 
+        Currently, the supported AI engine for the text generation is https://platform.openai.com/.
+
+
+        ***
+        Prerequisite: Using the AI service requires an API token, you have to either configure your own OpenAI account, or use the Emporix one. To configure your own OpenAI token, use the configuration service by storing the token under the `openAiApiToken` key. 
+
+        If you don't provide your own OpenAI token, the Emporix one is used with the following limits: 3 mln input tokens and 1 mln output tokens. When you reach the limit, the next requests are rejected and you have to provide your own OpenAI token. 
+        Emporix uses the gpt-4o-mini model by default. If you want to use your own OpenAI account with a different AI model, please contact our [Emporix Support Team](mailto:support@emporix.com) to negotiate the model and usage.
+      security:
+        - OAuth2:
+            - ai.completion_manage
+      requestBody:
+        $ref: '#/components/requestBodies/Completion'
+      tags:
+        - AI Completions
+  '/ai-service/{tenant}/jobs':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing available jobs
+      operationId: GET-ai-list-jobs
+      responses:
+        '200':
+          description: List of available jobs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+              examples:
+                Jobs:
+                  value:
+                    - id: 68835cc3ef4e8e1425c360ad
+                      status: success
+                      sessionId: 123e4567-e89b-12d3-a456-426614174000
+                      agentType: complaint
+                      type: AGENT_CHAT
+                      agentId: complaint-agent
+                      commerceEvent: product.product-updated
+                      message: |-
+                        Dear Customer,
+
+                        We have successfully processed your support request regarding the incorrect information on invoice EIN251131 for order EON1031. Our team has verified the order and customer details, confirming both the order and legal entity were found.
+                        Thank you for your patience and cooperation.
+
+                        Best regards,  
+                        [Your Support Team]
+                      metadata:
+                        version: 1
+                        createdAt: '2025-07-25T10:30:27.167Z'
+                        modifiedAt: '2025-07-25T10:31:14.509Z'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves agent jobs.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Job
+  '/ai-service/{tenant}/jobs/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching jobs
+      operationId: POST-ai-search-jobs
+      responses:
+        '200':
+          description: List of available jobs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+              examples:
+                Jobs:
+                  value:
+                    - id: 68835cc3ef4e8e1425c360ad
+                      status: success
+                      sessionId: 123e4567-e89b-12d3-a456-426614174000
+                      agentType: complaint
+                      type: AGENT_CHAT
+                      agentId: complaint-agent
+                      commerceEvent: product.product-updated
+                      message: |-
+                        Dear Customer,
+
+                        We have successfully processed your support request regarding the incorrect information on invoice EIN251131 for order EON1031. Our team has verified the order and customer details, confirming both the order and legal entity were found.
+                        Thank you for your patience and cooperation.
+
+                        Best regards,  
+                        [Your Support Team]
+                      metadata:
+                        version: 1
+                        createdAt: '2025-07-25T10:30:27.167Z'
+                        modifiedAt: '2025-07-25T10:31:14.509Z'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for agent jobs based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Job
+  '/ai-service/{tenant}/jobs/{jobId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: jobId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+      summary: Retrieving available job
+      operationId: GET-ai-job
+      responses:
+        '200':
+          description: A job details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              examples:
+                Jobs:
+                  value:
+                    id: 68835cc3ef4e8e1425c360ad
+                    status: success
+                    sessionId: 123e4567-e89b-12d3-a456-426614174000
+                    agentType: complaint
+                    type: AGENT_CHAT
+                    agentId: complaint-agent
+                    commerceEvent: product.product-updated
+                    message: |-
+                      Dear Customer,
+
+                      We have successfully processed your support request regarding the incorrect information on invoice EIN251131 for order EON1031. Our team has verified the order and customer details, confirming both the order and legal entity were found.
+                      Thank you for your patience and cooperation.
+
+                      Best regards,  
+                      [Your Support Team]
+                    metadata:
+                      version: 1
+                      createdAt: '2025-07-25T10:30:27.167Z'
+                      modifiedAt: '2025-07-25T10:31:14.509Z'
+
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves agent job by its ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Job
+    delete:
+      summary: Deleting a job
+      operationId: DELETE-ai-job
+      responses:
+        '204':
+          description: Given job has been deleted.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Deletes job by given ID.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Job
+  '/ai-service/{tenant}/agentic/chat':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+          format: uuid
+        name: session-id
+        in: header
+        description: Unique session identifier which allows for storing the context of the chat. If not provided, the system generates it.
+    post:
+      summary: Starting agent chat
+      operationId: POST-ai-agents-chat
+      responses:
+        '200':
+          description: Chat response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatResponse'
+              examples:
+                JobId:
+                  value:
+                    - agentId: complaint-agent
+                      agentType: complaint
+                      message: Found an order with its details.
+                      sessionId: fe91d168-4ce9-4b4d-8451-0029035b34a5
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+      description: |-
+        Allows for communication with Emporix agents.
+      security:
+        - OAuth2:
+            - ai.agentexecution_manage_own
+            - ai.agentexecution_manage
+      requestBody:
+        $ref: '#/components/requestBodies/AgenticChat'
+      tags:
+        - Agent Chat
+  '/ai-service/{tenant}/agentic/chat-stream':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+          format: uuid
+        name: session-id
+        in: header
+        description: Unique session identifier which allows for storing the context of the chat. If not provided, the system generates it.
+      - schema:
+          type: string
+          example: text/event-stream
+        name: Accept
+        in: header
+        required: false
+        description: Use `text/event-stream` to receive the response as a Server-Sent Events stream.
+    post:
+      summary: Starting agent chat stream
+      operationId: POST-ai-agents-chat-stream
+      responses:
+        '200':
+          description: Chat response stream.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+      description: |-
+        Allows for communication with Emporix agents using a Server-Sent Events stream.
+      security:
+        - OAuth2:
+            - ai.agentexecution_manage_own
+            - ai.agentexecution_manage
+      requestBody:
+        $ref: '#/components/requestBodies/AgenticChat'
+      tags:
+        - Agent Chat
+  '/ai-service/{tenant}/agentic/chat-async':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+          format: uuid
+        name: session-id
+        in: header
+        description: Unique session identifier which allows for storing the context of the chat. If not provided, the system generates it.
+    post:
+      summary: Starting agent async chat
+      operationId: POST-ai-agents-chat-async
+      responses:
+        '201':
+          description: Job ID response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobIdResponse'
+              examples:
+                JobId:
+                  value:
+                    jobId: 68835cc3ef4e8e1425c360ad
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+      description: |-
+        Allows for communication with Emporix agents in async way.
+      security:
+        - OAuth2:
+            - ai.agentexecution_manage_own
+            - ai.agentexecution_manage
+      requestBody:
+        $ref: '#/components/requestBodies/AgenticChat'
+      tags:
+        - Agent Chat
+  '/ai-service/{tenant}/agentic/{agentId}/attachments':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: agentId
+        in: path
+        required: true
+      - schema:
+          type: string
+          format: uuid
+        name: session-id
+        in: header
+        description: Unique session identifier which allows for storing the context of the chat. If not provided, the system generates it.
+    post:
+      summary: Uploading attachment
+      operationId: POST-ai-agents-upload-attachment
+      responses:
+        '201':
+          description: Attachment response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentResponse'
+              examples:
+                AttachmentId:
+                  value:
+                    id: 68835cc3ef4e8e1425c360ad
+                    sessionId: 0499bef6-a4d2-45b9-86a0-2edf7d70d726
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+      description: |-
+        Allows for upload of a file and assign it to the agent. Supported file extensions:
+          - jpg
+          - jpeg
+          - png
+          - pdf
+          - csv
+          - text
+          - txt
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                attachment:
+                  type: string
+                  format: binary
+                  description: Content of the file.
+              required:
+                - attachment
+      tags:
+        - Agent Chat
+  '/ai-service/{tenant}/agentic/templates':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/expand'
+      - $ref: '#/components/parameters/header_xTotalCount'
+      - $ref: '#/components/parameters/header_Accept-Language'
+    get:
+      summary: Listing available agent templates
+      operationId: GET-ai-list-templates
+      responses:
+        '200':
+          description: List of available agent templates.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentTemplateResponse'
+              examples:
+                Agent Templates Response:
+                  $ref: '#/components/examples/AgentTemplatesResponse'
+        '400':
+          $ref: '#/components/responses/401_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves agent templates which can be later use as a base for custom agents.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Template
+  '/ai-service/{tenant}/agentic/templates/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/expand'
+      - $ref: '#/components/parameters/header_xTotalCount'
+      - $ref: '#/components/parameters/header_Accept-Language'
+    post:
+      summary: Searching agent templates
+      operationId: POST-ai-search-templates
+      responses:
+        '200':
+          description: List of available agent templates.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentTemplateResponse'
+              examples:
+                Agent Templates Response:
+                  $ref: '#/components/examples/AgentTemplatesResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Searches for agent templates based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      tags:
+        - Agent Template
+  '/ai-service/{tenant}/agentic/templates/{templateId}/agents':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/header_Content-Language'
+      - schema:
+          type: string
+        name: templateId
+        in: path
+        required: true
+    post:
+      summary: Creating agent instance based on a template
+      operationId: POST-ai-clone-template
+      requestBody:
+        $ref: '#/components/requestBodies/AgentFromTemplateRequest'
+      responses:
+        '201':
+          description: ID of the created agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Agent Based on Template Response:
+                  $ref: '#/components/examples/IdResponse'
+        '400':
+          $ref: '#/components/responses/401_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Creates an instance of the agent based of the given agent template.
+
+        **Info:** Only active templates can be cloned.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Agent Template
+  '/ai-service/{tenant}/agentic/agents':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/header_Accept-Language'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/expand'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing agents
+      operationId: GET-ai-list-agents
+      responses:
+        '200':
+          description: List of agents.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentResponse'
+              examples:
+                Agents Response:
+                  $ref: '#/components/examples/AgentsResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves agent templates based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent
+  '/ai-service/{tenant}/agentic/agents/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/header_Accept-Language'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching agents
+      operationId: POST-ai-search-agents
+      responses:
+        '200':
+          description: List of agents.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentResponse'
+              examples:
+                Agents Response:
+                  $ref: '#/components/examples/AgentsResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for agents based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent
+  '/ai-service/{tenant}/agentic/agents/{agentId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: agentId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/header_Accept-Language'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expand'
+      summary: Retrieving agent by ID
+      operationId: GET-ai-retrieve-agent
+      responses:
+        '200':
+          description: A single agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+              examples:
+                Agent Response:
+                  $ref: '#/components/examples/AgentResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves the agent by given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent
+    put:
+      parameters:
+        - $ref: '#/components/parameters/header_Content-Language'
+      summary: Upserting agent
+      operationId: PUT-ai-agent
+      responses:
+        '201':
+          description: ID of created agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Cloned Agent Template Response:
+                  $ref: '#/components/examples/IdResponse'
+        '204':
+          description: The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+        '409':
+          $ref: '#/components/responses/409_resp_common'
+      description: |-
+        Updates or creates a specified product by replacing all of its existing data with data from the request body.
+        If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/agentUpsertBody'
+      tags:
+        - Agent
+    patch:
+      summary: Partially updating agent
+      operationId: PATCH-ai-update-agent
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Partially updates a single agent document with given information.
+        Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` (adding an item to the items list)
+          - `remove` (removing an item from the items list)
+          - `replace` (replacing an item with given ID with new definition)
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/agentPatchBody'
+      tags:
+        - Agent
+    delete:
+      summary: Deleting agent
+      operationId: DELETE-ai-delete-agent
+      parameters:
+        - $ref: '#/components/parameters/force'
+      responses:
+        '204':
+          description: Given agent has been deleted.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Deletes agent by given ID.
+
+        ***Important***: If an agent is being used by another agent as collaboration agent then delete operation is not possible without `force` flag set to `true`.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Agent
+  '/ai-service/{tenant}/agentic/conversations':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing conversations
+      operationId: GET-ai-list-conversations
+      responses:
+        '200':
+          description: List of conversations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConversationResponse'
+              examples:
+                Conversations Response:
+                  $ref: '#/components/examples/ConversationsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves agent conversations based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Conversation
+  '/ai-service/{tenant}/agentic/conversations/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching conversations
+      operationId: POST-ai-search-conversations
+      responses:
+        '200':
+          description: List of conversations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConversationResponse'
+              examples:
+                Conversations Response:
+                  $ref: '#/components/examples/ConversationsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Searches for agent conversations based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Conversation
+  '/ai-service/{tenant}/agentic/tools':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/header_xTotalCount'
+      - $ref: '#/components/parameters/expandTool'
+    get:
+      summary: Listing tools
+      operationId: GET-ai-list-tools
+      responses:
+        '200':
+          description: List of tools.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NativeToolsResponse'
+              examples:
+                Tools Response:
+                  $ref: '#/components/examples/SlackNativeToolsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves tools based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Tool
+  '/ai-service/{tenant}/agentic/tools/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/header_xTotalCount'
+        - $ref: '#/components/parameters/expandTool'
+      summary: Searching tools
+      operationId: POST-ai-search-tools
+      responses:
+        '200':
+          description: List of tools.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NativeToolsResponse'
+              examples:
+                Tools Response:
+                  $ref: '#/components/examples/SlackNativeToolsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for tools based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Tool
+  '/ai-service/{tenant}/agentic/tools/{toolId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: toolId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expandTool'
+      summary: Retrieving tool by ID
+      operationId: GET-ai-retrieve-tool
+      responses:
+        '200':
+          description: A single tool.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SlackNativeToolResponse'
+                  - $ref: '#/components/schemas/RagCustomNativeToolResponse'
+                  - $ref: '#/components/schemas/RagEmporixNativeToolResponse'
+                  - $ref: '#/components/schemas/TeamsNativeToolResponse'
+              examples:
+                Tool Response:
+                  $ref: '#/components/examples/SlackNativeToolResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves the tool by given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Tool
+    put:
+      summary: Upserting tool
+      parameters:
+        - $ref: '#/components/parameters/forceDisable'
+      operationId: PUT-ai-upsert-tool
+      responses:
+        '201':
+          description: ID of created tool.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Id Of Created Tool:
+                  $ref: '#/components/examples/IdResponse'
+        '204':
+          description: The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+        '409':
+          $ref: '#/components/responses/409_resp_common'
+      description: |-
+        Updates or creates a specified tool by replacing all of its existing data with data from the request body.
+        If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
+
+        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        The `teams` native tool type and its configuration fields are in preview. Slack `config.defaultInboundAgentId` and `config.allowedOperations` are in preview.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/toolUpsertBody'
+      tags:
+        - Tool
+    patch:
+      summary: Partially updating tool
+      parameters:
+        - $ref: '#/components/parameters/forceDisable'
+      operationId: PATCH-ai-update-tool
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Partially updates a single tool document with given information.
+        Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` (adding an item to the items list)
+          - `remove` (removing an item from the items list)
+          - `replace` (replacing an item with given ID with new definition)
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/toolPatchBody'
+      tags:
+        - Tool
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/force'
+      summary: Deleting tool
+      operationId: DELETE-ai-delete-tool
+      responses:
+        '204':
+          description: Given tool has been deleted.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Deletes tool by given ID.
+
+        ***Important***: If tool is being used by an agent then delete operation is not possible without `force` flag set to `true`.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Tool
+  '/ai-service/{tenant}/agentic/tokens':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing tokens
+      operationId: GET-ai-list-tokens
+      responses:
+        '200':
+          description: List of tokens.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenResponse'
+              examples:
+                Tokens Response:
+                  $ref: '#/components/examples/TokensResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves tokens based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Token
+  '/ai-service/{tenant}/agentic/tokens/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching tokens
+      operationId: POST-ai-search-tokens
+      responses:
+        '200':
+          description: List of tokens.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenResponse'
+              examples:
+                Tokens Response:
+                  $ref: '#/components/examples/TokensResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for tokens based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Token
+  '/ai-service/{tenant}/agentic/tokens/{tokenId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: tokenId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+      summary: Retrieving token by ID
+      operationId: GET-ai-retrieve-token
+      responses:
+        '200':
+          description: A single token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                Tool Response:
+                  $ref: '#/components/examples/TokenResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves the token by given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Token
+    put:
+      summary: Upserting token
+      operationId: PUT-ai-upsert-token
+      responses:
+        '201':
+          description: ID of created token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Id Of Created Tool:
+                  $ref: '#/components/examples/IdResponse'
+        '204':
+          description: The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+        '409':
+          $ref: '#/components/responses/409_resp_common'
+      description: |-
+        Updates or creates a specified token by replacing all of its existing data with data from the request body.
+        If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
+
+        **Important**: The `value` field cannot be updated, once created token cannot change `value` field.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/tokenUpsertBody'
+      tags:
+        - Token
+    patch:
+      summary: Partially updating token
+      operationId: PATCH-ai-update-token
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Partially updates a single token document with given information.
+        Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` (adding an item to the items list)
+          - `remove` (removing an item from the items list)
+          - `replace` (replacing an item with given ID with new definition)
+
+        **Important**: The `value` field cannot be updated, once created token cannot change `value` field.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/tokenPatchBody'
+      tags:
+        - Token
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/force'
+      summary: Deleting token
+      operationId: DELETE-ai-delete-token
+      responses:
+        '204':
+          description: Given token has been deleted.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Deletes tokens by given ID.
+
+
+        ***Important***: If a token is being used by an agent or by an MCP server, then delete operation is not possible without `force` flag set to `true`.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Token
+  '/ai-service/{tenant}/agentic/oauths':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/expandOAuth'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing OAuth configurations
+      operationId: GET-ai-list-oauths
+      responses:
+        '200':
+          description: List of OAuth configurations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OAuthResponse'
+              examples:
+                OAuths Response:
+                  $ref: '#/components/examples/OAuthsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves OAuth configurations based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - OAuth
+  '/ai-service/{tenant}/agentic/oauths/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expandOAuth'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching OAuth configurations
+      operationId: POST-ai-search-oauths
+      responses:
+        '200':
+          description: List of OAuth configurations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OAuthResponse'
+              examples:
+                OAuths Response:
+                  $ref: '#/components/examples/OAuthsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Searches for OAuth configurations based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - OAuth
+  '/ai-service/{tenant}/agentic/oauths/{oauthId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: oauthId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expandOAuth'
+      summary: Retrieving OAuth configuration by ID
+      operationId: GET-ai-retrieve-oauth
+      responses:
+        '200':
+          description: A single OAuth configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthResponse'
+              examples:
+                OAuth Response:
+                  $ref: '#/components/examples/OAuthResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the OAuth configuration by a given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - OAuth
+    put:
+      summary: Upserting OAuth configuration
+      parameters:
+        - $ref: '#/components/parameters/forceDisable'
+      operationId: PUT-ai-upsert-oauth
+      responses:
+        '201':
+          description: ID of created OAuth configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Id Of Created OAuth:
+                  $ref: '#/components/examples/IdResponse'
+        '204':
+          description: The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+        '409':
+          $ref: '#/components/responses/409_resp_common'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Updates or creates a specified OAuth configuration by replacing all of its existing data with data from the request body.
+        If the `metadata.version` is provided, then optimistic locking is enabled and version must match the version in the database.
+
+        Currently only the `client_credentials` grant type is supported.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/oauthUpsertBody'
+      tags:
+        - OAuth
+    patch:
+      summary: Partially updating OAuth configuration
+      parameters:
+        - $ref: '#/components/parameters/forceDisable'
+      operationId: PATCH-ai-update-oauth
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Partially updates a single OAuth configuration document with given information.
+        Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` (adding an item to the items list)
+          - `remove` (removing an item from the items list)
+          - `replace` (replacing an item with given ID with new definition)
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/oauthPatchBody'
+      tags:
+        - OAuth
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/force'
+      summary: Deleting OAuth configuration
+      operationId: DELETE-ai-delete-oauth
+      responses:
+        '204':
+          description: Given OAuth configuration has been deleted.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Deletes OAuth configuration by given ID.
+
+        ***Important***: If an OAuth configuration is being used by an agent, then delete operation is not possible without `force` flag set to `true`.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - OAuth
+  '/ai-service/{tenant}/agentic/models':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Listing LLM models from supported providers
+      operationId: GET-ai-list-models
+      responses:
+        '200':
+          description: List of models grouped by LLM provider.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProviderModelsResponse'
+              examples:
+                Provider Models Response:
+                  $ref: '#/components/examples/ProviderModelsResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves available LLM models from supported LLM providers: OpenAI, Anthropic, and Google.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Model
+  '/ai-service/{tenant}/agentic/mcp-servers':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/expandMcpServer'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing MCP servers
+      operationId: GET-ai-list-mcp-servers
+      responses:
+        '200':
+          description: List of MCP servers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/McpServerResponse'
+              examples:
+                Mcp Servers Response:
+                  $ref: '#/components/examples/McpServersResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves MCP servers based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - MCP Server
+  '/ai-service/{tenant}/agentic/mcp-servers/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expandMcpServer'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching MCP servers
+      operationId: POST-ai-search-mcp-servers
+      responses:
+        '200':
+          description: List of MCP servers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/McpServerResponse'
+              examples:
+                Tokens Response:
+                  $ref: '#/components/examples/McpServersResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for MCP servers based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - MCP Server
+  '/ai-service/{tenant}/agentic/mcp-servers/{mcpServerId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: mcpServerId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/expandMcpServer'
+      summary: Retrieving MCP server by ID
+      operationId: GET-ai-retrieve-mcp-server
+      responses:
+        '200':
+          description: A single mcp server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpServerResponse'
+              examples:
+                MCP Server Response:
+                  $ref: '#/components/examples/McpServerResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves the MCP server by a given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - MCP Server
+    put:
+      summary: Upserting MCP server
+      parameters:
+        - $ref: '#/components/parameters/forceDisable'
+      operationId: PUT-ai-upsert-mcp-server
+      responses:
+        '201':
+          description: ID of created MCP server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              examples:
+                Id Of Created Mcp Server:
+                  $ref: '#/components/examples/IdResponse'
+        '204':
+          description: The resource has been successfully updated.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+        '409':
+          $ref: '#/components/responses/409_resp_common'
+      description: |-
+        Updates or creates a specified MCP server by replacing all of its existing data with data from the request body.
+        If the `metadata.version` is provided, then optimistic locking is enabled and version must match the version in the database.
+
+        ***Important***: If MCP server is being used by an enabled agent then disabling MCP is not possible without `force` flag set to `true`. Only then the agent and MCP server are disabled.
+
+        The `type: dynamic` value and its `tools` definitions are in preview. When upserting an enabled dynamic MCP server, each tool's `config.invocation.functionId` is validated against the Automation service. The request returns `400` when a referenced function does not exist on the tenant.
+
+        {% hint style="danger" %}
+        Hosting of cloud functions and use of dynamic MCP servers is not included in standard billing plans and is billed separately on a pay-as-you-go basis. If you're interested in getting access to these features, contact the [Sales Team](mailto:support@emporix.com).
+        {% endhint %}
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/mcpServerUpsertBody'
+      tags:
+        - MCP Server
+    patch:
+      summary: Partially updating MCP server
+      parameters:
+        - $ref: '#/components/parameters/force'
+      operationId: PATCH-ai-update-mcp-server
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Partially updates a single mcp server document with given information.
+        Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
+          - `add` (adding an item to the items list)
+          - `remove` (removing an item from the items list)
+          - `replace` (replacing an item with given ID with new definition)
+
+        ***Important***: If an MCP server is being used by an enabled agent then disabling MCP is not possible without `force` flag set to `true`. Only then the agent and MCP server are disabled.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      requestBody:
+        $ref: '#/components/requestBodies/mcpServerPatchBody'
+      tags:
+        - MCP Server
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/force'
+      summary: Deleting MCP server
+      operationId: DELETE-ai-delete-mcp-server
+      responses:
+        '204':
+          description: Given mcp server has been deleted.
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Deletes MCP server by given ID. 
+
+        ***Important***: If MCP server is being used by an agent then delete operation is not possible without `force` flag set to `true`.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - MCP Server
+  '/ai-service/{tenant}/agentic/commerce-events':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Listing commerce events
+      operationId: GET-ai-commerce-events
+      responses:
+        '200':
+          description: List of available commerce events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommerceEventsResponse'
+              examples:
+                Tools Response:
+                  $ref: '#/components/examples/CommerceEventsResponse'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves commerce events available for agents with `COMMERCE_EVENTS` trigger.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Commerce Events
+  '/ai-service/{tenant}/agentic/agents/export':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Exporting agents
+      operationId: POST-ai-export-agents
+      requestBody:
+        $ref: '#/components/requestBodies/exportRequestBody'
+      responses:
+        '200':
+          description: The exported agents with components.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResponse'
+              examples:
+                Import Response:
+                  $ref: '#/components/examples/ExportResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Exports the agents by IDs.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Import/Export
+  '/ai-service/{tenant}/agentic/agents/import':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Importing agents
+      operationId: POST-ai-import-agents
+      requestBody:
+        $ref: '#/components/requestBodies/importRequestBody'
+      responses:
+        '200':
+          description: A single agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+              examples:
+                Import Response:
+                  $ref: '#/components/examples/ImportResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Imports the agents from the base64 encoded data.
+      security:
+        - OAuth2:
+            - ai.agent_manage
+      tags:
+        - Import/Export
+  '/ai-service/{tenant}/agentic/logs/requests':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing agent requests
+      operationId: GET-ai-list-requests
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_agent_requests'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves agent requests based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Logs
+  '/ai-service/{tenant}/agentic/logs/requests/{requestId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: requestId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+      summary: Retrieving agent request by ID
+      operationId: GET-ai-retrieve-request
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_agent_request'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves the agent request by given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Logs
+  '/ai-service/{tenant}/agentic/logs/requests/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching agent requests
+      operationId: POST-ai-search-requests
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_agent_requests'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for agent requests based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Logs
+  '/ai-service/{tenant}/agentic/logs/sessions':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/qParam'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/pageNumber'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/fields'
+      - $ref: '#/components/parameters/header_xTotalCount'
+    get:
+      summary: Listing agent sessions
+      operationId: GET-ai-list-sessions
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_agent_sessions'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Retrieves agent sessions based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Logs
+  '/ai-service/{tenant}/agentic/logs/sessions/{sessionId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - schema:
+          type: string
+        name: sessionId
+        in: path
+        required: true
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fields'
+      summary: Retrieving agent session by ID
+      operationId: GET-ai-retrieve-session
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_agent_session'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+        '404':
+          $ref: '#/components/responses/404_resp_common'
+      description: |-
+        Retrieves the agent session by given ID.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Logs
+  '/ai-service/{tenant}/agentic/logs/sessions/search':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/header_xTotalCount'
+      summary: Searching agent sessions
+      operationId: POST-ai-search-sessions
+      responses:
+        '200':
+          $ref: '#/components/responses/200_resp_GET_agent_sessions'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      requestBody:
+        $ref: '#/components/requestBodies/QParamSearchBody'
+      description: |-
+        Searches for agent sessions based on the provided query.
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Logs
+  '/ai-service/{tenant}/agentic/analytics':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving agent analytics bundle for last four weeks
+      operationId: GET-ai-agentic-analytics
+      parameters:
+        - name: agentId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: |
+            When set, metrics are scoped to this agent. When omitted, tenant-wide aggregates are returned.
+      responses:
+        '200':
+          description: Aggregated request and session metrics, resolution efficiency, and weekly trends.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentAnalyticsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Returns a single bundle of analytics for dashboards: request and session aggregates (including severity breakdowns), resolution efficiency, and per-week session error trends.
+
+        ### Required scopes
+
+        * `ai.agent_read`
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Analytics
+  '/ai-service/{tenant}/agentic/analytics/executions':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving per-agent execution counts by period
+      operationId: GET-ai-agentic-analytics-executions
+      parameters:
+        - name: agentIds
+          in: query
+          required: true
+          schema:
+            type: string
+          description: |
+            Comma-separated list of agent IDs (no spaces). Maximum 100 IDs.
+        - name: granularity
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - QUARTER
+              - MONTH
+              - WEEK
+            default: QUARTER
+          description: Time bucket for each period (UTC).
+      responses:
+        '200':
+          description: Per-agent execution counts aligned to the returned periods.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionsResponse'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_resp_common'
+      description: |-
+        Returns execution (session) counts per agent for each calendar period (quarter, month, or week).
+
+        ### Required scopes
+
+        * `ai.agent_read`
+      security:
+        - OAuth2:
+            - ai.agent_read
+      tags:
+        - Agent Analytics
+components:
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        code:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        moreInfo:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              type:
+                type: string
+              message:
+                type: string
+              moreInfo:
+                type: string
+      description: ''
+    ErrorMessageFault:
+      type: object
+      properties:
+        fault:
+          type: object
+          properties:
+            faultstring:
+              type: string
+            detail:
+              type: object
+              properties:
+                errorcode:
+                  type: string
+    AgenticRequest:
+      type: object
+      properties:
+        agentId:
+          type: string
+          description: Unique identifier of the agent.
+        message:
+          type: string
+          description: The user message to the agent.
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              attachmentId:
+                type: string
+                description: Id of the attachment.
+              caption:
+                type: string
+                description: Caption of the attachment.
+              purpose:
+                type: string
+                description: Purpose of the attachment.
+            required:
+              - attachmentId
+      required:
+        - agentId
+        - message
+    AgentType:
+      type: string
+      description: Type of the agent handling the request.
+      enum:
+        - generic
+        - complaint
+        - anti_fraud
+    TextGenerationRequest:
+      title: TextGenerationRequest
+      type: object
+      description: Represents a request body for a text generation operation.
+      required:
+        - prompt
+      properties:
+        id:
+          type: string
+          description: Identifier of the request. The value is not mandatory - if provided, the ID is returned in the text generation response.
+        prompt:
+          type: string
+          description: A prompt to AI engine. A desired text content is generated based on the prompt.
+        maxTokens:
+          type: integer
+          description: Maximum number of tokens that should be used during text generation. If not provided, then 4097 is used.
+    IdResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifier of the resource.
+
+    # Tokens:
+    ExpandedTokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/IdResponse'
+        - type: object
+          properties:
+            name:
+              type: string
+              description: Name of the token.
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    ExpandableTokenResponse:
+      oneOf:
+        - $ref: '#/components/schemas/IdResponse'
+        - $ref: '#/components/schemas/ExpandedTokenResponse'
+      description: The full response representing token. If the `expand=token` is **not** used, then only `id` field is returned, otherwise all fields are returned.
+
+    # Native Tools:
+    NativeToolType:
+      type: string
+      enum: [ slack, rag_custom, rag_emporix, teams ]
+      description: |-
+        Type of the native tool. Possible values:
+        * `slack`
+        * `rag_custom`
+        * `rag_emporix`
+        * `teams`
+
+          **The `teams` value is in preview mode** - some of the features may not be fully operational yet.
+          Slack fields `defaultInboundAgentId` and `allowedOperations` are in preview.
+    BaseNativeTool:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/NativeToolType'
+        name:
+          type: string
+          description: Name of the tool.
+        enabled:
+          type: boolean
+          description: An indicator whether the tool is enabled.
+          default: false
+      required:
+        - type
+        - name
+    RagCustomEmbeddingNativeToolConfig:
+      type: object
+      properties:
+        model:
+          type: string
+          description: Name of the OpenAI LLM model which should be used to create embedding of user's input in order to perform search operation.
+      required:
+        - model
+    RagCustomEmbeddingNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/RagCustomEmbeddingNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/IdWrapperRequest'
+          required:
+            - token
+    RagCustomEmbeddingNativeToolConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/RagCustomEmbeddingNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+    RagCustomDatabaseType:
+      type: string
+      enum: [ qdrant ]
+      description: Type of the database.
+    RagEntityType:
+      type: string
+      enum: [ product ]
+      description: Type of the entity which is stored in the given collection.
+    RagCustomDatabaseNativeToolConfig:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL of the database.
+        type:
+          allOf:
+            - $ref: '#/components/schemas/RagCustomDatabaseType'
+        entityType:
+          allOf:
+            - $ref: '#/components/schemas/RagEntityType'
+        collectionName:
+          type: string
+          description: Name of the database collection.
+      required:
+        - url
+        - type
+        - entityType
+        - collectionName
+    RagCustomDatabaseNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/RagCustomDatabaseNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/IdWrapperRequest'
+          required:
+            - token
+    RagCustomDatabaseNativeToolConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/RagCustomDatabaseNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+    RagCustomNativeToolConfig:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: The prompt for an agent. It should define when and why this tool is to be called.
+        maxResults:
+          type: integer
+          default: 5
+          description: The maximum number of results found in the Vector Database.
+      required:
+        - prompt
+    RagCustomNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/RagCustomNativeToolConfig'
+        - type: object
+          properties:
+            databaseConfig:
+              $ref: '#/components/schemas/RagCustomDatabaseNativeToolConfigRequest'
+            embeddingConfig:
+              $ref: '#/components/schemas/RagCustomEmbeddingNativeToolConfigRequest'
+          required:
+            - databaseConfig
+            - embeddingConfig
+    RagCustomNativeToolConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/RagCustomNativeToolConfig'
+        - type: object
+          properties:
+            databaseConfig:
+              $ref: '#/components/schemas/RagCustomDatabaseNativeToolConfigResponse'
+            embeddingConfig:
+              $ref: '#/components/schemas/RagCustomEmbeddingNativeToolConfigResponse'
+
+    RagLlmProvider:
+      type: string
+      enum: [ emporix_openai, openai, self_hosted_ollama ]
+    EmporixOpenAiRagEmporixEmbeddingNativeToolConfig:
+      type: object
+      properties:
+        provider:
+          allOf:
+            - $ref: '#/components/schemas/RagLlmProvider'
+          description: For this type, it should be set to 'emporix_openai'.
+      required:
+        - provider
+    OpenAiRagEmporixEmbeddingNativeToolConfig:
+      type: object
+      properties:
+        provider:
+          allOf:
+            - $ref: '#/components/schemas/RagLlmProvider'
+          description: For this type, it should be set to 'emporix_openai'.
+        model:
+          type: string
+          description: OpenAI LLM model to be used for generating embeddings for indexed products and user's input query.
+        dimensions:
+          type: integer
+          description: Number of dimensions of embedding.
+          minimum: 128
+          maximum: 4096
+      required:
+        - provider
+        - model
+        - dimensions
+    OpenAiRagEmporixEmbeddingNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/OpenAiRagEmporixEmbeddingNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/IdWrapperRequest'
+          required:
+            - token
+    OpenAiRagEmporixEmbeddingNativeToolConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/OpenAiRagEmporixEmbeddingNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+    SelfHostedOllamaRagEmporixEmbeddingNativeToolConfig:
+      type: object
+      properties:
+        provider:
+          allOf:
+            - $ref: '#/components/schemas/RagLlmProvider'
+          description: For this type, it should be set to 'self_hosted_ollama'.
+        model:
+          type: string
+          description: Ollama LLM model to be used for generating embeddings for indexed products and user's input query.
+        dimensions:
+          type: integer
+          description: Number of dimensions of embedding.
+          minimum: 128
+          maximum: 4096
+        url:
+          type: string
+          description: Base URL where Ollama is hosted.
+      required:
+        - provider
+        - model
+        - dimensions
+        - url
+    SelfHostedOllamaRagEmporixEmbeddingNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/SelfHostedOllamaRagEmporixEmbeddingNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/IdWrapperRequest'
+          required:
+            - token
+    SelfHostedOllamaRagEmporixEmbeddingNativeToolConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/SelfHostedOllamaRagEmporixEmbeddingNativeToolConfig'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+    RagEmporixNativeToolConfig:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: The prompt for an agent. It should define when and why this tool is to be called.
+        entityType:
+          type: string
+          description: "Type of the entity which is stored in the given collection. Supported predefined types: [ORDER, PRODUCT] and custom entity types."
+        indexedFields:
+          type: array
+          description: This field specifies the fields of the given entityType that are used for generating embeddings. The provided values are then concatenated and converted to embeddings.
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: It can act as an alias for the field key. For example, if the 'name.en' key is provided then its alias could be 'English Name' and that value is used in embedding input.
+              key:
+                type: string
+                description: Unique value representing the entityType key.
+            required:
+              - key
+        filterFields:
+          type: array
+          description: This field specifies the fields of the given entityType that are used for filtering the data before performing actual search.
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+                description: It should contain the description of the field, so LLM is able to know when to use this field in order to filter the data. For enums, possible values should be specified here.
+              key:
+                type: string
+                description: Unique value representing the entityType key.
+            required:
+              - key
+      required:
+        - prompt
+        - entityType
+        - indexedFields
+    RagEmporixNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/RagEmporixNativeToolConfig'
+        - type: object
+          properties:
+            embeddingConfig:
+              oneOf:
+                - $ref: '#/components/schemas/EmporixOpenAiRagEmporixEmbeddingNativeToolConfig'
+                - $ref: '#/components/schemas/OpenAiRagEmporixEmbeddingNativeToolConfigRequest'
+                - $ref: '#/components/schemas/SelfHostedOllamaRagEmporixEmbeddingNativeToolConfigRequest'
+          required:
+            - embeddingConfig
+    RagEmporixNativeToolConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/RagEmporixNativeToolConfig'
+        - type: object
+          properties:
+            embeddingConfig:
+              oneOf:
+                - $ref: '#/components/schemas/EmporixOpenAiRagEmporixEmbeddingNativeToolConfig'
+                - $ref: '#/components/schemas/OpenAiRagEmporixEmbeddingNativeToolConfigResponse'
+                - $ref: '#/components/schemas/SelfHostedOllamaRagEmporixEmbeddingNativeToolConfigResponse'
+
+    SlackAllowedOperations:
+      type: string
+      enum:
+        - sendMessage
+        - createChannel
+        - inviteParticipants
+        - collaborateOnChannel
+      description: |-
+        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Slack native tool operation identifier.
+    SlackNativeToolConfigResponse:
+      type: object
+      description: |-
+        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Configuration of a Slack native tool instance. Fields `defaultInboundAgentId` and `allowedOperations` are in preview.
+      properties:
+        teamId:
+          type: string
+          description: Unique identifier of the Slack workspace (team) associated with the request. Used to distinguish the source Slack environment when handling events or API calls.
+        defaultInboundAgentId:
+          type: string
+          description: Agent ID that handles inbound Slack replies when no conversation-specific routing context exists yet. This field is in preview.
+        allowedOperations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlackAllowedOperations'
+          description: Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled. This field is in preview.
+      required:
+        - teamId
+    SlackNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/SlackNativeToolConfigResponse'
+        - type: object
+          properties:
+            botToken:
+              type: string
+              description: OAuth token used to authenticate the Slack bot within the specified workspace. Required for performing authorized actions on behalf of the bot. Format usually starts with `xoxb-...`. It is required only for creation, for update operation it can be omitted.
+          required:
+            - botToken
+    SlackNativeToolRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            type:
+              description: For SlackNativeTool it has to be set to `slack`.
+              example: slack
+            config:
+              $ref: '#/components/schemas/SlackNativeToolConfigRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - config
+    SlackNativeToolResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the tool.
+            type:
+              description: For SlackNativeTool it has to be set to `slack`.
+              example: slack
+            config:
+              $ref: '#/components/schemas/SlackNativeToolConfigResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    TeamsAllowedOperations:
+      type: string
+      enum:
+        - sendMessage
+        - createChat
+        - createChannel
+        - inviteParticipants
+        - collaborateOnChannel
+        - collaborateOnChat
+      description: MS Teams native tool operation identifier.
+    TeamsNativeToolConfigResponse:
+      type: object
+      description: |-
+        Configuration of an MS Teams native tool instance.
+
+        **The MS Teams native tool configuration is in preview mode** - some of the features may not be fully operational yet.
+      properties:
+        teamId:
+          type: string
+          description: Microsoft Teams team ID the tool is bound to.
+        tenantId:
+          type: string
+          description: Customer Azure AD tenant ID for the Teams workspace.
+        defaultInboundAgentId:
+          type: string
+          description: Agent ID that handles inbound Teams replies when no conversation-specific owner is set.
+        allowedOperations:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamsAllowedOperations'
+          description: Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled.
+      required:
+        - teamId
+    TeamsNativeToolConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/TeamsNativeToolConfigResponse'
+    TeamsNativeToolRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            type:
+              description: For TeamsNativeTool it has to be set to `teams`.
+              example: teams
+            config:
+              $ref: '#/components/schemas/TeamsNativeToolConfigRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - config
+    TeamsNativeToolResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the tool.
+            type:
+              description: For TeamsNativeTool it has to be set to `teams`.
+              example: teams
+            config:
+              $ref: '#/components/schemas/TeamsNativeToolConfigResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    RagCustomNativeToolRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            type:
+              description: For `RagCustomNativeTool`, it has to be set to `rag_custom`.
+              example: rag_custom
+            config:
+              $ref: '#/components/schemas/RagCustomNativeToolConfigRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - config
+    RagCustomNativeToolResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the tool.
+            type:
+              description: For `RagCustomNativeTool`, it has to be set to `rag_custom`.
+              example: rag_custom
+            config:
+              $ref: '#/components/schemas/RagCustomNativeToolConfigResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    RagEmporixNativeToolRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            type:
+              description: For `RagEmporixNativeTool`, it has to be set to `rag_emporix`.
+              example: rag_emporix
+            config:
+              $ref: '#/components/schemas/RagEmporixNativeToolConfigRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - config
+    RagEmporixNativeToolResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the tool.
+            type:
+              description: For `RagEmporixNativeTool`, it has to be set to `rag_emporix`.
+              example: rag_emporix
+            config:
+              $ref: '#/components/schemas/RagEmporixNativeToolConfigResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    NativeToolsResponse:
+      type: array
+      description: List of native tools which agents should have access to.
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/SlackNativeToolResponse'
+          - $ref: '#/components/schemas/RagCustomNativeToolResponse'
+          - $ref: '#/components/schemas/RagEmporixNativeToolResponse'
+          - $ref: '#/components/schemas/TeamsNativeToolResponse'
+
+    ConversationResponse:
+      type: object
+      description: Represents an active agent conversation context (MS Teams channel or group chat).
+      properties:
+        conversationId:
+          type: string
+          description: Provider-side conversation identifier (Teams conversation ID).
+        conversationName:
+          type: string
+          description: Human-readable name of the conversation channel or group chat.
+        contextRef:
+          type: string
+          description: Caller-supplied reference key used to reuse an existing conversation.
+        channelId:
+          type: string
+          description: Teams channel or chat identifier.
+        agentId:
+          type: string
+          description: Identifier of the agent that owns this conversation.
+        sessionId:
+          type: string
+          description: LangGraph session (checkpointer) ID for agent continuity.
+        lastMessageAt:
+          type: string
+          format: date-time
+          description: Timestamp of the last message activity in this conversation.
+
+    # MCP Servers:
+    McpServerConfig:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL of the MCP server.
+        authorizationHeaderName:
+          type: string
+          description: Name of the header required for authorization, e.g. `Authorization`.
+      required:
+        - url
+    McpServerConfigRequest:
+      allOf:
+        - $ref: '#/components/schemas/McpServerConfig'
+        - type: object
+          properties:
+            authorizationHeaderToken:
+              $ref: '#/components/schemas/IdWrapperRequest'
+    McpServerConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/McpServerConfig'
+        - type: object
+          properties:
+            authorizationHeaderToken:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+    BaseManagedMcpServer:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the MCP server.
+        enabled:
+          type: boolean
+          description: An indicator whether the MCP server is enabled.
+          default: false
+        transport:
+          $ref: '#/components/schemas/CustomMcpServerTransportType'
+    ManagedMcpServerType:
+      type: string
+      enum: [ custom, dynamic ]
+      description: |-
+        Type of the managed MCP server resource. Possible values:
+        * `custom`
+        * `dynamic`
+
+          **The `dynamic` value is in preview mode** - some of the features may not be fully operational yet.
+    McpToolInvocationMethod:
+      type: string
+      enum: [ GET, POST, PUT, PATCH, DELETE ]
+      description: HTTP method used to invoke the Automation function.
+    McpToolInvocationArgsLocation:
+      type: string
+      enum: [ body, query ]
+      description: Location of the tool arguments in the HTTP request. Defaults to `body` when omitted.
+    McpToolInvocationRequest:
+      type: object
+      properties:
+        functionId:
+          type: string
+          description: Identifier of the Automation function to invoke when the tool is called.
+        method:
+          $ref: '#/components/schemas/McpToolInvocationMethod'
+        argsLocation:
+          $ref: '#/components/schemas/McpToolInvocationArgsLocation'
+      required:
+        - functionId
+        - method
+    McpToolInvocationResponse:
+      type: object
+      properties:
+        functionId:
+          type: string
+          description: Identifier of the Automation function to invoke when the tool is called.
+        method:
+          $ref: '#/components/schemas/McpToolInvocationMethod'
+        argsLocation:
+          $ref: '#/components/schemas/McpToolInvocationArgsLocation'
+    McpToolConfigRequest:
+      type: object
+      properties:
+        requiredScopes:
+          type: array
+          description: OAuth scopes required to invoke the tool.
+          items:
+            type: string
+        inputSchema:
+          type: string
+          description: JSON Schema document describing the tool input, provided as a JSON string.
+        invocation:
+          $ref: '#/components/schemas/McpToolInvocationRequest'
+      required:
+        - inputSchema
+        - invocation
+    McpToolConfigResponse:
+      type: object
+      properties:
+        requiredScopes:
+          type: array
+          description: OAuth scopes required to invoke the tool.
+          items:
+            type: string
+        inputSchema:
+          type: string
+          description: JSON Schema document describing the tool input, provided as a JSON string.
+        invocation:
+          $ref: '#/components/schemas/McpToolInvocationResponse'
+    McpToolRequest:
+      type: object
+      description: |-
+        Tool definition for a dynamic MCP server.
+
+        **Dynamic MCP tools are in preview mode** - some of the features may not be fully operational yet.
+      properties:
+        name:
+          type: string
+          description: Unique name of the tool. Must contain only letters, numbers, and underscores.
+          pattern: '^[A-Za-z0-9_]+$'
+        description:
+          type: string
+          description: Human-readable description of the tool.
+        prompt:
+          type: string
+          description: Prompt that defines when and why the agent should call this tool.
+        enabled:
+          type: boolean
+          description: An indicator whether the tool is enabled.
+          default: false
+        config:
+          $ref: '#/components/schemas/McpToolConfigRequest'
+      required:
+        - name
+        - prompt
+        - config
+    McpToolResponse:
+      type: object
+      description: |-
+        Tool definition for a dynamic MCP server.
+
+        **Dynamic MCP tools are in preview mode** - some of the features may not be fully operational yet.
+      properties:
+        name:
+          type: string
+          description: Unique name of the tool. Contains only letters, numbers, and underscores.
+        description:
+          type: string
+          description: Human-readable description of the tool.
+        prompt:
+          type: string
+          description: Prompt that defines when and why the agent should call this tool.
+        enabled:
+          type: boolean
+          description: An indicator whether the tool is enabled.
+        config:
+          $ref: '#/components/schemas/McpToolConfigResponse'
+    CustomMcpServerRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseManagedMcpServer'
+        - type: object
+          description: An object representing customer's own implementation of the MCP server.
+          properties:
+            type:
+              allOf:
+                - $ref: '#/components/schemas/ManagedMcpServerType'
+              description: For custom MCP servers it has to be set to `custom` or omitted. Defaults to `custom`.
+              example: custom
+            config:
+              $ref: '#/components/schemas/McpServerConfigRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - name
+            - transport
+            - config
+    DynamicMcpServerRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseManagedMcpServer'
+        - type: object
+          description: |-
+            Managed MCP server whose tools invoke Emporix cloud functions.
+
+            {% hint style="danger" %}
+            Hosting of cloud functions and use of dynamic MCP servers is not included in standard billing plans and is billed separately on a pay-as-you-go basis. If you're interested in getting access to these features, contact the [Sales Team](mailto:support@emporix.com).
+            {% endhint %}
+          properties:
+            type:
+              allOf:
+                - $ref: '#/components/schemas/ManagedMcpServerType'
+              description: For dynamic MCP servers it has to be set to `dynamic`.
+              example: dynamic
+            tools:
+              type: array
+              description: |-
+                List of tools exposed by this MCP server.
+
+                **The `tools` field is in preview mode** - some of the features may not be fully operational yet.
+              items:
+                $ref: '#/components/schemas/McpToolRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - name
+            - type
+            - tools
+    McpServerRequest:
+      oneOf:
+        - $ref: '#/components/schemas/CustomMcpServerRequest'
+        - $ref: '#/components/schemas/DynamicMcpServerRequest'
+    CustomMcpServerResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseManagedMcpServer'
+        - type: object
+          description: An object representing customer's own implementation of the MCP server.
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the MCP server.
+            type:
+              allOf:
+                - $ref: '#/components/schemas/ManagedMcpServerType'
+              description: Type of the managed MCP server resource.
+              example: custom
+            config:
+              $ref: '#/components/schemas/McpServerConfigResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    DynamicMcpServerResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseManagedMcpServer'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the MCP server.
+            type:
+              allOf:
+                - $ref: '#/components/schemas/ManagedMcpServerType'
+              description: For dynamic MCP servers it has to be set to `dynamic`.
+              example: dynamic
+            tools:
+              type: array
+              description: |-
+                List of tools exposed by this MCP server.
+
+                **The `tools` field is in preview mode** - some of the features may not be fully operational yet.
+              items:
+                $ref: '#/components/schemas/McpToolResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    McpServerResponse:
+      oneOf:
+        - $ref: '#/components/schemas/CustomMcpServerResponse'
+        - $ref: '#/components/schemas/DynamicMcpServerResponse'
+    CommerceEventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          description: List of events available to use by an agent with the `COMMERCE_EVENTS` trigger.
+          items:
+            type: string
+
+    McpServerType:
+      type: string
+      enum: [ custom,predefined,dynamic ]
+      description: Type of the MCP server attachment on an agent. The `custom` type references a tenant-managed MCP server with a URL. The `predefined` type references an Emporix domain MCP server. The `dynamic` type references a tenant-managed dynamic MCP server and may include an optional tool-name allow-list.
+    CustomMcpServerTransportType:
+      type: string
+      enum:
+        - streamable_http
+        - sse
+      description: Type of the communication between the agent and the MCP server. The `streamable_http` protocol is recommended, since the `sse` protocol is deprecated.
+    BaseAgentMcpServer:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/McpServerType'
+      required:
+        - type
+    PredefinedAgentMcpServer:
+      allOf:
+        - $ref: '#/components/schemas/BaseAgentMcpServer'
+        - type: object
+          properties:
+            type:
+              description: For the `PredefinedMcpServer` it has to be set to `predefined`.
+              example: predefined
+            domain:
+              enum: [ customer,extensibility,order,product,frontend ]
+            tools:
+              type: array
+              description: List of the tools which should be used by the agent from this particular MCP server.
+              items:
+                type: string
+    CustomAgentMcpServerRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseAgentMcpServer'
+        - type: object
+          properties:
+            type:
+              description: For `CustomMcpServer` it has to be set to `custom`.
+              example: custom
+            mcpServer:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ID of the MCP server.
+              required:
+                - id
+          required:
+            - mcpServer
+    DynamicAgentMcpServerRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseAgentMcpServer'
+        - type: object
+          properties:
+            type:
+              description: For a dynamic MCP server attachment it has to be set to `dynamic`.
+              example: dynamic
+            mcpServer:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ID of the dynamic MCP server.
+              required:
+                - id
+            tools:
+              type: array
+              description: Optional allow-list of tool names from the dynamic MCP server.
+              items:
+                type: string
+          required:
+            - mcpServer
+    AgentMcpServerResponse:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/McpServerType'
+        mcpServer:
+          allOf:
+            - $ref: '#/components/schemas/McpServerResponse'
+            - description: Present for `custom` and `dynamic` attachments. If `expand=mcpServer` is **not** used, then only the `id` field is returned, otherwise all fields are returned.
+        domain:
+          enum: [ customer,extensibility,order,product,frontend ]
+          description: Present for `predefined` attachments.
+        tools:
+          type: array
+          description: Tool-name allow-list. Present for `predefined` attachments and for `dynamic` attachments when a subset is configured. Omitted on `dynamic` means all enabled tools on the MCP server.
+          items:
+            type: string
+    AgentMcpServersRequest:
+      type: array
+      description: List of MCP servers which agents should have access to.
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/CustomAgentMcpServerRequest'
+          - $ref: '#/components/schemas/DynamicAgentMcpServerRequest'
+          - $ref: '#/components/schemas/PredefinedAgentMcpServer'
+    AgentMcpServersResponse:
+      type: array
+      description: List of MCP servers which agents should have access to.
+      items:
+        $ref: '#/components/schemas/AgentMcpServerResponse'
+
+    # LLM Config:
+    BaseLlm:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The exact name of the model.
+          example: gpt-4.1-mini
+        temperature:
+          type: number
+          format: float
+          description: Value between 0.1 and 1.0 (inclusive), in steps of 0.1. The lower value the more creative (but less stable) the model is.
+          enum: [ 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ]
+          example: 0.7
+        maxTokens:
+          type: integer
+          description: The limit of tokens which agent can burn during one request session.
+          example: 1000
+      required:
+        - model
+    EmporixLlm:
+      allOf:
+        - $ref: '#/components/schemas/BaseLlm'
+        - type: object
+          properties:
+            provider:
+              type: string
+              description: Type of the LLM Provider. The `emporix_openai` allows using the OpenAI token provided by Emporix. The token usage is limited. When using this provider `apiKey` property can be omitted.
+              enum: [ emporix_openai ]
+              example: emporix_openai
+          required:
+            - provider
+
+    SelfHostedParams:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Url of the self-hosted LLM.
+        authorizationHeaderName:
+          type: string
+          description: Name of the header required for authorization e.g. `Authorization`.
+      required:
+        - url
+    SelfHostedParamsRequest:
+      allOf:
+        - $ref: '#/components/schemas/SelfHostedParams'
+        - type: object
+        - properties:
+            authorizationHeaderToken:
+              $ref: '#/components/schemas/IdWrapperRequest'
+            oauth:
+              $ref: '#/components/schemas/IdWrapperRequest'
+    SelfHostedParamsResponse:
+      allOf:
+        - $ref: '#/components/schemas/SelfHostedParams'
+        - type: object
+          properties:
+            authorizationHeaderToken:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+            oauth:
+              $ref: '#/components/schemas/ExpandableOAuthResponse'
+    SelfHostedLlm:
+      allOf:
+        - $ref: '#/components/schemas/BaseLlm'
+        - type: object
+          properties:
+            provider:
+              type: string
+              description: Type of the LLM Provider. The self-hosted LLM allows you to provide your own LLMs. When using this providers, the `selfHostedParams.url` property cannot be omitted.
+              enum: [ self_hosted_ollama, self_hosted_vllm ]
+              example: self_hosted_ollama
+            baseProvider:
+              type: string
+              description: Optional. Indicates which cloud LLM provider API the self-hosted endpoint is compatible with (OPENAI, GOOGLE, or ANTHROPIC). Applies when provider is self_hosted_ollama or self_hosted_vllm. Used to select the correct request/response conventions for that backend. Ignored for non–self-hosted providers.
+              enum: [ ANTHROPIC, GOOGLE, OPENAI ]
+              example: OPENAI
+          required:
+            - provider
+    SelfHostedLlmRequest:
+      allOf:
+        - $ref: '#/components/schemas/SelfHostedLlm'
+        - type: object
+          properties:
+            selfHostedParams:
+              $ref: '#/components/schemas/SelfHostedParamsRequest'
+          required:
+            - selfHostedParams
+    SelfHostedLlmResponse:
+      allOf:
+        - $ref: '#/components/schemas/SelfHostedLlm'
+        - type: object
+          properties:
+            selfHostedParams:
+              $ref: '#/components/schemas/SelfHostedParamsResponse'
+    ApiKeyLlmProvider:
+      type: string
+      description: Type of the LLM Provider. The supported providers allows you to provide your own API key. When using this providers, the `apiKey` property cannot be omitted.
+      enum:
+        - openai
+        - google
+        - anthropic
+      example: openai
+    ModelResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Model identifier to use in agent LLM configuration.
+          example: gpt-4.1-mini
+        name:
+          type: string
+          description: Display name of the model.
+          example: gpt-4.1-mini
+        description:
+          type: string
+          description: Short description of the model. Available for some providers, such as Google.
+          example: Gemini 3.1 Flash Lite
+        thinking:
+          type: boolean
+          description: Indicates whether the model supports thinking capabilities.
+          example: true
+      required:
+        - id
+        - name
+    ProviderModelsResponse:
+      type: object
+      properties:
+        provider:
+          $ref: '#/components/schemas/ApiKeyLlmProvider'
+        models:
+          type: array
+          description: List of models available for the provider.
+          items:
+            $ref: '#/components/schemas/ModelResponse'
+      required:
+        - provider
+        - models
+    ApiKeyLlm:
+      allOf:
+        - $ref: '#/components/schemas/BaseLlm'
+        - type: object
+          properties:
+            provider:
+              $ref: '#/components/schemas/ApiKeyLlmProvider'
+          required:
+            - provider
+    ApiKeyLlmRequest:
+      allOf:
+        - $ref: '#/components/schemas/ApiKeyLlm'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/IdWrapperRequest'
+          required:
+            - token
+    ApiKeyLlmResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiKeyLlm'
+        - type: object
+          properties:
+            token:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+
+    ## OAuth:
+    OAuth:
+      type: object
+      description: OAuth 2.0 client-credentials settings for authenticating with a self-hosted LLM backend.
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Token endpoint URL of the OAuth 2.0 authorization server used to request an access token.
+        clientId:
+          type: string
+          description: OAuth 2.0 client identifier registered with the authorization server.
+        grantType:
+          type: string
+          description: OAuth 2.0 grant type used to obtain an access token. Currently only `client_credentials` is supported.
+          enum: [ client_credentials ]
+        scope:
+          type: string
+          description: Optional space-separated list of scopes to request for the access token.
+        enabled:
+          type: boolean
+          description: Indicates whether the OAuth configuration is enabled.
+          example: true
+      required:
+        - url
+        - clientId
+        - grantType
+    OAuthRequest:
+      allOf:
+        - $ref: '#/components/schemas/OAuth'
+        - type: object
+          properties:
+            clientSecretToken:
+              $ref: '#/components/schemas/IdWrapperRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+    OAuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/OAuth'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the entity.
+            clientSecretToken:
+              $ref: '#/components/schemas/ExpandableTokenResponse'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    ExpandableOAuthResponse:
+      oneOf:
+        - $ref: '#/components/schemas/IdResponse'
+        - $ref: '#/components/schemas/OAuthResponse'
+      description: The full response representing OAuth. If the `expand=oauth` is **not** used, then only `id` field is returned, otherwise all fields are returned.
+
+    ## Token:
+    BaseToken:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the token.
+      required:
+        - name
+    TokenRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseToken'
+        - type: object
+          properties:
+            value:
+              type: string
+              description: Value which represents token.
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - value
+    TokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseToken'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the token.
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+
+    IdWrapperRequest:
+      type: object
+      properties:
+        id:
+          type: string
+      required:
+        - id
+    NativeToolReferenceRequest:
+      type: object
+      description: Reference to a native tool assigned to an agent.
+      properties:
+        id:
+          type: string
+          description: Identifier of the native tool.
+        allowedOperations:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TeamsAllowedOperations'
+              - $ref: '#/components/schemas/SlackAllowedOperations'
+          description: |-
+            Optional per-agent override of allowed native tool operations. When omitted, the tool instance defaults apply. Supported for MS Teams and Slack (preview).
+
+            **The `allowedOperations` field is in preview mode** - some of the features may not be fully operational yet.
+      required:
+        - id
+
+    AgentCollaborations:
+      type: array
+      description: List of agent collaborations which allows an agent to hand off its task to other agents.
+      items:
+        type: object
+        properties:
+          agentId:
+            type: string
+            description: Identifier of the agent.
+          description:
+            type: string
+            description: Description of the agent collaboration.
+
+    TriggerType:
+      type: string
+      enum:
+        - endpoint
+        - slack
+        - teams
+      description: Type of the trigger. When `slack` or `teams` is selected, the agent must have exactly one matching enabled Slack or Teams native tool assigned.
+    CommerceEventsTriggerType:
+      type: string
+      enum:
+        - commerce_events
+      description: Type of the trigger.
+    CommerceEventTriggerFilterLogicalOperator:
+      type: string
+      enum:
+        - $and
+        - $or
+      description: Logical operator used to combine multiple filter conditions.
+    CommerceEventTriggerFilterScalarValue:
+      description: Scalar value used in commerce event filter comparisons.
+      oneOf:
+        - type: string
+        - type: number
+        - type: boolean
+    CommerceEventTriggerFilterScalarArrayValue:
+      type: array
+      description: Array value used by list-based operators in commerce event filters.
+      items:
+        $ref: '#/components/schemas/CommerceEventTriggerFilterScalarValue'
+      minItems: 1
+    CommerceEventTriggerLeafFilterNoRight:
+      type: object
+      description: Filter condition for unary operators that do not accept `right`.
+      example:
+        left: payload.customer.id
+        op: $exists
+      properties:
+        left:
+          type: string
+          description: Dot-notation path to a field in the commerce event payload.
+        op:
+          type: string
+          enum:
+            - $exists
+            - $notExists
+            - $isEmpty
+            - $notEmpty
+      required:
+        - left
+        - op
+      additionalProperties: false
+    CommerceEventTriggerLeafFilterScalarRight:
+      type: object
+      description: Filter condition for scalar comparison operators.
+      example:
+        left: payload.order.totalPrice
+        op: $eq
+        right: 99.99
+      properties:
+        left:
+          type: string
+          description: Dot-notation path to a field in the commerce event payload.
+        op:
+          type: string
+          enum:
+            - $eq
+            - $ne
+        right:
+          $ref: '#/components/schemas/CommerceEventTriggerFilterScalarValue'
+      required:
+        - left
+        - op
+        - right
+      additionalProperties: false
+    CommerceEventTriggerLeafFilterArrayRight:
+      type: object
+      description: Filter condition for array membership operators.
+      example:
+        left: payload.order.currency
+        op: $in
+        right:
+          - USD
+          - EUR
+      properties:
+        left:
+          type: string
+          description: Dot-notation path to a field in the commerce event payload.
+        op:
+          type: string
+          enum:
+            - $in
+            - $notIn
+        right:
+          $ref: '#/components/schemas/CommerceEventTriggerFilterScalarArrayValue'
+      required:
+        - left
+        - op
+        - right
+      additionalProperties: false
+    CommerceEventTriggerLeafFilter:
+      description: Filter condition applied to a single field in the commerce event payload.
+      oneOf:
+        - $ref: '#/components/schemas/CommerceEventTriggerLeafFilterNoRight'
+        - $ref: '#/components/schemas/CommerceEventTriggerLeafFilterScalarRight'
+        - $ref: '#/components/schemas/CommerceEventTriggerLeafFilterArrayRight'
+    CommerceEventTriggerCompoundFilter:
+      type: object
+      description: Filter that combines multiple conditions using logical operators.
+      example:
+        op: $and
+        conditions:
+          - left: payload.order.currency
+            op: $in
+            right:
+              - USD
+              - EUR
+          - left: payload.order.customerEmail
+            op: $notEmpty
+      properties:
+        op:
+          $ref: '#/components/schemas/CommerceEventTriggerFilterLogicalOperator'
+        conditions:
+          type: array
+          description: Nested filter conditions combined by the logical operator.
+          items:
+            $ref: '#/components/schemas/CommerceEventTriggerFilter'
+          minItems: 1
+      required:
+        - op
+        - conditions
+    CommerceEventTriggerFilter:
+      oneOf:
+        - $ref: '#/components/schemas/CommerceEventTriggerLeafFilter'
+        - $ref: '#/components/schemas/CommerceEventTriggerCompoundFilter'
+      description: Optional filter expression applied to commerce event payloads. When set, the agent is triggered only if the event payload matches the filter.
+      example:
+        op: $or
+        conditions:
+          - left: payload.eventType
+            op: $eq
+            right: order.updated
+          - left: payload.order.tags
+            op: $notEmpty
+    AgentTrigger:
+      oneOf:
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/TriggerType'
+          required:
+            - type
+        - type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/CommerceEventsTriggerType'
+            config:
+              type: object
+              description: Additional configuration for the trigger.
+              properties:
+                events:
+                  type: string
+                  description: List of events that trigger the agent.
+                filter:
+                  $ref: '#/components/schemas/CommerceEventTriggerFilter'
+              required:
+                - events
+          required:
+            - type
+            - config
+
+
+    HandOff:
+      type: boolean
+      description: Indicates whether the agent is handOff or not. HandOff agents are special types of agents which can be called by other agents through `agentCollaborations` property and their configuration is hidden.
+
+    BaseForAgentAndTemplateAndHandOff:
+      type: object
+      properties:
+        name:
+          type: object
+          description: Localized name of the agent.
+          additionalProperties:
+            type: string
+        description:
+          type: object
+          description: Description of the agent.
+          additionalProperties:
+            type: string
+    BaseForAgentAndTemplate:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentAndTemplateAndHandOff'
+        - type: object
+          properties:
+            requiredScopes:
+              type: array
+              description: |
+                Defines which caller types are allowed to execute the agent.
+                Authorization is evaluated with OR semantics: access is granted if the caller
+                matches at least one configured value.
+                If this field is missing or empty, no scope-based restriction is applied.
+
+                Matching rules:
+                - anonymous: always grants access.
+                - customer: requires scope `ai.agentexecution_manage_own`.
+                - employee: requires scope `ai.agentexecution_manage`.
+                - integration: requires scope `ai.agentexecution_manage`.
+
+                If no configured value matches, request is rejected with 403 Forbidden.
+              items:
+                type: string
+                enum:
+                  - anonymous
+                  - customer
+                  - employee
+                  - integration
+            userPrompt:
+              type: string
+              description: LLM Prompt which describes how agent should work in a detailed way, which tools it could use to solve problems etc; it can contain examples and step by step guidance.
+            icon:
+              type: string
+              description: The fa class of react icon.
+            tags:
+              type: array
+              items:
+                type: string
+                description: Markers that allow you to categorize the agent.
+            outputFormat:
+              type: string
+              description: >
+                Optional JSON Schema (provided as a JSON string) that constrains the structure
+                of the agent's generated output. Use this when you need predictable, machine-readable
+                output instead of free-form text.
+              example: '{"type":"object","properties":{"answer":{"type":"string"}},"required":["answer"]}'
+            enabled:
+              type: boolean
+              description: Indicates whether the agent is enabled.
+              default: false
+          required:
+            - name
+    BaseForAgentRequestAndResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentAndTemplate'
+        - type: object
+          properties:
+            triggers:
+              type: array
+              items:
+                $ref: '#/components/schemas/AgentTrigger'
+            agentCollaborations:
+              $ref: '#/components/schemas/AgentCollaborations'
+            maxRecursionLimit:
+              type: integer
+              description: Defines the maximum number of reasoning steps or internal calls an AI agent is allowed to perform during a single task. Helps prevent infinite loops or excessive resource usage.
+              example: 10
+              default: 20
+              minimum: 1
+              maximum: 50
+            enabledMemory:
+              type: boolean
+              description: Defines whether the session memory should be stored between different agent calls.
+              default: false
+          required:
+            - userPrompt
+            - triggers
+    AgentTemplateResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentAndTemplate'
+        - type: object
+          properties:
+            templatePrompt:
+              type: string
+              description: Immutable LLM base prompt which is concatenated with the `userPrompt`.
+            id:
+              type: string
+              description: Identifier of the agent.
+            nativeTools:
+              $ref: '#/components/schemas/NativeToolsResponse'
+            mcpServers:
+              $ref: '#/components/schemas/AgentMcpServersResponse'
+    AgentRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentRequestAndResponse'
+        - type: object
+          properties:
+            nativeTools:
+              type: array
+              items:
+                $ref: '#/components/schemas/NativeToolReferenceRequest'
+              description: Native tools assigned to the agent, optionally with per-agent `allowedOperations` overrides.
+            llmConfig:
+              oneOf:
+                - $ref: '#/components/schemas/EmporixLlm'
+                - $ref: '#/components/schemas/ApiKeyLlmRequest'
+                - $ref: '#/components/schemas/SelfHostedLlmRequest'
+            mcpServers:
+              $ref: '#/components/schemas/AgentMcpServersRequest'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - llmConfig
+            - mcpServers
+    AgentResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentRequestAndResponse'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Identifier of the agent.
+            nativeTools:
+              $ref: '#/components/schemas/NativeToolsResponse'
+            llmConfig:
+              oneOf:
+                - $ref: '#/components/schemas/EmporixLlm'
+                - $ref: '#/components/schemas/ApiKeyLlmResponse'
+                - $ref: '#/components/schemas/SelfHostedLlmResponse'
+            mcpServers:
+              $ref: '#/components/schemas/AgentMcpServersResponse'
+            handOff:
+              allOf:
+                - $ref: '#/components/schemas/HandOff'
+              example: false
+            type:
+              $ref: '#/components/schemas/AgentType'
+            templatePrompt:
+              type: string
+              description: Prompt which is inherited from the template (if agent is created based on the template). The prompt provided by the user is then concatenated with this prompt.
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
+    MetadataRequest:
+      type: object
+      properties:
+        version:
+          minimum: 1
+          type: integer
+          description: Version of the object. The version is required during the update operation because of the optimistic locking mechanism.
+      required:
+        - version
+    MetadataResponse:
+      allOf:
+        - $ref: '#/components/schemas/MetadataRequest'
+        - type: object
+          properties:
+            createdAt:
+              description: 'Date and time when the object was created. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              type: string
+            modifiedAt:
+              description: 'Date and time when the object was last modified. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              type: string
+          required:
+            - version
+            - createdAt
+            - modifiedAt
+
+    # Jobs:
+    JobStatus:
+      type: string
+      enum: [ in_progress,success,failure,skipped ]
+      description: Status of the job.
+    JobType:
+      type: string
+      enum: [ IMPORT,EXPORT,AGENT_CHAT ]
+      description: Type of the job.
+    Job:
+      type: object
+      description: Contains information about the job result - whether it was successful or not, what was the agent output etc.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the job.
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        type:
+          $ref: '#/components/schemas/JobType'
+        exportResult:
+          $ref: '#/components/schemas/ExportResult'
+        importResult:
+          $ref: '#/components/schemas/ImportResult'
+        sessionId:
+          type: string
+          description: Unique identifier of the session.
+        agentId:
+          type: string
+          description: Unique identifier of the agent.
+        message:
+          type: string
+          description: Agent message.
+        commerceEvent:
+          type: string
+          description: Commerce event which triggered the job.
+        metadata:
+          $ref: '#/components/schemas/MetadataResponse'
+    ImportResult:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Short summary of the import.
+        summary:
+          type: object
+          description: Summary of the import.
+          properties:
+            agents:
+              type: array
+              items:
+                $ref: '#/components/schemas/ImportedEntity'
+            tools:
+              type: array
+              items:
+                $ref: '#/components/schemas/ImportedEntity'
+            mcpServers:
+              type: array
+              items:
+                $ref: '#/components/schemas/ImportedEntity'
+    ExportResult:
+      type: object
+      properties:
+        data:
+          type: string
+          description: The base64 encoded JSON value of the exported agents with related tools and MCP servers.
+        checksum:
+          type: string
+          description: Checksum calculated based on JSON value. Validates if importing JSON is exactly the same as the exported one.
+    ImportedEntity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the imported entity.
+        name:
+          type: string
+          description: Name of the imported entity.
+        state:
+          type: string
+          description: State of the imported entity.
+          enum:
+            - TO_CREATE
+            - ENABLED
+            - DISABLED
+            - EXISTS
+            - FAILED
+        details:
+          type: array
+          description: Reasons the entity was skipped, disabled, or failed during import.
+          items:
+            $ref: '#/components/schemas/ImportDetails'
+    ImportDetails:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Machine-readable reason code for UI localization.
+          enum:
+            - MISSING_FUNCTION
+            - MISSING_TOKEN
+            - NOT_IMPORTABLE
+            - ALREADY_EXISTS
+            - AGENT_IMPORTED_DISABLED
+            - IMPORT_FAILED
+        objectId:
+          type: string
+          description: ID of the related object, such as a function ID or token ID.
+        objectName:
+          type: string
+          description: Display name of the related object, such as a tool name.
+        message:
+          type: string
+          description: English fallback message when a localized string is not available.
+    JobIdResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: Identifier of the job.
+    ChatResponse:
+      type: object
+      properties:
+        agentId:
+          type: string
+          description: Unique identifier of the agent.
+        agentType:
+          $ref: '#/components/schemas/AgentType'
+        sessionId:
+          type: string
+          description: Unique identifier of the session.
+        message:
+          type: string
+          description: Agent message.
+    AttachmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the created attachment.
+        sessionId:
+          type: string
+          description: Unique identifier of the session. The same sessionId must be used when calling chat endpoints to ensure the correct attachment is found.
+
+    # Agent Logs:
+    LogSeverity:
+      type: string
+      enum:
+        - INFO
+        - WARNING
+        - ERROR
+      description: Severity level of the log entry.
+    AgentLogMessageResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the log message was created.
+        severity:
+          $ref: '#/components/schemas/LogSeverity'
+        message:
+          type: string
+          description: The log message content.
+        agentId:
+          type: string
+          description: Unique identifier of the agent that generated the log.
+        requestId:
+          type: string
+          description: Unique identifier of the request associated with the log.
+        isBusinessLog:
+          type: boolean
+          description: Whether this is a business log entry.
+    AgentRequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the request log.
+        sessionId:
+          type: string
+          description: Unique identifier of the session.
+        requestId:
+          type: string
+          description: Unique identifier of the request.
+        triggerAgentId:
+          type: string
+          description: Unique identifier of the agent that triggered the request.
+        collaborationAgents:
+          type: array
+          items:
+            type: string
+          description: List of agent IDs that collaborated in this request.
+        severity:
+          $ref: '#/components/schemas/LogSeverity'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentLogMessageResponse'
+          description: List of log messages associated with this request.
+        duration:
+          type: integer
+          format: int64
+          description: Duration of the request in seconds.
+        metadata:
+          $ref: '#/components/schemas/MetadataResponse'
+    AgentSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: Unique identifier of the session.
+        triggerAgentId:
+          type: string
+          description: Unique identifier of the agent that triggered the session.
+        severity:
+          $ref: '#/components/schemas/LogSeverity'
+        agents:
+          type: array
+          items:
+            type: string
+          description: List of agent IDs that participated in this session.
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentLogMessageResponse'
+          description: List of log messages associated with this session.
+        duration:
+          type: integer
+          format: int64
+          description: Duration of the session in seconds.
+        metadata:
+          $ref: '#/components/schemas/MetadataResponse'
+
+    GenerationResponse:
+      title: GenerationResponse
+      type: object
+      description: Object represents the text generation response.
+      properties:
+        id:
+          type: string
+          description: 'Identifier of the text generation request. The value is populated only if the ID was provided in the request. '
+        result:
+          type: string
+          description: Text generation result.
+    CompletionRequest:
+      title: CompletionRequest
+      type: object
+      required:
+        - messages
+      properties:
+        id:
+          type: string
+          description: Identifier of the request. The value is not mandatory - if provided, then the ID is returned in the text generation response.
+        messages:
+          type: array
+          items:
+            type: object
+            required:
+              - role
+              - content
+            properties:
+              role:
+                type: string
+                enum:
+                  - USER
+                  - SYSTEM
+                  - ASSISTANT
+                description: 'Specifies the role of the message.
+                  `SYSTEM` - Provides instructions or context to the AI about the conversation.  
+                  `USER` - Represents a message sent by the user.  
+                  `ASSISTANT` - Represents a message generated by the AI.'
+              content:
+                type: string
+                description: 'Content of the message. Depending on the role parameter, it can be a background instruction, user instruction, or AI response.'
+    QParamSearchBody:
+      type: object
+      properties:
+        q:
+          type: string
+          description: |
+            A standard query parameter is used to search for specific values. 
+
+            See: [Standard Practices - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+    AgentFromTemplateRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentAndTemplateAndHandOff'
+        - type: object
+          properties:
+            userPrompt:
+              type: string
+              description: LLM Prompt which describes how agent should work in a detailed way, which tools it could use to solve problems etc; it can contain examples and step by step guidance.
+      required:
+        - name
+        - description
+        - userPrompt
+    PatchRequest:
+      type: array
+      description: Partial update operation list.
+      items:
+        type: object
+        properties:
+          op:
+            anyOf:
+              - enum:
+                  - ADD
+                  - REMOVE
+                  - REPLACE
+            type: string
+          path:
+            type: string
+            example: /name
+          value:
+            anyOf:
+              - type: string
+                description: Value of the string type.
+              - type: object
+                description: Any part of the details object.
+        required:
+          - op
+          - path
+    ExportResponse:
+      allOf:
+        - $ref: '#/components/schemas/DataWithChecksum'
+        - type: object
+          properties:
+            exportedAt:
+              description: Date of the export process.
+              type: string
+              format: date-time
+            jobId:
+              description: ID of the job.
+              type: string
+    DataWithChecksum:
+      type: object
+      properties:
+        data:
+          description: The base64 encoded JSON value of the exported agents with related tools and MCP servers.
+          type: string
+        checksum:
+          description: Checksum calculated based on decoded `data` value. Validates if importing JSON is exactly the same as the exported one.
+          type: string
+    ExportRequest:
+      type: object
+      required:
+        - agentIds
+      properties:
+        agentIds:
+          description: List of the agents IDs.
+          type: array
+          minimum: 0
+          maximum: 100
+          items:
+            type: string
+    ImportResponse:
+      allOf:
+        - $ref: '#/components/schemas/ImportResult'
+        - type: object
+          properties:
+            importedAt:
+              description: Date of the import process.
+              type: string
+              format: date-time
+            jobId:
+              description: ID of the job.
+              type: string
+    ImportRequest:
+      allOf:
+        - $ref: '#/components/schemas/DataWithChecksum'
+      required:
+        - data
+        - checksum
+    AnalyticsSeverityCounts:
+      type: object
+      description: Request log counts by severity.
+      properties:
+        info:
+          type: integer
+        warning:
+          type: integer
+        error:
+          type: integer
+    AnalyticsSessionSeverityCounts:
+      type: object
+      description: Session counts by outcome severity.
+      properties:
+        success:
+          type: integer
+        warning:
+          type: integer
+        error:
+          type: integer
+    AnalyticsLogMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of request logs in scope.
+        bySeverity:
+          $ref: '#/components/schemas/AnalyticsSeverityCounts'
+        errorRate:
+          type: number
+          format: double
+          description: Share of error-severity logs among request logs.
+    AnalyticsSessionMetrics:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of sessions in scope.
+        bySeverity:
+          $ref: '#/components/schemas/AnalyticsSessionSeverityCounts'
+        errorRate:
+          type: number
+          format: double
+          description: Share of error outcome sessions among sessions.
+    AnalyticsResolutionEfficiency:
+      type: object
+      properties:
+        requestsPerSession:
+          type: number
+          format: double
+          description: Average number of requests per session.
+        totalRequests:
+          type: integer
+        totalSessions:
+          type: integer
+    AnalyticsRequestTrendPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: Week start instant (UTC).
+        total:
+          type: integer
+        errors:
+          type: integer
+        errorRate:
+          type: number
+          format: double
+    AnalyticsSessionTrendPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: Week start instant (UTC).
+        totalSessions:
+          type: integer
+        errorSessions:
+          type: integer
+        errorRate:
+          type: number
+          format: double
+    AgentAnalyticsResponse:
+      type: object
+      description: Combined analytics payload for admin and partner dashboards.
+      properties:
+        requests:
+          $ref: '#/components/schemas/AnalyticsLogMetrics'
+        sessions:
+          $ref: '#/components/schemas/AnalyticsSessionMetrics'
+        resolutionEfficiency:
+          $ref: '#/components/schemas/AnalyticsResolutionEfficiency'
+        requestTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsRequestTrendPoint'
+        sessionTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsSessionTrendPoint'
+    AnalyticsPeriod:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Human-readable period label (e.g. quarter name).
+        start:
+          type: string
+          format: date-time
+          description: Period start (inclusive), UTC.
+        end:
+          type: string
+          format: date-time
+          description: Period end (exclusive), UTC.
+    AgentExecutionSeries:
+      type: object
+      properties:
+        agentId:
+          type: string
+        counts:
+          type: array
+          description: Execution counts per period, same order as `periods`.
+          items:
+            type: integer
+    ExecutionsResponse:
+      type: object
+      properties:
+        granularity:
+          type: string
+          description: Time bucket used for periods and series (enum constant name).
+          enum:
+            - QUARTER
+            - MONTH
+            - WEEK
+        periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsPeriod'
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentExecutionSeries'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          scopes:
+            ai.text_manage: Needed to execute actions related to the text generation.
+            ai.completion_manage: Needed to execute actions related to the AI completions.
+            ai.agentexecution_manage: Needed to execute agentic chat.
+            ai.agentexecution_manage_own: Needed to execute agentic chat by customers.
+            ai.agent_read: Needed to read AI agents.
+            ai.agent_manage: Needed to manage AI agents.
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      schema:
+        type: string
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant name should always be provided in lowercase.
+    header_Accept-Language:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the response. You can specify factors that indicate which language should be retrieved if the one with a higher factor was not found in the localized fields.
+
+        * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
+        * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    header_Content-Language:
+      name: Content-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of languages in which localized fields in the request body are provided.
+
+        * If the header is set to `*`, the localized fields should be provided as maps of translations, where the keys are language codes and values are the fields in their respective languages.
+        * If the header is set to a specific language, the localized fields should be provided as strings.
+        * If the header is empty, the endpoint assumes that the localized fields are provided in the default language defined in the Configuration Service.
+
+        **Note**: You can provide the localized fields only in languages defined in the Configuration Service. In case the fields are provided in languages that are not defined in the Configuration Service, the request is rejected.
+    header_xTotalCount:
+      schema:
+        type: boolean
+      in: header
+      name: X-Total-Count
+      description: Flag indicating whether the total number of retrieved results should be returned.
+    qParam:
+      in: query
+      name: q
+      description: |
+        A standard query parameter is used to search for specific values.
+
+        See: [Standard Practices - Query parameter](https://developer.emporix.io/docs/content/q-param)
+      schema:
+        type: string
+    pageSize:
+      schema:
+        type: string
+      in: query
+      name: pageSize
+      description: The number of documents to be retrieved per page.
+    pageNumber:
+      schema:
+        type: string
+      in: query
+      name: pageNumber
+      description: The page number to be retrieved. The size of the pages should be specified by the `pageSize` parameter.
+    sort:
+      schema:
+        type: string
+      in: query
+      name: sort
+      description: List of properties used to sort the results, separated by colons.
+    fields:
+      schema:
+        type: string
+      in: query
+      name: fields
+      description: Fields to be returned in the response.
+    expand:
+      schema:
+        type: string
+        enum:
+          - oauth
+          - mcpServers
+          - nativeTools
+          - token
+      in: query
+      name: expand
+      description: Fields to be expanded in the response. It means that instead of the object IDs, the whole objects are returned in the response.
+    expandMcpServer:
+      schema:
+        type: string
+        enum:
+          - token
+      in: query
+      name: expand
+      description: Fields to be expanded in the response. It means that instead of the object IDs, the whole objects are returned in the response.
+    expandTool:
+      schema:
+        type: string
+        enum:
+          - token
+      in: query
+      name: expand
+      description: Fields to be expanded in the response. It means that instead of the object IDs, the whole objects are returned in the response.
+    expandOAuth:
+      schema:
+        type: string
+        enum:
+          - token
+      in: query
+      name: expand
+      description: Fields to be expanded in the response. It means that instead of the object IDs, the whole objects are returned in the response.
+    force:
+      schema:
+        type: boolean
+      in: query
+      name: force
+      example: false
+      description: Allows you to remove a given entity even if it is used as a dependency in other entries. In that case, the removed entity is unassigned from other entries.
+    forceDisable:
+      schema:
+        type: boolean
+      in: query
+      name: force
+      example: false
+      description: Allows you to disable a given entity even if it is used as a dependency in other entries. In that case, cascade disable is performed.
+  responses:
+    401_resp_common:
+      description: The authorization token is invalid or has expired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessageFault'
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    403_resp_common:
+      description: Authorization scopes of the access token are not sufficient and do not match the scopes required by the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Access forbidden:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+    500_resp_common:
+      description: A server-side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Internal Server Error:
+              value:
+                code: 500
+                status: Internal Server Error
+                message: Problem encountered while trying to connect to the database.
+    400_resp_common:
+      description: The request was syntactically incorrect.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Code must not be null:
+              value:
+                code: 400
+                status: Bad Request
+                message: Validation problem with request body.
+                details:
+                  - message: code must not be null nor blank
+    404_resp_common:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Resource not found:
+              value:
+                resourceId: 628cd20c6e8b2432b6346ca6
+                code: 404
+                status: Not Found
+                message: The resource with id 628cd20c6e8b2432b6346ca6 has not been found.
+    409_resp_common:
+      description: |
+        There are three possible reasons:
+         1. Resource with given code already exists, please choose unique code for your resource
+         2. Optimistic locking failed. If user sends metadata/version attribute which is outdated (someone else updated resource in the time user was performing his changes). User should retrieve the latest product data and retry the request.
+         3. Optimistic locking failed. User did not provide metadata/version attribute in update request, but someone else updated product while it was internally handled by product service. Resending the same request can result in successful update, but the update can override recently persisted changes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Resource conflict:
+              value:
+                code: 409
+                status: Conflict
+                message: Conflict - a resource with given code or id has already exist.
+    200_resp_GET_text_generation:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenerationResponse'
+          examples:
+            Text Generation Response:
+              value:
+                id: en
+                result: 'Mini pipe cutters are small cutting tools that are designed to precisely and effectively cut through pipes ranging in size from 3 to 16 millimeters. Unlike some larger pipe cutters, these mini versions are conveniently small and light enough to be carried around easily and used in places where a standard-sized cutter may not be able to fit. They are typically made of hardened steel and are designed to work on most types of tubing and thin-walled plastic piping. The continuous interlocking jaws hold the pipe securely while the cutting blade smoothly and accurately creates a precise and neat cutting edge. Mini pipe cutters are the perfect tool for plumbers and those tackling smaller scale pipe work in hard-to-reach places.'
+    200_resp_GET_agent_requests:
+      description: List of agent requests.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AgentRequestResponse'
+          examples:
+            Agent Requests:
+              value:
+                - id: req-123e4567-e89b-12d3-a456-426614174000
+                  sessionId: sess-123e4567-e89b-12d3-a456-426614174000
+                  requestId: req-123e4567-e89b-12d3-a456-426614174000
+                  triggerAgentId: complaint-agent
+                  collaborationAgents:
+                    - complaint-agent-categorization
+                  severity: INFO
+                  messages:
+                    - timestamp: '2025-01-15T10:30:27.167Z'
+                      severity: INFO
+                      message: Agent started processing request
+                      agentId: complaint-agent
+                      requestId: req-123e4567-e89b-12d3-a456-426614174000
+                      isBusinessLog: false
+                    - timestamp: '2025-01-15T10:30:28.234Z'
+                      severity: INFO
+                      message: Retrieved order details successfully
+                      agentId: complaint-agent
+                      requestId: req-123e4567-e89b-12d3-a456-426614174000
+                      isBusinessLog: true
+                  duration: 45
+                  metadata:
+                    version: 1
+                    createdAt: '2025-01-15T10:30:27.167Z'
+                    modifiedAt: '2025-01-15T10:30:28.234Z'
+    200_resp_GET_agent_request:
+      description: A single agent request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentRequestResponse'
+          examples:
+            Agent Request:
+              value:
+                id: req-123e4567-e89b-12d3-a456-426614174000
+                sessionId: sess-123e4567-e89b-12d3-a456-426614174000
+                requestId: req-123e4567-e89b-12d3-a456-426614174000
+                triggerAgentId: complaint-agent
+                collaborationAgents:
+                  - complaint-agent-categorization
+                severity: INFO
+                messages:
+                  - timestamp: '2025-01-15T10:30:28.234Z'
+                    severity: INFO
+                    message: Retrieved order details successfully
+                    agentId: complaint-agent
+                    requestId: req-123e4567-e89b-12d3-a456-426614174000
+                    isBusinessLog: true
+                  - timestamp: '2025-01-15T10:30:29.456Z'
+                    severity: WARNING
+                    message: Order status check returned unexpected value
+                    agentId: complaint-agent
+                    requestId: req-123e4567-e89b-12d3-a456-426614174000
+                    isBusinessLog: false
+                duration: 45
+                metadata:
+                  version: 1
+                  createdAt: '2025-01-15T10:30:27.167Z'
+                  modifiedAt: '2025-01-15T10:30:29.456Z'
+    200_resp_GET_agent_sessions:
+      description: List of agent sessions.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AgentSessionResponse'
+          examples:
+            Agent Sessions:
+              value:
+                - sessionId: sess-123e4567-e89b-12d3-a456-426614174000
+                  triggerAgentId: complaint-agent
+                  severity: INFO
+                  agents:
+                    - complaint-agent
+                    - complaint-agent-categorization
+                  messages:
+                    - timestamp: '2025-01-15T10:30:27.167Z'
+                      severity: INFO
+                      message: Session started
+                      agentId: complaint-agent
+                      requestId: req-123e4567-e89b-12d3-a456-426614174000
+                      isBusinessLog: false
+                    - timestamp: '2025-01-15T10:30:28.234Z'
+                      severity: INFO
+                      message: Handed off to categorization agent
+                      agentId: complaint-agent
+                      requestId: req-123e4567-e89b-12d3-a456-426614174000
+                      isBusinessLog: true
+                  duration: 120
+                  metadata:
+                    version: 1
+                    createdAt: '2025-01-15T10:30:27.167Z'
+                    modifiedAt: '2025-01-15T10:30:29.234Z'
+    200_resp_GET_agent_session:
+      description: A single agent session.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentSessionResponse'
+          examples:
+            Agent Session:
+              value:
+                sessionId: sess-123e4567-e89b-12d3-a456-426614174000
+                triggerAgentId: complaint-agent
+                severity: INFO
+                agents:
+                  - complaint-agent
+                  - complaint-agent-categorization
+                messages:
+                  - timestamp: '2025-01-15T10:30:28.234Z'
+                    severity: INFO
+                    message: Retrieved order details successfully
+                    agentId: complaint-agent
+                    requestId: req-123e4567-e89b-12d3-a456-426614174000
+                    isBusinessLog: true
+                  - timestamp: '2025-01-15T10:30:30.789Z'
+                    severity: INFO
+                    message: Categorization agent processing request
+                    agentId: complaint-agent-categorization
+                    requestId: req-123e4567-e89b-12d3-a456-426614174000
+                    isBusinessLog: false
+                duration: 120
+                metadata:
+                  version: 1
+                  createdAt: '2025-01-15T10:30:27.167Z'
+                  modifiedAt: '2025-01-15T10:30:30.789Z'
+  requestBodies:
+    TextGeneration:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TextGenerationRequest'
+          examples:
+            Text generation request:
+              value:
+                id: en
+                prompt: 'Generate a long description for product ''pipe cutter'' in language EN '
+                maxTokens: 2048
+    AgenticChat:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgenticRequest'
+          examples:
+            Agentic Chat request:
+              value:
+                agentId: complaint-agent
+                message: 'Find a product with "EON1243" code'
+    Completion:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CompletionRequest'
+          examples:
+            Completion request:
+              value:
+                id: abc-123
+                messages:
+                  - role: SYSTEM
+                    content: You are an assistant responsible for creating a configuration based on information provided by user.
+    QParamSearchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/QParamSearchBody'
+          examples:
+            Search Request:
+              value:
+                q: name:~Complaint
+    AgentFromTemplateRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentFromTemplateRequest'
+          examples:
+            Search Request:
+              value:
+                name:
+                  en: Complaint Agent
+                description:
+                  de: Agent which is responsible for reading emails and base on that resolve the customer's complaints
+                userPrompt: Use get-order tool to fetch order.
+                id: a81bc81b-dead-4e5d-abff-90865d1e13b1
+    agentPatchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchRequest'
+          examples:
+            Multiple update list:
+              value:
+                - op: REPLACE
+                  path: /description
+                  value: New agent description
+                - op: REPLACE
+                  path: /name
+                  value: Complaint Agent
+            Change model of the LLM:
+              value:
+                - op: REPLACE
+                  path: /llmConfig/model
+                  value: OPENAI
+    agentUpsertBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AgentRequest'
+          examples:
+            Create agent:
+              $ref: '#/components/examples/AgentRequest'
+    mcpServerUpsertBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/McpServerRequest'
+          examples:
+            Create Custom MCP Server:
+              $ref: '#/components/examples/CustomMcpServerRequest'
+            Create Dynamic MCP Server:
+              $ref: '#/components/examples/DynamicMcpServerRequest'
+    mcpServerPatchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchRequest'
+          examples:
+            Change name:
+              value:
+                - op: REPLACE
+                  path: /name
+                  value: New Custom MCP Server
+            Replace tools on dynamic MCP server:
+              value:
+                - op: REPLACE
+                  path: /tools
+                  value:
+                    - name: get_order
+                      prompt: Use this tool to retrieve an order by ID.
+                      enabled: true
+                      config:
+                        inputSchema: '{"type":"object","properties":{"orderId":{"type":"string"}},"required":["orderId"]}'
+                        invocation:
+                          functionId: fn-get-order
+                          method: GET
+                          argsLocation: query
+    tokenUpsertBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenRequest'
+          examples:
+            Create OpenAI Token:
+              $ref: '#/components/examples/TokenRequest'
+    tokenPatchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchRequest'
+          examples:
+            Change name:
+              value:
+                - op: REPLACE
+                  path: /name
+                  value: New OpenAI Token
+    oauthUpsertBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OAuthRequest'
+          examples:
+            Create Client Credentials OAuth:
+              $ref: '#/components/examples/OAuthRequest'
+    oauthPatchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchRequest'
+          examples:
+            Change clientId:
+              value:
+                - op: REPLACE
+                  path: /clientId
+                  value: client-1-updated
+            Disable OAuth:
+              value:
+                - op: REPLACE
+                  path: /enabled
+                  value: false
+    toolUpsertBody:
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/SlackNativeToolRequest'
+              - $ref: '#/components/schemas/RagCustomNativeToolRequest'
+              - $ref: '#/components/schemas/RagEmporixNativeToolRequest'
+              - $ref: '#/components/schemas/TeamsNativeToolRequest'
+          examples:
+            Create Slack Tool:
+              $ref: '#/components/examples/SlackNativeToolRequest'
+            Create Teams Tool:
+              $ref: '#/components/examples/TeamsNativeToolRequest'
+    toolPatchBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PatchRequest'
+          examples:
+            Multiple update list:
+              value:
+                - op: REPLACE
+                  path: /config/botToken
+                  value: New bot token
+                - op: REPLACE
+                  path: /name
+                  value: New slack name
+            Change name:
+              value:
+                - op: REPLACE
+                  path: /name
+                  value: New slack name
+    exportRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ExportRequest'
+          examples:
+            Export Agent:
+              $ref: '#/components/examples/ExportRequest'
+    importRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImportRequest'
+          examples:
+            Export Agent:
+              $ref: '#/components/examples/ImportRequest'
+  examples:
+    IdResponse:
+      value:
+        id: a81bc81b-dead-4e5d-abff-90865d1e13b1
+    AgentTemplatesResponse:
+      value:
+        - id: "123"
+          name:
+            en: Complaint Handler
+          description:
+            en: A specialized agent template for handling customer complaints
+          userPrompt: First, determine if the user request is really a complaint.
+          templatePrompt: "You are a complaint resolution specialist. Your goal is to understand customer complaints and provide appropriate solutions."
+          type: complaint
+          enabled: true
+          tags:
+            - productivity
+          icon: fa-productivity
+          mcpServers:
+            - domain: customer
+              type: predefined
+              tools:
+                - delete-customer
+                - get-locations
+    McpServerResponse:
+      value:
+        id: mcp-custom
+        name: Custom MCP Server
+        type: custom
+        enabled: true
+        transport: streamable_http
+        config:
+          url: 'http://localhost:7900/mcp'
+          authorizationHeaderName: Authorization
+          authorizationHeaderToken:
+            id: token-id
+    McpServersResponse:
+      value:
+        - id: mcp-custom
+          name: Custom MCP Server
+          type: custom
+          enabled: true
+          transport: streamable_http
+          config:
+            url: 'http://localhost:7900/mcp'
+            authorizationHeaderName: Authorization
+            authorizationHeaderToken:
+              id: token-id
+        - id: mcp-dynamic
+          name: Dynamic MCP Server
+          type: dynamic
+          enabled: true
+          transport: streamable_http
+          tools:
+            - name: get_order
+              description: Retrieves an order by ID.
+              prompt: Use this tool when the user asks for order details.
+              enabled: true
+              config:
+                requiredScopes:
+                  - order.order_read
+                inputSchema: '{"type":"object","properties":{"orderId":{"type":"string"}},"required":["orderId"]}'
+                invocation:
+                  functionId: fn-get-order
+                  method: GET
+                  argsLocation: query
+    CommerceEventsResponse:
+      value:
+        events:
+          - product.product-created
+          - product.product-updated
+    TokenResponse:
+      value:
+        id: openai
+        name: OpenAi Token
+    TokensResponse:
+      value:
+        - id: emporix--openai
+          name: Emporix OpenAi Token
+        - id: openai
+          name: OpenAi Token
+    ProviderModelsResponse:
+      value:
+        - provider: openai
+          models:
+            - id: gpt-4.1-mini
+              name: gpt-4.1-mini
+        - provider: anthropic
+          models:
+            - id: claude-opus-4-6
+              name: Claude Opus 4.6
+              thinking: true
+            - id: claude-haiku-3-5
+              name: Claude Haiku 3.5
+              thinking: false
+        - provider: google
+          models:
+            - id: gemini-3.1-flash-lite
+              name: Gemini 3.1 Flash Lite
+              description: Gemini 3.1 Flash Lite
+              thinking: true
+    SlackNativeToolResponse:
+      value:
+        id: "slack-1"
+        name: Slack Native Tool
+        enabled: true
+        type: slack
+        config:
+          teamId: "12345"
+          defaultInboundAgentId: "slack-agent-id"
+          allowedOperations:
+            - sendMessage
+            - collaborateOnChannel
+            - inviteParticipants
+    SlackNativeToolsResponse:
+      value:
+        - id: "slack-1"
+          name: Slack Native Tool
+          enabled: true
+          type: slack
+          config:
+            teamId: "12345"
+            defaultInboundAgentId: "slack-agent-id"
+            allowedOperations:
+              - sendMessage
+              - collaborateOnChannel
+    ConversationResponse:
+      value:
+        conversationId: "19:abc123@thread.tacv2"
+        conversationName: "Support - Order #12345"
+        contextRef: "order-12345"
+        channelId: "19:abc123@thread.tacv2"
+        agentId: "generic-agent-id"
+        sessionId: "session-abc"
+        lastMessageAt: "2026-07-10T08:00:00Z"
+    ConversationsResponse:
+      value:
+        - conversationId: "19:abc123@thread.tacv2"
+          conversationName: "Support - Order #12345"
+          contextRef: "order-12345"
+          channelId: "19:abc123@thread.tacv2"
+          agentId: "generic-agent-id"
+          sessionId: "session-abc"
+          lastMessageAt: "2026-07-10T08:00:00Z"
+    AgentResponse:
+      value:
+        id: "123"
+        name:
+          en: Complaint Agent
+        description:
+          en: Complaint agent
+        type: complaint
+        enabled: true
+        templatePrompt: "You are an complaint agent for checking emails and do some action."
+        userPrompt: "Use get-order tool to fetch order."
+        llmConfig:
+          model: GPT-4.1
+          apiKey: secureApiKey
+          provider: openai
+          maxTokens: 100000
+          temperature: 0.2
+        triggers:
+          - type: endpoint
+        maxRecursionLimit: 20
+        enabledMemory: true
+        tags:
+          - productivity
+        icon: fa-productivity
+        mcpServers:
+          - domain: order
+            type: predefined
+            tools:
+              - get-orders
+              - get-order
+        nativeTools:
+          - name: slack
+            config:
+              teamId: T0445953
+    AgentsResponse:
+      value:
+        - id: "123"
+          name:
+            en: Complaint Agent
+          description:
+            en: Complaint agent
+          type: complaint
+          enabled: true
+          templatePrompt: "You are an complaint agent for checking emails and do some action."
+          userPrompt: "Use get-order tool to fetch order."
+          llmConfig:
+            model: GPT-4.1
+            apiKey: secureApiKey
+            provider: openai
+            maxTokens: 100000
+            temperature: 0.2
+          triggers:
+            - type: endpoint
+          maxRecursionLimit: 20
+          enabledMemory: true
+          tags:
+            - productivity
+          icon: fa-productivity
+          mcpServers:
+            - domain: order
+              type: predefined
+              tools:
+                - get-orders
+                - get-order
+          nativeTools:
+            - name: slack
+              config:
+                teamId: T0445953
+    CustomMcpServerRequest:
+      value:
+        name: Custom MCP Server
+        type: custom
+        transport: streamable_http
+        enabled: true
+        config:
+          url: 'http://localhost:7900/mcp'
+          authorizationHeaderName: Authorization
+          authorizationHeaderToken:
+            id: token-id
+    DynamicMcpServerRequest:
+      value:
+        name: Dynamic MCP Server
+        type: dynamic
+        enabled: true
+        tools:
+          - name: get_order
+            description: Retrieves an order by ID.
+            prompt: Use this tool when the user asks for order details.
+            enabled: true
+            config:
+              requiredScopes:
+                - order.order_read
+              inputSchema: '{"type":"object","properties":{"orderId":{"type":"string"}},"required":["orderId"]}'
+              invocation:
+                functionId: fn-get-order
+                method: GET
+                argsLocation: query
+    CustomMcpServerResponse:
+      value:
+        id: mcp-custom
+        name: Custom MCP Server
+        type: custom
+        enabled: true
+        transport: streamable_http
+        config:
+          url: 'http://localhost:7900/mcp'
+          authorizationHeaderName: Authorization
+          authorizationHeaderToken:
+            id: token-id
+    DynamicMcpServerResponse:
+      value:
+        id: mcp-dynamic
+        name: Dynamic MCP Server
+        type: dynamic
+        enabled: true
+        transport: streamable_http
+        tools:
+          - name: get_order
+            description: Retrieves an order by ID.
+            prompt: Use this tool when the user asks for order details.
+            enabled: true
+            config:
+              requiredScopes:
+                - order.order_read
+              inputSchema: '{"type":"object","properties":{"orderId":{"type":"string"}},"required":["orderId"]}'
+              invocation:
+                functionId: fn-get-order
+                method: GET
+                argsLocation: query
+    TokenRequest:
+      value:
+        name: OpenAI Token
+        value: sk-secret
+    OAuthRequest:
+      value:
+        url: 'https://auth.example.com/token'
+        clientId: client-1
+        clientSecretToken:
+          id: token-id
+        grantType: client_credentials
+        scope: llm read
+        enabled: true
+    OAuthResponse:
+      value:
+        id: oauth-1
+        url: 'https://auth.example.com/token'
+        clientId: client-1
+        clientSecretToken:
+          id: token-id
+        grantType: client_credentials
+        scope: llm read
+        enabled: true
+    OAuthsResponse:
+      value:
+        - id: oauth-1
+          url: 'https://auth.example.com/token'
+          clientId: client-1
+          clientSecretToken:
+            id: token-id
+          grantType: client_credentials
+          scope: llm read
+          enabled: true
+        - id: oauth-2
+          url: 'https://auth2.example.com/token'
+          clientId: client-2
+          clientSecretToken:
+            id: token-id-2
+          grantType: client_credentials
+          scope: llm
+          enabled: true
+    SlackNativeToolRequest:
+      value:
+        name: Slack Native Tool
+        enabled: true
+        type: slack
+        config:
+          teamId: "12345"
+          botToken: xoxb-35354
+          defaultInboundAgentId: "slack-agent-id"
+          allowedOperations:
+            - sendMessage
+            - collaborateOnChannel
+            - inviteParticipants
+    TeamsNativeToolRequest:
+      value:
+        name: MS Teams Collaboration Tool
+        enabled: true
+        type: teams
+        config:
+          teamId: "19:team-id@thread.tacv2"
+          tenantId: "aad-tenant-id"
+          defaultInboundAgentId: "generic-agent-id"
+          allowedOperations:
+            - sendMessage
+            - collaborateOnChannel
+            - inviteParticipants
+    TeamsNativeToolResponse:
+      value:
+        id: "teams-tool-1"
+        name: MS Teams Collaboration Tool
+        enabled: true
+        type: teams
+        config:
+          teamId: "19:team-id@thread.tacv2"
+          tenantId: "aad-tenant-id"
+          defaultInboundAgentId: "generic-agent-id"
+          allowedOperations:
+            - sendMessage
+            - collaborateOnChannel
+            - inviteParticipants
+    AgentRequest:
+      value:
+        name:
+          en: Complaint Agent
+        description:
+          en: Complaint agent
+        enabled: true
+        userPrompt: "You are an complaint agent for checking emails and do some action."
+        llmConfig:
+          model: GPT-4.1
+          token:
+            id: openai-token
+          provider: openai
+          maxTokens: 100000
+          temperature: 0.2
+        triggers:
+          - type: endpoint
+        maxRecursionLimit: 20
+        enabledMemory: true
+        tags:
+          - productivity
+        icon: fa-productivity
+        mcpServers:
+          - domain: order
+            type: predefined
+            tools:
+              - get-orders
+              - get-order
+        nativeTools:
+          - id: teams-tool-1
+            allowedOperations:
+              - sendMessage
+              - collaborateOnChannel
+    ExportResponse:
+      value:
+        jobId: job-id-of-export-job
+        exportedAt: "2025-11-04T11:15:25.903913Z"
+        checksum: de56cd0c62c234033eced948645c7b458962eaa11611bd1066ef52a61e1b4cb2
+        data: ewogICJhZ2VudHMiIDogWyB7CiAgICAiaWQiIDogInByb2R1Y3QtY3JlYXRlZCIsCiAgICAibmFtZSIgOiB7CiAgICAgICJlbiIgOiAicHJvZHVjdC1jcmVhdGVkIgogICAgfSwKICAgICJkZXNjcmlwdGlvbiIgOiB7CiAgICAgICJlbiIgOiAicHJvZHVjdC1jcmVhdGVkIgogICAgfSwKICAgICJyZXF1aXJlZFNjb3BlcyIgOiBbIF0sCiAgICAidXNlclByb21wdCIgOiAiWW91IGFyZSBhbiBhZ2VudCB3aGljaCBoYW5kbGUgcHJvZHVjdCBjcmVhdGlvbiBwcm9jZXNzLlxuQXQgZmlyc3QgZ2V0IHRoZSB3aG9sZSBwcm9kdWN0IG9iamVjdCBmcm9tIHRoZSBhcGkgYW5kIHJldHVybiBpdCBhcyBhIEpTT04iLAogICAgInRyaWdnZXJzIiA6IFsgewogICAgICAidHlwZSIgOiAiZW5kcG9pbnQiCiAgICB9IF0sCiAgICAibGxtQ29uZmlnIiA6IHsKICAgICAgIm1vZGVsIiA6ICJjbGF1ZGUtMy01LWhhaWt1LTIwMjQxMDIyIiwKICAgICAgInRlbXBlcmF0dXJlIiA6IDAuMSwKICAgICAgIm1heFRva2VucyIgOiA0MDAwLAogICAgICAicHJvdmlkZXIiIDogImFudGhyb3BpYyIsCiAgICAgICJ0b2tlbiIgOiB7CiAgICAgICAgImlkIiA6ICJhbnRocm9waWMtdG9rZW4iCiAgICAgIH0KICAgIH0sCiAgICAibWNwU2VydmVycyIgOiBbIHsKICAgICAgInR5cGUiIDogInByZWRlZmluZWQiLAogICAgICAiZG9tYWluIiA6ICJwcm9kdWN0IiwKICAgICAgInRvb2xzIiA6IFsgImdldC1wcm9kdWN0IiBdCiAgICB9IF0sCiAgICAibmF0aXZlVG9vbHMiIDogWyBdLAogICAgImFnZW50Q29sbGFib3JhdGlvbnMiIDogWyBdLAogICAgIm1heFJlY3Vyc2lvbkxpbWl0IiA6IDIwLAogICAgImVuYWJsZU1lbW9yeSIgOiB0cnVlLAogICAgImljb24iIDogInJvYm90IiwKICAgICJ0YWdzIiA6IFsgXSwKICAgICJ0eXBlIiA6ICJnZW5lcmljIgogIH0gXQp9
+    ExportRequest:
+      value:
+        agentIds:
+          - complaint-agent-id
+    ImportResponse:
+      value:
+        importedAt: '2025-11-04T11:56:55.296335Z'
+        summary:
+          agents:
+            - id: 346cefda-19be-4603-a471-5d2e990566ba--import-1762257415296
+              name: complaint-demo
+              state: DISABLED
+              details:
+                - code: AGENT_IMPORTED_DISABLED
+                  objectId: 346cefda-19be-4603-a471-5d2e990566ba--import-1762257415296
+                  objectName: complaint-demo
+                  message: Imported agents start disabled.
+          tools:
+            - id: 80171fb9-a3cc-4441-8235-ced7edd0635d2
+              name: Slack Tool
+              state: TO_CREATE
+              details:
+                - code: NOT_IMPORTABLE
+                  objectId: 80171fb9-a3cc-4441-8235-ced7edd0635d2
+                  objectName: Slack Tool
+                  message: Slack/Teams tools cannot be imported. Create them on this tenant.
+          mcpServers:
+            - id: 80171fb9-a3cc-4441-8235-ced7edd0635d3
+              name: Custom MCP Server
+              state: ENABLED
+              details: []
+        message: "Successfully imported 1 agents, 0 tools, and 1 MCP servers."
+        jobId: 6909ea07e0527f327fdead3e
+    ImportRequest:
+      value:
+        checksum: de56cd0c62c234033eced948645c7b458962eaa11611bd1066ef52a61e1b4cb2
+        data: ewogICJhZ2VudHMiIDogWyB7CiAgICAiaWQiIDogInByb2R1Y3QtY3JlYXRlZCIsCiAgICAibmFtZSIgOiB7CiAgICAgICJlbiIgOiAicHJvZHVjdC1jcmVhdGVkIgogICAgfSwKICAgICJkZXNjcmlwdGlvbiIgOiB7CiAgICAgICJlbiIgOiAicHJvZHVjdC1jcmVhdGVkIgogICAgfSwKICAgICJyZXF1aXJlZFNjb3BlcyIgOiBbIF0sCiAgICAidXNlclByb21wdCIgOiAiWW91IGFyZSBhbiBhZ2VudCB3aGljaCBoYW5kbGUgcHJvZHVjdCBjcmVhdGlvbiBwcm9jZXNzLlxuQXQgZmlyc3QgZ2V0IHRoZSB3aG9sZSBwcm9kdWN0IG9iamVjdCBmcm9tIHRoZSBhcGkgYW5kIHJldHVybiBpdCBhcyBhIEpTT04iLAogICAgInRyaWdnZXJzIiA6IFsgewogICAgICAidHlwZSIgOiAiZW5kcG9pbnQiCiAgICB9IF0sCiAgICAibGxtQ29uZmlnIiA6IHsKICAgICAgIm1vZGVsIiA6ICJjbGF1ZGUtMy01LWhhaWt1LTIwMjQxMDIyIiwKICAgICAgInRlbXBlcmF0dXJlIiA6IDAuMSwKICAgICAgIm1heFRva2VucyIgOiA0MDAwLAogICAgICAicHJvdmlkZXIiIDogImFudGhyb3BpYyIsCiAgICAgICJ0b2tlbiIgOiB7CiAgICAgICAgImlkIiA6ICJhbnRocm9waWMtdG9rZW4iCiAgICAgIH0KICAgIH0sCiAgICAibWNwU2VydmVycyIgOiBbIHsKICAgICAgInR5cGUiIDogInByZWRlZmluZWQiLAogICAgICAiZG9tYWluIiA6ICJwcm9kdWN0IiwKICAgICAgInRvb2xzIiA6IFsgImdldC1wcm9kdWN0IiBdCiAgICB9IF0sCiAgICAibmF0aXZlVG9vbHMiIDogWyBdLAogICAgImFnZW50Q29sbGFib3JhdGlvbnMiIDogWyBdLAogICAgIm1heFJlY3Vyc2lvbkxpbWl0IiA6IDIwLAogICAgImVuYWJsZU1lbW9yeSIgOiB0cnVlLAogICAgImljb24iIDogInJvYm90IiwKICAgICJ0YWdzIiA6IFsgXSwKICAgICJ0eXBlIiA6ICJnZW5lcmljIgogIH0gXQp9
