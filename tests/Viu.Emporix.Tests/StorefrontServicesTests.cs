@@ -344,4 +344,71 @@ public class StorefrontServicesTests
 
         Assert.Equal(0, handler.CallCount);
     }
+
+    // ---------- Price models and price lists ----------
+
+    [Fact]
+    public async Task Explicit_matching_spells_the_context_out()
+    {
+        // Unlike MatchByContext this works from a service token, because the
+        // currency and site are in the request rather than in the token.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"priceId":"p1"}]""");
+        PriceService prices = new(Http(handler), Options());
+
+        IReadOnlyList<PriceModels.MatchResponse> matches = await prices.MatchAsync(
+            new PriceModels.SearchPrices { Currency = "CHF", SiteCode = "main" });
+
+        Assert.Single(matches);
+        Assert.Equal("/price/acme/match-prices", Uri(handler));
+    }
+
+    [Fact]
+    public async Task Price_models_live_under_their_own_path()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"m1"}""");
+        PriceService prices = new(Http(handler), Options());
+
+        await prices.Models.GetAsync("m1");
+
+        Assert.Equal("/price/acme/priceModels/m1", Uri(handler));
+    }
+
+    [Fact]
+    public async Task A_price_inside_a_list_is_addressed_through_the_list()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"p1"}""");
+        PriceService prices = new(Http(handler), Options());
+
+        await prices.Lists.GetPriceAsync("l1", "p1");
+
+        Assert.Equal("/price/acme/price-lists/l1/prices/p1", Uri(handler));
+    }
+
+    [Fact]
+    public async Task Bulk_calls_with_nothing_to_do_make_no_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        PriceService prices = new(Http(handler), Options());
+
+        Assert.Empty(await prices.CreateManyAsync([]));
+        Assert.Empty(await prices.Lists.AddPricesAsync("l1", []));
+        Assert.Empty(await prices.Lists.DeletePricesAsync("l1", []));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Searching_a_price_list_only_reads()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"l1"}]""");
+        PriceService prices = new(Http(handler), Options());
+
+        await prices.Lists.SearchAsync("name:summer");
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.True(handler.LastRequest!.Options.TryGetValue(
+            EmporixRequestOptions.Idempotent,
+            out bool idempotent));
+        Assert.True(idempotent);
+    }
 }
