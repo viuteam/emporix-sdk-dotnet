@@ -258,6 +258,28 @@ seconds. A server-supplied `Retry-After` takes precedence.
 repeatable. A server error can arrive after the server has already applied the
 change — a repeated order would be a duplicate order.
 
+## Before releasing: the smoke test
+
+Unit tests use a stubbed `HttpMessageHandler`, which cannot tell a right address
+from a wrong one — that is how six calls in this SDK once pointed at endpoints
+Emporix does not have, each with a passing test.
+[`SpecPathTests`](tests/Viu.Emporix.Tests/SpecPathTests.cs) now catches that
+against the vendored specifications, but only a real call catches a body the API
+rejects, a response that deserialises to nothing, or a scope a token turns out
+not to carry.
+
+`samples/Viu.Emporix.SmokeTest` walks the anonymous storefront flow against a
+real tenant — session, products, categories, prices, availability, cart,
+validation — and exits non-zero if any step fails. It creates one cart and
+deletes it again; it places no order.
+
+```bash
+EMPORIX_TENANT=your-tenant EMPORIX_CLIENT_ID=your-client-id EMPORIX_SITE=main EMPORIX_CURRENCY=CHF dotnet run --project samples/Viu.Emporix.SmokeTest
+```
+
+Credentials come from the environment and are never read from a file in the
+repository. Nothing it prints contains a token.
+
 ## Contributing
 
 The types under `src/Viu.Emporix/Generated/` are produced from the Emporix

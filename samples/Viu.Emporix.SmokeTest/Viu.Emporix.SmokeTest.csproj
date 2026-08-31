@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Viu.Emporix.SmokeTest</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Runs against the live API, so it is published AOT like the sample: what the
+    smoke test exercises is the binary a consumer would ship, not a JIT build
+    that happens to behave differently.
+  -->
+  <PropertyGroup>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Viu.Emporix/Viu.Emporix.csproj" />
+  </ItemGroup>
+
+</Project>

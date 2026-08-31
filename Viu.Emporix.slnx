@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/Viu.Emporix.Sample/Viu.Emporix.Sample.csproj" />
+    <Project Path="samples/Viu.Emporix.SmokeTest/Viu.Emporix.SmokeTest.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Viu.Emporix/Viu.Emporix.csproj" />
