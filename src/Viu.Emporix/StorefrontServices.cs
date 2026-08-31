@@ -144,6 +144,183 @@ public sealed class AvailabilityService
             },
             cancellationToken);
     }
+
+    /// <summary>Fetches availability for several products on one site.</summary>
+    /// <param name="productIds">The products to look up.</param>
+    /// <param name="siteCode">The site.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="treatMissingAsAvailable">
+    /// Whether a product with no record counts as available. Off by default.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The result is in the order asked for, one entry per requested product,
+    /// including the ones Emporix has no record for — a caller lining these up
+    /// against a product list must not have to guess which one went missing.
+    /// Sent as a <c>POST</c> because the id list does not fit in an address, but
+    /// declared repeatable: it only reads.
+    /// </remarks>
+    public async Task<IReadOnlyList<AvailabilityModels.Availability>> GetManyAsync(
+        IReadOnlyList<string> productIds,
+        string siteCode,
+        AuthContext auth = default,
+        bool treatMissingAsAvailable = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(productIds);
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
+
+        if (productIds.Count == 0)
+        {
+            return [];
+        }
+
+        List<AvailabilityModels.Availability> found = await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/search",
+                Auth = Defaults.Anonymous(auth),
+                Query =
+                [
+                    new("site", siteCode),
+                    new("pageSize", productIds.Count.ToString(CultureInfo.InvariantCulture)),
+                ],
+                Content = EmporixJsonContent.Create(
+                    productIds.ToList(),
+                    AvailabilityJsonContext.Default.ListString),
+                Idempotent = true,
+            },
+            AvailabilityJsonContext.Default.ListAvailability,
+            cancellationToken).ConfigureAwait(false) ?? [];
+
+        Dictionary<string, AvailabilityModels.Availability> byId = [];
+        foreach (AvailabilityModels.Availability entry in found)
+        {
+            if (entry.ProductId is { Length: > 0 } id)
+            {
+                byId[id] = entry;
+            }
+        }
+
+        return
+        [
+            .. productIds.Select(id => byId.TryGetValue(id, out AvailabilityModels.Availability? hit)
+                ? hit
+                : new AvailabilityModels.Availability
+                {
+                    ProductId = id,
+                    Site = siteCode,
+                    Available = treatMissingAsAvailable,
+                }),
+        ];
+    }
+
+    /// <summary>Replaces a product's availability on a site.</summary>
+    /// <param name="productId">The product.</param>
+    /// <param name="siteCode">The site.</param>
+    /// <param name="availability">The new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task UpdateAsync(
+        string productId,
+        string siteCode,
+        AvailabilityModels.AvailabilityDto availability,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
+        ArgumentNullException.ThrowIfNull(availability);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(productId)}/{Uri.EscapeDataString(siteCode)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    availability,
+                    AvailabilityJsonContext.Default.AvailabilityDto),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Creates availability records in bulk.</summary>
+    /// <param name="records">The records to create.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>Each entry carries its own status; a 200 does not mean all of them landed.</remarks>
+    public Task<IReadOnlyList<AvailabilityModels.BulkResponse>> CreateManyAsync(
+        IEnumerable<AvailabilityModels.AvailabilityBulkDto> records,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => BulkAsync(HttpMethod.Post, records, auth, cancellationToken);
+
+    /// <summary>Replaces availability records in bulk.</summary>
+    /// <param name="records">The records in their new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<IReadOnlyList<AvailabilityModels.BulkResponse>> UpdateManyAsync(
+        IEnumerable<AvailabilityModels.AvailabilityBulkDto> records,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => BulkAsync(HttpMethod.Put, records, auth, cancellationToken);
+
+    /// <summary>Deletes availability records in bulk.</summary>
+    /// <param name="records">Which product and site to clear.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<IReadOnlyList<AvailabilityModels.BulkResponse>> DeleteManyAsync(
+        IEnumerable<AvailabilityModels.AvailabilityDeleteBulkDto> records,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+
+        List<AvailabilityModels.AvailabilityDeleteBulkDto> body = [.. records];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Delete,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        AvailabilityJsonContext.Default.ListAvailabilityDeleteBulkDto),
+                },
+                AvailabilityJsonContext.Default.ListBulkResponse,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    private async Task<IReadOnlyList<AvailabilityModels.BulkResponse>> BulkAsync(
+        HttpMethod method,
+        IEnumerable<AvailabilityModels.AvailabilityBulkDto> records,
+        AuthContext auth,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+
+        List<AvailabilityModels.AvailabilityBulkDto> body = [.. records];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = method,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        AvailabilityJsonContext.Default.ListAvailabilityBulkDto),
+                },
+                AvailabilityJsonContext.Default.ListBulkResponse,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
 }
 
 /// <summary>
@@ -208,6 +385,39 @@ public sealed class CheckoutService
 
                 // Deliberately absent: Idempotent. Placing an order twice is the
                 // failure this whole guard exists to prevent.
+            },
+            CheckoutJsonContext.Default.ResponseCheckout,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Turns an accepted quote into an order.</summary>
+    /// <param name="checkout">The quote checkout request.</param>
+    /// <param name="auth">A customer or anonymous context. Required.</param>
+    /// <param name="saasToken">An optional SaaS token, where the tenant requires one.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Same endpoint as <see cref="PlaceOrderAsync"/>, different body: the quote
+    /// supplies what the cart otherwise would. Deliberately not repeatable — a
+    /// retried checkout is a second order.
+    /// </remarks>
+    public async Task<CheckoutModels.ResponseCheckout?> PlaceOrderFromQuoteAsync(
+        CheckoutModels.RequestFromQuoteCheckout checkout,
+        AuthContext auth,
+        string? saasToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(checkout);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"/checkout/{_tenant}/checkouts/order",
+                Auth = RequireShopper(auth),
+                Content = EmporixJsonContent.Create(
+                    checkout,
+                    CheckoutJsonContext.Default.RequestFromQuoteCheckout),
+                Headers = saasToken is { Length: > 0 } ? [new("saas-token", saasToken)] : null,
             },
             CheckoutJsonContext.Default.ResponseCheckout,
             cancellationToken).ConfigureAwait(false);

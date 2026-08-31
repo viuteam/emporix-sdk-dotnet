@@ -108,6 +108,35 @@ public sealed class BrandService
             cancellationToken);
     }
 
+    /// <summary>Replaces a brand.</summary>
+    /// <param name="brandId">The brand id.</param>
+    /// <param name="brand">The new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Unlike <see cref="UpdateAsync"/> this sends the whole brand: anything you
+    /// leave out is cleared.
+    /// </remarks>
+    public Task ReplaceAsync(
+        string brandId,
+        UpdateBrand brand,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(brandId);
+        ArgumentNullException.ThrowIfNull(brand);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(brandId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(brand, BrandJsonContext.Default.UpdateBrand),
+            },
+            cancellationToken);
+    }
+
     /// <summary>Deletes a brand.</summary>
     /// <param name="brandId">The brand id.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
@@ -225,6 +254,35 @@ public sealed class LabelService
                 Path = $"{BasePath}/{Uri.EscapeDataString(labelId)}",
                 Auth = Defaults.Service(auth),
                 Content = EmporixJsonContent.Create(changes, LabelJsonContext.Default.LabelUpdate),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Replaces a label.</summary>
+    /// <param name="labelId">The label id.</param>
+    /// <param name="label">The new state.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Unlike <see cref="UpdateAsync"/> this sends the whole label: anything you
+    /// leave out is cleared.
+    /// </remarks>
+    public Task ReplaceAsync(
+        string labelId,
+        LabelUpdate label,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(labelId);
+        ArgumentNullException.ThrowIfNull(label);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/{Uri.EscapeDataString(labelId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(label, LabelJsonContext.Default.LabelUpdate),
             },
             cancellationToken);
     }
@@ -383,6 +441,36 @@ public sealed class CatalogService
                 Path = $"{BasePath}/{Uri.EscapeDataString(catalogId)}",
                 Auth = Defaults.Service(auth),
                 Content = EmporixJsonContent.Create(catalog, CatalogJsonContext.Default.UpdateCatalog),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Changes individual fields of a catalog.</summary>
+    /// <param name="catalogId">The catalog id.</param>
+    /// <param name="changes">The fields to change.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Unlike <see cref="ReplaceAsync"/> this leaves untouched fields alone.
+    /// </remarks>
+    public Task UpdateAsync(
+        string catalogId,
+        UpdateCatalogProperties changes,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(catalogId);
+        ArgumentNullException.ThrowIfNull(changes);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Patch,
+                Path = $"{BasePath}/{Uri.EscapeDataString(catalogId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    changes,
+                    CatalogJsonContext.Default.UpdateCatalogProperties),
             },
             cancellationToken);
     }

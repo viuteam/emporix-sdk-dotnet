@@ -132,6 +132,7 @@ internal sealed partial class LabelJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.CatalogModels.CreateCatalog))]
 [JsonSerializable(typeof(Viu.Emporix.CatalogModels.CreateCatalogResponse))]
 [JsonSerializable(typeof(Viu.Emporix.CatalogModels.UpdateCatalog))]
+[JsonSerializable(typeof(Viu.Emporix.CatalogModels.UpdateCatalogProperties))]
 internal sealed partial class CatalogJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the customer service. See <see cref="ProductJsonContext"/>.</summary>
@@ -167,6 +168,11 @@ internal sealed partial class PriceJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.AvailabilityModels.Availability))]
 [JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.Availability>))]
 [JsonSerializable(typeof(Viu.Emporix.AvailabilityModels.AvailabilityDto))]
+[JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(Viu.Emporix.AvailabilityModels.AvailabilityDto))]
+[JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.AvailabilityBulkDto>))]
+[JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.AvailabilityDeleteBulkDto>))]
+[JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.BulkResponse>))]
 internal sealed partial class AvailabilityJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the checkout service. See <see cref="ProductJsonContext"/>.</summary>
@@ -175,6 +181,7 @@ internal sealed partial class AvailabilityJsonContext : JsonSerializerContext;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Viu.Emporix.CheckoutModels.RequestCheckout))]
 [JsonSerializable(typeof(Viu.Emporix.CheckoutModels.ResponseCheckout))]
+[JsonSerializable(typeof(Viu.Emporix.CheckoutModels.RequestFromQuoteCheckout))]
 internal sealed partial class CheckoutJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the order service. See <see cref="ProductJsonContext"/>.</summary>
