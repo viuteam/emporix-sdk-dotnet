@@ -58,15 +58,57 @@ public class CategoryServiceTests
     }
 
     [Fact]
-    public async Task The_subtree_comes_in_one_call()
+    public async Task The_tree_comes_from_the_tree_endpoint()
     {
-        // Useful for building navigation without walking level by level.
+        // /subcategories returns one level as a list; the tree lives under
+        // /category-trees. Reading a list into a tree object yields nothing.
         StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"root"}""");
         CategoryService categories = Create(handler);
 
-        await categories.GetTreeAsync("root");
+        CategoryModels.CategoryTree? tree = await categories.GetTreeAsync("root");
 
+        Assert.Equal("root", tree?.Id);
+        Assert.Equal("/category/acme/category-trees/root", Uri(handler));
+    }
+
+    [Fact]
+    public async Task Subcategories_are_one_level_down()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"child"}]""");
+        CategoryService categories = Create(handler);
+
+        IReadOnlyList<CategoryModels.Category> children =
+            await categories.ListSubcategoriesAsync("root");
+
+        Assert.Single(children);
         Assert.Equal("/category/acme/categories/root/subcategories", Uri(handler));
+    }
+
+    [Fact]
+    public async Task Fetching_many_by_id_builds_a_query_and_splits_it()
+    {
+        // There is no fetch-by-id-list endpoint, so the ids become an id:(…)
+        // query — which has to be chunked or it outgrows what search accepts.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"c1"}]""");
+        CategoryService categories = Create(handler);
+
+        string[] ids = [.. Enumerable.Range(1, 250).Select(i => $"c{i}")];
+
+        await categories.GetManyByIdAsync(ids, chunkSize: 100);
+
+        Assert.Equal(3, handler.CallCount);
+        Assert.Contains("id:(c1,c2", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_reverse_lookup_asks_by_reference()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"c1"}]""");
+        CategoryService categories = Create(handler);
+
+        await categories.Assignments.ListCategoriesByReferenceAsync("p1");
+
+        Assert.Equal("/category/acme/assignments/references/p1", Uri(handler));
     }
 
     [Fact]

@@ -109,6 +109,15 @@ internal sealed partial class CartJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.CategoryIdResponse))]
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.CategoryAssignment))]
 [JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.CategoryAssignment>))]
+[JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.Category>))]
+[JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.CategoryTree>))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.CategoryTreeSearchRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.SearchRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.CategoryUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentUpsertRequest))]
+[JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.BulkAssignmentResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.AssignmentRequest))]
 internal sealed partial class CategoryJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the brand service. See <see cref="ProductJsonContext"/>.</summary>
