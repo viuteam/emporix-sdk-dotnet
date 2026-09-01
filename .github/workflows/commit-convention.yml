@@ -1,0 +1,58 @@
+name: Commit convention
+
+# Release Please reads the commit history to decide the next version and to write
+# the changelog. A commit it cannot classify contributes nothing to either — the
+# change ships, and no one reading the changelog learns that it did.
+#
+# This checks the pull-request title, because that is what a squash merge puts on
+# main. A branch merged without squashing is checked commit by commit instead.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    name: Conventional title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check the pull-request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # The types release-please-config.json knows about, plus the ones it
+          # deliberately hides. Anything else is a typo, not a new category.
+          pattern='^(feat|fix|perf|refactor|docs|deps|chore|test|ci|build|style|revert)(\([a-z0-9._-]+\))?!?: .+'
+
+          if [[ "$TITLE" =~ $pattern ]]; then
+            echo "«$TITLE» is fine."
+            exit 0
+          fi
+
+          cat >&2 <<MESSAGE
+          The pull-request title has to read as a conventional commit:
+
+              <type>[(scope)][!]: <what changed>
+
+          for example
+
+              feat: add the audit log service
+              fix(cart): send the item YRN rather than the bare id
+              feat!: require a JsonTypeInfo for cloud functions
+
+          Yours is:
+
+              $TITLE
+
+          «feat» and «fix» reach the changelog and move the version; «docs»,
+          «chore», «test», «ci» and «build» do not. A «!» or a «BREAKING CHANGE:»
+          footer marks a break — before 1.0 that bumps the minor.
+
+          The types are listed in release-please-config.json, and
+          docs/releasing.md explains what each one does to a release.
+          MESSAGE
+          exit 1

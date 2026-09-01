@@ -1,7 +1,11 @@
-name: Release
+name: Release (tag)
 
-# Publishing is driven by tags: pushing v0.1.0-preview.1 publishes exactly that
-# version, because MinVer derives it from the tag.
+# Publishing driven by a tag pushed by hand. Kept alongside release-please for
+# two cases it cannot cover: the very first release, which has to happen before
+# release-please has a published version to count from, and a release that has
+# to go out without waiting for a pull request.
+#
+# The usual path is release-please.yml. Reach for this one deliberately.
 on:
   push:
     tags: ['v*']
@@ -12,62 +16,9 @@ concurrency:
 
 jobs:
   publish:
-    name: Publish to nuget.org
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ github.ref }}
     permissions:
       contents: read
-      # Required for trusted publishing. Without it the OIDC token request fails
-      # silently and the login step receives no key.
       id-token: write
-
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Restore tools
-        run: dotnet tool restore
-
-      - name: Build
-        run: dotnet build --configuration Release
-
-      - name: Test
-        run: dotnet test --no-build --configuration Release
-
-      - name: Publish the sample with Native AOT
-        run: dotnet publish samples/Viu.Emporix.Sample --configuration Release
-
-      - name: Pack
-        run: dotnet pack src/Viu.Emporix --no-build --configuration Release --output artifacts
-
-      # Trusted publishing: the workflow proves its identity to nuget.org over
-      # OIDC and receives a key valid only for this run. No long-lived secret in
-      # the repository — which matters more since 2026-08-17, when newly created
-      # API keys became limited to 30 days.
-      #
-      # Requires a trusted-publishing policy on nuget.org for this repository
-      # and workflow. See
-      # https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
-      - name: Exchange the OIDC token for a NuGet key
-        uses: NuGet/login@v1
-        id: login
-        with:
-          user: ${{ vars.NUGET_USER }}
-
-      - name: Push package and symbols
-        run: |
-          dotnet nuget push "artifacts/*.nupkg" \
-            --source https://api.nuget.org/v3/index.json \
-            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
-            --skip-duplicate
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: release-packages
-          path: artifacts/*

@@ -1,0 +1,88 @@
+name: Publish
+
+# The publishing steps, in one place. Two workflows call this: the tag-triggered
+# one for a release cut by hand, and the release-please one for a release cut by
+# merging its pull request. Duplicating these steps across both is how the two
+# paths drift until only one of them still works.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: >-
+          The tag to publish. Checked out by name so that MinVer, which derives
+          the version from the nearest tag, produces exactly that version. A
+          checkout of the branch would build a height-suffixed prerelease
+          instead.
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Publish to nuget.org
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      # Required for trusted publishing. Without it the OIDC token request fails
+      # silently and the login step receives no key.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          # MinVer needs the tags, and shallow clones carry none.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+      - name: Publish the sample with Native AOT
+        run: dotnet publish samples/Viu.Emporix.Sample --configuration Release
+
+      - name: Pack
+        run: dotnet pack src/Viu.Emporix --no-build --configuration Release --output artifacts
+
+      # The packed file name carries the version MinVer derived, which is the only
+      # honest place to read it: `-getProperty:PackageVersion` answers 1.0.0,
+      # because MinVer sets the version in a target that the query does not run.
+      # Printed before pushing, so the log says what went out.
+      - name: Report what will be pushed
+        run: ls -1 artifacts/
+
+      # Trusted publishing: the workflow proves its identity to nuget.org over
+      # OIDC and receives a key valid only for this run. No long-lived secret in
+      # the repository — which matters more since 2026-08-17, when newly created
+      # API keys became limited to 30 days.
+      #
+      # Requires a trusted-publishing policy on nuget.org for this repository
+      # and workflow. See
+      # https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
+      - name: Exchange the OIDC token for a NuGet key
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Push package and symbols
+        run: |
+          dotnet nuget push "artifacts/*.nupkg" \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --skip-duplicate
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-packages
+          path: artifacts/*

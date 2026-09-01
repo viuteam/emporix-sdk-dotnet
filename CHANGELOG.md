@@ -4,10 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Versions are derived from Git tags by MinVer: tagging `v0.1.0-preview.1` produces
-exactly that package version.
+Versions come from Git tags, derived by MinVer. From 0.2.0 onwards the tag is cut
+by Release Please when its release pull request is merged, and the sections below
+it are generated from the commit history — see
+[docs/releasing.md](docs/releasing.md).
 
-## [Unreleased]
+## 0.1.0
 
 ### Added
 
@@ -114,7 +116,12 @@ exactly that package version.
   inside it. Passing the value through verbatim beats guessing a separator; use
   `SearchByProductAsync`, which is fully specified.
 
-## [0.1.0-preview.1]
+## 0.1.0-preview.1 — never published
+
+Written as the first prerelease and superseded before it went out: the tag was
+cut locally and never pushed, so no such version exists on nuget.org. Kept
+because it is the honest record of what the package looked like after wave 1, and
+everything in it ships as part of 0.1.0.
 
 The first prerelease. The core is complete, and so are twelve of the 48 Emporix
 services — each with the full set of operations the API offers for it, 193 in
@@ -161,5 +168,4 @@ the package. See
   Emporix specifications, repairs known defects, records a sha256 manifest and
   regenerates the types.
 
-[Unreleased]: https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.1.0-preview.1...HEAD
-[0.1.0-preview.1]: https://github.com/viuteam/emporix-sdk-dotnet/releases/tag/v0.1.0-preview.1
+[0.1.0]: https://github.com/viuteam/emporix-sdk-dotnet/releases/tag/v0.1.0

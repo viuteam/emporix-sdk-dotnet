@@ -1,0 +1,53 @@
+name: Release Please
+
+# The usual release path. Every push to main updates a release pull request that
+# collects the changes since the last release, derives the next version from the
+# commit types, and rewrites CHANGELOG.md. Merging that pull request creates the
+# tag and the GitHub release, and publishes.
+#
+# The decision to release is therefore a pull-request review, not a tag push.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    outputs:
+      released: ${{ steps.release.outputs.releases_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    name: Publish the release
+    needs: release-please
+    if: needs.release-please.outputs.released == 'true'
+
+    # The tag release-please just created is what gets built. Chaining inside one
+    # workflow rather than letting the tag trigger release.yml is deliberate: a
+    # tag created with GITHUB_TOKEN does not start another workflow run, so the
+    # tag-triggered path would silently never fire. The alternative is a GitHub
+    # App token, which is a secret to manage for no gain here.
+    uses: ./.github/workflows/publish.yml
+    with:
+      ref: ${{ needs.release-please.outputs.tag }}
+    permissions:
+      contents: read
+      id-token: write

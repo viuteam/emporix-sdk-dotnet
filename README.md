@@ -428,6 +428,21 @@ Without those two the pass says so and skips itself, which is why the same
 command works with or without them. Put the secret in the environment or a
 repository secret — never in a file in the repository.
 
+## Releasing
+
+Releases are cut by Release Please: every push to `main` updates a release pull
+request, and merging it publishes to nuget.org. What that asks of a contributor is
+one thing — a commit message a machine can classify:
+
+```
+feat: add the audit log service
+fix(cart): send the item YRN rather than the bare id
+```
+
+`feat` moves the minor version, `fix` the patch, and `chore`/`test`/`ci` move
+nothing. The full picture, including what is deliberately still manual, is in
+[docs/releasing.md](docs/releasing.md).
+
 ## Contributing
 
 The types under `src/Viu.Emporix/Generated/` are produced from the Emporix

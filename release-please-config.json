@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": false,
+  "include-commit-authors": false,
+
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+
+  "changelog-sections": [
+    { "type": "feat", "section": "Added" },
+    { "type": "fix", "section": "Fixed" },
+    { "type": "perf", "section": "Changed" },
+    { "type": "refactor", "section": "Changed" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "deps", "section": "Dependencies" },
+    { "type": "chore", "hidden": true },
+    { "type": "test", "hidden": true },
+    { "type": "ci", "hidden": true },
+    { "type": "build", "hidden": true },
+    { "type": "style", "hidden": true }
+  ],
+
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "Viu.Emporix",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
+    }
+  }
+}
