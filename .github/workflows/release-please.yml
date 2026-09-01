@@ -18,7 +18,7 @@ jobs:
   release-please:
     name: Release pull request
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     permissions:
       contents: write
@@ -35,6 +35,51 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+      # The public API baseline, promoted into the release pull request itself.
+      #
+      # This runs here rather than in a workflow of its own for a reason worth
+      # recording: a pull request opened by GITHUB_TOKEN does not start workflow
+      # runs — GitHub parks them as «action_required» until someone approves each
+      # one by hand. A workflow triggered by that pull request would therefore
+      # never fire on its own. Doing the work in the run that created the pull
+      # request needs no second trigger and no App token.
+      - name: Check out the release branch
+        if: steps.release.outputs.pr
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        if: steps.release.outputs.pr
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Promote the public API surface
+        if: steps.release.outputs.pr
+        run: bash scripts/promote-public-api.sh
+
+      # Proves the promoted baseline compiles before it reaches the pull request.
+      # RS0017 fires here if a symbol that was about to be promised has since
+      # been removed or changed — which is the whole point of having a baseline.
+      - name: Verify the promoted baseline
+        if: steps.release.outputs.pr
+        run: dotnet build --configuration Release
+
+      - name: Commit the promotion
+        if: steps.release.outputs.pr
+        run: |
+          if git diff --quiet; then
+            echo "Already promoted — nothing to commit."
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Viu.Emporix/PublicAPI.Shipped.txt src/Viu.Emporix/PublicAPI.Unshipped.txt
+          git commit -m "chore: promote the public API surface to shipped"
+          git push
+
   publish:
     name: Publish the release
     needs: release-please
@@ -43,8 +88,7 @@ jobs:
     # The tag release-please just created is what gets built. Chaining inside one
     # workflow rather than letting the tag trigger release.yml is deliberate: a
     # tag created with GITHUB_TOKEN does not start another workflow run, so the
-    # tag-triggered path would silently never fire. The alternative is a GitHub
-    # App token, which is a secret to manage for no gain here.
+    # tag-triggered path would silently never fire.
     uses: ./.github/workflows/publish.yml
     with:
       ref: ${{ needs.release-please.outputs.tag }}

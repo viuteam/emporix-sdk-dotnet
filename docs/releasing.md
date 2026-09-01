@@ -42,16 +42,40 @@ commit contributes to neither the version nor the changelog. It ships, silently.
 1. Push to `main`. **Release Please** opens or updates a pull request titled
    `chore(main): release <version>`. It contains the version bump, the generated
    changelog section, and nothing else you have to write.
-2. The **API baseline** check runs on that pull request only, and commits the
-   promotion of `PublicAPI.Unshipped.txt` into `PublicAPI.Shipped.txt`. Read that
-   diff: it is the list of symbols the release promises to keep, and the last
-   moment to notice one that went public by accident.
-3. CI runs on the pull request as on any other — build, tests, the Native AOT
-   publish, the public-API check against the freshly promoted baseline.
-4. Merge. Release Please creates the tag and the GitHub release, and the same
+2. The same run then promotes `PublicAPI.Unshipped.txt` into
+   `PublicAPI.Shipped.txt` on that branch, builds to prove the promoted baseline
+   compiles, and commits it into the pull request. Read that diff: it is the list
+   of symbols the release promises to keep, and the last moment to notice one
+   that went public by accident.
+3. Merge. Release Please creates the tag and the GitHub release, and the same
    workflow publishes to nuget.org over trusted publishing.
 
 Nothing is published before that merge, and nothing needs a tag pushed by hand.
+
+### Why the checks on the release pull request say «action required»
+
+Because GitHub does not start workflow runs for anything `GITHUB_TOKEN` created —
+[release-please documents this](https://github.com/googleapis/release-please-action#github-credentials)
+— so the runs for CI and the commit-convention check sit waiting for a manual
+approval on the release pull request, and only there.
+
+That is why the API promotion happens inside the Release Please run instead of in
+a workflow of its own: a workflow triggered by that pull request would never fire.
+The promotion is verified with a Release build in the same run, so the thing that
+could actually break is checked either way.
+
+What is lost is the full CI sweep on the release pull request. Two ways to get it
+back, when it starts to matter:
+
+- **Approve the runs.** One click per release, on the pull request's checks.
+- **Give Release Please a GitHub App token** instead of `GITHUB_TOKEN`, which is
+  what the Node SDK does. Then the pull request is authored by the app, its events
+  start workflows normally, and CI runs unattended. The cost is an App to create,
+  install and keep two secrets for.
+
+Until then: the release pull request changes `CHANGELOG.md`, `version.txt`, the
+manifest and the two API files, and nothing else. CI runs in full on `main` right
+after the merge, and the publish job runs the tests again before pushing.
 
 ## The changelog is thinner than it used to be
 
