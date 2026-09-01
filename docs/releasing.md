@@ -44,7 +44,9 @@ commit contributes to neither the version nor the changelog. It ships, silently.
    changelog section, and nothing else you have to write.
 2. The same run then promotes `PublicAPI.Unshipped.txt` into
    `PublicAPI.Shipped.txt` on that branch, builds to prove the promoted baseline
-   compiles, and commits it into the pull request. Read that diff: it is the list
+   compiles, and commits it into the pull request. It happens on any push that
+   actually changes the release pull request — a `ci:` or `chore:` commit changes
+   nothing there, so nothing is promoted either. Read that diff: it is the list
    of symbols the release promises to keep, and the last moment to notice one
    that went public by accident.
 3. Merge. Release Please creates the tag and the GitHub release, and the same

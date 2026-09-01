@@ -43,31 +43,37 @@ jobs:
       # one by hand. A workflow triggered by that pull request would therefore
       # never fire on its own. Doing the work in the run that created the pull
       # request needs no second trigger and no App token.
+      # Only when this run left a release pull request behind. Two runs do not:
+      # one where nothing release-worthy changed, which sets no `pr` at all, and
+      # the run that cuts the release, where the branch has just been merged and
+      # deleted. A promotion for a pull request opened in that same run happens
+      # on the next push instead — the alternative is checking out a branch that
+      # may no longer exist.
       - name: Check out the release branch
-        if: steps.release.outputs.pr
+        if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
         uses: actions/checkout@v5
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
           fetch-depth: 0
 
       - uses: actions/setup-dotnet@v5
-        if: steps.release.outputs.pr
+        if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
         with:
           dotnet-version: '10.0.x'
 
       - name: Promote the public API surface
-        if: steps.release.outputs.pr
+        if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
         run: bash scripts/promote-public-api.sh
 
       # Proves the promoted baseline compiles before it reaches the pull request.
       # RS0017 fires here if a symbol that was about to be promised has since
       # been removed or changed — which is the whole point of having a baseline.
       - name: Verify the promoted baseline
-        if: steps.release.outputs.pr
+        if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
         run: dotnet build --configuration Release
 
       - name: Commit the promotion
-        if: steps.release.outputs.pr
+        if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
         run: |
           if git diff --quiet; then
             echo "Already promoted — nothing to commit."
