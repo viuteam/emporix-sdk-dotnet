@@ -30,27 +30,6 @@ namespace Viu.Emporix.ShoppingListModels
     
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class TimeProperties
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("epochSecond")]
-        public double? EpochSecond { get; set; } = default!;
-
-        [System.Text.Json.Serialization.JsonPropertyName("nano")]
-        public double? Nano { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class ShoppinglistItem
     {
 
@@ -461,10 +440,10 @@ namespace Viu.Emporix.ShoppingListModels
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        public TimeProperties? CreatedAt { get; set; } = default!;
+        public System.DateTimeOffset? CreatedAt { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
-        public TimeProperties? ModifiedAt { get; set; } = default!;
+        public System.DateTimeOffset? ModifiedAt { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("version")]
         public double? Version { get; set; } = default!;

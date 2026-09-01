@@ -1186,6 +1186,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderStatusChangePackingStatus>))]
     public enum OrderStatusChangePackingStatus
     {
 
@@ -1207,6 +1208,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderPackingStatus>))]
     public enum OrderPackingStatus
     {
 
@@ -1228,6 +1230,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobOrderJobOrderStatus>))]
     public enum RecalculationJobOrderJobOrderStatus
     {
 
@@ -1243,6 +1246,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobJobType>))]
     public enum RecalculationJobJobType
     {
 
@@ -1255,6 +1259,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobJobStatus>))]
     public enum RecalculationJobJobStatus
     {
 
@@ -1270,6 +1275,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobCreationJobType>))]
     public enum RecalculationJobCreationJobType
     {
 
@@ -1282,6 +1288,7 @@ namespace Viu.Emporix.PickPackModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderListPackingStatus>))]
     public enum OrderListPackingStatus
     {
 

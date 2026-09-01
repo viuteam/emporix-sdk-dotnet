@@ -46,7 +46,7 @@ namespace Viu.Emporix.LabelServiceModels
         /// Localized resource description in a form of a map of translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -112,7 +112,7 @@ namespace Viu.Emporix.LabelServiceModels
         /// Localized resource description in a form of a map of translations.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public Metadata? Metadata { get; set; } = default!;

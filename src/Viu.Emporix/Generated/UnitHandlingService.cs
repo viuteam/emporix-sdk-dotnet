@@ -43,7 +43,7 @@ namespace Viu.Emporix.UnitHandlingServiceModels
         /// The name of the unit in the form of a map (language, value) or string.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// The type of a unit.

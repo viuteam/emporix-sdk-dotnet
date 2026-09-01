@@ -111,6 +111,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the agent handling the request.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AgentType>))]
     public enum AgentType
     {
 
@@ -205,6 +206,7 @@ namespace Viu.Emporix.AiServiceModels
     /// <br/>  Slack fields `defaultInboundAgentId` and `allowedOperations` are in preview.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<NativeToolType>))]
     public enum NativeToolType
     {
 
@@ -296,6 +298,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the database.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RagCustomDatabaseType>))]
     public enum RagCustomDatabaseType
     {
 
@@ -308,6 +311,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the entity which is stored in the given collection.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RagEntityType>))]
     public enum RagEntityType
     {
 
@@ -421,6 +425,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RagLlmProvider>))]
     public enum RagLlmProvider
     {
 
@@ -611,7 +616,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("embeddingConfig")]
-        public EmporixOpenAiRagEmporixEmbeddingNativeToolConfig EmbeddingConfig { get; set; } = default!;
+        public System.Text.Json.JsonElement? EmbeddingConfig { get; set; } = default!;
 
     }
 
@@ -620,7 +625,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("embeddingConfig")]
-        public EmporixOpenAiRagEmporixEmbeddingNativeToolConfig? EmbeddingConfig { get; set; } = default!;
+        public System.Text.Json.JsonElement? EmbeddingConfig { get; set; } = default!;
 
     }
 
@@ -634,6 +639,7 @@ namespace Viu.Emporix.AiServiceModels
     /// <br/>Slack native tool operation identifier.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SlackAllowedOperations>))]
     public enum SlackAllowedOperations
     {
 
@@ -680,7 +686,6 @@ namespace Viu.Emporix.AiServiceModels
         /// Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled. This field is in preview.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("allowedOperations")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
         public System.Collections.Generic.ICollection<SlackAllowedOperations>? AllowedOperations { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -752,6 +757,7 @@ namespace Viu.Emporix.AiServiceModels
     /// MS Teams native tool operation identifier.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TeamsAllowedOperations>))]
     public enum TeamsAllowedOperations
     {
 
@@ -806,7 +812,6 @@ namespace Viu.Emporix.AiServiceModels
         /// Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("allowedOperations")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
         public System.Collections.Generic.ICollection<TeamsAllowedOperations>? AllowedOperations { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -1099,6 +1104,7 @@ namespace Viu.Emporix.AiServiceModels
     /// <br/>  **The `dynamic` value is in preview mode** - some of the features may not be fully operational yet.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ManagedMcpServerType>))]
     public enum ManagedMcpServerType
     {
 
@@ -1114,6 +1120,7 @@ namespace Viu.Emporix.AiServiceModels
     /// HTTP method used to invoke the Automation function.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<McpToolInvocationMethod>))]
     public enum McpToolInvocationMethod
     {
 
@@ -1138,6 +1145,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Location of the tool arguments in the HTTP request. Defaults to `body` when omitted.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<McpToolInvocationArgsLocation>))]
     public enum McpToolInvocationArgsLocation
     {
 
@@ -1484,6 +1492,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the MCP server attachment on an agent. The `custom` type references a tenant-managed MCP server with a URL. The `predefined` type references an Emporix domain MCP server. The `dynamic` type references a tenant-managed dynamic MCP server and may include an optional tool-name allow-list.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<McpServerType>))]
     public enum McpServerType
     {
 
@@ -1502,6 +1511,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the communication between the agent and the MCP server. The `streamable_http` protocol is recommended, since the `sse` protocol is deprecated.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomMcpServerTransportType>))]
     public enum CustomMcpServerTransportType
     {
 
@@ -1780,6 +1790,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the LLM Provider. The supported providers allows you to provide your own API key. When using this providers, the `apiKey` property cannot be omitted.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApiKeyLlmProvider>))]
     public enum ApiKeyLlmProvider
     {
 
@@ -2053,7 +2064,6 @@ namespace Viu.Emporix.AiServiceModels
         /// <br/>**The `allowedOperations` field is in preview mode** - some of the features may not be fully operational yet.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("allowedOperations")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
         public System.Collections.Generic.ICollection<TeamsAllowedOperations>? AllowedOperations { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -2080,6 +2090,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the trigger. When `slack` or `teams` is selected, the agent must have exactly one matching enabled Slack or Teams native tool assigned.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TriggerType>))]
     public enum TriggerType
     {
 
@@ -2098,6 +2109,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the trigger.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CommerceEventsTriggerType>))]
     public enum CommerceEventsTriggerType
     {
 
@@ -2110,6 +2122,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Logical operator used to combine multiple filter conditions.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CommerceEventTriggerFilterLogicalOperator>))]
     public enum CommerceEventTriggerFilterLogicalOperator
     {
 
@@ -2288,7 +2301,6 @@ namespace Viu.Emporix.AiServiceModels
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("requiredScopes")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
         public System.Collections.Generic.ICollection<RequiredScopes>? RequiredScopes { get; set; } = default!;
 
         /// <summary>
@@ -2380,7 +2392,7 @@ namespace Viu.Emporix.AiServiceModels
         public System.Collections.Generic.ICollection<NativeToolReferenceRequest>? NativeTools { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("llmConfig")]
-        public EmporixLlm LlmConfig { get; set; } = default!;
+        public System.Text.Json.JsonElement? LlmConfig { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("mcpServers")]
         public AgentMcpServersRequest McpServers { get; set; } = new AgentMcpServersRequest();
@@ -2404,7 +2416,7 @@ namespace Viu.Emporix.AiServiceModels
         public NativeToolsResponse? NativeTools { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("llmConfig")]
-        public EmporixLlm? LlmConfig { get; set; } = default!;
+        public System.Text.Json.JsonElement? LlmConfig { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("mcpServers")]
         public AgentMcpServersResponse? McpServers { get; set; } = default!;
@@ -2470,6 +2482,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Status of the job.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobStatus>))]
     public enum JobStatus
     {
 
@@ -2491,6 +2504,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Type of the job.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobType>))]
     public enum JobType
     {
 
@@ -2797,6 +2811,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Severity level of the log entry.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LogSeverity>))]
     public enum LogSeverity
     {
 
@@ -3479,6 +3494,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand>))]
     public enum Expand
     {
 
@@ -3521,6 +3537,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand2>))]
     public enum Expand2
     {
 
@@ -3530,6 +3547,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand3>))]
     public enum Expand3
     {
 
@@ -3539,6 +3557,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand4>))]
     public enum Expand4
     {
 
@@ -3548,6 +3567,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Granularity>))]
     public enum Granularity
     {
 
@@ -3698,6 +3718,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PredefinedAgentMcpServerDomain>))]
     public enum PredefinedAgentMcpServerDomain
     {
 
@@ -3762,6 +3783,7 @@ namespace Viu.Emporix.AiServiceModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AgentMcpServerResponseDomain>))]
     public enum AgentMcpServerResponseDomain
     {
 
@@ -3783,6 +3805,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<EmporixLlmProvider>))]
     public enum EmporixLlmProvider
     {
 
@@ -3792,6 +3815,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SelfHostedLlmProvider>))]
     public enum SelfHostedLlmProvider
     {
 
@@ -3804,6 +3828,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SelfHostedLlmBaseProvider>))]
     public enum SelfHostedLlmBaseProvider
     {
 
@@ -3819,6 +3844,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OAuthGrantType>))]
     public enum OAuthGrantType
     {
 
@@ -3855,6 +3881,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CommerceEventTriggerLeafFilterNoRightOp>))]
     public enum CommerceEventTriggerLeafFilterNoRightOp
     {
 
@@ -3873,6 +3900,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CommerceEventTriggerLeafFilterScalarRightOp>))]
     public enum CommerceEventTriggerLeafFilterScalarRightOp
     {
 
@@ -3885,6 +3913,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CommerceEventTriggerLeafFilterArrayRightOp>))]
     public enum CommerceEventTriggerLeafFilterArrayRightOp
     {
 
@@ -3915,6 +3944,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RequiredScopes>))]
     public enum RequiredScopes
     {
 
@@ -3957,6 +3987,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportedEntityState>))]
     public enum ImportedEntityState
     {
 
@@ -3978,6 +4009,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportDetailsCode>))]
     public enum ImportDetailsCode
     {
 
@@ -4030,6 +4062,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ExecutionsResponseGranularity>))]
     public enum ExecutionsResponseGranularity
     {
 
@@ -4078,6 +4111,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MessagesRole>))]
     public enum MessagesRole
     {
 

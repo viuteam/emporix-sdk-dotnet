@@ -162,6 +162,21 @@ internal static partial class SpecPatches
             ],
 
 
+            ["shopping-list"] =
+            [
+                new SpecPatch(
+                    "upstream: metadata timestamps are declared as TimeProperties, an object "
+                    + "of epochSecond and nano — Java's Instant serialised field by field. The "
+                    + "live API sends an ISO-8601 string (»2026-06-13T17:36:55.366Z«), so the "
+                    + "generated model cannot read a shopping list at all. Verified against "
+                    + "tenant viu on 2026-09-01.",
+                    ReplaceAll(
+                        "    TimeProperties:\n      type: object\n      properties:\n"
+                        + "        epochSecond:\n          type: number\n"
+                        + "        nano:\n          type: number",
+                        "    TimeProperties:\n      type: string\n      format: date-time")),
+            ],
+
             ["approval-service"] =
             [
                 new SpecPatch(

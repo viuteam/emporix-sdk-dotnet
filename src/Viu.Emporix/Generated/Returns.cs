@@ -935,6 +935,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UpdateEmployeeReturnApprovalStatus>))]
     public enum UpdateEmployeeReturnApprovalStatus
     {
 
@@ -1035,6 +1036,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FullCustomerReturnApprovalStatus>))]
     public enum FullCustomerReturnApprovalStatus
     {
 
@@ -1262,6 +1264,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationOp>))]
     public enum PatchOperationOp
     {
 
@@ -1277,6 +1280,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssistedBuyingEntryOperation>))]
     public enum AssistedBuyingEntryOperation
     {
 
@@ -1310,6 +1314,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApproverType>))]
     public enum ApproverType
     {
 
@@ -1322,6 +1327,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Approver2Type>))]
     public enum Approver2Type
     {
 
@@ -1334,6 +1340,7 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Approver3Type>))]
     public enum Approver3Type
     {
 

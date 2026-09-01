@@ -344,12 +344,8 @@ paths:
 components:
   schemas:
     TimeProperties:
-      type: object
-      properties:
-        epochSecond:
-          type: number
-        nano:
-          type: number
+      type: string
+      format: date-time
     shoppinglistItem:
       title: ShoppinglistItem
       type: object

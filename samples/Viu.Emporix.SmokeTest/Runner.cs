@@ -10,6 +10,9 @@ internal sealed record Step(StepOutcome Outcome, string Detail, string? Value = 
     /// <summary>Succeeded, but the answer was empty in a way worth looking at.</summary>
     public static Step Empty(string detail) => new(StepOutcome.Empty, detail);
 
+    /// <summary>The call was understood and the token was not allowed to make it.</summary>
+    public static Step Forbidden(string detail) => new(StepOutcome.Forbidden, detail);
+
     public static Step Failed(string detail) => new(StepOutcome.Failed, detail);
 
     public static Step Skipped(string detail) => new(StepOutcome.Skipped, detail);
@@ -19,6 +22,20 @@ internal enum StepOutcome
 {
     Ok,
     Empty,
+
+    /// <summary>
+    /// A <c>403</c>: the address exists, the request was understood, and this
+    /// token may not make it.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from a failure because it says something different. A wrong
+    /// address answers <c>404</c>; a wrong body answers <c>400</c>. A <c>403</c>
+    /// says the SDK got it right and the client is missing a scope, which is a
+    /// tenant's configuration and not this package's problem. Counting it as a
+    /// failure would have the smoke test refuse to publish over someone else's
+    /// permissions.
+    /// </remarks>
+    Forbidden,
     Failed,
     Skipped,
 }
@@ -35,6 +52,7 @@ internal sealed class Runner
 {
     private int _failed;
     private int _empty;
+    private int _forbidden;
 
     /// <summary>Runs one step and returns whatever it produced for the next one.</summary>
     public async Task<string?> RunAsync(string name, Func<Task<Step>> step)
@@ -50,10 +68,25 @@ internal sealed class Runner
         }
         catch (EmporixApiException exception)
         {
+            bool forbidden = exception.StatusCode == System.Net.HttpStatusCode.Forbidden;
+
+            if (forbidden)
+            {
+                _forbidden++;
+            }
+            else
+            {
+                _failed++;
+            }
+
+            Write(
+                forbidden ? "SCOPE" : "FAIL",
+                name,
+                $"{(int)exception.StatusCode} {exception.Message}",
+                started);
+
             // The correlation id is what makes this findable in Emporix's own
             // logs, so it belongs in the output even though nothing else does.
-            _failed++;
-            Write("FAIL", name, $"{(int)exception.StatusCode} {exception.Message}", started);
             Console.WriteLine($"       correlation id: {exception.CorrelationId ?? "none"}");
             return null;
         }
@@ -75,6 +108,11 @@ internal sealed class Runner
                 Write("EMPTY", name, result.Detail, started);
                 break;
 
+            case StepOutcome.Forbidden:
+                _forbidden++;
+                Write("SCOPE", name, result.Detail, started);
+                break;
+
             case StepOutcome.Failed:
                 _failed++;
                 Write("FAIL", name, result.Detail, started);
@@ -93,8 +131,10 @@ internal sealed class Runner
 
     /// <summary>Prints the summary and returns the exit code.</summary>
     /// <remarks>
-    /// An empty answer is not a failure — a tenant may genuinely have no prices
-    /// configured — but it is reported separately so it cannot pass unnoticed.
+    /// Three outcomes short of a plain pass, and only one of them is this
+    /// package's fault. An empty answer means the tenant has nothing of that
+    /// kind configured; a <c>403</c> means the client is missing a scope. Both
+    /// are reported so they cannot pass unnoticed, and neither fails the run.
     /// </remarks>
     public int Report()
     {
@@ -104,13 +144,23 @@ internal sealed class Runner
             return 1;
         }
 
-        if (_empty > 0)
+        if (_forbidden > 0)
         {
-            Console.WriteLine($"All steps passed, but {_empty} returned nothing. Check the note above each.");
-            return 0;
+            Console.WriteLine(
+                $"No step failed. {_forbidden} were refused for a missing scope (SCOPE) — "
+                + "the addresses are right, the client credentials are not entitled.");
         }
 
-        Console.WriteLine("All steps passed.");
+        if (_empty > 0)
+        {
+            Console.WriteLine($"{_empty} step(s) returned nothing. Check the note above each.");
+        }
+
+        if (_forbidden == 0 && _empty == 0)
+        {
+            Console.WriteLine("All steps passed.");
+        }
+
         return 0;
     }
 

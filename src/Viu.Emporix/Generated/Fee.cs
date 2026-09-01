@@ -144,13 +144,13 @@ namespace Viu.Emporix.FeeModels
         /// The localized fee name.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// The localized fee description.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public string? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         /// <summary>
         /// The code-name, unique for the tenant.
@@ -808,6 +808,7 @@ namespace Viu.Emporix.FeeModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FeeType>))]
     public enum FeeType
     {
 
@@ -823,6 +824,7 @@ namespace Viu.Emporix.FeeModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FeeItemType>))]
     public enum FeeItemType
     {
 

@@ -123,6 +123,7 @@ namespace Viu.Emporix.SchemaModels
     /// Type which the schema should be assigned to. Can be one of the predefined values or any custom schema type id.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SchemaType>))]
     public enum SchemaType
     {
 
@@ -201,6 +202,7 @@ namespace Viu.Emporix.SchemaModels
     /// <br/>
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SchemaAttributeType>))]
     public enum SchemaAttributeType
     {
 
@@ -425,7 +427,6 @@ namespace Viu.Emporix.SchemaModels
         /// List of types which schema should be assigned to.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("types")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
         public System.Collections.Generic.ICollection<SchemaType> Types { get; set; } = new System.Collections.ObjectModel.Collection<SchemaType>();
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -591,7 +592,6 @@ namespace Viu.Emporix.SchemaModels
         /// List of types to which schema should be assigned.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("types")]
-        // TODO(system.text.json): Add ItemConverterType with enum converter when supported
         public System.Collections.Generic.ICollection<SchemaType>? Types { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
@@ -1051,6 +1051,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Mode>))]
     public enum Mode
     {
 
@@ -1418,6 +1419,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomInstanceOwnerType>))]
     public enum CustomInstanceOwnerType
     {
 
@@ -1433,6 +1435,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomInstanceOwnerRequestType>))]
     public enum CustomInstanceOwnerRequestType
     {
 
@@ -1445,6 +1448,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationOp>))]
     public enum PatchOperationOp
     {
 

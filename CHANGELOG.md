@@ -54,6 +54,31 @@ exactly that package version.
 
 ### Fixed
 
+- Localized fields declared inline are now typed as `LocalizedString`. The
+  pipeline only recognised the union when a specification named it and
+  referenced it; the tax service spells it out on the property, so `taxClass.name`
+  shipped typed as a map and **reading a tax configuration threw** against a
+  tenant that stores a plain string.
+- Localized fields nested inside another object or an array are found too. The
+  path is now resolved through the generated code, which is the only place that
+  knows NSwag called the nested class `Zone2` — `QuoteResponseItem.zone.name` was
+  typed `string` and would have broken any shipping quote whose zone name is not
+  translated.
+- A localized property the pipeline cannot find in the generated code is now
+  reported instead of silently skipped. That silence is what let the two defects
+  above ship.
+- Enums are annotated for string serialization on the type rather than on each
+  property. NSwag leaves a `TODO` where a property is a *collection* of enums, so
+  `["customer"]` could not be read into `ICollection<RequiredScopes>` and **the AI
+  agent list failed entirely**. Six properties across two services were affected.
+- Properties whose schema is a union of several object types are typed as
+  `JsonElement`. NSwag resolves such a union to its first branch: an agent using
+  `provider: openai` could not be read, because the generated type only admits
+  `emporix_openai` — a value the specification's own examples contradict. Four
+  properties, all provider configurations.
+- Shopping-list timestamps parse. The specification declares them as
+  `{epochSecond, nano}`; the API sends ISO-8601, so **no shopping list could be
+  read at all**.
 - `Imports` pages from zero with `page` and `size`. Every other service in the
   SDK counts from one with `pageNumber` and `pageSize`; using the usual spelling
   here skips the first page without an error.

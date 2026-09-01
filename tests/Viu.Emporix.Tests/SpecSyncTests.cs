@@ -271,4 +271,285 @@ public class SpecSyncTests
                     StringComparer.Ordinal),
                 StringComparer.Ordinal),
         };
+
+    // ---------- Localized and union properties ----------
+    //
+    // Every case below is one a live call found. Unit tests could not have:
+    // the specification and the generated code agreed with each other, and both
+    // disagreed with the API.
+
+    [Fact]
+    public void A_union_spelled_out_on_the_property_is_recognised()
+    {
+        // The tax service does this. Only the $ref form was handled at first,
+        // so taxClass.name shipped typed as a map and reading a tax
+        // configuration threw on a tenant that stores a plain string.
+        const string yaml = """
+            components:
+              schemas:
+                taxClass:
+                  type: object
+                  properties:
+                    name:
+                      description: |-
+                        A long description that pushes the union well past any
+                        fixed look-ahead window.
+
+                        Another paragraph, for good measure.
+                      oneOf:
+                        - type: object
+                          additionalProperties:
+                            type: string
+                        - type: string
+            """;
+
+        Assert.Contains("TaxClass.Name", LocalizedProperties.Read(yaml));
+    }
+
+    [Fact]
+    public void A_union_nested_deeper_is_not_attributed_to_the_property_above_it()
+    {
+        // A oneOf three levels down inside an array's items belongs to the
+        // property it is on, not to the outermost one. Attributing it upwards
+        // flagged «AggregateFee.Elements» as localized text.
+        const string yaml = """
+            components:
+              schemas:
+                aggregateFee:
+                  type: object
+                  properties:
+                    elements:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            oneOf:
+                              - type: string
+                              - type: object
+                                additionalProperties:
+                                  type: string
+            """;
+
+        IReadOnlyCollection<string> found = LocalizedProperties.Read(yaml);
+
+        Assert.Contains("AggregateFee.Elements.Name", found);
+        Assert.DoesNotContain("AggregateFee.Elements", found);
+    }
+
+    [Fact]
+    public void A_path_operation_is_not_mistaken_for_a_schema()
+    {
+        // «post:» sits at a schema's indentation, and its requestBody has a
+        // «content» property whose media type holds a schema — which is how
+        // «Post.Content» reached the list of localized properties.
+        const string yaml = """
+            paths:
+              /thing:
+                post:
+                  requestBody:
+                    content:
+                      application/json:
+                        schema:
+                          oneOf:
+                            - type: string
+                            - type: object
+                              additionalProperties:
+                                type: string
+            """;
+
+        Assert.DoesNotContain("Post.Content", LocalizedProperties.Read(yaml));
+    }
+
+    [Fact]
+    public void A_union_of_named_object_types_is_read_separately()
+    {
+        // Not a localized value: three provider shapes with no discriminator.
+        const string yaml = """
+            components:
+              schemas:
+                agent:
+                  type: object
+                  properties:
+                    llmConfig:
+                      oneOf:
+                        - $ref: '#/components/schemas/EmporixLlm'
+                        - $ref: '#/components/schemas/ApiKeyLlm'
+                        - $ref: '#/components/schemas/SelfHostedLlm'
+            """;
+
+        Assert.Contains("Agent.LlmConfig", LocalizedProperties.ReadUnions(yaml));
+        Assert.Empty(LocalizedProperties.Read(yaml));
+    }
+
+    [Fact]
+    public void A_localized_property_is_retyped_from_either_branch()
+    {
+        // NSwag picks whichever branch the specification listed first, and both
+        // have been seen: products came back as a map typed as string, a tax
+        // class as a string typed as a map.
+        const string source = """
+                public partial class Product
+                {
+                    public string? Name { get; set; }
+                }
+
+                public partial class TaxClass
+                {
+                    public System.Collections.Generic.IDictionary<string, string> Name { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.RetypeLocalizedProperties(source, ["Product.Name", "TaxClass.Name"]);
+
+        Assert.Equal(2, retyped.Count);
+        Assert.Empty(missed);
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Count(
+            result, @"Viu\.Emporix\.LocalizedString\? Name"));
+    }
+
+    [Fact]
+    public void A_localized_property_that_cannot_be_found_is_reported()
+    {
+        // Previously a silent no-op, which is how taxClass.name shipped broken:
+        // the specification was read correctly and the replacement found
+        // nothing to replace.
+        const string source = "public partial class Product { public int Age { get; set; } }";
+
+        (_, IReadOnlyList<string> retyped, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.RetypeLocalizedProperties(source, ["Product.Name"]);
+
+        Assert.Empty(retyped);
+        Assert.Equal(["Product.Name"], missed);
+    }
+
+    [Fact]
+    public void A_nested_path_is_resolved_through_the_generated_code()
+    {
+        // «QuoteResponseItem.Zone.Name» has to become «Zone2.Name», and only the
+        // generated code knows the nested class ended up called Zone2.
+        const string source = """
+                public partial class QuoteResponseItem
+                {
+                    public Zone2? Zone { get; set; }
+                }
+
+                public partial class Zone2
+                {
+                    public string? Id { get; set; }
+                    public string? Name { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, _) =
+            GeneratedCodeFixer.RetypeLocalizedProperties(source, ["QuoteResponseItem.Zone.Name"]);
+
+        Assert.Equal(["QuoteResponseItem.Zone.Name"], retyped);
+        Assert.Contains("Viu.Emporix.LocalizedString? Name", result, StringComparison.Ordinal);
+        Assert.Contains("string? Id", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_collection_wrapper_is_stepped_through_on_the_way_down()
+    {
+        // «AggregateFee.Elements.Name»: Elements is ICollection<Elements>, and
+        // the localized field is on the item class.
+        const string source = """
+                public partial class AggregateFee
+                {
+                    public System.Collections.Generic.ICollection<Elements>? Elements { get; set; }
+                }
+
+                public partial class Elements
+                {
+                    public string? Name { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, _) =
+            GeneratedCodeFixer.RetypeLocalizedProperties(source, ["AggregateFee.Elements.Name"]);
+
+        Assert.Single(retyped);
+        Assert.Contains("Viu.Emporix.LocalizedString? Name", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_union_property_becomes_raw_json()
+    {
+        const string source = """
+                public partial class AgentResponse
+                {
+                    public EmporixLlm? LlmConfig { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, _) =
+            GeneratedCodeFixer.RetypeUnionProperties(source, ["AgentResponse.LlmConfig"]);
+
+        Assert.Single(retyped);
+        Assert.Contains("System.Text.Json.JsonElement? LlmConfig", result, StringComparison.Ordinal);
+    }
+
+    // ---------- Enum serialization ----------
+
+    [Fact]
+    public void Enums_are_annotated_for_string_serialization()
+    {
+        // NSwag annotates a property whose type is an enum but not one that is a
+        // collection of enums — it leaves a TODO. Deserialising ["customer"]
+        // into ICollection<RequiredScopes> threw and took the whole agent list
+        // with it.
+        const string source = """
+            namespace X
+            {
+                [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0")]
+                public enum RequiredScopes
+                {
+                    Anonymous = 0,
+                }
+            }
+            """;
+
+        (string result, IReadOnlyList<string> annotated) = GeneratedCodeFixer.AnnotateEnums(source);
+
+        Assert.Equal(["RequiredScopes"], annotated);
+        Assert.Contains(
+            "JsonStringEnumConverter<RequiredScopes>",
+            result,
+            StringComparison.Ordinal);
+
+        // The attribute has to land above the declaration, not above the
+        // [GeneratedCode] attribute that documents where the type came from.
+        Assert.True(
+            result.IndexOf("GeneratedCode", StringComparison.Ordinal)
+            < result.IndexOf("JsonStringEnumConverter", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Annotating_enums_twice_changes_nothing_the_second_time()
+    {
+        // Every repair in this pipeline has to be repeatable: the sync runs on a
+        // schedule and stacked attributes would not compile.
+        const string source = "    public enum Colour\n    {\n        Red = 0,\n    }\n";
+
+        (string once, _) = GeneratedCodeFixer.AnnotateEnums(source);
+        (string twice, IReadOnlyList<string> again) = GeneratedCodeFixer.AnnotateEnums(once);
+
+        Assert.Equal(once, twice);
+        Assert.Empty(again);
+    }
+
+    [Fact]
+    public void The_stale_element_converter_note_is_removed()
+    {
+        const string source =
+            "        // TODO(system.text.json): Add ItemConverterType with enum converter when supported\n"
+            + "        public System.Collections.Generic.ICollection<X>? Y { get; set; }\n";
+
+        (string result, _) = GeneratedCodeFixer.AnnotateEnums(source);
+
+        Assert.DoesNotContain("TODO(system.text.json)", result, StringComparison.Ordinal);
+        Assert.Contains("ICollection<X>? Y", result, StringComparison.Ordinal);
+    }
 }

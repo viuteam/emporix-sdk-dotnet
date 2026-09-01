@@ -502,6 +502,7 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssetAccess>))]
     public enum AssetAccess
     {
 
@@ -514,6 +515,7 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssetCreateLinkType>))]
     public enum AssetCreateLinkType
     {
 
@@ -523,6 +525,7 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssetCreateBlobType>))]
     public enum AssetCreateBlobType
     {
 
@@ -532,6 +535,7 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GetAssetType>))]
     public enum GetAssetType
     {
 
@@ -544,6 +548,7 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssetUpdateLinkType>))]
     public enum AssetUpdateLinkType
     {
 
@@ -553,6 +558,7 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssetUpdateBlobType>))]
     public enum AssetUpdateBlobType
     {
 

@@ -226,6 +226,53 @@ All three are settled, and two of them shrank once measured.
    services with no schema, and a familiar-looking generic that quietly used
    reflection would break the promise the rest of the package makes.
 
+## What the first live call to the seller's side found
+
+The smoke test's second pass ran on client credentials for the first time on
+2026-09-01, against tenant `viu`. Five of thirteen steps failed. Two were missing
+scopes on the client — which is a tenant's configuration, and the runner now says
+`SCOPE` rather than counting them as defects. The other three were real, and each
+turned out to be one instance of a class:
+
+| Symptom | Class | Reach, counted from the diff |
+| --- | --- | --- |
+| A tax configuration could not be read | A localized union the pipeline did not recognise | 13 properties, 8 specifications |
+| The AI agent list could not be read | An enum inside a collection, left without its converter | 6 properties, 2 specifications |
+| An agent on a non-Emporix model could not be read | A union of object types collapsed to its first branch | 4 properties, 1 specification |
+| No shopping list could be read | A specification that disagrees with the API | 1 property |
+
+Fixing the class rather than the instance is what turned three live failures into
+24 corrected properties. Two of the four classes were found while fixing the
+first: the union collapse only became visible once the enum fix let the agent
+list get one field further, and the nested case
+(`QuoteResponseItem.zone.name`, typed `string`) surfaced because the pipeline now
+reports a property it cannot find instead of skipping it. No call in the smoke
+test reaches that one — it would have broken the first shipping quote against a
+zone with an untranslated name.
+
+**The tally after five waves is unchanged in shape.** Twenty-four defects found:
+
+| Found by | Defects |
+| --- | ---: |
+| Reading the specification against the code | 11 |
+| Calling the live API | 12 |
+| Building a sample that consumes the package | 1 |
+| **Unit tests** | **0** |
+
+The unit tests are not useless — they pin behaviour once it is understood, and
+the twelve added for this round would each have caught their defect. But not one
+of them was written before something outside the test suite showed the problem,
+because a stub answers with whatever the test author already believed.
+
+### Still open
+
+`Ai.*.PatchAsync` sends `ADD` / `REMOVE` / `REPLACE`, which is what the AI
+specification declares. The approval service declares the same three and the live
+API rejects them, accepting only lowercase — a repair that is already in
+`SpecPatches`. Whether the AI service behaves like its specification or like its
+neighbour is unverified: finding out means a write against a live agent, which is
+not something a read-only smoke test should do.
+
 ## Per-service checklist
 
 What «done» means, derived from the twelve. Every item on it caught something

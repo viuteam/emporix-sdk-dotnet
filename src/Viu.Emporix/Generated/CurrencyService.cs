@@ -151,7 +151,7 @@ namespace Viu.Emporix.CurrencyServiceModels
         /// <br/>**Note:** Only the languages defined in the system are allowed to be used here. If a language code not defined in the system is provided, the request will be rejected.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -177,7 +177,7 @@ namespace Viu.Emporix.CurrencyServiceModels
         /// <br/>Only the languages defined in the system are allowed to be used here. If a language code not defined in the system is provided, the request will be rejected.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public UpdateMetadata Metadata { get; set; } = new UpdateMetadata();
@@ -264,7 +264,7 @@ namespace Viu.Emporix.CurrencyServiceModels
         /// <br/>If the `Accept-Language` header is empty, the translation will be returned in the language defined in the `Configuration service` as default.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public Metadata? Metadata { get; set; } = default!;

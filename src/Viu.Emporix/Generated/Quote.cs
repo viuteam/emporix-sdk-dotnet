@@ -329,7 +329,7 @@ namespace Viu.Emporix.QuoteModels
         /// Localized message - can be either string or map with languages as map's keys accordingly to specified 'Accept-Language' header.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
-        public System.Collections.Generic.IDictionary<string, string>? Message { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Message { get; set; } = default!;
 
         /// <summary>
         /// Code of the reason for the quote status change.
@@ -1086,6 +1086,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteReasonResponseType>))]
     public enum QuoteReasonResponseType
     {
 
@@ -1131,6 +1132,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteResponseBusinessModel>))]
     public enum QuoteResponseBusinessModel
     {
 
@@ -1494,6 +1496,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteReasonCreateRequestType>))]
     public enum QuoteReasonCreateRequestType
     {
 
@@ -1506,6 +1509,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteReasonUpdateRequestType>))]
     public enum QuoteReasonUpdateRequestType
     {
 
@@ -1632,6 +1636,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Op>))]
     public enum Op
     {
 
@@ -1647,6 +1652,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Path>))]
     public enum Path
     {
 
@@ -1728,6 +1734,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Op2>))]
     public enum Op2
     {
 
@@ -1746,6 +1753,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Path2>))]
     public enum Path2
     {
 
@@ -1811,6 +1819,7 @@ namespace Viu.Emporix.QuoteModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserType>))]
     public enum UserType
     {
 
@@ -2194,6 +2203,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PriceType>))]
     public enum PriceType
     {
 
@@ -2260,6 +2270,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Product2Type>))]
     public enum Product2Type
     {
 
@@ -2326,6 +2337,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Product3Type>))]
     public enum Product3Type
     {
 
@@ -2392,6 +2404,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Price2Type>))]
     public enum Price2Type
     {
 

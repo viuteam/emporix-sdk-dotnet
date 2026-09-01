@@ -256,6 +256,7 @@ namespace Viu.Emporix.ProductModels
     /// <br/>
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
     public enum ProductType
     {
 
@@ -281,6 +282,7 @@ namespace Viu.Emporix.ProductModels
     /// <br/>
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductTypeUpdate>))]
     public enum ProductTypeUpdate
     {
 
@@ -1684,6 +1686,7 @@ namespace Viu.Emporix.ProductModels
     /// Current status of a dynamic variant recalculation job.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DynamicVariantRecalculationJobStatus>))]
     public enum DynamicVariantRecalculationJobStatus
     {
 
@@ -2428,6 +2431,7 @@ namespace Viu.Emporix.ProductModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DynamicVariantAttributeValueType>))]
     public enum DynamicVariantAttributeValueType
     {
 

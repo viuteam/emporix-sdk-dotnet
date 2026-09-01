@@ -193,7 +193,7 @@ namespace Viu.Emporix.TaxServiceModels
         /// <br/>**Note**: You can provide the names only in languages defined in the Configuration Service. In case the name is provided in a language that is not defined in the Configuration Service, the request will be rejected.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public System.Collections.Generic.IDictionary<string, string> Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Tax class description.
@@ -205,7 +205,7 @@ namespace Viu.Emporix.TaxServiceModels
         /// <br/>**Note**: You can provide the descriptions only in languages defined in the Configuration Service. In case the description is provided in a language that is not defined in the Configuration Service, the request will be rejected.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public System.Collections.Generic.IDictionary<string, string>? Description { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
 
         /// <summary>
         /// Number indicating the position on the tax class list. Tax classes in a configuration are sorted based on their `order` values in ascending order.

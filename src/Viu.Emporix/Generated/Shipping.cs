@@ -1405,7 +1405,7 @@ namespace Viu.Emporix.ShippingModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

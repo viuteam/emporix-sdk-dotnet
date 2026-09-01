@@ -75,6 +75,7 @@ namespace Viu.Emporix.IndexingServiceModels
     /// Informs about status of reindex job. `PENDING` means that the maximum number of parallel `IN_PROGRESS` jobs is reached and such job will be processed when one of current `IN_PROGRESS` jobs is released. `PUBLISHED` means that all the indexing events were emitted. `SUCCESS` means that all the indexing events were consumed.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReindexJobStatus>))]
     public enum ReindexJobStatus
     {
 
@@ -312,6 +313,7 @@ namespace Viu.Emporix.IndexingServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Provider>))]
     public enum Provider
     {
 
@@ -342,6 +344,7 @@ namespace Viu.Emporix.IndexingServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<IndexPublicConfigurationProvider>))]
     public enum IndexPublicConfigurationProvider
     {
 
@@ -354,6 +357,7 @@ namespace Viu.Emporix.IndexingServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReindexMode>))]
     public enum ReindexMode
     {
 

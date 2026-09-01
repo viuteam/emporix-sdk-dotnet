@@ -785,6 +785,7 @@ namespace Viu.Emporix.CouponModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<BaseCouponDiscountType>))]
     public enum BaseCouponDiscountType
     {
 
@@ -827,6 +828,7 @@ namespace Viu.Emporix.CouponModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<BaseCouponDiscountCalculationType>))]
     public enum BaseCouponDiscountCalculationType
     {
 
@@ -884,6 +886,7 @@ namespace Viu.Emporix.CouponModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponCreationDiscountType>))]
     public enum CouponCreationDiscountType
     {
 
@@ -900,6 +903,7 @@ namespace Viu.Emporix.CouponModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponCreationDiscountCalculationType>))]
     public enum CouponCreationDiscountCalculationType
     {
 
@@ -932,6 +936,7 @@ namespace Viu.Emporix.CouponModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponWithIdAndStatusStatus>))]
     public enum CouponWithIdAndStatusStatus
     {
 
@@ -950,6 +955,7 @@ namespace Viu.Emporix.CouponModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReferralCouponDiscountType>))]
     public enum ReferralCouponDiscountType
     {
 
@@ -1001,6 +1007,7 @@ namespace Viu.Emporix.CouponModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReferralCouponStatus>))]
     public enum ReferralCouponStatus
     {
 

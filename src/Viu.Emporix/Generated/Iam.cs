@@ -1412,6 +1412,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand>))]
     public enum Expand
     {
 
@@ -1430,6 +1431,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand2>))]
     public enum Expand2
     {
 
@@ -1439,6 +1441,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand3>))]
     public enum Expand3
     {
 
@@ -1448,6 +1451,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserType>))]
     public enum UserType
     {
 
@@ -1457,6 +1461,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand4>))]
     public enum Expand4
     {
 
@@ -1466,6 +1471,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand5>))]
     public enum Expand5
     {
 
@@ -1631,6 +1637,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AccessControlQueryDocumentRestrictedTo>))]
     public enum AccessControlQueryDocumentRestrictedTo
     {
 
@@ -1643,6 +1650,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AccessControlUpsertRequestRestrictedTo>))]
     public enum AccessControlUpsertRequestRestrictedTo
     {
 
@@ -1667,6 +1675,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssignmentCreateRequestUserType>))]
     public enum AssignmentCreateRequestUserType
     {
 
@@ -1679,6 +1688,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GroupCreateRequestUserType>))]
     public enum GroupCreateRequestUserType
     {
 
@@ -1712,6 +1722,7 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GroupUpdateRequestUserType>))]
     public enum GroupUpdateRequestUserType
     {
 

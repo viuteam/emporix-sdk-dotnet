@@ -1917,6 +1917,7 @@ namespace Viu.Emporix.OrderV2Models
     /// Status of the order. Supported order statuses are `IN_CHECKOUT`, `CREATED`, `CONFIRMED`, `DECLINED`, `SHIPPED`, `COMPLETED`'. Customers can only change the order status from `CREATED` to `DECLINED`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderStatus>))]
     public enum OrderStatus
     {
 
@@ -1944,6 +1945,7 @@ namespace Viu.Emporix.OrderV2Models
     /// Available on orders that have been split. For standard orders, the value is `null`. For the original order that was split, the value is `MASTER_ORDER`s, and for the created suborders, the value is `SUB_ORDER`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SplitOrderType>))]
     public enum SplitOrderType
     {
 
@@ -1959,6 +1961,7 @@ namespace Viu.Emporix.OrderV2Models
     /// Specifies the criteria used to split a master order into suborders. Currently, only `VENDOR_ID` is supported.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SplitBy>))]
     public enum SplitBy
     {
 
@@ -2076,6 +2079,7 @@ namespace Viu.Emporix.OrderV2Models
     /// Status of the payment.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PaymentStatus>))]
     public enum PaymentStatus
     {
 
@@ -2669,6 +2673,7 @@ namespace Viu.Emporix.OrderV2Models
     /// Type of the external discount.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ExternalDiscountType>))]
     public enum ExternalDiscountType
     {
 
@@ -3308,6 +3313,7 @@ namespace Viu.Emporix.OrderV2Models
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DiscountCalculationType>))]
     public enum DiscountCalculationType
     {
 
@@ -3352,6 +3358,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
     public enum ProductType
     {
 
@@ -3394,6 +3401,7 @@ namespace Viu.Emporix.OrderV2Models
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssistedBuyingEntryOperation>))]
     public enum AssistedBuyingEntryOperation
     {
 
@@ -3689,6 +3697,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedFeeType>))]
     public enum CalculatedFeeType
     {
 
@@ -3704,6 +3713,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedFeeOrigin>))]
     public enum CalculatedFeeOrigin
     {
 
@@ -3716,6 +3726,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedPaymentFeeType>))]
     public enum CalculatedPaymentFeeType
     {
 
@@ -3732,6 +3743,7 @@ namespace Viu.Emporix.OrderV2Models
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedAppliedDiscountDiscountType>))]
     public enum CalculatedAppliedDiscountDiscountType
     {
 
@@ -3747,6 +3759,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedAppliedDiscountOrigin>))]
     public enum CalculatedAppliedDiscountOrigin
     {
 
@@ -3759,6 +3772,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedTotalDiscountCalculationType>))]
     public enum CalculatedTotalDiscountCalculationType
     {
 
@@ -4006,6 +4020,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ExternalFeeFeeType>))]
     public enum ExternalFeeFeeType
     {
 
@@ -4332,7 +4347,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Name of the tax.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public string? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Value of the tax.
@@ -4358,6 +4373,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PaymentFeesType>))]
     public enum PaymentFeesType
     {
 
@@ -4443,6 +4459,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TotalDiscountCalculationType>))]
     public enum TotalDiscountCalculationType
     {
 
@@ -4523,6 +4540,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Price5Calculated>))]
     public enum Price5Calculated
     {
 
@@ -4560,6 +4578,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Fees3Type>))]
     public enum Fees3Type
     {
 
@@ -4575,6 +4594,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Fees3Origin>))]
     public enum Fees3Origin
     {
 
@@ -4693,6 +4713,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TotalDiscount2CalculationType>))]
     public enum TotalDiscount2CalculationType
     {
 
@@ -4730,6 +4751,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscountsDiscountType>))]
     public enum AppliedDiscountsDiscountType
     {
 
@@ -4745,6 +4767,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts2DiscountType>))]
     public enum AppliedDiscounts2DiscountType
     {
 
@@ -4760,6 +4783,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts3DiscountType>))]
     public enum AppliedDiscounts3DiscountType
     {
 
@@ -4811,6 +4835,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts4DiscountType>))]
     public enum AppliedDiscounts4DiscountType
     {
 
@@ -4851,6 +4876,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts5DiscountType>))]
     public enum AppliedDiscounts5DiscountType
     {
 
@@ -4866,6 +4892,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts6DiscountType>))]
     public enum AppliedDiscounts6DiscountType
     {
 
@@ -4881,6 +4908,7 @@ namespace Viu.Emporix.OrderV2Models
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts7DiscountType>))]
     public enum AppliedDiscounts7DiscountType
     {
 

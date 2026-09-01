@@ -1032,6 +1032,7 @@ namespace Viu.Emporix.CustomerServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomerForSellerDtoBusinessModel>))]
     public enum CustomerForSellerDtoBusinessModel
     {
 
@@ -1044,6 +1045,7 @@ namespace Viu.Emporix.CustomerServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LegacyAuthAlgorithm>))]
     public enum LegacyAuthAlgorithm
     {
 

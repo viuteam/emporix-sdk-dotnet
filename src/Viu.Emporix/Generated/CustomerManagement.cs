@@ -955,6 +955,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Type>))]
     public enum Type
     {
 
@@ -988,6 +989,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Type2>))]
     public enum Type2
     {
 
@@ -1006,6 +1008,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Type3>))]
     public enum Type3
     {
 
@@ -1162,6 +1165,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LegalEntityType>))]
     public enum LegalEntityType
     {
 
@@ -1174,6 +1178,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LegalEntityCreateType>))]
     public enum LegalEntityCreateType
     {
 
@@ -1186,6 +1191,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LegalEntityUpdateType>))]
     public enum LegalEntityUpdateType
     {
 
@@ -1198,6 +1204,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentType>))]
     public enum ContactAssignmentType
     {
 
@@ -1237,6 +1244,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentWithoutExpandedLegalEntityType>))]
     public enum ContactAssignmentWithoutExpandedLegalEntityType
     {
 
@@ -1297,6 +1305,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentCreateType>))]
     public enum ContactAssignmentCreateType
     {
 
@@ -1357,6 +1366,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentUpdateType>))]
     public enum ContactAssignmentUpdateType
     {
 
@@ -1375,6 +1385,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LocationType>))]
     public enum LocationType
     {
 
@@ -1390,6 +1401,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LocationCreateType>))]
     public enum LocationCreateType
     {
 
@@ -1405,6 +1417,7 @@ namespace Viu.Emporix.CustomerManagementModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LocationUpdateType>))]
     public enum LocationUpdateType
     {
 

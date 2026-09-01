@@ -1251,6 +1251,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssignmentType>))]
     public enum AssignmentType
     {
 
@@ -1260,6 +1261,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssignmentType2>))]
     public enum AssignmentType2
     {
 
@@ -1354,6 +1356,7 @@ namespace Viu.Emporix.CategoryModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CategoryAssignmentRefQueryDocumentType>))]
     public enum CategoryAssignmentRefQueryDocumentType
     {
 
@@ -1363,6 +1366,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CategoryCreateRequestType>))]
     public enum CategoryCreateRequestType
     {
 
@@ -1471,6 +1475,7 @@ namespace Viu.Emporix.CategoryModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReferenceType>))]
     public enum ReferenceType
     {
 
@@ -1529,6 +1534,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Ref4Type>))]
     public enum Ref4Type
     {
 

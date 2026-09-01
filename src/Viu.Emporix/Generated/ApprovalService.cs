@@ -348,6 +348,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     /// <br/>
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ResourceType>))]
     public enum ResourceType
     {
 
@@ -363,6 +364,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     /// Base schema for an approval action type.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApprovalAction>))]
     public enum ApprovalAction
     {
 
@@ -375,6 +377,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     /// Base schema for the approval status.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApprovalStatus>))]
     public enum ApprovalStatus
     {
 
@@ -1049,6 +1052,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AddressType>))]
     public enum AddressType
     {
 
@@ -1165,6 +1169,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CreateCartApprovalRequestResourceType>))]
     public enum CreateCartApprovalRequestResourceType
     {
 
@@ -1174,6 +1179,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CreateQuoteApprovalRequestResourceType>))]
     public enum CreateQuoteApprovalRequestResourceType
     {
 

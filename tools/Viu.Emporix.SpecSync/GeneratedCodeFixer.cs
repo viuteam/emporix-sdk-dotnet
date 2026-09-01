@@ -100,6 +100,62 @@ internal static partial class GeneratedCodeFixer
     }
 
     /// <summary>
+    /// Puts the string-enum converter on the enum types themselves.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// NSwag attaches <c>JsonStringEnumConverter</c> to each property whose type
+    /// is an enum, but not to a property that is a <em>collection</em> of one —
+    /// it leaves a <c>TODO(system.text.json)</c> there instead. Such a property
+    /// then reads as a numeric enum, and the API sends names: deserialising
+    /// <c>["customer"]</c> into <c>ICollection&lt;RequiredScopes&gt;</c> threw,
+    /// and took the whole agent list with it.
+    /// </para>
+    /// <para>
+    /// Annotating the enum declaration fixes every use at once — scalar,
+    /// collection, dictionary value, nested — and keeps working when the next
+    /// specification adds another. Found by a live call against tenant viu; six
+    /// properties across two services were affected, of which one was reachable
+    /// by a read.
+    /// </para>
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Annotated) AnnotateEnums(string source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        List<string> annotated = [];
+
+        string result = EnumDeclaration().Replace(source, match =>
+        {
+            string name = match.Groups["name"].Value;
+
+            // Idempotent: a second run must not stack attributes.
+            if (match.Groups["attributes"].Value.Contains("JsonStringEnumConverter", StringComparison.Ordinal))
+            {
+                return match.Value;
+            }
+
+            annotated.Add(name);
+
+            return match.Groups["attributes"].Value
+                + "    [System.Text.Json.Serialization.JsonConverter("
+                + $"typeof(System.Text.Json.Serialization.JsonStringEnumConverter<{name}>))]"
+                + Environment.NewLine
+                + match.Groups["declaration"].Value;
+        });
+
+        // The per-property TODO is now answered by the type annotation, and a
+        // TODO that no longer describes anything is worse than none.
+        result = result.Replace(
+            "        // TODO(system.text.json): Add ItemConverterType with enum converter when supported"
+            + Environment.NewLine,
+            string.Empty,
+            StringComparison.Ordinal);
+
+        return (result, annotated);
+    }
+
+    /// <summary>
     /// Replaces references to types that were never generated with raw JSON.
     /// </summary>
     /// <remarks>
@@ -193,9 +249,18 @@ internal static partial class GeneratedCodeFixer
     /// Emporix declares a localized field as <c>oneOf: [string, object]</c> —
     /// the same field arrives as <c>"Kaffee"</c> when the request asked for one
     /// language and as <c>{"de":"Kaffee"}</c> when it did not. NSwag resolves the
-    /// union to its first branch and types the property <c>string</c>, so the
-    /// untranslated shape fails to parse: reading products from a real tenant
-    /// throws unless <c>Accept-Language</c> happens to be set.
+    /// union to <em>whichever branch the specification lists first</em>, so the
+    /// other shape fails to parse. Both directions have been seen against a live
+    /// tenant: products came back as a map where the type said <c>string</c>,
+    /// and a tax class came back as a string where the type said
+    /// <c>IDictionary&lt;string, string&gt;</c>.
+    /// </para>
+    /// <para>
+    /// Which is why both are matched here. Handling only <c>string</c> is what
+    /// let <c>taxClass.name</c> ship broken: the specification was read
+    /// correctly, the property was on the list, and the replacement quietly
+    /// found nothing to replace. A property on the list that cannot be found is
+    /// now reported rather than skipped.
     /// </para>
     /// <para>
     /// <see cref="T:Viu.Emporix.LocalizedString"/> reads both shapes, so the
@@ -204,36 +269,84 @@ internal static partial class GeneratedCodeFixer
     /// like «Name» or «Description» is not evidence of anything.
     /// </para>
     /// </remarks>
-    public static (string Source, IReadOnlyList<string> Retyped) RetypeLocalizedProperties(
-        string source,
-        IReadOnlyCollection<string> localized)
+    public static (string Source, IReadOnlyList<string> Retyped, IReadOnlyList<string> Missed)
+        RetypeLocalizedProperties(
+            string source,
+            IReadOnlyCollection<string> localized)
+        => RetypeProperties(source, localized, "Viu.Emporix.LocalizedString?", @"(?:string\??|System\.Collections\.Generic\.IDictionary<string,\s*string>\??)");
+
+    /// <summary>
+    /// Retypes the properties whose schema is a union of several object types.
+    /// </summary>
+    /// <remarks>
+    /// The current type is whichever branch the specification listed first, so
+    /// the pattern accepts any single identifier — there is nothing more
+    /// specific to match on, and the property name is already anchored to its
+    /// class.
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Retyped, IReadOnlyList<string> Missed)
+        RetypeUnionProperties(
+            string source,
+            IReadOnlyCollection<string> unions)
+        => RetypeProperties(source, unions, "System.Text.Json.JsonElement?", @"[\w\.]+\??");
+
+    private static (string Source, IReadOnlyList<string> Retyped, IReadOnlyList<string> Missed)
+        RetypeProperties(
+            string source,
+            IReadOnlyCollection<string> localized,
+            string replacement,
+            string currentType)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(localized);
 
         List<string> retyped = [];
+        List<string> missed = [];
         string result = source;
 
         foreach (string entry in localized)
         {
-            int separator = entry.LastIndexOf('.');
-            if (separator <= 0)
+            string[] parts = entry.Split('.');
+            if (parts.Length < 2)
             {
                 continue;
             }
 
-            string className = entry[..separator];
-            string propertyName = entry[(separator + 1)..];
+            // A path of three or more parts walks through the generated code
+            // rather than guessing at it. «QuoteResponseItem.Zone.Name» means:
+            // find QuoteResponseItem.Zone, read the type NSwag gave it — which
+            // is «Zone2», a name no one could have predicted — and retype
+            // Zone2.Name. Following the declarations is the only way to know
+            // what the anonymous nested class ended up being called.
+            string? className = parts[0];
+
+            for (int i = 1; i < parts.Length - 1 && className is not null; i++)
+            {
+                className = DeclaredTypeOf(result, className, parts[i]);
+            }
+
+            if (className is null)
+            {
+                missed.Add(entry);
+                continue;
+            }
+
+            string propertyName = parts[^1];
 
             // Anchored on the class so a property name shared by several classes
             // is only touched where the specification says it is localized.
             Regex declaration = new(
-                $@"(?<class>public partial class {Regex.Escape(className)}\b(?:[^{{]*)\{{)(?<body>.*?)(?<property>public\s+)string\??(?<tail>\s+{Regex.Escape(propertyName)}\s*\{{)",
+                $@"(?<class>public partial class {Regex.Escape(className)}\b(?:[^{{]*)\{{)(?<body>.*?)(?<property>public\s+){currentType}(?<tail>\s+{Regex.Escape(propertyName)}\s*\{{)",
                 RegexOptions.Singleline);
 
             Match match = declaration.Match(result);
             if (!match.Success)
             {
+                // The specification says this property is localized and the
+                // generated code has no such property, or has it under another
+                // type. Either way something moved, and silence here is how a
+                // broken read ships.
+                missed.Add(entry);
                 continue;
             }
 
@@ -242,14 +355,48 @@ internal static partial class GeneratedCodeFixer
                 m => m.Groups["class"].Value
                     + m.Groups["body"].Value
                     + m.Groups["property"].Value
-                    + "Viu.Emporix.LocalizedString?"
+                    + replacement
                     + m.Groups["tail"].Value,
                 1);
 
             retyped.Add(entry);
         }
 
-        return (result, retyped);
+        return (result, retyped, missed);
+    }
+
+    /// <summary>
+    /// Reads the type a generated property was given, stripped of nullability
+    /// and of any collection wrapper.
+    /// </summary>
+    /// <remarks>
+    /// The wrapper is stripped because a localized field inside an array's items
+    /// lives on the item class: <c>ICollection&lt;Elements&gt;</c> means the
+    /// next step of the path is <c>Elements</c>.
+    /// </remarks>
+    private static string? DeclaredTypeOf(string source, string className, string propertyName)
+    {
+        Match match = new Regex(
+            $@"public partial class {Regex.Escape(className)}\b(?:[^{{]*)\{{"
+            + $@".*?public\s+(?<type>[\w\.<>, ]+?)\??\s+{Regex.Escape(propertyName)}\s*\{{",
+            RegexOptions.Singleline).Match(source);
+
+        if (!match.Success)
+        {
+            return null;
+        }
+
+        string type = match.Groups["type"].Value.Trim();
+
+        Match element = CollectionElement().Match(type);
+        if (element.Success)
+        {
+            type = element.Groups[1].Value.Trim();
+        }
+
+        // A plain string or a map is the end of the road, not a class to walk
+        // into: the path is wrong, or the generated shape moved.
+        return type.Contains('.', StringComparison.Ordinal) || type == "string" ? null : type;
     }
 
     /// <summary>
@@ -356,4 +503,13 @@ internal static partial class GeneratedCodeFixer
     /// <summary>The alias as the sole type argument, for example in a collection.</summary>
     private static Regex GenericArgument(string alias)
         => new($@"<{Regex.Escape(alias)}>", RegexOptions.None, TimeSpan.FromSeconds(5));
+
+    [GeneratedRegex(
+        @"(?<attributes>(?:^[ \t]*(?:\[[^\]]*\]|///[^\n]*)\r?\n)*)" +
+        @"(?<declaration>^[ \t]*public enum (?<name>\w+)\r?$)",
+        RegexOptions.Multiline)]
+    private static partial Regex EnumDeclaration();
+
+    [GeneratedRegex(@"^(?:System\.Collections\.Generic\.)?I?(?:Collection|List|Enumerable)<(.+)>$")]
+    private static partial Regex CollectionElement();
 }
