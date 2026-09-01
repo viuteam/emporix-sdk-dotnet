@@ -71,6 +71,17 @@ public sealed class EmporixClient : IDisposable
     private ApprovalService? _approval;
     private QuoteService? _quote;
     private SegmentService? _segment;
+    private IamService? _iam;
+    private SchemaService? _schema;
+    private SiteService? _site;
+    private VendorService? _vendor;
+    private CurrencyService? _currency;
+    private CountryService? _country;
+    private WebhookService? _webhook;
+    private UnitService? _unit;
+    private SequentialIdService? _sequentialId;
+    private ConfigurationService? _configuration;
+    private SessionContextService? _sessionContext;
     private bool _disposed;
 
     /// <summary>
@@ -482,6 +493,127 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _segment ??= new SegmentService(_http, _options);
+        }
+    }
+
+    /// <summary>Identity and access — users, groups, and what they may do.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public IamService Iam
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _iam ??= new IamService(_http, _options);
+        }
+    }
+
+    /// <summary>Schemas and custom entities — a tenant's own data shapes.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SchemaService Schemas
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _schema ??= new SchemaService(_http, _options);
+        }
+    }
+
+    /// <summary>The storefronts a tenant runs.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SiteService Sites
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _site ??= new SiteService(_http, _options);
+        }
+    }
+
+    /// <summary>Who sells, in a marketplace.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public VendorService Vendors
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _vendor ??= new VendorService(_http, _options);
+        }
+    }
+
+    /// <summary>Currencies and the rates between them.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public CurrencyService Currencies
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _currency ??= new CurrencyService(_http, _options);
+        }
+    }
+
+    /// <summary>Countries and regions.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public CountryService Countries
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _country ??= new CountryService(_http, _options);
+        }
+    }
+
+    /// <summary>Emporix calling out when something happens.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public WebhookService Webhooks
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _webhook ??= new WebhookService(_http, _options);
+        }
+    }
+
+    /// <summary>Units of measure, and converting between them.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public UnitService Units
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _unit ??= new UnitService(_http, _options);
+        }
+    }
+
+    /// <summary>Order numbers and the like.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SequentialIdService SequentialIds
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _sequentialId ??= new SequentialIdService(_http, _options);
+        }
+    }
+
+    /// <summary>Tenant and client configuration.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ConfigurationService Configuration
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _configuration ??= new ConfigurationService(_http, _options);
+        }
+    }
+
+    /// <summary>What a session carries beyond its token.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SessionContextService SessionContext
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _sessionContext ??= new SessionContextService(_http, _options);
         }
     }
 

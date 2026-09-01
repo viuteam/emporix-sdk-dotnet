@@ -120,7 +120,27 @@ at. These make the legal entity a real thing.
 Note: `companies`, `contacts` and `locations` all come out of
 `customer-management.yml`, so one specification serves three facades.
 
-### Wave 4 — platform and administration (12 services, 133 operations)
+### Wave 4 — platform and administration (12 services, 159 operations) — done
+
+More operations than planned, not fewer: the plan counted 136 from the Node
+facades, and the specifications carry 159. IAM alone has 42 where the Node SDK
+covers 30 — the gap is the read-only catalogue of permissions, resources, roles
+and templates, which the Node facade skips.
+
+`customer-groups` arrived here from wave 3, where it turned out to be three
+convenience methods over `/iam/{tenant}/groups`. It is now
+`client.Iam.Groups.AddMemberAsync` and `AssignMemberAsync` rather than a service
+of its own.
+
+Two things the tooling caught before any call was made. The public-API analyzer
+refused two `AddMemberAsync` overloads that both had optional parameters — a
+genuine versioning hazard, and the two calls are not the same anyway: one
+creates an assignment each time, the other is a `PUT` at the member's own
+address. And a unit test caught `ListMyScopesAsync` deserialising into a list
+where the specification returns an object.
+
+`SpecPathTests` passed on all 159 new calls at the first attempt.
+
 
 Nothing here blocks a storefront. It blocks whoever has to operate the tenant.
 
@@ -220,5 +240,5 @@ real at least once.
 | 1 | 12 | 193 | done |
 | 2 — checkout | 7 | 101 | done |
 | 3 — B2B | 7 | 84 | done |
-| 4 — platform | 13 | 136 | planned |
+| 4 — platform | 12 | 159 | done |
 | 5 — needs decisions | 9 | 104 | blocked on the three ADRs |

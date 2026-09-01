@@ -24,6 +24,13 @@ exactly that package version.
   services are now covered.
 - Grouped operations for those: `Segments.Customers(id)`, `Segments.Items(id)`,
   `Quotes.Reasons` and `CustomerAdmin.AddressesOf(number)`.
+- Twelve platform services: `Iam`, `Schemas`, `Sites`, `Vendors`, `Currencies`,
+  `Countries`, `Webhooks`, `Units`, `SequentialIds`, `Configuration` and
+  `SessionContext` — 159 operations. Thirty-seven of the 48 Emporix services are
+  now covered.
+- Grouped operations for those: `Iam.Users`, `Iam.Groups`, `Iam.AccessControls`,
+  `Schemas.CustomEntities`, `Schemas.InstancesOf(type)`, `Sites.MixinsOf(code)`
+  and `Configuration.ForClient(id)`.
 
 ### Fixed
 
@@ -39,6 +46,9 @@ exactly that package version.
 
 ### Notes
 
+- No sequential-identifier call is ever retried. Taking the next number consumes
+  it, and a retry leaves a gap in a sequence that is usually expected to have
+  none.
 - No payment call is ever retried. Emporix offers no idempotency key on
   authorize, capture, refund or cancel, so a retry cannot be made safe.
 - `Fees.SearchByProductsAsync` takes the product ids as a single string, not a

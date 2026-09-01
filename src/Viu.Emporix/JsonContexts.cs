@@ -487,3 +487,179 @@ internal sealed partial class SegmentJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.PasswordMigrationRetentionConfigResponse))]
 internal sealed partial class CustomerAdminJsonContext : JsonSerializerContext;
 
+/// <summary>Serialization for the site service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.SiteSettingsServiceModels.SiteDto))]
+[JsonSerializable(typeof(List<Viu.Emporix.SiteSettingsServiceModels.SiteDto>))]
+[JsonSerializable(typeof(Viu.Emporix.SiteSettingsServiceModels.ResourceLocation))]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class SiteJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the vendor service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.Vendor))]
+[JsonSerializable(typeof(List<Viu.Emporix.VendorServiceModels.Vendor>))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.VendorCreate))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.VendorUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.Location))]
+[JsonSerializable(typeof(List<Viu.Emporix.VendorServiceModels.Location>))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.LocationCreate))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.LocationUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.ResourceId))]
+[JsonSerializable(typeof(Viu.Emporix.VendorServiceModels.QParam))]
+internal sealed partial class VendorJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the currency service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.CurrencyRetrieval))]
+[JsonSerializable(typeof(List<Viu.Emporix.CurrencyServiceModels.CurrencyRetrieval>))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.CurrencyCreation))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.CurrencyCreationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.CurrencyUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.ExchangeRateRetrieval))]
+[JsonSerializable(typeof(List<Viu.Emporix.CurrencyServiceModels.ExchangeRateRetrieval>))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.ExchangeRateCreationRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.ExchangeRateUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CurrencyServiceModels.ExchangeRateResponse))]
+internal sealed partial class CurrencyJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the country service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.CountryServiceModels.Country))]
+[JsonSerializable(typeof(List<Viu.Emporix.CountryServiceModels.Country>))]
+[JsonSerializable(typeof(Viu.Emporix.CountryServiceModels.CountryUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CountryServiceModels.Region))]
+[JsonSerializable(typeof(List<Viu.Emporix.CountryServiceModels.Region>))]
+internal sealed partial class CountryJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the IAM service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.UserResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.UserResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.UserExtendedResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.UserExtendedResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.UserCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.UserUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.UserIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.UserScopesResponse))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.GroupsQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.GroupsQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.GroupCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.GroupUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.GroupIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.AssignmentQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.AssignmentQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.AssignmentCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.AssignmentIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.AccessControlQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.AccessControlQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.AccessControlUpsertRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.AccessControlIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.CustomScopeQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.CustomScopeQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.CustomScopeUpsertRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.CustomScopeIdResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.PermissionQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.PermissionQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.ResourceQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.ResourceQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.RoleQueryDocument>))]
+[JsonSerializable(typeof(Viu.Emporix.IamModels.RoleQueryDocument))]
+[JsonSerializable(typeof(List<Viu.Emporix.IamModels.TemplateQueryDocument>))]
+internal sealed partial class IamJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for tenant configuration. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.ConfigurationModels.BaseConfiguration))]
+[JsonSerializable(typeof(List<Viu.Emporix.ConfigurationModels.BaseConfiguration>))]
+[JsonSerializable(typeof(List<Viu.Emporix.ConfigurationModels.ClientConfiguration>))]
+internal sealed partial class ConfigurationJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the session context. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.SessionContextModels.SessionContext_GET))]
+[JsonSerializable(typeof(Viu.Emporix.SessionContextModels.SessionContext_PUT))]
+[JsonSerializable(typeof(Viu.Emporix.SessionContextModels.SessionContext_PATCH))]
+[JsonSerializable(typeof(Viu.Emporix.SessionContextModels.ContextAttribute))]
+internal sealed partial class SessionContextJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the webhook service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.ConfigurationGet))]
+[JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.ConfigurationGet>))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookConfigCreation))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookConfigUpdate))]
+[JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.WebhookConfigPartialUpdate>))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookSubscriptions))]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class WebhookJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the unit service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.Unit))]
+[JsonSerializable(typeof(List<Viu.Emporix.UnitHandlingServiceModels.Unit>))]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.BaseUnit))]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.UpdateUnit))]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.ConversionFactorPayload))]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.ConversionFactorResponse))]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.ConversionPayload))]
+[JsonSerializable(typeof(Viu.Emporix.UnitHandlingServiceModels.ConversionResponse))]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class UnitJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for sequential identifiers. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.SequentialIdModels.SequenceSchema))]
+[JsonSerializable(typeof(List<Viu.Emporix.SequentialIdModels.SequenceSchema>))]
+[JsonSerializable(typeof(Viu.Emporix.SequentialIdModels.SequenceSchemaCreate))]
+[JsonSerializable(typeof(Viu.Emporix.SequentialIdModels.NextIdCommandRequest))]
+[JsonSerializable(typeof(Viu.Emporix.SequentialIdModels.NextIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.SequentialIdModels.SchemaBatchNextIdRequest))]
+[JsonSerializable(typeof(Viu.Emporix.SequentialIdModels.SchemaBatchNextIdResponse))]
+internal sealed partial class SequentialIdJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the schema service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.SchemaResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.SchemaModels.SchemaResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.SchemaCreation))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.SchemaUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.SchemaTypes))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.SchemaFileResponse))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.ReferenceCreation))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.ReferenceUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.CustomSchemaTypeResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.SchemaModels.CustomSchemaTypeResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.CustomSchemaTypeCreation))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.CustomSchemaTypeUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.BulkPatchCustomInstanceRequest))]
+[JsonSerializable(typeof(List<Viu.Emporix.SchemaModels.BulkResponse>))]
+[JsonSerializable(typeof(List<Viu.Emporix.SchemaModels.PatchOperation>))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.ExportImportRequest))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.ExportImportResponse))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.IdResponse))]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class SchemaJsonContext : JsonSerializerContext;
+

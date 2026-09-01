@@ -241,6 +241,49 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(static provider => new SegmentService(
             provider.GetRequiredService<EmporixHttpClient>(),
             provider.GetRequiredService<IOptions<EmporixOptions>>()));
+        services.TryAddSingleton(static provider => new IamService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new SchemaService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new SiteService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new VendorService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new CurrencyService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new CountryService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new WebhookService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new UnitService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new SequentialIdService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new ConfigurationService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
+
+        services.TryAddSingleton(static provider => new SessionContextService(
+            provider.GetRequiredService<EmporixHttpClient>(),
+            provider.GetRequiredService<IOptions<EmporixOptions>>()));
         // The client bundles the services. Here it uses the parts from the
         // container and therefore releases nothing itself.
         services.TryAddSingleton(static provider => new EmporixClient(
