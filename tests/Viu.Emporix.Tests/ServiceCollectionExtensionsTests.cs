@@ -57,4 +57,50 @@ public class ServiceCollectionExtensionsTests
 
         Assert.Same(services, services.AddEmporix(options => options.Tenant = "acme"));
     }
+
+    [Fact]
+    public void The_wave_five_services_are_registered_and_reachable_from_the_client()
+    {
+        // Wiring a service means touching three files — the facade, the client
+        // property and the container registration. Forgetting the third
+        // compiles, passes every other test, and fails at run time in whichever
+        // application resolves it first.
+        ServiceProvider provider = new ServiceCollection()
+            .AddEmporix(options => options.Tenant = "acme")
+            .BuildServiceProvider();
+
+        Assert.NotNull(provider.GetRequiredService<ImportService>());
+        Assert.NotNull(provider.GetRequiredService<IndexingService>());
+        Assert.NotNull(provider.GetRequiredService<PickPackService>());
+        Assert.NotNull(provider.GetRequiredService<ShoppingListService>());
+        Assert.NotNull(provider.GetRequiredService<RewardPointsService>());
+        Assert.NotNull(provider.GetRequiredService<AiService>());
+        Assert.NotNull(provider.GetRequiredService<RagIndexerService>());
+        Assert.NotNull(provider.GetRequiredService<CloudFunctionService>());
+        Assert.NotNull(provider.GetRequiredService<AuditLogService>());
+
+        EmporixClient client = provider.GetRequiredService<EmporixClient>();
+
+        Assert.NotNull(client.Imports);
+        Assert.NotNull(client.Indexing);
+        Assert.NotNull(client.PickPack);
+        Assert.NotNull(client.ShoppingLists);
+        Assert.NotNull(client.RewardPoints);
+        Assert.NotNull(client.Ai);
+        Assert.NotNull(client.RagIndexer);
+        Assert.NotNull(client.CloudFunctions);
+        Assert.NotNull(client.AuditLogs);
+
+        // The nested AI groups are built on demand; a wrong tenant or a missing
+        // constructor argument would only show here.
+        Assert.NotNull(client.Ai.Agents);
+        Assert.NotNull(client.Ai.Tools);
+        Assert.NotNull(client.Ai.Tokens);
+        Assert.NotNull(client.Ai.OAuths);
+        Assert.NotNull(client.Ai.McpServers);
+        Assert.NotNull(client.Ai.Templates);
+        Assert.NotNull(client.Ai.Conversations);
+        Assert.NotNull(client.Ai.Jobs);
+        Assert.NotNull(client.Ai.Logs);
+    }
 }

@@ -1,6 +1,6 @@
 # ADR-0007 — Streaming responses: expose them, do not wrap them
 
-**Status:** Decided · **Date:** 2026-09-01 · Affects: [ADR-0004](0004-aot-trimming.md)
+**Status:** Implemented · **Date:** 2026-09-01 · Affects: [ADR-0004](0004-aot-trimming.md)
 
 ## Context
 

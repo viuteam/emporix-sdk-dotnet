@@ -1,6 +1,6 @@
 # ADR-0009 — Cloud functions: the caller brings the types
 
-**Status:** Decided · **Date:** 2026-09-01 · Affects: [ADR-0004](0004-aot-trimming.md)
+**Status:** Implemented · **Date:** 2026-09-01 · Affects: [ADR-0004](0004-aot-trimming.md)
 
 ## Context
 
@@ -42,7 +42,7 @@ TResponse? result = await client.CloudFunctions.InvokeAsync(
     MyJsonContext.Default.MyResponse);
 
 // Untyped, for a function whose shape is decided at runtime.
-JsonElement result = await client.CloudFunctions.InvokeAsync("my-function", payload);
+JsonElement result = await client.CloudFunctions.InvokeJsonAsync("my-function", payload);
 
 // Raw, for a function that answers with something other than JSON.
 using HttpResponseMessage response = await client.CloudFunctions.InvokeRawAsync(
@@ -53,12 +53,17 @@ The signature is unusual, and it is unusual because the situation is. A method
 that looked like `InvokeAsync<TReq, TRes>` and quietly used reflection would be
 familiar and would break the promise the rest of the package makes.
 
+The untyped form is named `InvokeJsonAsync` rather than being an overload of
+`InvokeAsync`: both carry optional parameters, and the public-API analyzer
+forbids that pairing (RS0026) precisely because a caller cannot tell at a glance
+which one they are calling.
+
 ## Consequences
 
 - The SDK still contributes what it is for on this call: the tenant in the path,
   the token on the request, retry, error translation and the correlation id. A
   caller dropping to `HttpClient` loses all of that.
-- `InvokeAsync` is **not** repeatable. A cloud function is arbitrary code; the
+- No form of invoke is **ever** repeatable. A cloud function is arbitrary code; the
   SDK cannot know whether running it twice is safe, and assuming it is would be
   the one place where the idempotency gate guesses.
 - The default auth is anonymous, matching the Node SDK: a cloud function is

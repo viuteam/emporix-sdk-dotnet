@@ -663,3 +663,190 @@ internal sealed partial class SequentialIdJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(System.Text.Json.JsonElement))]
 internal sealed partial class SchemaJsonContext : JsonSerializerContext;
 
+
+/// <summary>Serialization for the import service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportConfig))]
+[JsonSerializable(typeof(List<Viu.Emporix.ImportServiceModels.ImportConfig>))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportStream))]
+[JsonSerializable(typeof(List<Viu.Emporix.ImportServiceModels.ImportStream>))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.Schedule))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.Body))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportRun))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportRunPage))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.RunDetail))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.CancelResult))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ErrorRecordPage))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportedRecordPage))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportStats))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.JobGroup))]
+[JsonSerializable(typeof(List<Viu.Emporix.ImportServiceModels.JobGroup>))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.HealthSettings))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportLicense))]
+[JsonSerializable(typeof(List<string>))]
+internal sealed partial class ImportJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the indexing service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.IndexingServiceModels.IndexConfiguration))]
+[JsonSerializable(typeof(List<Viu.Emporix.IndexingServiceModels.IndexConfiguration>))]
+[JsonSerializable(typeof(Viu.Emporix.IndexingServiceModels.IndexPublicConfiguration))]
+[JsonSerializable(typeof(List<Viu.Emporix.IndexingServiceModels.IndexPublicConfiguration>))]
+[JsonSerializable(typeof(Viu.Emporix.IndexingServiceModels.IndexCreationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.IndexingServiceModels.Reindex))]
+[JsonSerializable(typeof(Viu.Emporix.IndexingServiceModels.ReindexRequest))]
+[JsonSerializable(typeof(Viu.Emporix.IndexingServiceModels.ReindexJob))]
+[JsonSerializable(typeof(List<Viu.Emporix.IndexingServiceModels.ReindexJob>))]
+internal sealed partial class IndexingJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the shopping-list service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.ShoppingListModels.OwnShoppingListCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ShoppingListModels.OwnShoppingListUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ShoppingListModels.EmployeeShoppingListCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ShoppingListModels.GetShoppingList))]
+[JsonSerializable(typeof(Viu.Emporix.ShoppingListModels.GetShoppingLists))]
+[JsonSerializable(typeof(Viu.Emporix.ShoppingListModels.Response))]
+internal sealed partial class ShoppingListJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the reward-points service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.CustomerSummaryBatchOut))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.PointsSummaryOut))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.NewCustomerIn))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.AddedPoints))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.RedeemedPoints))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.RedeemOption))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.RedeemOptions))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.RedeemOptionIn))]
+[JsonSerializable(typeof(Viu.Emporix.RewardPointsModels.RedeemCouponOut))]
+[JsonSerializable(typeof(int))]
+internal sealed partial class RewardPointsJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the pick-pack service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Order))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderList))]
+[JsonSerializable(typeof(List<Viu.Emporix.PickPackModels.OrderList>))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderStatusChange))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Assignee))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.PackagingProductsChange))]
+[JsonSerializable(typeof(List<Viu.Emporix.PickPackModels.PackagingProductsChange>))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderEntryEventCreate))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderEntryEventResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.PickPackModels.OrderEntryEventResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.RecalculationJobCreation))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.RecalculationJob))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Response))]
+[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Response4))]
+[JsonSerializable(typeof(List<string>))]
+internal sealed partial class PickPackJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// The <c>{ "id": … }</c> the AI service answers a successful <c>PUT</c> with.
+/// </summary>
+/// <remarks>
+/// The specification declares this shape as <c>IdResponse</c>, but the generator
+/// emits that type without its property, so there is nothing to deserialise
+/// into. Rather than reach into the generated type's extension data on every
+/// call, the SDK declares the two fields itself. If a later specification sync
+/// fixes the generated type, this can go.
+/// </remarks>
+internal sealed class AiIdResponse
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; init; }
+}
+
+/// <summary>Serialization for the AI service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(AiIdResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiPatchOperation>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.TextGenerationRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.CompletionRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.GenerationResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgenticRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ChatResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.ChatResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.JobIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AttachmentResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.QParamSearchBody))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.AgentResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentFromTemplateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentTemplateResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.AgentTemplateResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ConversationResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.ConversationResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.TokenRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.TokenResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.TokenResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.OAuthRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.OAuthResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.OAuthResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.SlackNativeToolRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.TeamsNativeToolRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.RagCustomNativeToolRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.RagEmporixNativeToolRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.CustomMcpServerRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.DynamicMcpServerRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ProviderModelsResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.ProviderModelsResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.CommerceEventsResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.Job))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.Job>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentRequestResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.AgentRequestResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentSessionResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiServiceModels.AgentSessionResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.AgentAnalyticsResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ExecutionsResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ExportRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ExportResponse))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.DataWithChecksum))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ImportResponse))]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class AiJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the RAG indexer. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.AiRagIndexerModels.MetadataFilter))]
+[JsonSerializable(typeof(List<Viu.Emporix.AiRagIndexerModels.MetadataFilter>))]
+[JsonSerializable(typeof(List<string>))]
+internal sealed partial class RagIndexerJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Serialization for cloud functions.
+/// </summary>
+/// <remarks>
+/// Only <see cref="System.Text.Json.JsonElement"/>: the typed form of
+/// <see cref="CloudFunctionService.InvokeAsync"/> takes its type information
+/// from the caller, because there is no schema to generate from (ADR-0009).
+/// </remarks>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class CloudFunctionJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the audit log. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.AuditLogsChangelogModels.ChangelogHistoryResponse))]
+internal sealed partial class AuditLogJsonContext : JsonSerializerContext;

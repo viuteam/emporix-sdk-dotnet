@@ -82,6 +82,15 @@ public sealed class EmporixClient : IDisposable
     private SequentialIdService? _sequentialId;
     private ConfigurationService? _configuration;
     private SessionContextService? _sessionContext;
+    private ImportService? _import;
+    private IndexingService? _indexing;
+    private PickPackService? _pickPack;
+    private ShoppingListService? _shoppingList;
+    private RewardPointsService? _rewardPoints;
+    private AiService? _ai;
+    private RagIndexerService? _ragIndexer;
+    private CloudFunctionService? _cloudFunction;
+    private AuditLogService? _auditLog;
     private bool _disposed;
 
     /// <summary>
@@ -614,6 +623,105 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _sessionContext ??= new SessionContextService(_http, _options);
+        }
+    }
+
+    /// <summary>Bringing data in from somewhere else.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ImportService Imports
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _import ??= new ImportService(_http, _options);
+        }
+    }
+
+    /// <summary>Which provider indexes the catalogue, and rebuilding it.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public IndexingService Indexing
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _indexing ??= new IndexingService(_http, _options);
+        }
+    }
+
+    /// <summary>The warehouse side of an order.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public PickPackService PickPack
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _pickPack ??= new PickPackService(_http, _options);
+        }
+    }
+
+    /// <summary>What a customer means to buy later.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ShoppingListService ShoppingLists
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _shoppingList ??= new ShoppingListService(_http, _options);
+        }
+    }
+
+    /// <summary>Loyalty points, and what they buy.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public RewardPointsService RewardPoints
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _rewardPoints ??= new RewardPointsService(_http, _options);
+        }
+    }
+
+    /// <summary>Text generation, and agents that do things.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public AiService Ai
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _ai ??= new AiService(_http, _options);
+        }
+    }
+
+    /// <summary>What an agent can retrieve over.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public RagIndexerService RagIndexer
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _ragIndexer ??= new RagIndexerService(_http, _options);
+        }
+    }
+
+    /// <summary>Code a tenant deployed, invoked by name.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public CloudFunctionService CloudFunctions
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _cloudFunction ??= new CloudFunctionService(_http, _options);
+        }
+    }
+
+    /// <summary>Who changed what, when, and from which value to which.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public AuditLogService AuditLogs
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _auditLog ??= new AuditLogService(_http, _options);
         }
     }
 

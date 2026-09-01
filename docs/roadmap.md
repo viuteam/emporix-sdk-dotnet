@@ -1,18 +1,39 @@
-# Roadmap: the remaining 36 services
+# Roadmap: how the coverage was built
 
-Twelve of Emporix's 48 services are implemented, with 193 of the operations the
-API offers for them. This plans the other 36.
+**Finished.** Every one of the 44 vendored specifications now has a hand-written
+facade, and so does cloud functions, which has none. Forty-seven properties on
+the client and 665 public calls, built in five waves.
 
-Measured against the Node SDK's public operations, not estimated:
+| Wave | Services | API operations | Facade calls |
+| --- | ---: | ---: | ---: |
+| 1 — the storefront path | 12 | 193 | 190 |
+| 2 — completing a checkout | 7 | 101 | 101 |
+| 3 — B2B | 7 | 84 | 84 |
+| 4 — platform | 12 | 159 | 159 |
+| 5 — operations and AI | 9 | 124 | 131 |
+| **Total** | **47 properties** | **661** | **665** |
 
-| | Services | Operations |
-| --- | ---: | ---: |
-| Implemented | 12 | 193 |
-| **Remaining** | **36** | **433** |
+Checked against the Node SDK rather than asserted: all 49 of its service facades
+have an equivalent here, and `SalesOrders` is one the Node SDK does not have —
+this SDK splits `order-v2` into the customer-facing and the administrative view
+because they take different tokens.
 
-The generated types for all of them already ship in the package — 43
-specifications, ~55,000 lines. A remaining service costs a hand-written facade
-and its tests, never generator work.
+The two right-hand columns are counted differently and are not meant to match.
+An operation is a verb and a path in a specification; a facade call is a public
+method, counted from the source. Wave 5 has seven more methods than operations
+because three unions and one dual-purpose `POST` read better as several named
+methods than as one method taking a tagged object. Wave 1 has three fewer
+because a handful of operations differ only by an optional parameter.
+
+This document is kept because the per-service checklist below is what made the
+later waves cheap, and because the wave-by-wave record is the honest account of
+where the defects came from.
+
+The counts here started out measured against the Node SDK's public operations.
+Wave 4 showed that undercounts — the IAM facade exposes 30 operations where the
+specification declares 42 — so from wave 4 on the counts come from the
+specifications instead. Wave 5 also dissolved a service: `ai-resources` is not
+one, its operations are part of `ai-service`.
 
 ## What the first twelve taught us
 
@@ -163,7 +184,7 @@ controls, scopes. It is the widest facade in the SDK and wants its own review.
 `schema` needs multipart upload, already built for media. `client-config` and
 `tenant-config` share `configuration.yml`.
 
-### Wave 5 — needs a decision first (9 services, 104 operations)
+### Wave 5 — operations and AI (9 services, 124 operations) — done
 
 Not last because they matter least, but because each raises a question the other
 waves do not.
@@ -246,4 +267,38 @@ real at least once.
 | 2 — checkout | 7 | 101 | done |
 | 3 — B2B | 7 | 84 | done |
 | 4 — platform | 12 | 159 | done |
-| 5 — needs decisions | 9 | 104 | blocked on the three ADRs |
+| 5 — operations and AI | 9 | 124 | done |
+
+Wave 5 came in at 124 operations against a plan of 104. The difference is one
+correction and one omission. The correction: the plan counted Node facades, the
+work counted specifications, and `ai-service` alone declares 57 operations where
+the two Node facades suggested 38 — while `ai-resources` turned out not to be a
+service at all. The omission: `audit-log` was in the Node SDK but its
+specification had never been vendored here, so it fell through every wave. It
+was found by diffing the Node facade list against the client's properties before
+claiming the coverage was complete, and it is now the 44th specification.
+
+### What wave 5 cost, and what found the defects
+
+Four defects, all found by reading the specifications, the generated code and
+the Node SDK against each other, none by a unit test — the same pattern as the
+first four waves:
+
+| Defect | How it would have shown |
+| --- | --- |
+| `audit-log` was never vendored and so was never implemented | «Every service is covered» would have been wrong by one, and nobody would have noticed until a caller looked for it |
+| The import tool pages from zero and spells its parameters `page`/`size` | Copying the usual `pageNumber`/`pageSize` silently skips the first page |
+| `IdResponse` is generated without its `id` property | Five `PUT` calls would report `null` for a resource they had just created |
+| `NativeToolsResponse` collapses a four-way `oneOf` to its first alternative | A Teams tool read as a Slack tool, its configuration dropped without an error |
+
+The second and third are generator defects, not specification defects: the YAML
+is correct and NSwag mis-renders it. The SDK works around both in the facade —
+its own `AiIdResponse`, and `JsonElement` where a union cannot be resolved —
+rather than patching the generated code, so a later specification sync cannot
+quietly undo the fix.
+
+`SpecPathTests` caught two things in this wave. One was real formatting rot: a
+path built by concatenating outside the interpolated string, which the scanner
+cannot see. The other was cloud functions, which no specification can confirm
+because none exists — that one is now an explicit, argued exemption in the test
+rather than a silent skip.

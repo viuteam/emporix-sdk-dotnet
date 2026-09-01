@@ -23,6 +23,7 @@ internal static class SpecCatalog
         new("ai-rag-indexer", $"{Base}/artificial-intelligence/ai-rag-indexer/api-reference/api.yml"),
         new("ai-service", $"{Base}/artificial-intelligence/ai-service/api-reference/api.yml"),
         new("approval-service", $"{Base}/companies-and-customers/approval-service/approval-api-reference/api.yml"),
+        new("audit-logs-changelog", $"{Base}/utilities/audit-logs-changelog/api-reference/api.yml"),
         new("availability", $"{Base}/orders/availability/api-reference/api.yml"),
         new("brand-service", $"{Base}/products-labels-and-brands/brand-service/api-reference/api.yml"),
         new("cart", $"{Base}/checkout/cart/api-reference/api.yml"),

@@ -14,8 +14,21 @@ internal sealed record Configuration(
     string? Currency,
     string? Country,
     string? ProductId,
-    string? Host)
+    string? Host,
+    string? BackendClientId,
+    string? BackendSecret)
 {
+    /// <summary>
+    /// Whether the second, service-token pass can run.
+    /// </summary>
+    /// <remarks>
+    /// The anonymous pass needs only a storefront client id. Everything a seller
+    /// does — taxes, IAM, imports, the audit log — needs client credentials, and
+    /// those are a different pair. The smoke test runs whichever it has.
+    /// </remarks>
+    public bool HasBackendCredentials =>
+        BackendClientId is { Length: > 0 } && BackendSecret is { Length: > 0 };
+
     /// <summary>
     /// Reads the configuration, or explains what is missing.
     /// </summary>
@@ -56,7 +69,9 @@ internal sealed record Configuration(
             Read("EMPORIX_CURRENCY"),
             Read("EMPORIX_COUNTRY"),
             Read("EMPORIX_PRODUCT_ID"),
-            Read("EMPORIX_HOST"));
+            Read("EMPORIX_HOST"),
+            Read("EMPORIX_BACKEND_CLIENT_ID"),
+            Read("EMPORIX_BACKEND_SECRET"));
     }
 
     public EmporixOptions ToOptions()
@@ -66,6 +81,13 @@ internal sealed record Configuration(
             Tenant = Tenant,
             Credentials = new EmporixCredentials
             {
+                Backend = HasBackendCredentials
+                    ? new EmporixServiceCredentials
+                    {
+                        ClientId = BackendClientId!,
+                        Secret = BackendSecret!,
+                    }
+                    : null,
                 Storefront = new EmporixStorefrontCredentials
                 {
                     ClientId = ClientId,

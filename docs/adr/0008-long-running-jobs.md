@@ -1,6 +1,6 @@
 # ADR-0008 — Long-running jobs: one waiting helper, no job abstraction
 
-**Status:** Decided · **Date:** 2026-09-01 · Affects: [ADR-0005](0005-resilience.md)
+**Status:** Implemented · **Date:** 2026-09-01 · Affects: [ADR-0005](0005-resilience.md)
 
 ## Context
 

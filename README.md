@@ -164,9 +164,8 @@ unset to get every language and choose per request.
 
 ## The other services
 
-Thirty-seven of the Emporix services are covered, each with the full set of
-operations the API offers for it. Each hangs off the client under a name that
-says what it owns:
+Every Emporix service is covered, each with the full set of operations the API
+offers for it. Each hangs off the client under a name that says what it owns:
 
 | Property | Covers |
 |---|---|
@@ -208,6 +207,15 @@ says what it owns:
 | `client.SequentialIds` | order numbers and the like |
 | `client.Configuration` | tenant and client configuration |
 | `client.SessionContext` | what a session carries beyond its token |
+| `client.Imports` | bringing data in from somewhere else |
+| `client.Indexing` | which provider indexes the catalogue, and rebuilding it |
+| `client.PickPack` | the warehouse side of an order |
+| `client.ShoppingLists` | what a customer means to buy later |
+| `client.RewardPoints` | loyalty points, and what they buy |
+| `client.Ai` | text generation, and agents that do things |
+| `client.RagIndexer` | what an agent can retrieve over |
+| `client.CloudFunctions` | code a tenant deployed, invoked by name |
+| `client.AuditLogs` | who changed what, when, and from which value to which |
 
 A storefront flow from browsing to order:
 
@@ -254,6 +262,10 @@ Some services group operations that belong together:
 | `client.Schemas.CustomEntities` · `client.Schemas.InstancesOf(type)` | a tenant's own shapes, and their records |
 | `client.Sites.MixinsOf(code)` | a tenant's own settings on one site |
 | `client.Configuration.ForClient(id)` | configuration narrowed to one client |
+| `client.Ai.Agents` · `client.Ai.Templates` | agents, and the templates they are built from |
+| `client.Ai.Tools` · `client.Ai.McpServers` | what an agent may reach out to |
+| `client.Ai.Tokens` · `client.Ai.OAuths` | the credentials those need |
+| `client.Ai.Conversations` · `client.Ai.Logs` · `client.Ai.Jobs` | what was said, what was done, what is still running |
 
 A cart item is addressed by its YRN, not by a bare product id — `ProductYrn.Create(tenant, id)`
 builds one, and passing a bare id is refused before the request leaves. It also
@@ -264,19 +276,44 @@ Price matching with a service token would return an empty list — indistinguish
 from «no prices configured» — so it throws `EmporixConfigurationException` before
 the request is sent. Carts, checkout and own-orders do the same.
 
-### What is not here yet
+### Where the SDK hands you JSON instead of a type
 
-These thirty-seven services carry the operations the Emporix API offers for
-them. What is missing is the other 11: the AI services, imports and indexing,
-pick-and-pack, shopping lists, reward points and cloud functions. Three of them
-need a decision before any code — see
-[docs/roadmap.md](docs/roadmap.md#the-three-decisions-to-take-before-coding).
-Their generated types ship in the package, so anything missing is reachable
-through the underlying `HttpClient`.
+Three places, all for the same reason: the specification declares a `oneOf` with
+no discriminator the generator can act on, so choosing one of the alternatives
+would silently drop the others' fields.
 
-The full picture is in
-[docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31), and what happens
-to the other 36 in [docs/roadmap.md](docs/roadmap.md).
+- `client.Ai.Tools` — a tool is a Slack, Teams or one of two retrieval kinds.
+  Writing is typed, one method per kind; reading hands back a `JsonElement` whose
+  `type` says which it is.
+- `client.Ai.McpServers` — the same split between a server Emporix hosts and one
+  you run yourself.
+- `client.CloudFunctions` — no specification exists at all, by design. The caller
+  supplies the type information; see [ADR-0009](docs/adr/0009-cloud-functions.md).
+
+Everything else returns a generated type. The full picture is in
+[docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31); how the coverage
+was built up, wave by wave, is in [docs/roadmap.md](docs/roadmap.md).
+
+### Waiting for work that takes a while
+
+Imports, reindexing, invoice generation and asynchronous chats all answer with a
+job rather than a result. `EmporixPolling.WaitForAsync` waits for one, with a
+growing interval and a timeout that is distinct from cancellation:
+
+```csharp
+var job = await EmporixPolling.WaitForAsync(
+    poll: ct => client.Imports.GetRunAsync(runId, cancellationToken: ct),
+    isComplete: r => r?.Status is not (ImportRunStatus.RUNNING or ImportRunStatus.PENDING),
+    cancellationToken: cancellationToken);
+```
+
+There is no job type, because the four job shapes in the API share no field a
+type system can use — [ADR-0008](docs/adr/0008-long-running-jobs.md) has the
+detail. Two endpoints stream their progress instead of being polled;
+`client.Imports.StreamEventsAsync` and `client.Ai.ChatStreamAsync` return the
+response unread, and `System.Net.ServerSentEvents` — already in the `net10.0`
+shared framework — parses it in three lines
+([ADR-0007](docs/adr/0007-streaming.md)).
 
 ## Error handling
 
@@ -374,6 +411,22 @@ to the end. `EMPORIX_HOST` overrides the API host; everything else is optional.
 
 Credentials come from the environment and are never read from a file in the
 repository. Nothing it prints contains a token.
+
+### The seller's side
+
+An anonymous storefront token cannot reach anything a seller configures, so the
+smoke test has a second pass that runs on client credentials. It is read-only —
+every call is a `GET` or a search — and it covers the services no browser ever
+sees: taxes, sites, shipping zones, IAM, custom entities, imports, indexing,
+reward options, AI agents and tools, shopping lists and the audit log.
+
+```bash
+EMPORIX_BACKEND_CLIENT_ID=your-client-id EMPORIX_BACKEND_SECRET=your-secret dotnet run --project samples/Viu.Emporix.SmokeTest
+```
+
+Without those two the pass says so and skips itself, which is why the same
+command works with or without them. Put the secret in the environment or a
+repository secret — never in a file in the repository.
 
 ## Contributing
 

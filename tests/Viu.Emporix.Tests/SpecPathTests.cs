@@ -38,13 +38,27 @@ public class SpecPathTests
         Assert.True(used.Count > 60, $"Only {used.Count} service paths found.");
 
         string[] unknown = [.. used
-            .Where(u => !Known(declared, u.Call))
+            .Where(u => !Exempt(u.Call) && !Known(declared, u.Call))
             .Select(u => $"{u.Call}  ({u.File})")
             .Distinct()
             .Order()];
 
         Assert.Empty(unknown);
     }
+
+    /// <summary>
+    /// The one address no specification can confirm.
+    /// </summary>
+    /// <remarks>
+    /// Emporix vendors no specification for cloud functions — the whole point of
+    /// the service is that the shapes belong to whoever deployed the function.
+    /// The address is verified against the Node SDK instead
+    /// (<c>packages/sdk/src/services/cloud-functions.ts</c>), and the decision is
+    /// recorded in ADR-0009. It is listed here rather than skipped silently so
+    /// that a second exemption has to be argued for.
+    /// </remarks>
+    private static bool Exempt(string call)
+        => call.EndsWith("/cloud-functions/{}/functions/{}{}", StringComparison.Ordinal);
 
     private static DirectoryInfo FindRepositoryRoot()
     {

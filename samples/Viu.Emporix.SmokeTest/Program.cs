@@ -33,6 +33,9 @@ if (configuration is null)
     Console.WriteLine("  EMPORIX_COUNTRY    ISO 3166-1, e.g. CH       (optional)");
     Console.WriteLine("  EMPORIX_PRODUCT_ID a product known to have a price (optional)");
     Console.WriteLine("  EMPORIX_HOST       override the API host      (optional)");
+    Console.WriteLine();
+    Console.WriteLine("  EMPORIX_BACKEND_CLIENT_ID  client credentials, for the seller-side pass (optional)");
+    Console.WriteLine("  EMPORIX_BACKEND_SECRET     its secret — never commit this              (optional)");
     return 2;
 }
 
@@ -322,6 +325,162 @@ await runner.RunAsync("delete the cart", async () =>
 
     await client.Carts.DeleteAsync(cartId, shopper);
     return Step.Ok("cleaned up");
+});
+
+// ---------------------------------------------------------------------------
+// The seller's side. Everything above ran on an anonymous storefront token;
+// none of it can reach a service configured by a seller. This second pass needs
+// client credentials, and it runs only when they are there.
+//
+// Read-only by design. Every call below is a GET or a search: the point is to
+// prove the addresses, the scopes and the response shapes, not to leave anything
+// behind in a tenant.
+if (!configuration.HasBackendCredentials)
+{
+    Console.WriteLine();
+    Console.WriteLine(
+        "Skipping the service-token pass — set EMPORIX_BACKEND_CLIENT_ID and");
+    Console.WriteLine(
+        "EMPORIX_BACKEND_SECRET to also check the services a seller configures.");
+    Console.WriteLine();
+    return runner.Report();
+}
+
+Console.WriteLine();
+Console.WriteLine("Service token — the seller's side (read-only)");
+Console.WriteLine();
+
+AuthContext service = AuthContext.Service();
+
+await runner.RunAsync("service token and tax configuration", async () =>
+{
+    // Also the token check for this pass: a wrong secret fails here, before
+    // anything else has a chance to look like the problem.
+    IReadOnlyList<Viu.Emporix.TaxServiceModels.TaxRetrieval> taxes =
+        await client.Taxes.ListAsync(auth: service);
+
+    return taxes.Count > 0
+        ? Step.Ok($"{taxes.Count} tax configuration(s)")
+        : Step.Empty("no tax configuration on this tenant");
+});
+
+await runner.RunAsync("sites", async () =>
+{
+    IReadOnlyList<Viu.Emporix.SiteSettingsServiceModels.SiteDto> sites =
+        await client.Sites.ListAsync(auth: service);
+
+    return sites.Count > 0
+        ? Step.Ok(string.Join(", ", sites.Select(s => s.Code).Take(5)))
+        : Step.Empty("no site is configured");
+});
+
+await runner.RunAsync("shipping zones for the site", async () =>
+{
+    IReadOnlyList<Viu.Emporix.ShippingModels.Zone> zones =
+        await client.Shipping.ForSite(configuration.Site).ListZonesAsync(auth: service);
+
+    return zones.Count > 0
+        ? Step.Ok($"{zones.Count} zone(s)")
+        : Step.Empty($"site {configuration.Site} has no shipping zone");
+});
+
+await runner.RunAsync("IAM groups", async () =>
+{
+    PaginatedItems<Viu.Emporix.IamModels.GroupsQueryDocument> groups =
+        await client.Iam.Groups.ListAsync(pageSize: 5, auth: service);
+
+    return groups.Items.Count > 0
+        ? Step.Ok($"{groups.Items.Count} group(s) on the first page")
+        : Step.Empty("no IAM group is defined");
+});
+
+await runner.RunAsync("custom entity types", async () =>
+{
+    IReadOnlyList<Viu.Emporix.SchemaModels.CustomSchemaTypeResponse> types =
+        await client.Schemas.CustomEntities.ListAsync(auth: service);
+
+    return types.Count > 0
+        ? Step.Ok($"{types.Count} type(s)")
+        : Step.Empty("this tenant defines no custom entity types");
+});
+
+// ---- Wave 5. None of these had ever been called live before this pass. ----
+
+await runner.RunAsync("import configurations", async () =>
+{
+    IReadOnlyList<Viu.Emporix.ImportServiceModels.ImportConfig> configs =
+        await client.Imports.ListConfigsAsync(service);
+
+    return configs.Count > 0
+        ? Step.Ok($"{configs.Count} configuration(s)")
+        : Step.Empty("the import tool is not configured on this tenant");
+});
+
+await runner.RunAsync("public index configuration", async () =>
+{
+    // Deliberately the public variant: the full one carries write keys, and a
+    // smoke test has no business printing those.
+    IReadOnlyList<Viu.Emporix.IndexingServiceModels.IndexPublicConfiguration> indexes =
+        await client.Indexing.ListPublicConfigurationsAsync(service);
+
+    return indexes.Count > 0
+        ? Step.Ok(string.Join(", ", indexes.Select(i => i.Provider?.ToString()).Take(3)))
+        : Step.Empty("no search provider is configured");
+});
+
+await runner.RunAsync("reward redemption options", async () =>
+{
+    IReadOnlyList<Viu.Emporix.RewardPointsModels.RedeemOption> options =
+        await client.RewardPoints.ListRedeemOptionsAsync(service);
+
+    return options.Count > 0
+        ? Step.Ok($"{options.Count} option(s)")
+        : Step.Empty("loyalty is not configured on this tenant");
+});
+
+await runner.RunAsync("AI agents", async () =>
+{
+    IReadOnlyList<Viu.Emporix.AiServiceModels.AgentResponse> agents =
+        await client.Ai.Agents.ListAsync(new AiListOptions { PageSize = 5 }, service);
+
+    return agents.Count > 0
+        ? Step.Ok($"{agents.Count} agent(s)")
+        : Step.Empty("no agent is configured");
+});
+
+await runner.RunAsync("AI tools", async () =>
+{
+    // The one that returns JSON rather than a type, because four shapes share
+    // the endpoint. Worth exercising: if the union ever gains a discriminator,
+    // this is where it would show.
+    System.Text.Json.JsonElement tools =
+        await client.Ai.Tools.ListAsync(new AiListOptions { PageSize = 5 }, service);
+
+    return tools.ValueKind == System.Text.Json.JsonValueKind.Array
+        ? Step.Ok($"{tools.GetArrayLength()} tool(s)")
+        : Step.Empty($"the endpoint answered with {tools.ValueKind}, not an array");
+});
+
+await runner.RunAsync("shopping lists", async () =>
+{
+    IReadOnlyList<Viu.Emporix.ShoppingListModels.GetShoppingList> lists =
+        await client.ShoppingLists.ListAsync(auth: service);
+
+    return lists.Count > 0
+        ? Step.Ok($"{lists.Count} customer(s) with a list")
+        : Step.Empty("nobody has a shopping list on this tenant");
+});
+
+await runner.RunAsync("audit log, last 30 days", async () =>
+{
+    // Unfiltered means «the last 30 days», not «everything» — Emporix applies
+    // that window itself. An empty answer here is a quiet tenant, not a fault.
+    Viu.Emporix.AuditLogsChangelogModels.ChangelogHistoryResponse? page =
+        await client.AuditLogs.ListAsync(size: 5, auth: service);
+
+    return page is { Items.Count: > 0 }
+        ? Step.Ok($"{page.TotalElements} change(s) in the window")
+        : Step.Empty("no change recorded in the last 30 days");
 });
 
 Console.WriteLine();

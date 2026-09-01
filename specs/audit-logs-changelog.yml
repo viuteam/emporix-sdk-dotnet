@@ -1,0 +1,374 @@
+openapi: 3.0.0
+info:
+  title: Audit Logs (Changelog) Service
+  version: ''
+  description: |-
+    The Emporix API Changelog Service allows you to query tenant-wide change history for platform entities.
+  contact:
+    name: Emporix
+    url: 'https://www.emporix.com/contact-us'
+    email: documentation@emporix.com
+servers:
+  - url: 'https://api.emporix.io'
+security:
+  - OAuth2: []
+tags:
+  - name: Changelogs
+    description: Query tenant change history.
+paths:
+  '/changelog/{tenant}/changelogs':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      tags:
+        - Changelogs
+      summary: Retrieving logs
+      operationId: GET-changelog-retrieve-tenant-changelogs
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves a paginated list of changes for the tenant. Results are ordered by occurrence time.
+
+        Filter results with the standard `q` query parameter. Supported fields:
+
+        * `entity` — Entity type, for example `order`, `customer`, `company`, `product`, `segment`, `group`, `group-assignment`, `coupon`, or a custom entity created with the Schema Service.
+        * `entityId` — Document identifier. Requires `entity`.
+        * `type` — Change type. Possible values: `create`, `update`, `delete`.
+        * `actor` — Actor display name. Supports exact match, glob patterns such as `John*`, and regex such as `actor:~^sys`. Special values: `system`, `unknown`.
+        * `occurredAt` — Time range, for example `occurredAt:(>"2026-06-01T00:00:00.000Z" AND <"2026-06-30T23:59:59.999Z")`.
+        * `related.entity` / `related.entityId` — Related-entity filters. Alternatively use `related:elemMatch(entity:<type> entityId:<id>)`.
+        * `compoundLogicalQuery` — Nested `OR` / `AND` expressions.
+
+        Scope a single document with `entity` and `entityId` in `q`. There is no path-based history endpoint.
+
+        {% hint style="info" %}
+        When the query omits a conjunctive `occurredAt` from-bound, the API applies a default trailing window of **30 days**. Pass an explicit top-level or `AND` `occurredAt` range to override it. An `occurredAt` only inside an `OR` arm does not disable the default window.
+        {% endhint %}
+      security:
+        - OAuth2:
+            - changelog.changelog_read
+            - changelog.changelog_manage
+      parameters:
+        - $ref: '#/components/parameters/query_q'
+        - $ref: '#/components/parameters/query_page'
+        - $ref: '#/components/parameters/query_size'
+      responses:
+        '200':
+          description: |-
+            The request was successful. A paginated list of changed entries has been returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangelogHistoryResponse'
+              examples:
+                Order status update:
+                  $ref: '#/components/examples/changelogHistoryOrderUpdate'
+                Related group-assignment rows:
+                  $ref: '#/components/examples/changelogHistoryRelated'
+        '400':
+          description: Bad Request. The page, size, or q parameter is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Invalid page:
+                  value:
+                    status: 400
+                    message: page must be >= 1
+                Invalid size:
+                  value:
+                    status: 400
+                    message: size must be between 1 and 100
+                Unsupported query field:
+                  value:
+                    status: 400
+                    message: 'Unsupported query field: status'
+                Missing entity for entityId:
+                  value:
+                    status: 400
+                    message: entity is required when entityId is provided
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.emporix.io/oauth/token'
+          scopes:
+            changelog.changelog_read: Needed to retrieve changelog history.
+            changelog.changelog_manage: Needed to manage changelog resources. Also grants read access.
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      required: true
+      schema:
+        pattern: '^[a-z][a-z0-9]+$'
+        minLength: 3
+        maxLength: 16
+        type: string
+      description: |
+        Your Emporix tenant's name.
+        **Note**: The tenant should always be written in lowercase.
+    query_q:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |-
+        Standard query parameter used to filter changed entries.
+
+        Supported fields:
+        * `entity` — Entity type, for example `q=entity:order`.
+        * `entityId` — Document identifier. Requires `entity`, for example `q=entity:order entityId:6a2bce93592855a33518fc2f`.
+        * `type` — Change type (`create`, `update`, or `delete`), for example `q=type:update`.
+        * `actor` — Actor display name. Exact match: `q=actor:system`. Glob: `q=actor:John*`. Regex: `q=actor:~^sys`.
+        * `occurredAt` — Time range, for example `q=occurredAt:(>"2026-06-01T00:00:00.000Z" AND <"2026-06-30T23:59:59.999Z")`.
+        * `related.entity` / `related.entityId` — Related-entity filters, for example `q=related.entity:group related.entityId:1gr5e52e-6e27-4ac5-9471-2467d3fb7501`.
+        * `related:elemMatch(...)` — ElemMatch syntax, for example `q=related:elemMatch(entity:group entityId:1gr5e52e-6e27-4ac5-9471-2467d3fb7501)`.
+        * `compoundLogicalQuery` — Nested `OR` / `AND` expressions, for example `q=compoundLogicalQuery:((entity:group type:update) OR (related:elemMatch(entity:group)))`.
+
+        See also [Query Parameter](https://developer.emporix.io/api-references/standard-practices/q-param).
+      example: 'entity:order entityId:6a2bce93592855a33518fc2f'
+    query_page:
+      name: page
+      in: query
+      required: false
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+      description: |
+        Page number to be retrieved. The number of the first page is 1.
+    query_size:
+      name: size
+      in: query
+      required: false
+      schema:
+        default: 20
+        minimum: 1
+        maximum: 100
+        type: integer
+      description: |
+        Number of changed entries to be retrieved per page. Maximum value is 100.
+  schemas:
+    ChangelogHistoryResponse:
+      type: object
+      description: Paginated tenant changelog history.
+      properties:
+        items:
+          type: array
+          description: List of changed entries for the requested page.
+          items:
+            $ref: '#/components/schemas/ChangelogChangeItem'
+        page:
+          type: integer
+          description: Current page number. The number of the first page is 1.
+        size:
+          type: integer
+          description: Number of items requested per page.
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of changed entries matching the query.
+        totalPages:
+          type: integer
+          description: Total number of pages for the matching result set.
+      required:
+        - items
+        - page
+        - size
+        - totalElements
+        - totalPages
+    ChangelogChangeItem:
+      type: object
+      description: A single changelog entry describing a change to a platform entity.
+      properties:
+        at:
+          type: string
+          format: date-time
+          description: |
+            ISO-8601 UTC timestamp with milliseconds when the change occurred, for example `2026-06-01T13:01:29.123Z`.
+        type:
+          type: string
+          enum:
+            - create
+            - update
+            - delete
+          description: |
+            Change type returned by the API.
+            * `create` — Document insert.
+            * `update` — Document update or replace.
+            * `delete` — Document delete.
+        entity:
+          type: string
+          description: |
+            Logical entity type of the changed document, for example `order`, `customer`, `company`, `product`, `segment`, `group`, `group-assignment`, `coupon`, or a custom entity created with the Schema Service.
+        entityId:
+          type: string
+          description: Unique identifier of the changed document.
+        name:
+          type: string
+          description: Optional display name of the changed document when available.
+        paths:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/PathValueChange'
+          description: |
+            Flattened map of changed field paths to before/after values derived from the change patch.
+        schemaVersion:
+          type: string
+          description: Optional schema or document format version associated with the change.
+        actor:
+          type: string
+          description: |
+            Actor display name that performed the change. Possible values include a person name, `system`, `external`, or `unknown`.
+        related:
+          type: array
+          description: Related entities linked to the changed document, for example junction-style references.
+          items:
+            $ref: '#/components/schemas/ChangelogRelatedItem'
+    PathValueChange:
+      type: object
+      description: Before and after values for a changed field path.
+      properties:
+        before:
+          description: Value of the field before the change. Omitted when not available.
+        after:
+          description: Value of the field after the change. Omitted when not available.
+    ChangelogRelatedItem:
+      type: object
+      description: A related entity referenced by a changelog entry.
+      properties:
+        entity:
+          type: string
+          description: Related entity type, for example `group` or `customer`.
+        entityId:
+          type: string
+          description: Unique identifier of the related entity.
+    ErrorMessage:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP status code.
+        type:
+          type: string
+          description: Error type identifier.
+        message:
+          type: string
+          description: Human-readable error message.
+        details:
+          type: array
+          description: Field-level validation details.
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+  examples:
+    changelogHistoryOrderUpdate:
+      summary: Order status update
+      value:
+        items:
+          - at: '2026-06-01T13:01:29.123Z'
+            type: update
+            entity: order
+            entityId: 6a2bce93592855a33518fc2f
+            paths:
+              status:
+                before: CREATED
+                after: CONFIRMED
+            schemaVersion: v2
+            actor: John Doe
+        page: 1
+        size: 20
+        totalElements: 1
+        totalPages: 1
+    changelogHistoryRelated:
+      summary: Group-assignment related to a group
+      value:
+        items:
+          - at: '2026-06-01T10:00:00.000Z'
+            type: create
+            entity: group-assignment
+            entityId: 264e59c0-0130-4f1b-a83f-cea06264a397
+            actor: system
+            related:
+              - entity: group
+                entityId: 1gr5e52e-6e27-4ac5-9471-2467d3fb7501
+              - entity: customer
+                entityId: cd6818c8-ec9b-42d4-83c4-8c51dfbe9ce0
+        page: 1
+        size: 20
+        totalElements: 1
+        totalPages: 1
+  responses:
+    Unauthorized_401:
+      description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fault:
+                type: object
+                properties:
+                  faultstring:
+                    type: string
+                  detail:
+                    type: object
+                    properties:
+                      errorcode:
+                        type: string
+          examples:
+            Invalid access token:
+              value:
+                fault:
+                  faultstring: Invalid access token
+                  detail:
+                    errorcode: oauth.v2.InvalidAccessToken
+            Access token expired:
+              value:
+                fault:
+                  faultstring: Access Token expired
+                  detail:
+                    errorcode: keymanagement.service.access_token_expired
+    Forbidden_403:
+      description: |
+        Given authorization scopes are not sufficient and do not match required scopes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Forbidden:
+              value:
+                status: 403
+                message: Given request does not have required scopes. It is not authorized to perform this operation.
+                type: insufficient_permissions
+    InternalServiceError_500:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            Internal Server Error:
+              value:
+                status: 500
+                message: Problem encountered while trying to retrieve changelog history.

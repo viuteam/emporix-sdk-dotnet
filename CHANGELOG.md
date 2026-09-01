@@ -31,9 +31,41 @@ exactly that package version.
 - Grouped operations for those: `Iam.Users`, `Iam.Groups`, `Iam.AccessControls`,
   `Schemas.CustomEntities`, `Schemas.InstancesOf(type)`, `Sites.MixinsOf(code)`
   and `Configuration.ForClient(id)`.
+- The last nine services: `Imports`, `Indexing`, `PickPack`, `ShoppingLists`,
+  `RewardPoints`, `Ai`, `RagIndexer`, `CloudFunctions` and `AuditLogs` — 124
+  operations. **Every Emporix service is now covered**: 47 properties on the
+  client over 665 public calls, and every one of the Node SDK's 49 service
+  facades has an equivalent here.
+- The `audit-logs-changelog` specification, which had never been vendored. Its
+  absence is why `AuditLogs` was missing from every earlier wave.
+- Grouped operations for the AI service: `Ai.Agents`, `Ai.Templates`, `Ai.Tools`,
+  `Ai.Tokens`, `Ai.OAuths`, `Ai.McpServers`, `Ai.Conversations`, `Ai.Jobs` and
+  `Ai.Logs`.
+- `EmporixPolling.WaitForAsync` for the endpoints that answer with a job rather
+  than a result — imports, reindexing, invoice generation, asynchronous chats.
+  Growing interval, a ceiling on it, and a timeout distinct from cancellation
+  ([ADR-0008](docs/adr/0008-long-running-jobs.md)).
+- Streaming for the two endpoints that have it — `Imports.StreamEventsAsync` and
+  `Ai.ChatStreamAsync`. Both hand back the response unread; `net10.0` already
+  ships the parser ([ADR-0007](docs/adr/0007-streaming.md)).
+- `AiPatchOperation`, the SDK's own type for the AI service's `PATCH` bodies. The
+  specification leaves the operation object untitled, so the generated name is
+  `Anonymous` — no name for a public signature.
 
 ### Fixed
 
+- `Imports` pages from zero with `page` and `size`. Every other service in the
+  SDK counts from one with `pageNumber` and `pageSize`; using the usual spelling
+  here skips the first page without an error.
+- The AI service's `PUT` responses no longer come back empty. The specification
+  declares `IdResponse` as `{ "id": … }`, but the generator emits that type
+  without its property, so five calls would have reported `null` for a resource
+  they had just created. The SDK declares the shape itself.
+- Reads of AI tools and MCP servers hand back `JsonElement` rather than a wrong
+  type. Both are four-way and two-way unions with no discriminator the generator
+  can act on, and it had collapsed each to its first alternative — a Teams tool
+  read as a Slack tool would have lost its configuration silently. Writes stay
+  typed, one method per kind.
 - The generation pipeline keeps the meaningful name when dissolving an alias
   over an untitled schema. NSwag calls a schema it cannot title `Anonymous2`,
   and the resolver was dissolving the named alias into it — which put
