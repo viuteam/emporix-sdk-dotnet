@@ -37,6 +37,50 @@ A pull request whose title does not parse is rejected by the **Commit convention
 check, because a squash merge puts that title on `main` and an unclassifiable
 commit contributes to neither the version nor the changelog. It ships, silently.
 
+## The trap: a commit body that will not parse
+
+Release Please parses the **whole** commit message, not only the subject. A
+message its parser rejects is dropped in full: no changelog entry, no version
+bump, the change ships regardless, and the only trace is one line in a workflow
+log.
+
+The construct that does it is **nested parentheses anywhere in the body** —
+including inside a code fence:
+
+```
+feat: bind the options from a configuration section
+
+`AddEmporix(builder.Configuration.GetSection("Emporix"))` alongside the
+delegate overload.
+```
+
+That exact commit vanished from release 0.2.0. The parser stops at the second
+opening parenthesis:
+
+```
+commit could not be parsed: 0698991 feat: bind the options ...
+error message: unexpected token '(' at 3:45, valid tokens [)]
+```
+
+A single pair is fine. It is the nesting that ends the parse:
+
+| In a commit body | |
+| --- | --- |
+| `see AddEmporix for details` | fine |
+| `see AddEmporix, second overload` | fine |
+| `AddEmporix of GetSection of the options` | fine |
+| ``` `AddEmporix(section)` ``` | fine |
+| ``` `AddEmporix(GetSection("x"))` ``` | **drops the commit** |
+
+The **Parseable messages** check runs the same library Release Please uses over
+every commit a pull request adds and every commit a push brings to `main`, so the
+failure is red rather than silent. It cannot be worked around by rewording the
+subject — the body is what breaks.
+
+Prose in commit bodies is worth keeping; it is where the reasoning lives now that
+the changelog is generated. Just write the code references without nesting the
+brackets.
+
 ## What happens then
 
 1. Push to `main`. **Release Please** opens or updates a pull request titled

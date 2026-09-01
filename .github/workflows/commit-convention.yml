@@ -1,14 +1,21 @@
 name: Commit convention
 
 # Release Please reads the commit history to decide the next version and to write
-# the changelog. A commit it cannot classify contributes nothing to either — the
-# change ships, and no one reading the changelog learns that it did.
+# the changelog. Two ways a commit contributes nothing to either, both silent:
 #
-# This checks the pull-request title, because that is what a squash merge puts on
-# main. A branch merged without squashing is checked commit by commit instead.
+#   * a subject it cannot classify, and
+#   * a message its parser rejects outright.
+#
+# The second is the dangerous one. A commit whose body the parser chokes on is
+# dropped whole — no changelog entry, no version bump, one line in a log nobody
+# reads. It happened here: `feat: bind the options from a configuration section`
+# vanished from the release because its body contained
+# `GetSection("Emporix"))`, and nested parentheses end the parse.
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -18,6 +25,7 @@ jobs:
     name: Conventional title
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Check the pull-request title
@@ -56,3 +64,76 @@ jobs:
           docs/releasing.md explains what each one does to a release.
           MESSAGE
           exit 1
+
+  parseable:
+    name: Parseable messages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Parse every commit with Release Please's own parser
+        env:
+          # A pull request checks what it adds; a push checks what it brought.
+          RANGE_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          RANGE_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          # The first push to a branch reports an all-zero «before». Nothing to
+          # compare against, so check the head commit alone.
+          if [[ -z "$RANGE_BASE" || "$RANGE_BASE" =~ ^0+$ ]]; then
+            commits="$RANGE_HEAD"
+          else
+            commits="$(git rev-list "$RANGE_BASE..$RANGE_HEAD")"
+          fi
+
+          if [[ -z "$commits" ]]; then
+            echo "No commits to check."
+            exit 0
+          fi
+
+          # The very library release-please uses, so this cannot drift from what
+          # it will actually do with the message.
+          npm install --silent --no-save @conventional-commits/parser
+
+          failed=0
+          for sha in $commits; do
+            message="$(git log -1 --format=%B "$sha")"
+            if ! MESSAGE="$message" SHA="$sha" node -e '
+              const { parser } = require("@conventional-commits/parser");
+              try {
+                parser(process.env.MESSAGE);
+                console.log("  ok    " + process.env.SHA.slice(0, 7) + "  " +
+                  process.env.MESSAGE.split("\n")[0].slice(0, 60));
+              } catch (error) {
+                console.log("  FAIL  " + process.env.SHA.slice(0, 7) + "  " +
+                  process.env.MESSAGE.split("\n")[0].slice(0, 60));
+                console.log("        " + error.message.split("\n")[0]);
+                process.exit(1);
+              }
+            '; then
+              failed=1
+            fi
+          done
+
+          if [[ "$failed" -ne 0 ]]; then
+            cat >&2 <<'MESSAGE'
+
+          Release Please drops a commit it cannot parse — the change ships, and
+          neither the changelog nor the version records that it did.
+
+          The usual cause is nested parentheses anywhere in the body, including
+          inside a code fence:
+
+              GetSection("Emporix"))     breaks
+              GetSection of the options  fine
+
+          Rewrite the body without them. The prose is worth keeping; the
+          parentheses are not.
+          MESSAGE
+            exit 1
+          fi
