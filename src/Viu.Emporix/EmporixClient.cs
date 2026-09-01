@@ -64,6 +64,13 @@ public sealed class EmporixClient : IDisposable
     private ShippingService? _shipping;
     private ReturnService? _return;
     private InvoiceService? _invoice;
+    private LegalEntityService? _legalEntity;
+    private ContactAssignmentService? _contactAssignment;
+    private LocationService? _location;
+    private CustomerAdminService? _customerAdmin;
+    private ApprovalService? _approval;
+    private QuoteService? _quote;
+    private SegmentService? _segment;
     private bool _disposed;
 
     /// <summary>
@@ -398,6 +405,83 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _invoice ??= new InvoiceService(_http, _options);
+        }
+    }
+
+    /// <summary>The companies a B2B tenant sells to.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public LegalEntityService LegalEntities
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _legalEntity ??= new LegalEntityService(_http, _options);
+        }
+    }
+
+    /// <summary>Who may act for which legal entity.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ContactAssignmentService ContactAssignments
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _contactAssignment ??= new ContactAssignmentService(_http, _options);
+        }
+    }
+
+    /// <summary>Where a legal entity receives.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public LocationService Locations
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _location ??= new LocationService(_http, _options);
+        }
+    }
+
+    /// <summary>Customers, as a seller manages them.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public CustomerAdminService CustomerAdmin
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _customerAdmin ??= new CustomerAdminService(_http, _options);
+        }
+    }
+
+    /// <summary>Carts and quotes waiting for a decision.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public ApprovalService Approvals
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _approval ??= new ApprovalService(_http, _options);
+        }
+    }
+
+    /// <summary>Negotiated prices, before they become orders.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public QuoteService Quotes
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _quote ??= new QuoteService(_http, _options);
+        }
+    }
+
+    /// <summary>Who gets which prices and which catalogue.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SegmentService Segments
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _segment ??= new SegmentService(_http, _options);
         }
     }
 

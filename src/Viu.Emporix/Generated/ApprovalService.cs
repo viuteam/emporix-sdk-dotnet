@@ -493,7 +493,6 @@ namespace Viu.Emporix.ApprovalServiceModels
 
     }
 
-
     /// <summary>
     /// Resource of the approval.
     /// </summary>
@@ -1098,7 +1097,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     /// Base schema for approval permitted response.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class ApprovalPermittedResponse
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("action")]

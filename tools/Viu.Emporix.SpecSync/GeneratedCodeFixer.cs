@@ -34,11 +34,39 @@ internal static partial class GeneratedCodeFixer
         }
 
         Dictionary<string, string> aliases = new(StringComparer.Ordinal);
+        List<string> renamedBases = [];
         string result = source;
 
         foreach (Match match in matches)
         {
-            aliases[match.Groups["name"].Value] = match.Groups["baseType"].Value;
+            string name = match.Groups["name"].Value;
+            string baseType = match.Groups["baseType"].Value;
+
+            // NSwag names a schema it cannot title «Anonymous», «Anonymous2» and
+            // so on. Where such a type is the base of a named alias, dissolving
+            // the alias throws the only meaningful name away and puts
+            // «Anonymous2» in a public signature. Renaming the base instead
+            // keeps the name the specification gave it.
+            if (AnonymousType().IsMatch(baseType))
+            {
+                result = new Regex($@"\b{Regex.Escape(baseType)}\b").Replace(result, name);
+
+                // The alias now derives from itself. Removing it has to take the
+                // attributes and documentation above it too — leaving those
+                // behind orphans a [GeneratedCode] attribute onto whatever class
+                // comes next, which is a duplicate-attribute error pointing at
+                // an innocent type.
+                result = new Regex(
+                    $@"(?:^[ \t]*(?:\[[^\]]*\]|///[^\n]*)\r?\n)*"
+                    + $@"^[ \t]*public partial class {Regex.Escape(name)} : {Regex.Escape(name)}\r?\n"
+                    + @"[ \t]*\{\r?\n(?:[ \t]*\r?\n)*[ \t]*\}\r?\n(?:[ \t]*\r?\n)*",
+                    RegexOptions.Multiline).Replace(result, string.Empty, 1);
+
+                renamedBases.Add($"{baseType} → {name}");
+                continue;
+            }
+
+            aliases[name] = baseType;
             result = result.Replace(match.Value, string.Empty, StringComparison.Ordinal);
         }
 
@@ -68,7 +96,7 @@ internal static partial class GeneratedCodeFixer
                 StringComparison.Ordinal);
         }
 
-        return (result, [.. aliases.Select(pair => $"{pair.Key} → {pair.Value}")]);
+        return (result, [.. renamedBases, .. aliases.Select(pair => $"{pair.Key} → {pair.Value}")]);
     }
 
     /// <summary>
@@ -317,6 +345,9 @@ internal static partial class GeneratedCodeFixer
 
     [GeneratedRegex(@"^    public partial class (\w+)", RegexOptions.Multiline)]
     private static partial Regex ClassDeclaration();
+
+    [GeneratedRegex(@"^Anonymous\d*$")]
+    private static partial Regex AnonymousType();
 
     /// <summary>A field whose type is the alias being dissolved.</summary>
     private static Regex PropertyDeclaration(string alias)

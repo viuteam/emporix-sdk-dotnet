@@ -386,3 +386,104 @@ internal sealed partial class PaymentJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.SlotCreation>))]
 internal sealed partial class ShippingJsonContext : JsonSerializerContext;
 
+/// <summary>Serialization for customer management. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.LegalEntity))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerManagementModels.LegalEntity>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.LegalEntityCreate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.LegalEntityUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.ContactAssignment))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerManagementModels.ContactAssignment>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.ContactAssignmentCreate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.ContactAssignmentUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.Location))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerManagementModels.Location>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.LocationCreate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.LocationUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.ResourceId))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerManagementModels.QParam))]
+internal sealed partial class LegalEntityJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the quote service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.QuoteModels.QuoteResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteUpdateStatus))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteIdResponse))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteHistory))]
+[JsonSerializable(typeof(List<Viu.Emporix.QuoteModels.QuoteHistory>))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteReasonResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.QuoteModels.QuoteReasonResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteReasonCreateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteReasonUpdateRequest))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteReasonIdResponse))]
+internal sealed partial class QuoteJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the approval service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.GetApprovalResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.ApprovalServiceModels.GetApprovalResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.CreateCartApprovalRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.CreateQuoteApprovalRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.UpdateApprovalRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.ApprovalPermittedRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.ApprovalPermittedResponse))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.SearchUsersRequest))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.User))]
+[JsonSerializable(typeof(List<Viu.Emporix.ApprovalServiceModels.User>))]
+[JsonSerializable(typeof(Viu.Emporix.ApprovalServiceModels.CreatedResource))]
+internal sealed partial class ApprovalJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for the segment service. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.SegmentResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.SegmentResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.SegmentCreation))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.SegmentCreation>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.SegmentUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.SegmentsSearch))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.Match))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.CustomerAssignmentUpsert))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.CustomerAssignmentUpsertBulk>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.CustomerAssignmentResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.CustomerAssignmentResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.ItemAssignmentUpsert))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.ItemAssignmentUpsertBulk>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.ItemAssignmentResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.ItemAssignmentResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerSegmentModels.CategoryTreeResponse))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.BulkAssignmentResponse>))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerSegmentModels.PatchOperation>))]
+[JsonSerializable(typeof(List<string>))]
+internal sealed partial class SegmentJsonContext : JsonSerializerContext;
+
+/// <summary>Serialization for customer administration. See <see cref="ProductJsonContext"/>.</summary>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.CustomerForSellerDto))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerServiceModels.CustomerForSellerDto>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.CustomerSignupBySellerDto))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.CustomerUpdateBySellerDto))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.CustomerPatchBySellerDto))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerServiceModels.CustomerImportDto>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.Address))]
+[JsonSerializable(typeof(List<Viu.Emporix.CustomerServiceModels.Address>))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.Address_2))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.AddressUpdateDto))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.ResourceLocation))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.Body))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.PasswordMigrationRetentionConfigRequest))]
+[JsonSerializable(typeof(Viu.Emporix.CustomerServiceModels.PasswordMigrationRetentionConfigResponse))]
+internal sealed partial class CustomerAdminJsonContext : JsonSerializerContext;
+

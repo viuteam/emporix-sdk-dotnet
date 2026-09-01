@@ -17,9 +17,20 @@ exactly that package version.
 - Grouped operations for the new services: `Payments.Modes`,
   `Shipping.ForSite(site)`, `Shipping.DeliveryTimes`, `Coupons.Redemptions(code)`,
   `Fees.ForItem(yrn)` and `Fees.ForProduct(id)`.
+- Seven B2B services: `LegalEntities`, `ContactAssignments`, `Locations`,
+  `CustomerAdmin`, `Approvals`, `Quotes` and `Segments` — 84 operations, and
+  what `Orders.ListForLegalEntityAsync` and `Checkout.PlaceOrderFromQuoteAsync`
+  had been pointing at with nothing behind them. Twenty-six of the 48 Emporix
+  services are now covered.
+- Grouped operations for those: `Segments.Customers(id)`, `Segments.Items(id)`,
+  `Quotes.Reasons` and `CustomerAdmin.AddressesOf(number)`.
 
 ### Fixed
 
+- The generation pipeline keeps the meaningful name when dissolving an alias
+  over an untitled schema. NSwag calls a schema it cannot title `Anonymous2`,
+  and the resolver was dissolving the named alias into it — which put
+  `Anonymous2` in a public signature.
 - The generation pipeline renames generated types that differ only in letter
   case. The shipping specification defines both `MetaData` and `Metadata`, which
   collide in a case-insensitive file name and made the JSON source generator

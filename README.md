@@ -164,7 +164,7 @@ unset to get every language and choose per request.
 
 ## The other services
 
-Nineteen of the Emporix services are covered, each with the full set of
+Twenty-six of the Emporix services are covered, each with the full set of
 operations the API offers for it. Each hangs off the client under a name that
 says what it owns:
 
@@ -190,6 +190,13 @@ says what it owns:
 | `client.Shipping` | zones, methods, quotes, delivery times |
 | `client.Returns` | returns against an order |
 | `client.Invoices` | invoice generation, as a job |
+| `client.LegalEntities` | the companies a B2B tenant sells to |
+| `client.ContactAssignments` | who may act for which company |
+| `client.Locations` | where a company receives |
+| `client.CustomerAdmin` | customers, as a seller manages them |
+| `client.Approvals` | carts and quotes waiting for a decision |
+| `client.Quotes` | negotiated prices, before they become orders |
+| `client.Segments` | who gets which prices and which catalogue |
 
 A storefront flow from browsing to order:
 
@@ -229,6 +236,9 @@ Some services group operations that belong together:
 | `client.Shipping.DeliveryTimes` | delivery times and slots, configured tenant-wide |
 | `client.Coupons.Redemptions(code)` | the redemptions of one coupon |
 | `client.Fees.ForItem(yrn)` · `client.Fees.ForProduct(id)` | the fees attached to one thing |
+| `client.Segments.Customers(id)` · `client.Segments.Items(id)` | who is in a segment, and what it grants |
+| `client.Quotes.Reasons` | why a quote was requested or refused |
+| `client.CustomerAdmin.AddressesOf(number)` | one customer's addresses, seller-side |
 
 A cart item is addressed by its YRN, not by a bare product id — `ProductYrn.Create(tenant, id)`
 builds one, and passing a bare id is refused before the request leaves. It also
@@ -241,11 +251,10 @@ the request is sent. Carts, checkout and own-orders do the same.
 
 ### What is not here yet
 
-These nineteen services carry the operations the Emporix API offers for them.
-What is missing is the other 29 services — B2B (companies, contacts, quotes,
-approvals), platform (IAM, schemas, webhooks) and the AI and import services.
-Their generated types ship in the package, so anything missing is reachable
-through the underlying `HttpClient`.
+These twenty-six services carry the operations the Emporix API offers for them.
+What is missing is the other 22 — platform (IAM, schemas, webhooks, sites) and
+the AI and import services. Their generated types ship in the package, so
+anything missing is reachable through the underlying `HttpClient`.
 
 The full picture is in
 [docs/analysis.md](docs/analysis.md#actual-coverage-2026-08-31), and what happens

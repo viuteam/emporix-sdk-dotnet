@@ -86,7 +86,22 @@ production storefront needs before it can take money.
 New infrastructure: none. Payment's nested groups follow the pattern already
 built for `Prices.Models` and `Prices.Lists`.
 
-### Wave 3 — B2B (8 services, 92 operations)
+### Wave 3 — B2B (7 services, 84 operations) — done
+
+Delivered as seven, not eight: `customer-groups` turned out to be three
+convenience methods over `/iam/{tenant}/groups`, so it belongs with `iam` in
+wave 4 rather than being built twice. The plan had taken the facade name at
+face value — worth noting because the same trap is waiting in wave 4, where
+several small facades sit on services they are not named after.
+
+One improvement to the generation pipeline came out of it: where NSwag could
+not title a schema it emits `Anonymous2`, and the alias resolver was dissolving
+the *named* alias into it — which put `Anonymous2` in a public signature. It
+now renames the anonymous base to the alias instead, so the approval check
+returns `ApprovalPermittedResponse`.
+
+`SpecPathTests` passed on all 74 new calls at the first attempt.
+
 
 `OrderService.ListForLegalEntityAsync` already exists and has nothing to point
 at. These make the legal entity a real thing.
@@ -204,6 +219,6 @@ real at least once.
 | --- | ---: | ---: | --- |
 | 1 | 12 | 193 | done |
 | 2 — checkout | 7 | 101 | done |
-| 3 — B2B | 8 | 92 | planned |
-| 4 — platform | 12 | 133 | planned |
+| 3 — B2B | 7 | 84 | done |
+| 4 — platform | 13 | 136 | planned |
 | 5 — needs decisions | 9 | 104 | blocked on the three ADRs |
