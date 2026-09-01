@@ -12,7 +12,7 @@ namespace Viu.Emporix;
 /// One instance safely serves many concurrent users: what a call is authorised
 /// with lives in the <see cref="AuthContext"/> it receives, never on the client.
 /// In an application with dependency injection the client therefore belongs
-/// registered as a singleton — <see cref="ServiceCollectionExtensions.AddEmporix"/>
+/// registered as a singleton — <see cref="ServiceCollectionExtensions.AddEmporix(Microsoft.Extensions.DependencyInjection.IServiceCollection, System.Action{Viu.Emporix.EmporixOptions})"/>
 /// does that for you.
 /// </para>
 /// <para>
@@ -104,7 +104,7 @@ public sealed class EmporixClient : IDisposable
     /// <exception cref="OptionsValidationException">The configuration is incomplete or invalid.</exception>
     /// <remarks>
     /// For applications with dependency injection,
-    /// <see cref="ServiceCollectionExtensions.AddEmporix"/> is the better route:
+    /// <see cref="ServiceCollectionExtensions.AddEmporix(Microsoft.Extensions.DependencyInjection.IServiceCollection, System.Action{Viu.Emporix.EmporixOptions})"/> is the better route:
     /// there the container manages the connections.
     /// </remarks>
     public EmporixClient(EmporixOptions options, ILoggerFactory? loggerFactory = null)

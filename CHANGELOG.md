@@ -13,6 +13,12 @@ it are generated from the commit history — see
 
 ### Added
 
+- `AddEmporix(IConfiguration)` alongside the delegate overload, so the options can
+  be bound from `appsettings.json` and its per-environment layers without writing
+  the `Bind` line by hand. Bound by the configuration binding source generator
+  rather than by reflection, which is what keeps the package's AOT promise
+  ([ADR-0004](docs/adr/0004-aot-trimming.md)) intact.
+
 - Seven services that complete a checkout: `Taxes`, `Fees`, `Coupons`,
   `Payments`, `Shipping`, `Returns` and `Invoices` — 101 operations. Nineteen of
   the 48 Emporix services are now covered.

@@ -27,6 +27,17 @@
   </PropertyGroup>
 
   <!--
+    The configuration binding source generator turns the Bind call in
+    AddEmporix(IConfiguration) into generated code at compile time. Without it
+    that one call is reflection, and reflection is what ADR-0004 rules out — the
+    build would fail on IL2026 and IL3050 rather than quietly shipping a package
+    whose AOT promise no longer holds.
+  -->
+  <PropertyGroup>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
+  </PropertyGroup>
+
+  <!--
     MinVer derives the version from Git tags. Without a tag that yields
     0.0.0-alpha.0.N — correct for a fresh clone, not an error.
   -->
@@ -43,6 +54,7 @@
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
   </ItemGroup>
 
   <ItemGroup>

@@ -107,6 +107,128 @@ For tokens the SDK owns, a 401 triggers **one** fresh token and a retry. A
 customer token belongs to the calling application; its 401 is passed through —
 unless an `ICustomerTokenRefresher` is registered.
 
+## Environments
+
+**Emporix separates environments by tenant, not by host.** Every one of the 44
+vendored specifications points at `https://api.emporix.io`; there is no staging
+host. Dev, staging and production are three tenants with three sets of
+credentials, and `Host` stays at its default unless you are pointing at a proxy or
+a mock server.
+
+Which means dev and production are one string apart. Everything below is about
+making that string hard to get wrong.
+
+### Configuration per environment
+
+Bind the options from configuration and let the layering .NET already has do the
+work:
+
+```csharp
+builder.Services.AddEmporix(builder.Configuration.GetSection("Emporix"));
+```
+
+```jsonc
+// appsettings.json — what is the same everywhere
+{
+  "Emporix": {
+    "Credentials": {
+      "Storefront": {
+        "ClientId": "...",
+        "Context": { "Currency": "CHF", "SiteCode": "main", "TargetLocation": "CH" }
+      }
+    }
+  }
+}
+
+// appsettings.Development.json — only what differs
+{ "Emporix": { "Tenant": "acme-dev" } }
+```
+
+The section's shape is `EmporixOptions`, so anything on it can be configured this
+way — timeouts, retry, the token cache, and the named credential sets under
+`Credentials:Custom:<name>`.
+
+To take everything from configuration and still override one value in code, bind
+first and adjust after; the calls apply in order:
+
+```csharp
+builder.Services.AddEmporix(builder.Configuration.GetSection("Emporix"));
+builder.Services.Configure<EmporixOptions>(o => o.Tenant = ResolveTenant());
+```
+
+The delegate form shown under [Quick start](#with-dependency-injection) stays the
+right choice when the values come from somewhere that is not `IConfiguration` —
+flat environment variables of your own naming, for instance, as
+`samples/Viu.Emporix.Storefront` does.
+
+### Secrets belong in none of those files
+
+`Credentials.Backend.Secret` is the one value that must not sit in a file in your
+repository. Locally use user secrets; deployed, use an environment variable or a
+vault. The .NET configuration stack layers them for you — this wins over any JSON
+file, with no code change:
+
+```bash
+Emporix__Credentials__Backend__Secret=...
+```
+
+The storefront client id is a different matter: anonymous sessions need no secret,
+so that one may ship inside a browser bundle.
+
+### Two mistakes worth designing against
+
+**A misconfigured deployment should not start.** `AddEmporix` registers
+`ValidateOnStart`, so a missing or malformed tenant fails at startup rather than on
+the first API call, in production, as an empty product list. That guarantee holds
+for both overloads.
+
+**Log the tenant once, at startup.** The SDK never logs tokens, but nothing tells
+you which tenant a running process is talking to. Without that line, «why are there
+no products here» takes hours to separate from «wrong tenant»:
+
+```csharp
+app.Logger.LogInformation(
+    "Emporix tenant {Tenant}", app.Services.GetRequiredService<IOptions<EmporixOptions>>().Value.Tenant);
+```
+
+### Several environments in one process
+
+For a migration or a sync job that talks to two tenants at once, register a client
+per environment as a keyed singleton:
+
+```csharp
+foreach (string name in new[] { "dev", "prod" })
+{
+    EmporixOptions options = builder.Configuration
+        .GetSection($"Emporix:{name}").Get<EmporixOptions>()!;
+
+    builder.Services.AddKeyedSingleton(name, (sp, _) =>
+        new EmporixClient(options, sp.GetRequiredService<ILoggerFactory>()));
+}
+
+public sealed class Migration(
+    [FromKeyedServices("dev")] EmporixClient source,
+    [FromKeyedServices("prod")] EmporixClient target);
+```
+
+`AddEmporix` itself registers exactly one configuration, so this is the way for
+now. **Keep each client a singleton**: one built through its public constructor
+owns its own connection pool, and building one per request exhausts sockets the
+same way `new HttpClient()` in a loop does.
+
+### `Credentials.Custom` is not for environments
+
+It looks like it might be. It is a set of named client credentials *within one
+tenant*, addressed per call:
+
+```csharp
+await client.Imports.StartRunAsync(configId, auth: AuthContext.Service("import-writer"));
+```
+
+Useful for least privilege — a writing client for the import job, a read-only one
+for the dashboard. It cannot reach another tenant, because the tenant lives on the
+options and not on the `AuthContext`.
+
 ## Products
 
 ```csharp

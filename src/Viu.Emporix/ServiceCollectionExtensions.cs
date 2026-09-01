@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -69,6 +70,67 @@ public static class ServiceCollectionExtensions
             .Configure(configure)
             .ValidateOnStart();
 
+        return AddEmporixCore(services);
+    }
+
+    /// <summary>
+    /// Registers the SDK from a configuration section.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">
+    /// The section holding the settings — normally
+    /// <c>builder.Configuration.GetSection("Emporix")</c>. Its shape is
+    /// <see cref="EmporixOptions"/>.
+    /// </param>
+    /// <returns><paramref name="services"/>, for chaining.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="services"/> or <paramref name="configuration"/> is
+    /// <see langword="null"/>.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// The layered configuration a .NET application already has does the work:
+    /// what is common lives in <c>appsettings.json</c>, what differs per
+    /// environment in <c>appsettings.{Environment}.json</c>, and the secret in
+    /// neither — user secrets locally, an environment variable or a vault when
+    /// deployed. <c>Emporix__Credentials__Backend__Secret</c> overrides any file.
+    /// </para>
+    /// <para>
+    /// An incomplete section fails at application startup rather than on the
+    /// first API call, exactly as with the delegate.
+    /// </para>
+    /// <para>
+    /// To bind and then adjust something in code, follow this with
+    /// <c>services.Configure&lt;EmporixOptions&gt;(...)</c>; the calls apply in
+    /// order.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// builder.Services.AddEmporix(builder.Configuration.GetSection("Emporix"));
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddEmporix(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        // Bound by the configuration binding source generator, not by
+        // reflection: EnableConfigurationBindingGenerator is on for this project,
+        // which is what keeps the binding within the no-reflection rule of
+        // ADR-0004. Without it this one call would cost the package its AOT
+        // promise.
+        services.AddOptions<EmporixOptions>()
+            .Bind(configuration)
+            .ValidateOnStart();
+
+        return AddEmporixCore(services);
+    }
+
+    private static IServiceCollection AddEmporixCore(IServiceCollection services)
+    {
         services.AddSingleton<IValidateOptions<EmporixOptions>, EmporixOptionsValidator>();
 
         services.AddHttpClient(TokenHttpClientName, static (provider, client) =>
