@@ -117,8 +117,11 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
 /// A controllable clock. Enough for the SDK's expiry arithmetic and avoids a
 /// dependency on a test-time package.
 /// </summary>
-internal sealed class FakeTimeProvider : TimeProvider
+internal sealed class StubClock : TimeProvider
 {
+    // Deliberately only a clock: it does not override CreateTimer, so anything
+    // that waits would wait for real. Tests of waiting use Microsoft's
+    // FakeTimeProvider, which drives timers on virtual time.
     public DateTimeOffset Now { get; set; } = new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
     public override DateTimeOffset GetUtcNow() => Now;

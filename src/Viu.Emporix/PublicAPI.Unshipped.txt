@@ -888,3 +888,13 @@ Viu.Emporix.WebhookService.ReplaceAsync(string! code, Viu.Emporix.WebhookModels.
 Viu.Emporix.WebhookService.UpdateAsync(string! code, System.Collections.Generic.IEnumerable<Viu.Emporix.WebhookModels.WebhookConfigPartialUpdate!>! changes, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.WebhookService.UpdateSubscriptionsAsync(Viu.Emporix.WebhookModels.WebhookSubscriptions! subscriptions, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.IamUserOperations.ListMyScopesAsync(Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.IamModels.UserScopesResponse?>!
+Viu.Emporix.EmporixPolling
+Viu.Emporix.EmporixPollingOptions
+Viu.Emporix.EmporixPollingOptions.EmporixPollingOptions() -> void
+Viu.Emporix.EmporixPollingOptions.InitialInterval.get -> System.TimeSpan
+Viu.Emporix.EmporixPollingOptions.InitialInterval.init -> void
+Viu.Emporix.EmporixPollingOptions.MaximumInterval.get -> System.TimeSpan
+Viu.Emporix.EmporixPollingOptions.MaximumInterval.init -> void
+Viu.Emporix.EmporixPollingOptions.Timeout.get -> System.TimeSpan
+Viu.Emporix.EmporixPollingOptions.Timeout.init -> void
+static Viu.Emporix.EmporixPolling.WaitForAsync<T>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<T>!>! poll, System.Func<T, bool>! isComplete, Viu.Emporix.EmporixPollingOptions? options = null, System.TimeProvider? timeProvider = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!

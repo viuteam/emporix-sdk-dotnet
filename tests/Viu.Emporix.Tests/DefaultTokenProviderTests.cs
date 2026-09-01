@@ -23,10 +23,10 @@ public class DefaultTokenProviderTests
 
     private static DefaultTokenProvider Create(
         StubHttpMessageHandler handler,
-        out FakeTimeProvider time,
+        out StubClock time,
         Action<EmporixOptions>? configure = null)
     {
-        time = new FakeTimeProvider();
+        time = new StubClock();
         return new DefaultTokenProvider(
             new HttpClient(handler),
             Microsoft.Extensions.Options.Options.Create(Options(configure)),
@@ -84,7 +84,7 @@ public class DefaultTokenProviderTests
     public async Task Refetches_after_the_token_expires()
     {
         StubHttpMessageHandler handler = new(HttpStatusCode.OK, ServiceTokenBody);
-        using DefaultTokenProvider provider = Create(handler, out FakeTimeProvider time);
+        using DefaultTokenProvider provider = Create(handler, out StubClock time);
 
         await provider.GetServiceTokenAsync("backend");
         // 3600s validity minus a 60s buffer — just before that the token still holds.
@@ -105,7 +105,7 @@ public class DefaultTokenProviderTests
         StubHttpMessageHandler handler = new(
             HttpStatusCode.OK,
             """{"access_token":"svc-token","expires_in":86400}""");
-        using DefaultTokenProvider provider = Create(handler, out FakeTimeProvider time);
+        using DefaultTokenProvider provider = Create(handler, out StubClock time);
 
         await provider.GetServiceTokenAsync("backend");
         time.Advance(TimeSpan.FromMinutes(61)); // über MaxLifetime von 1h
@@ -228,7 +228,7 @@ public class DefaultTokenProviderTests
         StubHttpMessageHandler handler = new(
             HttpStatusCode.OK,
             """{"access_token":"svc-token","expires_in":"3600"}""");
-        using DefaultTokenProvider provider = Create(handler, out FakeTimeProvider time);
+        using DefaultTokenProvider provider = Create(handler, out StubClock time);
 
         await provider.GetServiceTokenAsync("backend");
         time.Advance(TimeSpan.FromSeconds(3000));
@@ -293,7 +293,7 @@ public class DefaultTokenProviderTests
             call == 1
                 ? AnonymousBody
                 : """{"access_token":"anon-2","refresh_token":"refresh-2","sessionId":"session-1","expires_in":3600}"""));
-        using DefaultTokenProvider provider = Create(handler, out FakeTimeProvider time);
+        using DefaultTokenProvider provider = Create(handler, out StubClock time);
 
         AnonymousSession first = await provider.GetAnonymousSessionAsync();
         time.Advance(TimeSpan.FromSeconds(3600));
@@ -316,7 +316,7 @@ public class DefaultTokenProviderTests
                 ? StubHttpMessageHandler.Json(HttpStatusCode.BadRequest, """{"message":"refresh token expired"}""")
                 : StubHttpMessageHandler.Json(HttpStatusCode.OK, AnonymousBody);
         });
-        using DefaultTokenProvider provider = Create(handler, out FakeTimeProvider time);
+        using DefaultTokenProvider provider = Create(handler, out StubClock time);
 
         await provider.GetAnonymousSessionAsync();
         time.Advance(TimeSpan.FromSeconds(3600));

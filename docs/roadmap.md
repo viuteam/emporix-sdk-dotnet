@@ -184,21 +184,26 @@ request and response types. Under the no-reflection rule the caller has to pass
 `JsonTypeInfo<T>`, which makes it the only service whose signature is dictated
 by the AOT constraint. Worth deciding deliberately rather than in passing.
 
-## The three decisions to take before coding
+## The three decisions — taken
 
-1. **SSE.** `ai` and `imports` stream.
-   [The analysis](analysis.md#infrastructure-core) put
-   `IAsyncEnumerable<SseEvent>` in scope for V1.x, but nothing was built and no
-   ADR covers it. Needed before either service: where the reader lives, how
-   cancellation behaves, whether a dropped stream is an exception or an end, and
-   whether it reconnects at all.
-2. **Long-running jobs.** `imports`, `indexing` and product recalculation all
-   return a job and expect polling. `Products.GetRecalculationJobAsync` already
-   exists as a bare call. Either every service polls by hand, or there is one
-   `WaitForAsync` helper. Deciding once is cheaper than three times.
-3. **`cloud-functions`.** A generic invoke with no generated types. Either the
-   caller passes `JsonTypeInfo<T>` — honest but unusual — or the service is left
-   out and callers use the `HttpClient` directly. Leaving it out is defensible.
+All three are settled, and two of them shrank once measured.
+
+1. **[ADR-0007](adr/0007-streaming.md) — streaming.** Three operations in the
+   whole API stream, out of 88 in the affected services. `net10.0` already ships
+   `System.Net.ServerSentEvents` in the shared framework, so there is nothing to
+   build and no dependency to take: the streaming calls return the response
+   unread and the caller parses it in three lines. **Wave 5 is not blocked on
+   infrastructure.**
+2. **[ADR-0008](adr/0008-long-running-jobs.md) — long-running jobs.** The four
+   job shapes share no field a type system can use — three call it `Status` with
+   three unrelated enums, one calls it `JobStatus`. So no job abstraction, but
+   one `EmporixPolling.WaitForAsync` helper for the part that is easy to get
+   wrong: growing intervals, a ceiling, and a timeout distinguishable from a
+   cancellation. Already shipped.
+3. **[ADR-0009](adr/0009-cloud-functions.md) — cloud functions.** The caller
+   passes `JsonTypeInfo<T>`. Unusual, and honest: it is the one call in 48
+   services with no schema, and a familiar-looking generic that quietly used
+   reflection would break the promise the rest of the package makes.
 
 ## Per-service checklist
 
