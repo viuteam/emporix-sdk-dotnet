@@ -177,6 +177,33 @@ public sealed class ImportService
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Removes a configuration's schedule.</summary>
+    /// <param name="configId">The configuration id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The configuration stays; only the automatic run goes. Deleting a schedule
+    /// that is not there answers <c>204</c> as well, which is why this is
+    /// repeatable.
+    /// </remarks>
+    public Task DeleteScheduleAsync(
+        string configId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(configId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/configs/{Uri.EscapeDataString(configId)}/schedule",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            cancellationToken);
+    }
+
     /// <summary>Starts an import run.</summary>
     /// <param name="configId">The configuration id.</param>
     /// <param name="mode">A full import or only what changed. Emporix defaults to <c>DELTA</c>.</param>

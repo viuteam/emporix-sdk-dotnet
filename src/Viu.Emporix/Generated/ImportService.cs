@@ -391,6 +391,18 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportRunTrigger? Trigger { get; set; } = default!;
 
         /// <summary>
+        /// Dry-run only. A sample of the mapped records that would be written, so the mapping can be previewed without a real import. Absent on normal runs.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("dryRunSample")]
+        public System.Collections.Generic.ICollection<DryRunSample>? DryRunSample { get; set; } = default!;
+
+        /// <summary>
+        /// What requested the run. The `origin` value from the trigger request, or the `trigger` value when `origin` was omitted. Use this field to distinguish a dashboard run from a run started by an integration scenario. The field is absent on runs recorded before it existed.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("origin")]
+        public string? Origin { get; set; } = default!;
+
+        /// <summary>
         /// The run status.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
@@ -1577,6 +1589,18 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("force")]
         public bool? Force { get; set; } = default!;
 
+        /// <summary>
+        /// Dry-run only. How many mapped records to sample per stream for the preview returned as `dryRunSample`. Clamped to 1-100; defaults to 25.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("sampleSize")]
+        public int? SampleSize { get; set; } = default!;
+
+        /// <summary>
+        /// What requested this run. Examples: `Dashboard`, an integration scenario name, or a scheduler name. The `trigger` field records only `MANUAL` or `SCHEDULED`. Use `origin` when more than one system calls this endpoint. If you omit `origin` or send a blank value, the service stores the `trigger` value. The service rejects values longer than 40 characters and values that contain control characters. It does not shorten them.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("origin")]
+        public string? Origin { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -1750,6 +1774,45 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"SCHEDULED")]
         SCHEDULED = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class DryRunSample
+    {
+
+        /// <summary>
+        /// The stream that produced the sample record.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("stream")]
+        public string? Stream { get; set; } = default!;
+
+        /// <summary>
+        /// The resolved target type the record would be written to.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("targetType")]
+        public string? TargetType { get; set; } = default!;
+
+        /// <summary>
+        /// The record's natural/deterministic key.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("key")]
+        public string? Key { get; set; } = default!;
+
+        /// <summary>
+        /// The mapped target fields that would be written.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fields")]
+        public object? Fields { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 

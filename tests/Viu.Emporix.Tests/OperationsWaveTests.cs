@@ -572,4 +572,23 @@ public class OperationsWaveTests
 
         Assert.Equal(0, handler.CallCount);
     }
+
+    [Fact]
+    public async Task A_schedule_can_be_removed_without_removing_its_configuration()
+    {
+        // The endpoint arrived in an upstream sync and nothing announced it —
+        // the coverage check in SpecPathTests exists so the next one does not
+        // have to be found by reading a diff.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        ImportService imports = new(Http(handler), Options());
+
+        await imports.DeleteScheduleAsync("cfg-1");
+
+        Assert.Equal(HttpMethod.Delete, handler.RequestMethods[0]);
+        Assert.Equal("/importtool/acme/configs/cfg-1/schedule", Uri(handler));
+
+        // Deleting a schedule that is not there answers 204 as well, so a retry
+        // after a dropped connection cannot do harm.
+        Assert.True(IsRepeatable(handler));
+    }
 }

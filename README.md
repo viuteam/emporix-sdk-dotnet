@@ -286,8 +286,11 @@ unset to get every language and choose per request.
 
 ## The other services
 
-Every Emporix service is covered, each with the full set of operations the API
-offers for it. Each hangs off the client under a name that says what it owns:
+Every Emporix service is covered, and all but one with the full set of operations
+the API offers for it — `Availability` carries the stock records but not the
+locations a site ships from, five operations that no caller has needed yet. The
+gap is pinned by a test rather than left to be discovered, so it is a gap someone
+chose. Each service hangs off the client under a name that says what it owns:
 
 | Property | Covers |
 |---|---|

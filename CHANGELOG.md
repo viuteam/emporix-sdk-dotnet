@@ -13,6 +13,9 @@ it are generated from the commit history — see
 
 ### Added
 
+- `Imports.DeleteScheduleAsync`, for the `DELETE` on a configuration's schedule
+  that an upstream sync added.
+
 - `AddEmporix(IConfiguration)` alongside the delegate overload, so the options can
   be bound from `appsettings.json` and its per-environment layers without writing
   the `Bind` line by hand. Bound by the configuration binding source generator
@@ -61,6 +64,12 @@ it are generated from the commit history — see
   `Anonymous` — no name for a public signature.
 
 ### Fixed
+
+- `Availability.CreateAsync` posted to `/availability/{tenant}/availability`, a
+  path the API does not have, so it can never have worked. It now addresses the
+  product and the site, as the specification requires, which changes its
+  signature. Found by teaching the specification check to read the two thirds of
+  the call sites it had been unable to see.
 
 - Localized fields declared inline are now typed as `LocalizedString`. The
   pipeline only recognised the union when a specification named it and
