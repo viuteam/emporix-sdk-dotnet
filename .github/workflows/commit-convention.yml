@@ -83,12 +83,19 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Merge commits are excluded. GitHub writes «Merge pull request #2
+          # from …», which is not a conventional commit and never will be, and
+          # Release Please ignores merge commits anyway — what they merged is
+          # described by the commits inside them, which are checked here.
+          # Without --no-merges this check fails on every merged pull request.
+          #
           # The first push to a branch reports an all-zero «before». Nothing to
-          # compare against, so check the head commit alone.
+          # compare against, so check the head commit alone, unless it is itself
+          # a merge.
           if [[ -z "$RANGE_BASE" || "$RANGE_BASE" =~ ^0+$ ]]; then
-            commits="$RANGE_HEAD"
+            commits="$(git rev-list --no-merges --max-count=1 "$RANGE_HEAD")"
           else
-            commits="$(git rev-list "$RANGE_BASE..$RANGE_HEAD")"
+            commits="$(git rev-list --no-merges "$RANGE_BASE..$RANGE_HEAD")"
           fi
 
           if [[ -z "$commits" ]]; then
