@@ -48,14 +48,16 @@ jobs:
       - name: Publish the sample with Native AOT
         run: dotnet publish samples/Viu.Emporix.Sample --configuration Release
 
+      # Packing is a real check: it is the only thing that catches a missing
+      # readme, a licence expression the gallery rejects, or an icon path that
+      # does not resolve. Nothing else in the build touches those.
+      #
+      # The resulting package is deliberately not uploaded. It was, on every push
+      # and every pull request, at about five megabytes a run for seven days —
+      # and nobody ever downloaded one. The release workflow still uploads the
+      # packages it actually publishes, which is where a copy is worth keeping.
       - name: Pack
         run: dotnet pack src/Viu.Emporix --no-build --configuration Release --output artifacts
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: packages
-          path: artifacts/*
-          retention-days: 7
 
   public-api:
     name: Public API surface
