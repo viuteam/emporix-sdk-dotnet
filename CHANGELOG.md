@@ -9,6 +9,25 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.2.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.1.0...v0.2.0) (2026-09-02)
+
+
+### Added
+
+* add the import schedule delete, and check coverage both ways ([b18c919](https://github.com/viuteam/emporix-sdk-dotnet/commit/b18c919d0f829a4d64e593129f93d53185f3f9cd))
+* add the import schedule delete, and check specification coverage both ways ([ad4c716](https://github.com/viuteam/emporix-sdk-dotnet/commit/ad4c7168fbd132d6d18c20c8bd51b3e5a3a19cb2))
+
+
+### Fixed
+
+* sync generated types with upstream Emporix specifications ([809e599](https://github.com/viuteam/emporix-sdk-dotnet/commit/809e599673d46414df79228444b0eaff5823af9d))
+* sync generated types with upstream Emporix specifications ([3e5494e](https://github.com/viuteam/emporix-sdk-dotnet/commit/3e5494e67d841cd61054d56aec734aeb701e752a))
+
+
+### Documentation
+
+* add CLAUDE.md ([1e099bb](https://github.com/viuteam/emporix-sdk-dotnet/commit/1e099bb292d3eabdd2756cb274f2f88414c6be4f))
+
 ## 0.1.0
 
 ### Added
