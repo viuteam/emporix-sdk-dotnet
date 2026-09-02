@@ -98,6 +98,9 @@ jobs:
     uses: ./.github/workflows/publish.yml
     with:
       ref: ${{ needs.release-please.outputs.tag }}
+    # Without this the called workflow sees no secrets at all. Repository
+    # variables need no passing; secrets do, and the difference is silent.
+    secrets: inherit
     permissions:
       contents: read
       id-token: write

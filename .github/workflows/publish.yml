@@ -16,6 +16,24 @@ on:
         required: true
         type: string
 
+      dry-run:
+        description: >-
+          Build, test and exchange the OIDC token, then stop before pushing.
+          Proves the trusted-publishing policy, the profile name and the workflow
+          file name the policy has to match, without publishing anything.
+        required: false
+        type: boolean
+        default: false
+
+    secrets:
+      NUGET_USER:
+        description: >-
+          The nuget.org profile name to exchange the OIDC token as. Optional
+          here because it may equally be a repository variable — see the login
+          step below. A reusable workflow receives no secret unless the caller
+          passes it, which is why both callers say `secrets: inherit`.
+        required: false
+
 jobs:
   publish:
     name: Publish to nuget.org
@@ -69,13 +87,44 @@ jobs:
       # Requires a trusted-publishing policy on nuget.org for this repository
       # and workflow. See
       # https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
+      # Fails here with a sentence rather than three steps later with a NuGet
+      # error that says nothing about where the value was meant to come from.
+      - name: Check that the nuget.org profile name is configured
+        env:
+          NUGET_USER: ${{ vars.NUGET_USER || secrets.NUGET_USER }}
+        run: |
+          if [[ -z "$NUGET_USER" ]]; then
+            cat >&2 <<'MESSAGE'
+          NUGET_USER is set neither as a repository variable nor as a secret.
+
+          It is the nuget.org profile name — the last segment of
+          nuget.org/profiles/… — and never an email address.
+
+          A variable is the better place for it. The value is not secret: package
+          owners are public on nuget.org. As a secret it is also masked in every
+          log line it appears in, and a short name that occurs inside the
+          repository path turns those logs into asterisks.
+          MESSAGE
+            exit 1
+          fi
+
       - name: Exchange the OIDC token for a NuGet key
         uses: NuGet/login@v1
         id: login
         with:
-          user: ${{ vars.NUGET_USER }}
+          # Either place works. NuGet's own documentation suggests a secret;
+          # a variable avoids the log masking described above.
+          user: ${{ vars.NUGET_USER || secrets.NUGET_USER }}
+
+      - name: Stop here — this was a dry run
+        if: ${{ inputs.dry-run }}
+        run: |
+          echo "The token exchange succeeded, so the trusted-publishing policy"
+          echo "matches this repository, this workflow file and this profile"
+          echo "name. Nothing was pushed."
 
       - name: Push package and symbols
+        if: ${{ !inputs.dry-run }}
         run: |
           dotnet nuget push "artifacts/*.nupkg" \
             --source https://api.nuget.org/v3/index.json \
@@ -83,6 +132,7 @@ jobs:
             --skip-duplicate
 
       - uses: actions/upload-artifact@v7
+        if: ${{ !inputs.dry-run }}
         with:
           name: release-packages
           path: artifacts/*

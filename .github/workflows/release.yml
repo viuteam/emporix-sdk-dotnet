@@ -10,6 +10,11 @@ on:
   push:
     tags: ['v*']
 
+  # Run it by hand to verify the setup. A manual run is always a dry run: it
+  # stops after the token exchange, so it cannot publish even if someone means
+  # it to. That is deliberate — the only way to release is to push a tag.
+  workflow_dispatch:
+
 concurrency:
   group: release
   cancel-in-progress: false
@@ -19,6 +24,10 @@ jobs:
     uses: ./.github/workflows/publish.yml
     with:
       ref: ${{ github.ref }}
+      dry-run: ${{ github.event_name == 'workflow_dispatch' }}
+    # Without this the called workflow sees no secrets at all. Repository
+    # variables need no passing; secrets do, and the difference is silent.
+    secrets: inherit
     permissions:
       contents: read
       id-token: write

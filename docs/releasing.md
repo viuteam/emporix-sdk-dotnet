@@ -158,9 +158,34 @@ needs the changelog section it already has, written by hand, which is the better
 text anyway.
 
 **Trusted publishing.** Before any release, nuget.org needs a trusted-publishing
-policy for this repository and for `publish.yml`, and the repository needs the
-`NUGET_USER` variable. Without both, every path fails at the last step. See
+policy for this repository, and the repository needs `NUGET_USER`. Without both,
+every path fails at the last step. See
 [the NuGet documentation](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing).
+
+`NUGET_USER` is the nuget.org **profile name** — the last segment of
+`nuget.org/profiles/…`, never an email address. It works as a repository variable
+or as a secret, and a variable is the better place for it: the value is not
+secret, package owners are public, and a secret is masked in every log line it
+appears in. A short name that also occurs inside the repository path turns those
+logs into asterisks.
+
+Which workflow file the policy has to name is the one thing the documentation does
+not settle. The publishing job lives in a reusable workflow, so the OIDC token
+carries both the entry workflow and the one containing the job, and neither
+NuGet's documentation nor the login action says which is compared. Create a policy
+for each of `release.yml`, `release-please.yml` and `publish.yml`; the ones that
+never match cost nothing.
+
+### Verifying it before the irreversible part
+
+Run **Release (tag)** by hand from the Actions tab. A manual run is always a dry
+run: it builds, tests, packs and exchanges the OIDC token, then stops before the
+push. It cannot publish, whatever anyone intends — the only way to release is to
+push a tag.
+
+A green run proves the policy matches this repository, this workflow file and this
+profile name. A red one says which of them is wrong while nothing has been
+published yet.
 
 ## Cutting a release by hand
 
