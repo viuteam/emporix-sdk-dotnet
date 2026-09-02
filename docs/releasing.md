@@ -179,12 +179,17 @@ and as a secret it is masked only sometimes: GitHub hides it in the step output
 while nuget.org's own error response prints it back in the clear. So it buys no
 privacy and costs readable logs wherever it does apply.
 
-Which workflow file the policy has to name is the one thing the documentation does
-not settle. The publishing job lives in a reusable workflow, so the OIDC token
-carries both the entry workflow and the one containing the job, and neither
-NuGet's documentation nor the login action says which is compared. Create a policy
-for each of `release.yml`, `release-please.yml` and `publish.yml`; the ones that
-never match cost nothing.
+The policy's **Workflow File is `publish.yml`** — the reusable workflow that holds
+the publishing job, not the `release.yml` or `release-please.yml` that calls it.
+No documentation says this; nuget.org does, when they disagree:
+
+> Workflow mismatch for policy 'emporix-sdk-dotnet release': expected
+> 'release.yml', actual 'publish.yml'
+
+So NuGet compares the workflow containing the running job. That makes the reusable
+workflow worth keeping for a second reason: both release paths run their publish
+job in the same file, so **one policy covers both**. Splitting the steps back into
+the two callers would need two policies that have to stay in step.
 
 ### Verifying it before the irreversible part
 
