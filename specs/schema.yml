@@ -226,7 +226,7 @@ paths:
         - name: type
           in: query
           description: |
-            Filters schemas by type. Possible types to specify, AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, MEDIA. When the newest version of the schema is of different type than the previous one and the previous one matches the type specified in this query param, then the previous version is returned.
+            Filters schemas by type. Possible types to specify, AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, VENDOR_LOCATION, MEDIA. When the newest version of the schema is of different type than the previous one and the previous one matches the type specified in this query param, then the previous version is returned.
           # DEV NOTE: If you add another type, the tutorial and MD guides have to be updated as well.
           schema:
             type: string
@@ -586,7 +586,7 @@ paths:
         - name: type
           in: query
           description: |
-            Filters references by type. Possible types to specify, AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, MEDIA. When the newer version of a reference is of different type than the previous one and the previous one matches the type specified in this query param, then the previous version is returned.
+            Filters references by type. Possible types to specify, AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, VENDOR_LOCATION, MEDIA. When the newer version of a reference is of different type than the previous one and the previous one matches the type specified in this query param, then the previous version is returned.
           schema:
             type: string
   '/schema/{tenant}/references/{id}':
@@ -2094,7 +2094,7 @@ components:
     SchemaType:
       type: string
       description: Type which the schema should be assigned to. Can be one of the predefined values or any custom schema type id.
-      enum: [AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, MEDIA]
+      enum: [AVAILABILITY, CART, CART_ITEM, CATEGORY, COMPANY, COUPON, CUSTOMER, CUSTOMER_ADDRESS, LOCATION, ORDER, ORDER_ENTRY, PRODUCT, QUOTE, RETURN, PRICE_LIST, SITE, CUSTOM_ENTITY, VENDOR, VENDOR_LOCATION, MEDIA]
     SchemaTypes:
       type: array
       description: List of types to which assign the schema.
