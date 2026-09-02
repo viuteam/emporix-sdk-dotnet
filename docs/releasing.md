@@ -191,6 +191,32 @@ workflow worth keeping for a second reason: both release paths run their publish
 job in the same file, so **one policy covers both**. Splitting the steps back into
 the two callers would need two policies that have to stay in step.
 
+### Two settings that silently stop a release
+
+**No `package-name` in the configuration.** It sets the component, and Release
+Please then compares the component it parses back out of the release pull
+request's title against the configured one. The default title carries none, so
+the two never match and the release is **not built** — with the reason only in a
+workflow log:
+
+```
+Found pull request #1: 'chore: release main'
+Building release for path: .
+PR component: undefined does not match configured component: Viu.Emporix
+```
+
+That is what happened to 0.2.0: the release pull request merged, the changelog
+and the manifest landed on `main`, and no tag or release appeared. The setting
+earns its keep in a monorepo, where it tells several packages apart. This
+repository has one package at the root and no component in the tag, so it buys
+nothing and breaks the round trip.
+
+**Squash the release pull request.** Merging it with a merge commit puts two
+commits on `main` — the branch commit and the merge — and Release Please writes a
+changelog line for each, so every change appears twice, once under its real
+commit and once under the merge with the pull-request title. Squashing gives one
+entry per pull request.
+
 ### Verifying it before the irreversible part
 
 Run **Release (tag)** by hand from the Actions tab. A manual run is always a dry
