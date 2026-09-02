@@ -100,22 +100,33 @@ public sealed class AvailabilityService
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 
-    /// <summary>Records or replaces the availability of a product.</summary>
+    /// <summary>Records the availability of a product at a site.</summary>
+    /// <param name="productId">The product id.</param>
+    /// <param name="siteCode">The site code.</param>
     /// <param name="availability">The record to store.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     public Task CreateAsync(
+        string productId,
+        string siteCode,
         AvailabilityModels.AvailabilityDto availability,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
         ArgumentNullException.ThrowIfNull(availability);
 
         return _http.SendAsync(
             new EmporixRequest
             {
                 Method = HttpMethod.Post,
-                Path = BasePath,
+
+                // The product and the site belong in the address, not only in
+                // the body. This posted to the collection root until the
+                // specification check learned to read `Path = BasePath`, and a
+                // collection root is not something this service has.
+                Path = $"{BasePath}/{Uri.EscapeDataString(productId)}/{Uri.EscapeDataString(siteCode)}",
                 Auth = Defaults.Service(auth),
                 Content = EmporixJsonContent.Create(
                     availability,

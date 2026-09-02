@@ -30,7 +30,7 @@ public class SpecPathTests
     {
         DirectoryInfo root = FindRepositoryRoot();
         HashSet<string> declared = ReadSpecificationPaths(root);
-        List<(string Call, string File)> used = ReadServicePaths(root);
+        List<(string Call, string File)> used = ReadServicePaths(root, out _);
 
         // A guard on the guard: if the scan finds nothing, it is broken rather
         // than the code being clean.
@@ -134,31 +134,91 @@ public class SpecPathTests
     }
 
     /// <summary>
-    /// Collects every path the hand-written services build, resolving the
-    /// <c>BasePath</c> each class defines.
+    /// Collects every path the hand-written services build.
     /// </summary>
-    private static List<(string Call, string File)> ReadServicePaths(DirectoryInfo root)
+    /// <param name="root">The repository root.</param>
+    /// <param name="unresolved">
+    /// The calls whose path could not be worked out. Reported rather than
+    /// dropped: a path this scanner cannot see is a path neither direction of
+    /// the check covers, and a silent blind spot is worse than a small one that
+    /// is counted.
+    /// </param>
+    /// <remarks>
+    /// A path is written in one of four shapes, and all four are resolved here.
+    /// The scanner used to understand only the first, which left 212 of 639
+    /// calls unchecked without saying so.
+    /// <list type="bullet">
+    /// <item>an interpolated literal, <c>$"{BasePath}/configs"</c>;</item>
+    /// <item>the base path alone, <c>Path = BasePath</c>;</item>
+    /// <item>a nested class's base path, <c>_basePath</c>, which comes from the
+    /// parent at construction — and one class may be constructed from several
+    /// places with different bases, as the fee attachments are;</item>
+    /// <item>a private helper returning a path, which may return more than one
+    /// shape depending on its arguments.</item>
+    /// </list>
+    /// </remarks>
+    private static List<(string Call, string File)> ReadServicePaths(
+        DirectoryInfo root,
+        out List<string> unresolved)
     {
         List<(string, string)> used = [];
+        unresolved = [];
 
         foreach (string file in Directory.EnumerateFiles(
             Path.Combine(root.FullName, "src", "Viu.Emporix"),
             "*.cs"))
         {
-            string text = File.ReadAllText(file);
+            string text = WithoutComments(File.ReadAllText(file));
             string name = Path.GetFileName(file);
 
-            // A file may hold several services, so each BasePath applies from
-            // where it is declared until the next one.
+            // A file may hold several services, so each base applies from where
+            // it is declared until the next one. Two declaration forms: an
+            // expression body with the tenant in it, and a const for the two
+            // services whose path carries no tenant.
             List<(int Offset, string Value)> bases =
             [
-                .. Regex.Matches(text, @"private string BasePath => \$""([^""]+)""")
+                .. Regex.Matches(text, @"string BasePath\s*=>\s*\$""([^""]+)""")
+                    .Select(m => (m.Index, m.Groups[1].Value)),
+                .. Regex.Matches(text, @"const string BasePath\s*=\s*""([^""]+)""")
+                    .Select(m => (m.Index, m.Groups[1].Value)),
+            ];
+            bases.Sort((a, b) => a.Offset.CompareTo(b.Offset));
+
+            Dictionary<string, List<string>> constructions = [];
+            foreach (Match m in Regex.Matches(
+                text, @"new (\w+Operations)\(\s*_http,\s*\$""([^""]+)""", RegexOptions.Singleline))
+            {
+                if (!constructions.TryGetValue(m.Groups[1].Value, out List<string>? sites))
+                {
+                    constructions[m.Groups[1].Value] = sites = [];
+                }
+
+                sites.Add(m.Groups[2].Value);
+            }
+
+            Dictionary<string, List<string>> helpers = [];
+            foreach (Match m in Regex.Matches(
+                text, @"private string (\w+)\([^)]*\)\s*(=>[\s\S]*?;|\{[\s\S]*?\n    \})"))
+            {
+                List<string> paths =
+                    [.. Regex.Matches(m.Groups[2].Value, @"\$""([^""]+)""").Select(x => x.Groups[1].Value)];
+
+                if (paths.Count > 0)
+                {
+                    helpers[m.Groups[1].Value] = paths;
+                }
+            }
+
+            List<(int Offset, string Name)> classes =
+            [
+                .. Regex.Matches(text, @"\n(?:public|internal) sealed class (\w+)")
                     .Select(m => (m.Index, m.Groups[1].Value)),
             ];
 
             foreach (Match match in Regex.Matches(
                 text,
-                @"Method = (?:HttpMethod\.(\w+)|(\w+))[^;]*?Path = ((?:\$?""[^""]*""|\s*\+\s*)+)",
+                @"Method = (?:HttpMethod\.(\w+)|(\w+))[^;]*?Path =\s*"
+                + @"((?:\$?""[^""]*""|\s*\+\s*|[\w.]+\([^)]*\)|[\w.]+)+)",
                 RegexOptions.Singleline))
             {
                 // A method held in a variable cannot be resolved statically, so
@@ -167,27 +227,131 @@ public class SpecPathTests
                     ? match.Groups[1].Value.ToUpperInvariant()
                     : "*";
 
-                string built = string.Concat(
-                    Regex.Matches(match.Groups[3].Value, @"""([^""]*)""").Select(m => m.Groups[1].Value));
-
+                string expression = match.Groups[3].Value.Trim().TrimEnd(',');
                 string? basePath = bases
                     .Where(b => b.Offset < match.Index)
                     .Select(b => b.Value)
                     .LastOrDefault();
+                string? owner = classes
+                    .Where(c => c.Offset < match.Index)
+                    .Select(c => c.Name)
+                    .LastOrDefault();
 
-                if (basePath is not null)
+                List<string> candidates = Candidates(expression, helpers);
+
+                if (candidates.Count == 0)
                 {
-                    built = built.Replace("{BasePath}", basePath, StringComparison.Ordinal);
+                    unresolved.Add($"{name}: {verb} {expression}");
+                    continue;
                 }
 
-                if (built.StartsWith('/'))
+                if (owner is not null
+                    && constructions.TryGetValue(owner, out List<string>? sites)
+                    && sites.Count > 1)
                 {
-                    used.Add(($"{verb} {Normalise(built)}", name));
+                    candidates =
+                    [
+                        .. candidates.SelectMany(
+                            c => sites.Select(s => c.Replace("{_basePath}", s, StringComparison.Ordinal))),
+                    ];
+                }
+
+                List<string> resolved = [.. candidates.Select(
+                    c => Resolve(c, basePath, owner, constructions, helpers))];
+
+                if (resolved.All(r => r.StartsWith('/')))
+                {
+                    used.AddRange(resolved.Select(r => ($"{verb} {Normalise(r)}", name)));
+                }
+                else
+                {
+                    unresolved.Add($"{name}: {verb} {expression}");
                 }
             }
         }
 
         return used;
+    }
+
+    /// <summary>
+    /// Strips line comments, so prose about the code is not read as code.
+    /// </summary>
+    /// <remarks>
+    /// Found the hard way: a comment in AvailabilityService explaining a fixed
+    /// path defect quoted the assignment it was about, and the scanner read the
+    /// quotation as a real call — reporting the very defect the comment says was
+    /// fixed. Anything that scans source has to ignore what is not source.
+    /// </remarks>
+    private static string WithoutComments(string source)
+        => Regex.Replace(source, @"^[ \t]*//.*$", string.Empty, RegexOptions.Multiline);
+
+    /// <summary>The path shapes one assignment can produce, before substitution.</summary>
+    private static List<string> Candidates(string expression, Dictionary<string, List<string>> helpers)
+    {
+        if (expression.Contains('"', StringComparison.Ordinal))
+        {
+            return
+            [
+                string.Concat(Regex.Matches(expression, @"""([^""]*)""").Select(m => m.Groups[1].Value)),
+            ];
+        }
+
+        if (expression == "BasePath")
+        {
+            return ["{BasePath}"];
+        }
+
+        if (expression is "_basePath" or "basePath")
+        {
+            return ["{_basePath}"];
+        }
+
+        Match helper = Regex.Match(expression, @"^(\w+)\(");
+
+        return helper.Success && helpers.TryGetValue(helper.Groups[1].Value, out List<string>? paths)
+            ? [.. paths]
+            : [];
+    }
+
+    /// <summary>
+    /// Substitutes the placeholders until none are left.
+    /// </summary>
+    /// <remarks>
+    /// Repeated on purpose: a nested class's base path is itself written in
+    /// terms of its parent's, so one pass is not enough.
+    /// </remarks>
+    private static string Resolve(
+        string path,
+        string? basePath,
+        string? owner,
+        Dictionary<string, List<string>> constructions,
+        Dictionary<string, List<string>> helpers)
+    {
+        for (int pass = 0; pass < 5; pass++)
+        {
+            if (owner is not null && constructions.TryGetValue(owner, out List<string>? sites))
+            {
+                path = path.Replace("{_basePath}", sites[0], StringComparison.Ordinal);
+            }
+
+            foreach ((string helper, List<string> paths) in helpers)
+            {
+                path = Regex.Replace(path, @"\{" + helper + @"\([^{}]*\)\}", paths[0].Replace("$", "$$"));
+            }
+
+            if (basePath is not null)
+            {
+                path = path.Replace("{BasePath}", basePath, StringComparison.Ordinal);
+            }
+
+            if (!path.Contains("{BasePath}", StringComparison.Ordinal)
+                && !path.Contains("{_basePath}", StringComparison.Ordinal))
+            {
+                break;
+            }
+        }
+
+        return path;
     }
 
     /// <summary>
@@ -202,4 +366,110 @@ public class SpecPathTests
     /// <summary>Reduces a path to its shape: parameter names do not matter.</summary>
     private static string Normalise(string path)
         => Regex.Replace(Regex.Replace(path, @"\{[^}]*\}", "{}"), "/+", "/");
+
+    /// <summary>
+    /// Checks the other direction: every operation a specification declares
+    /// should be reachable through a facade.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The check above catches a call the API does not have. This one catches
+    /// the opposite — an operation the API has and the SDK does not — which is
+    /// what a specification sync quietly introduces. The upstream import
+    /// service gained a <c>DELETE</c> on its schedule, and nothing said so; it
+    /// was found by hand.
+    /// </para>
+    /// <para>
+    /// The gaps are pinned rather than merely counted, so both directions fail
+    /// loudly: a new one appears when upstream adds an operation, and a closed
+    /// one appears when someone implements it and forgets this list.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void Every_operation_a_specification_declares_has_a_facade()
+    {
+        DirectoryInfo root = FindRepositoryRoot();
+        HashSet<string> declared = ReadSpecificationPaths(root);
+        List<(string Call, string File)> used = ReadServicePaths(root, out _);
+
+        HashSet<string> covered = [.. used.Select(u => u.Call)];
+        string[] wildcards = [.. used.Where(u => u.Call.StartsWith("* ", StringComparison.Ordinal))
+            .Select(u => u.Call[1..])];
+
+        string[] uncovered = [.. declared
+            .Where(d => !covered.Contains(d)
+                && !wildcards.Any(w => d.EndsWith(w, StringComparison.Ordinal))
+                && !ImplementedWithoutAFacade(d)
+                && !Superseded(d))
+            .Order()];
+
+        Assert.Equal(KnownGaps, uncovered);
+    }
+
+    /// <summary>
+    /// Operations the SDK reaches, but not through a service facade.
+    /// </summary>
+    /// <remarks>
+    /// The token endpoints belong to <c>DefaultTokenProvider</c> and the
+    /// customer session endpoints to a private helper in
+    /// <c>CustomerService</c> that takes its path as an argument. Both are
+    /// covered by their own tests; neither is a gap.
+    /// </remarks>
+    private static bool ImplementedWithoutAFacade(string call) =>
+        call is "POST /oauth/token"
+            or "GET /customerlogin/auth/anonymous/login"
+            or "GET /customerlogin/auth/anonymous/refresh"
+            or "POST /customer/{}/login"
+            or "POST /customer/{}/socialLogin"
+            or "POST /customer/{}/exchangeauthtoken"
+            or "GET /customer/{}/refreshauthtoken";
+
+    /// <summary>
+    /// Operations the specification itself marks as superseded.
+    /// </summary>
+    /// <remarks>
+    /// <c>categoryTree</c> under <c>/categories</c> carries
+    /// <c>deprecated: true</c>; the SDK uses <c>/category-trees</c>, which is
+    /// the endpoint that replaced it.
+    /// </remarks>
+    private static bool Superseded(string call) =>
+        call is "GET /category/{}/categories/categoryTree";
+
+    /// <summary>
+    /// Operations Emporix offers and this SDK does not implement yet.
+    /// </summary>
+    /// <remarks>
+    /// Availability has two halves. The stock records are covered; the
+    /// locations a site ships from are not, and neither is the search across
+    /// them. Nothing depends on them today, and pinning them here is the
+    /// difference between a gap someone chose and a gap nobody noticed.
+    /// </remarks>
+    private static readonly string[] KnownGaps =
+    [
+        "DELETE /availability/{}/locations/{}",
+        "GET /availability/{}/locations/{}",
+        "POST /availability/{}/locations/{}",
+        "POST /availability/{}/search/locations",
+        "PUT /availability/{}/locations/{}",
+    ];
+
+    /// <summary>
+    /// Guards the scanner itself: a path it cannot read is checked by neither
+    /// direction.
+    /// </summary>
+    /// <remarks>
+    /// One call is unreadable, and deliberately so: <c>CustomerService</c>
+    /// funnels its four session endpoints through a private helper that takes
+    /// the path as an argument. Those four are listed in
+    /// <see cref="ImplementedWithoutAFacade"/>. Anything else appearing here
+    /// means a new way of writing a path has crept in, and with it a blind
+    /// spot — which is how 212 of 639 calls once went unchecked in silence.
+    /// </remarks>
+    [Fact]
+    public void The_scanner_reads_every_path_but_one()
+    {
+        ReadServicePaths(FindRepositoryRoot(), out List<string> unresolved);
+
+        Assert.Equal(["CustomerService.cs: POST path"], unresolved);
+    }
 }
