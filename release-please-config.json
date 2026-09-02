@@ -23,7 +23,6 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "Viu.Emporix",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": false
     }

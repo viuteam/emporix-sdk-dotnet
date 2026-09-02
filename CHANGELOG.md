@@ -15,13 +15,11 @@ it are generated from the commit history — see
 ### Added
 
 * add the import schedule delete, and check coverage both ways ([b18c919](https://github.com/viuteam/emporix-sdk-dotnet/commit/b18c919d0f829a4d64e593129f93d53185f3f9cd))
-* add the import schedule delete, and check specification coverage both ways ([ad4c716](https://github.com/viuteam/emporix-sdk-dotnet/commit/ad4c7168fbd132d6d18c20c8bd51b3e5a3a19cb2))
 
 
 ### Fixed
 
 * sync generated types with upstream Emporix specifications ([809e599](https://github.com/viuteam/emporix-sdk-dotnet/commit/809e599673d46414df79228444b0eaff5823af9d))
-* sync generated types with upstream Emporix specifications ([3e5494e](https://github.com/viuteam/emporix-sdk-dotnet/commit/3e5494e67d841cd61054d56aec734aeb701e752a))
 
 
 ### Documentation
