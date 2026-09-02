@@ -181,8 +181,11 @@ namespace Viu.Emporix.SchemaModels
         [System.Runtime.Serialization.EnumMember(Value = @"VENDOR")]
         VENDOR = 17,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"VENDOR_LOCATION")]
+        VENDOR_LOCATION = 18,
+
         [System.Runtime.Serialization.EnumMember(Value = @"MEDIA")]
-        MEDIA = 18,
+        MEDIA = 19,
 
     }
 
