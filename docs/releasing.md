@@ -162,12 +162,22 @@ policy for this repository, and the repository needs `NUGET_USER`. Without both,
 every path fails at the last step. See
 [the NuGet documentation](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing).
 
-`NUGET_USER` is the nuget.org **profile name** — the last segment of
-`nuget.org/profiles/…`, never an email address. It works as a repository variable
-or as a secret, and a variable is the better place for it: the value is not
-secret, package owners are public, and a secret is masked in every log line it
-appears in. A short name that also occurs inside the repository path turns those
-logs into asterisks.
+`NUGET_USER` is the **personal account of whoever created the policy**, not the
+account that owns the packages. The two are different fields and they are usually
+different accounts: the policy is owned by the organisation, and created by a
+person who belongs to it. nuget.org says so itself when they do not match:
+
+> Make sure you are using the username of the policy creator, not the policy
+> owner: No matching trust policy owned by user 'x' was found.
+
+Neither the documentation nor the login action mentions this; the error message
+is the only place it is stated. It is a profile name, never an email address.
+
+It works as a repository variable or as a secret, and a variable is the better
+place for it. The value is not secret — package owners are public on nuget.org —
+and as a secret it is masked only sometimes: GitHub hides it in the step output
+while nuget.org's own error response prints it back in the clear. So it buys no
+privacy and costs readable logs wherever it does apply.
 
 Which workflow file the policy has to name is the one thing the documentation does
 not settle. The publishing job lives in a reusable workflow, so the OIDC token
@@ -185,7 +195,12 @@ push a tag.
 
 A green run proves the policy matches this repository, this workflow file and this
 profile name. A red one says which of them is wrong while nothing has been
-published yet.
+published yet — the token-exchange failures are specific about what they compared.
+
+The version a dry run packs looks like `0.0.0-alpha.0.28`. That is correct: the
+run happens on a branch rather than a tag, and MinVer falls back to a height-based
+prerelease when it finds no tag to count from. Nothing is pushed, so the number
+does not matter.
 
 ## Cutting a release by hand
 
