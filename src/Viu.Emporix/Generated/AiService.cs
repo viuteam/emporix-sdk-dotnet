@@ -1713,6 +1713,41 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("authorizationHeaderName")]
         public string? AuthorizationHeaderName { get; set; } = default!;
 
+        [System.Text.Json.Serialization.JsonPropertyName("fileProcessingConfig")]
+        public FileProcessingConfig? FileProcessingConfig { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Optional additional config for file processing (preview).
+    /// <br/>
+    /// <br/>**The `fileProcessingConfig` field is in preview mode** - some of the features may not be fully operational yet.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileProcessingConfig
+    {
+
+        /// <summary>
+        /// When true, file processing uses the Responses API on the self-hosted LLM.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("useResponsesApi")]
+        public bool? UseResponsesApi { get; set; } = default!;
+
+        /// <summary>
+        /// Optional extra model identifier used for file processing.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("extraModelKey")]
+        public string? ExtraModelKey { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
