@@ -436,4 +436,115 @@ public class MixinSyncTests
 
         Assert.Empty(await SchemaSource.ToRawMixins([schema], _ => Task.FromResult<string?>("{}")));
     }
+
+    [Fact]
+    public void Each_mixin_gets_its_own_namespace_and_context()
+    {
+        // Two mixins both declaring «note» would otherwise emit two Note classes
+        // into one namespace, which is CS0101.
+        IReadOnlyDictionary<string, string> files = Generator.Generate(
+        [
+            new RawMixin { Key = "delivery", Entity = "PRODUCT", Version = 6, Url = "https://cdn/d.v6.json",
+                Schema = """{"type":"object","properties":{"note":{"type":"object","properties":{"en":{"type":"string"}}}}}""" },
+            new RawMixin { Key = "warranty", Entity = "PRODUCT", Version = 2, Url = "https://cdn/w.v2.json",
+                Schema = """{"type":"object","properties":{"note":{"type":"object","properties":{"en":{"type":"string"}}}}}""" },
+        ], "Acme.Mixins");
+
+        Assert.Contains("namespace Acme.Mixins.Delivery", files["Delivery.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("namespace Acme.Mixins.Warranty", files["Warranty.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("DeliveryContext", files["Delivery.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("WarrantyContext", files["Warranty.g.cs"], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_registry_binds_every_mixin_to_a_descriptor()
+    {
+        IReadOnlyDictionary<string, string> files = Generator.Generate(
+        [
+            new RawMixin { Key = "delivery", Entity = "PRODUCT", Version = 6, Url = "https://cdn/d.v6.json",
+                Schema = """{"type":"object","properties":{"packaging":{"type":"string"}}}""" },
+        ], "Acme.Mixins");
+
+        string registry = files["Registry.g.cs"];
+
+        Assert.Contains("MixinDescriptor<", registry, StringComparison.Ordinal);
+        Assert.Contains("\"delivery\"", registry, StringComparison.Ordinal);
+        Assert.Contains("\"PRODUCT\"", registry, StringComparison.Ordinal);
+        Assert.Contains("Version = 6", registry, StringComparison.Ordinal);
+        Assert.Contains("[\"Packaging\"] = \"packaging\"", registry, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Two_attributes_normalising_to_one_name_are_refused_by_name()
+    {
+        // NJsonSchema appends no disambiguating suffix, so both emit XCustom and
+        // the consumer receives code that does not compile, with a diagnostic
+        // naming nothing about Emporix.
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => Generator.Generate(
+        [
+            new RawMixin { Key = "attrs", Entity = "PRODUCT", Version = 1, Url = "https://cdn/a.v1.json",
+                Schema = """{"type":"object","properties":{"x-custom":{"type":"string"},"xCustom":{"type":"string"}}}""" },
+        ], "Acme.Mixins"));
+
+        Assert.Contains("x-custom", error.Message, StringComparison.Ordinal);
+        Assert.Contains("xCustom", error.Message, StringComparison.Ordinal);
+        Assert.Contains("attrs", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_key_that_is_not_an_identifier_still_produces_a_valid_type()
+    {
+        // Emporix schema ids can be object ids, which cannot start a C# name.
+        IReadOnlyDictionary<string, string> files = Generator.Generate(
+        [
+            new RawMixin { Key = "68e27d7a68ce91215abc0f23", Entity = "PRODUCT", Version = 1, Url = "https://cdn/x.v1.json",
+                Schema = """{"type":"object","properties":{"a":{"type":"string"}}}""" },
+        ], "Acme.Mixins");
+
+        Assert.Single(files.Keys, k => !string.Equals(k, "Registry.g.cs", StringComparison.Ordinal));
+        Assert.Contains("\"68e27d7a68ce91215abc0f23\"", files["Registry.g.cs"], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Generated_contexts_skip_null_attributes()
+    {
+        IReadOnlyDictionary<string, string> files = Generator.Generate(
+        [
+            new RawMixin { Key = "delivery", Entity = "PRODUCT", Version = 6, Url = "https://cdn/d.v6.json",
+                Schema = """{"type":"object","properties":{"packaging":{"type":"string"}}}""" },
+        ], "Acme.Mixins");
+
+        Assert.Contains("WhenWritingNull", files["Delivery.g.cs"], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_mixin_on_two_entities_emits_one_type_and_two_descriptors()
+    {
+        IReadOnlyDictionary<string, string> files = Generator.Generate(
+        [
+            new RawMixin { Key = "shared", Entity = "PRODUCT", Version = 3, Url = "https://cdn/s.v3.json",
+                Schema = """{"type":"object","properties":{"a":{"type":"string"}}}""" },
+            new RawMixin { Key = "shared", Entity = "CATEGORY", Version = 3, Url = "https://cdn/s.v3.json",
+                Schema = """{"type":"object","properties":{"a":{"type":"string"}}}""" },
+        ], "Acme.Mixins");
+
+        Assert.Equal(2, files.Count);
+        Assert.Contains("Shared =", files["Registry.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("SharedOnCategory =", files["Registry.g.cs"], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_entity_name_with_an_underscore_becomes_one_pascal_case_member()
+    {
+        // SchemaType values are SCREAMING_SNAKE. Reusing the schema-key
+        // conversion here produced SharedOnCUSTOMERADDRESS, because that one
+        // preserves interior capitals so deliveryOptions stays DeliveryOptions.
+        IReadOnlyDictionary<string, string> files = Generator.Generate(
+        [
+            new RawMixin { Key = "shared", Entity = "CUSTOMER_ADDRESS", Version = 1, Url = "https://cdn/s.v1.json",
+                Schema = """{"type":"object","properties":{"a":{"type":"string"}}}""" },
+        ], "Acme.Mixins");
+
+        Assert.Contains("SharedOnCustomerAddress =", files["Registry.g.cs"], StringComparison.Ordinal);
+    }
 }

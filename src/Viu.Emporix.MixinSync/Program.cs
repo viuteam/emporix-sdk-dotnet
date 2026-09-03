@@ -101,7 +101,40 @@ static EmporixClient ClientFor(MixinConfig config)
 }
 
 static int Generate(MixinConfig config, string configPath)
-    => throw new NotImplementedException("Task 11 implements generate.");
+{
+    string root = RootOf(configPath);
+    string lockPath = Path.Combine(root, config.LockFile);
+    string snapshotPath = SnapshotPathFor(lockPath, root);
+
+    if (!File.Exists(snapshotPath))
+    {
+        throw new FileNotFoundException($"No snapshot at {snapshotPath}. Run pull first.", snapshotPath);
+    }
+
+    List<RawMixin> mixins = JsonSerializer.Deserialize<List<RawMixin>>(
+        File.ReadAllText(snapshotPath), MixinJson.Options) ?? [];
+
+    string outputDirectory = Path.Combine(root, config.Out);
+    Directory.CreateDirectory(outputDirectory);
+
+    // A mixin removed from the tenant must not leave an orphaned file behind —
+    // the same reasoning SpecSync applies to its generated specifications.
+    foreach (string stale in Directory.GetFiles(outputDirectory, "*.g.cs"))
+    {
+        File.Delete(stale);
+    }
+
+    IReadOnlyDictionary<string, string> files = Generator.Generate(mixins, config.Namespace);
+
+    foreach ((string name, string content) in files)
+    {
+        File.WriteAllText(Path.Combine(outputDirectory, name), content);
+    }
+
+    Console.WriteLine($"Generated {files.Count} files for {mixins.Count} mixins into {outputDirectory}.");
+
+    return 0;
+}
 
 static Task<int> CheckAsync(MixinConfig config, string configPath)
     => throw new NotImplementedException("Task 12 implements check.");
