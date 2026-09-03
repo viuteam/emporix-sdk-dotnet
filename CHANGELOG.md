@@ -9,6 +9,14 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.3.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.0...v0.3.1) (2026-09-03)
+
+
+### Fixed
+
+* give the mixin tool the same version as the library ([53555a6](https://github.com/viuteam/emporix-sdk-dotnet/commit/53555a667b46334d00349dec6e06f6ec87f7a65f))
+* give the mixin tool the same version as the library ([9b01412](https://github.com/viuteam/emporix-sdk-dotnet/commit/9b01412377c944cc986fd1e9b2365be517271119))
+
 ## [0.3.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.2.1...v0.3.0) (2026-09-03)
 
 
