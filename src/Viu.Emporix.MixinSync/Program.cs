@@ -136,5 +136,33 @@ static int Generate(MixinConfig config, string configPath)
     return 0;
 }
 
-static Task<int> CheckAsync(MixinConfig config, string configPath)
-    => throw new NotImplementedException("Task 12 implements check.");
+static async Task<int> CheckAsync(MixinConfig config, string configPath)
+{
+    string root = RootOf(configPath);
+
+    using EmporixClient client = ClientFor(config);
+    using HttpClient http = new() { Timeout = TimeSpan.FromSeconds(30) };
+
+    IReadOnlyList<RawMixin> live = await new SchemaSource(client, http).ListAsync();
+    IReadOnlyList<string> drift = Lockfile.Diff(
+        Lockfile.Read(Path.Combine(root, config.LockFile)),
+        Lockfile.Build(live, DateTimeOffset.UtcNow));
+
+    if (drift.Count == 0)
+    {
+        Console.WriteLine($"In sync: {live.Count} mixins match the lockfile.");
+        return 0;
+    }
+
+    Console.Error.WriteLine($"Drift against {config.LockFile}:");
+
+    foreach (string line in drift)
+    {
+        Console.Error.WriteLine($"  {line}");
+    }
+
+    Console.Error.WriteLine();
+    Console.Error.WriteLine("Run pull and generate, then review the type diff before committing.");
+
+    return 1;
+}
