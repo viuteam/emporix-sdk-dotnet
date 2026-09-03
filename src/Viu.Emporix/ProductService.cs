@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json.Serialization.Metadata;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -85,10 +86,19 @@ public sealed partial class ProductService
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <exception cref="EmporixNotFoundException">No product exists with this id.</exception>
     /// <exception cref="EmporixTransportException">The request did not reach Emporix.</exception>
-    public async Task<BasicProductWithId?> GetAsync(
+    public Task<BasicProductWithId?> GetAsync(
         string productId,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
+        => GetOneCoreAsync(productId, ProductJsonContext.Default.BasicProductWithId, auth, cancellationToken);
+
+    // The path and the auth default live here once. ProductAnyTypeOperations
+    // passes a different JsonTypeInfo and gets the resolving read for free.
+    internal async Task<T?> GetOneCoreAsync<T>(
+        string productId,
+        JsonTypeInfo<T> typeInfo,
+        AuthContext auth,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(productId);
 
@@ -99,7 +109,7 @@ public sealed partial class ProductService
                 Path = $"{BasePath}/{Uri.EscapeDataString(productId)}",
                 Auth = Anonymous(auth),
             },
-            ProductJsonContext.Default.BasicProductWithId,
+            typeInfo,
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -108,14 +118,21 @@ public sealed partial class ProductService
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The product, or <see langword="null"/> when no product carries this code.</returns>
-    public async Task<BasicProductWithId?> GetByCodeAsync(
+    public Task<BasicProductWithId?> GetByCodeAsync(
         string code,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
+        => GetOneByCodeCoreAsync(code, ProductJsonContext.Default.ListBasicProductWithId, auth, cancellationToken);
+
+    internal async Task<T?> GetOneByCodeCoreAsync<T>(
+        string code,
+        JsonTypeInfo<List<T>> listTypeInfo,
+        AuthContext auth,
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
 
-        List<BasicProductWithId>? matches = await _http.SendAsync(
+        List<T>? matches = await _http.SendAsync(
             new EmporixRequest
             {
                 Method = HttpMethod.Get,
@@ -123,10 +140,12 @@ public sealed partial class ProductService
                 Auth = Anonymous(auth),
                 Query = [new("q", $"code:{code}")],
             },
-            ProductJsonContext.Default.ListBasicProductWithId,
+            listTypeInfo,
             cancellationToken).ConfigureAwait(false);
 
-        return matches is { Count: > 0 } ? matches[0] : null;
+        // «default» rather than «null»: T is unconstrained, so null does not
+        // compile here.
+        return matches is { Count: > 0 } ? matches[0] : default;
     }
 
     /// <summary>Fetches one page of the catalog.</summary>
@@ -137,7 +156,12 @@ public sealed partial class ProductService
         ProductPageOptions? options = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => ListPageAsync(options ?? new ProductPageOptions(), query: null, auth, cancellationToken);
+        => ListPageAsync(
+            options ?? new ProductPageOptions(),
+            query: null,
+            ProductJsonContext.Default.ListBasicProductWithId,
+            auth,
+            cancellationToken);
 
     /// <summary>
     /// Walks the entire catalog, fetching each page only when it is needed.
@@ -180,7 +204,12 @@ public sealed partial class ProductService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
-        return ListPageAsync(options ?? new ProductPageOptions(), query, auth, cancellationToken);
+        return ListPageAsync(
+            options ?? new ProductPageOptions(),
+            query,
+            ProductJsonContext.Default.ListBasicProductWithId,
+            auth,
+            cancellationToken);
     }
 
     /// <summary>
@@ -206,6 +235,15 @@ public sealed partial class ProductService
         ProductPageOptions? options = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
+        => SearchByNameCoreAsync(
+            term, options, ProductJsonContext.Default.ListBasicProductWithId, auth, cancellationToken);
+
+    internal Task<PaginatedItems<T>> SearchByNameCoreAsync<T>(
+        string term,
+        ProductPageOptions? options,
+        JsonTypeInfo<List<T>> listTypeInfo,
+        AuthContext auth,
+        CancellationToken cancellationToken)
     {
         ProductPageOptions page = options ?? new ProductPageOptions();
 
@@ -217,14 +255,22 @@ public sealed partial class ProductService
 
         if (cleaned.Length == 0)
         {
-            return Task.FromResult(new PaginatedItems<BasicProductWithId>(
+            return Task.FromResult(new PaginatedItems<T>(
                 [],
                 page.PageNumber,
                 page.PageSize,
                 hasNextPage: false));
         }
 
-        return SearchAsync($"name:(~{EscapeRegexMetacharacters(cleaned)})", page, auth, cancellationToken);
+        // Straight to the paged read rather than through the public SearchAsync,
+        // which is not generic. Its only extra work is rejecting a blank query,
+        // and the built filter can never be blank at this point.
+        return ListPageAsync(
+            page,
+            $"name:(~{EscapeRegexMetacharacters(cleaned)})",
+            listTypeInfo,
+            auth,
+            cancellationToken);
     }
 
     /// <summary>
@@ -247,7 +293,9 @@ public sealed partial class ProductService
     {
         ArgumentNullException.ThrowIfNull(productIds);
 
-        return SearchInChunksAsync("id", productIds, chunkSize, auth, cancellationToken);
+        return SearchInChunksAsync(
+            "id", productIds, chunkSize,
+            ProductJsonContext.Default.ListBasicProductWithId, auth, cancellationToken);
     }
 
     /// <summary>
@@ -268,6 +316,26 @@ public sealed partial class ProductService
         int chunkSize = DefaultChunkSize,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
+        => GetManyByCodeCoreAsync(
+            codes, chunkSize, ProductJsonContext.Default.ListBasicProductWithId, auth, cancellationToken);
+
+    /// <summary>
+    /// Collapses duplicates, drops codes the query language cannot carry, and
+    /// chunks the rest.
+    /// </summary>
+    /// <remarks>
+    /// A core rather than logic in the public method, so the resolving read on
+    /// <c>ProductAnyTypeOperations</c> filters identically. Reaching
+    /// <see cref="SearchInChunksAsync"/> directly would send a code containing a
+    /// comma into the filter, where it breaks the value list apart — the one
+    /// path this method exists to prevent.
+    /// </remarks>
+    internal Task<IReadOnlyList<T>> GetManyByCodeCoreAsync<T>(
+        IReadOnlyCollection<string> codes,
+        int chunkSize,
+        JsonTypeInfo<List<T>> listTypeInfo,
+        AuthContext auth,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(codes);
 
@@ -279,7 +347,7 @@ public sealed partial class ProductService
             Log.DroppedCodesWithDelimiters(_logger, distinct.Count - usable.Count);
         }
 
-        return SearchInChunksAsync("code", usable, chunkSize, auth, cancellationToken);
+        return SearchInChunksAsync("code", usable, chunkSize, listTypeInfo, auth, cancellationToken);
     }
 
     /// <summary>
@@ -477,11 +545,12 @@ public sealed partial class ProductService
 
     // ----- Internals -----
 
-    private const int DefaultChunkSize = 100;
+    internal const int DefaultChunkSize = 100;
 
-    private async Task<PaginatedItems<BasicProductWithId>> ListPageAsync(
+    internal async Task<PaginatedItems<T>> ListPageAsync<T>(
         ProductPageOptions options,
         string? query,
+        JsonTypeInfo<List<T>> listTypeInfo,
         AuthContext auth,
         CancellationToken cancellationToken)
     {
@@ -513,7 +582,7 @@ public sealed partial class ProductService
                 Query = parameters,
                 Headers = headers,
             },
-            ProductJsonContext.Default.ListBasicProductWithId,
+            listTypeInfo,
             options.PageNumber,
             options.PageSize,
             cancellationToken).ConfigureAwait(false);
@@ -527,10 +596,11 @@ public sealed partial class ProductService
     /// the permitted address length. Despite being a <c>POST</c> the call counts
     /// as repeatable — it only reads.
     /// </remarks>
-    private async Task<IReadOnlyList<BasicProductWithId>> SearchInChunksAsync(
+    internal async Task<IReadOnlyList<T>> SearchInChunksAsync<T>(
         string field,
         IReadOnlyCollection<string> values,
         int chunkSize,
+        JsonTypeInfo<List<T>> listTypeInfo,
         AuthContext auth,
         CancellationToken cancellationToken)
     {
@@ -541,11 +611,11 @@ public sealed partial class ProductService
             return [];
         }
 
-        List<BasicProductWithId> all = [];
+        List<T> all = [];
 
         foreach (string[] chunk in values.Chunk(chunkSize))
         {
-            List<BasicProductWithId>? page = await _http.SendAsync(
+            List<T>? page = await _http.SendAsync(
                 new EmporixRequest
                 {
                     Method = HttpMethod.Post,
@@ -557,7 +627,7 @@ public sealed partial class ProductService
                         ProductJsonContext.Default.SearchQueryBody),
                     Idempotent = true,
                 },
-                ProductJsonContext.Default.ListBasicProductWithId,
+                listTypeInfo,
                 cancellationToken).ConfigureAwait(false);
 
             if (page is not null)
