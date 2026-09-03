@@ -850,3 +850,17 @@ internal sealed partial class CloudFunctionJsonContext : JsonSerializerContext;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Viu.Emporix.AuditLogsChangelogModels.ChangelogHistoryResponse))]
 internal sealed partial class AuditLogJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// Serialization for the mixin writer.
+/// </summary>
+/// <remarks>
+/// Its own context, as every service has: the writer assembles a map of mixin
+/// keys to already-serialized values and needs type information for it. The
+/// values arrive as <see cref="System.Text.Json.JsonElement"/>, so this context
+/// never has to know a tenant's own shapes — those come from the caller's
+/// context by way of the descriptor.
+/// </remarks>
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(System.Collections.Generic.Dictionary<string, System.Text.Json.JsonElement>))]
+internal sealed partial class MixinJsonContext : JsonSerializerContext;

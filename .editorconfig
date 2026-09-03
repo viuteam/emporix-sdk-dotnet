@@ -70,7 +70,15 @@ dotnet_analyzer_diagnostic.severity = none
 # Both are console applications without a synchronization context, so
 # ConfigureAwait changes nothing there. In a sample it would also distract from
 # what is being shown.
+#
+# Viu.Emporix.MixinSync is listed by name because it lives under src/ rather
+# than tools/: it is published, unlike SpecSync. What earns the exception is
+# being a console application, not where the project sits.
 [{tools,samples}/**/*.cs]
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA1849.severity = none
+
+[src/Viu.Emporix.MixinSync/**.cs]
 dotnet_diagnostic.CA2007.severity = none
 dotnet_diagnostic.CA1849.severity = none
 

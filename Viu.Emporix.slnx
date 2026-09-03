@@ -6,6 +6,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Viu.Emporix/Viu.Emporix.csproj" />
+    <Project Path="src/Viu.Emporix.MixinSync/Viu.Emporix.MixinSync.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Viu.Emporix.Tests/Viu.Emporix.Tests.csproj" />

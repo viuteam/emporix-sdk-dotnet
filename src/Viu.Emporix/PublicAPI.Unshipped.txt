@@ -1,1 +1,77 @@
 #nullable enable
+*REMOVED*Viu.Emporix.SchemaService.ListAsync(Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.SchemaModels.SchemaResponse!>!>!
+Viu.Emporix.Mixins.AnyCondition
+Viu.Emporix.Mixins.AnyCondition.AnyCondition() -> void
+Viu.Emporix.Mixins.BoolCondition
+Viu.Emporix.Mixins.BoolCondition.BoolCondition() -> void
+Viu.Emporix.Mixins.CompoundMixinFilter
+Viu.Emporix.Mixins.CompoundMixinFilter.And(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.CompoundMixinFilter!
+Viu.Emporix.Mixins.CompoundMixinFilter.Build(Viu.Emporix.Mixins.EmporixQuery! target) -> string!
+Viu.Emporix.Mixins.CompoundMixinFilter.Or(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.CompoundMixinFilter!
+Viu.Emporix.Mixins.Condition
+Viu.Emporix.Mixins.EmporixQuery
+Viu.Emporix.Mixins.MixinDescriptor<T>
+Viu.Emporix.Mixins.MixinDescriptor<T>.Attributes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Attributes.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Entity.get -> string!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Entity.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Key.get -> string!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Key.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.MixinDescriptor() -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.TypeInfo.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>!
+Viu.Emporix.Mixins.MixinDescriptor<T>.TypeInfo.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Url.get -> string!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Url.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Version.get -> int
+Viu.Emporix.Mixins.MixinDescriptor<T>.Version.init -> void
+Viu.Emporix.Mixins.MixinFilter
+Viu.Emporix.Mixins.MixinFilter.And(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.MixinFilter!
+Viu.Emporix.Mixins.MixinFilter.Build() -> string!
+Viu.Emporix.Mixins.MixinFilter.Or(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.CompoundMixinFilter!
+Viu.Emporix.Mixins.MixinQuery
+Viu.Emporix.Mixins.MixinQueryBuilder<T>
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Build() -> Viu.Emporix.Mixins.MixinFilter!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, bool?>!>! selector, Viu.Emporix.Mixins.BoolCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, double?>!>! selector, Viu.Emporix.Mixins.NumberCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, int?>!>! selector, Viu.Emporix.Mixins.NumberCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, string?>!>! selector, Viu.Emporix.Mixins.TextCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where<TAttr>(System.Linq.Expressions.Expression<System.Func<T, TAttr?>!>! selector, Viu.Emporix.Mixins.AnyCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.WhereEnum<TEnum>(System.Linq.Expressions.Expression<System.Func<T, TEnum?>!>! selector, TEnum value) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.WhereLocalized<TAttr>(System.Linq.Expressions.Expression<System.Func<T, TAttr?>!>! selector, string! language, Viu.Emporix.Mixins.TextCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinReader
+Viu.Emporix.Mixins.MixinWriter
+Viu.Emporix.Mixins.MixinWriter.SchemaUrls.get -> System.Collections.Generic.IDictionary<string!, string!>!
+Viu.Emporix.Mixins.MixinWriter.Set<T>(Viu.Emporix.Mixins.MixinDescriptor<T>! descriptor, T value) -> Viu.Emporix.Mixins.MixinWriter!
+Viu.Emporix.Mixins.MixinWriter.Values.get -> System.Text.Json.JsonElement
+Viu.Emporix.Mixins.NumberCondition
+Viu.Emporix.Mixins.NumberCondition.NumberCondition() -> void
+Viu.Emporix.Mixins.TextCondition
+Viu.Emporix.Mixins.TextCondition.TextCondition() -> void
+Viu.Emporix.SchemaService.ListAsync(string? query = null, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.SchemaModels.SchemaResponse!>!>!
+static Viu.Emporix.Mixins.Condition.AtLeast(double value) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.AtMost(double value) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.Between(double low, double high) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.EqualTo(double value) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.EqualTo(string! value) -> Viu.Emporix.Mixins.TextCondition
+static Viu.Emporix.Mixins.Condition.False() -> Viu.Emporix.Mixins.BoolCondition
+static Viu.Emporix.Mixins.Condition.Matching(string! regex) -> Viu.Emporix.Mixins.TextCondition
+static Viu.Emporix.Mixins.Condition.Missing() -> Viu.Emporix.Mixins.AnyCondition
+static Viu.Emporix.Mixins.Condition.OneOf(params string![]! values) -> Viu.Emporix.Mixins.TextCondition
+static Viu.Emporix.Mixins.Condition.Present() -> Viu.Emporix.Mixins.AnyCondition
+static Viu.Emporix.Mixins.Condition.True() -> Viu.Emporix.Mixins.BoolCondition
+static Viu.Emporix.Mixins.EmporixQuery.ApprovalSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.AuditLogSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.AvailabilitySearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.CategorySearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.CustomerAdminSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.OrderList.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.ProductSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.QuoteSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.SchemaSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.VendorSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.MixinFilter.Raw(string! fragment) -> Viu.Emporix.Mixins.MixinFilter!
+static Viu.Emporix.Mixins.MixinQuery.For<T>(Viu.Emporix.Mixins.MixinDescriptor<T>! descriptor) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+static Viu.Emporix.Mixins.MixinReader.Read<T>(object? mixins, Viu.Emporix.Mixins.MixinDescriptor<T>! descriptor) -> T?
+static Viu.Emporix.Mixins.MixinReader.SavedVersion(System.Collections.Generic.IDictionary<string!, string!>? metadataMixins, string! key) -> int?
+static Viu.Emporix.Mixins.MixinReader.SavedVersion(object? metadataMixins, string! key) -> int?
+static Viu.Emporix.Mixins.MixinWriter.Create() -> Viu.Emporix.Mixins.MixinWriter!

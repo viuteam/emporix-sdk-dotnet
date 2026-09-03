@@ -69,8 +69,15 @@ jobs:
       - name: Publish the sample with Native AOT
         run: dotnet publish samples/Viu.Emporix.Sample --configuration Release
 
+      # Two packable projects sharing one version line: the library and the
+      # mixin generator tool. The push step globs *.nupkg, so it needs no
+      # change, and the NuGet trusted-publishing policy still names this
+      # workflow — it compares the workflow containing the job, not the
+      # workflow that started it.
       - name: Pack
-        run: dotnet pack src/Viu.Emporix --no-build --configuration Release --output artifacts
+        run: |
+          dotnet pack src/Viu.Emporix --no-build --configuration Release --output artifacts
+          dotnet pack src/Viu.Emporix.MixinSync --no-build --configuration Release --output artifacts
 
       # The packed file name carries the version MinVer derived, which is the only
       # honest place to read it: `-getProperty:PackageVersion` answers 1.0.0,
