@@ -1,0 +1,67 @@
+version: 2
+
+updates:
+  # Keep the workflow actions current on their own, so a forced runtime bump
+  # (Node 20 -> 24 and whatever comes next) never has to be chased by hand.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    # One pull request for the whole set instead of ten — the actions move
+    # together and are verified by the same ci run.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      # «chore» is hidden from the changelog, which is right here: a workflow
+      # change never reaches anyone who installs the package.
+      prefix: chore(deps)
+    labels:
+      - dependencies
+      - automated
+
+  # NuGet is covered, unlike npm in the Node SDK. There the exclusion exists
+  # because a dependency bump needs a changeset and Dependabot cannot author
+  # one; release-please reads commit messages instead, so nothing is missing.
+  #
+  # Versions live in Directory.Packages.props — central package management,
+  # which Dependabot edits in place.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      # Everything that never reaches a consumer: test, analysis and the mixin
+      # generator's own dependencies. One pull request, reviewed as a batch.
+      #
+      # Expect some of these to arrive red. TreatWarningsAsErrors is on
+      # repository-wide, so an analyzer release that adds a rule fails the
+      # build rather than warning — which is the point, but it means a bump
+      # here is occasionally work rather than a rubber stamp.
+      development:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "Microsoft.Extensions.Http"
+          - "Microsoft.Extensions.Logging.Abstractions"
+          - "Microsoft.Extensions.Options"
+          - "Microsoft.Extensions.Options.ConfigurationExtensions"
+    commit-message:
+      # «deps» is a visible changelog section, unlike «chore» — worth having for
+      # a package whose four runtime dependencies set a consumer's floor.
+      #
+      # Whether it also moves the version is not settled: docs/releasing.md says
+      # patch, while release-please bumps on «feat» and «fix» alone by default,
+      # and no release here has ever consisted of dependency commits only. The
+      # first grouped bump will show which, and it is worth knowing — a patch
+      # per month of test-library updates is noise nobody asked for.
+      prefix: deps
+    labels:
+      - dependencies
+      - automated
+
+# The four Microsoft.Extensions packages the library itself depends on are
+# deliberately left out of every group: they set the floor a consumer has to
+# meet, so each one is worth reading on its own rather than as part of a batch.
