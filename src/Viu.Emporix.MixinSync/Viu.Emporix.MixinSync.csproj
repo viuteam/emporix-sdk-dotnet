@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Viu.Emporix.MixinSync</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>emporix-mixins</ToolCommandName>
+    <PackageId>Viu.Emporix.MixinSync</PackageId>
+    <Description>Generates typed C# for an Emporix tenant's mixins and detects schema drift.</Description>
+    <PackageTags>emporix;mixins;json-schema;codegen</PackageTags>
+  </PropertyGroup>
+
+  <!--
+    A developer-machine tool, so the trimming and AOT requirements from
+    Directory.Build.props do not apply — NJsonSchema cannot satisfy them. Same
+    arrangement as tools/Viu.Emporix.SpecSync. Warnings-as-errors stays.
+  -->
+  <PropertyGroup>
+    <IsAotCompatible>false</IsAotCompatible>
+    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+    <EnableAotAnalyzer>false</EnableAotAnalyzer>
+    <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NJsonSchema.CodeGeneration.CSharp" />
+  </ItemGroup>
+
+  <!-- For SchemaService and EmporixClient when pulling from a tenant. -->
+  <ItemGroup>
+    <ProjectReference Include="../Viu.Emporix/Viu.Emporix.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Viu.Emporix.Tests" />
+  </ItemGroup>
+
+</Project>

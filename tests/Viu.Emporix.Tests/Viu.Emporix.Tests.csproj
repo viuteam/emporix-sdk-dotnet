@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Viu.Emporix/Viu.Emporix.csproj" />
     <ProjectReference Include="../../tools/Viu.Emporix.SpecSync/Viu.Emporix.SpecSync.csproj" />
+    <ProjectReference Include="../../src/Viu.Emporix.MixinSync/Viu.Emporix.MixinSync.csproj" />
   </ItemGroup>
 
   <ItemGroup>
