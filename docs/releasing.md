@@ -37,6 +37,30 @@ A pull request whose title does not parse is rejected by the **Commit convention
 check, because a squash merge puts that title on `main` and an unclassifiable
 commit contributes to neither the version nor the changelog. It ships, silently.
 
+### What a squash merge actually puts on `main`
+
+Every pull request here is squashed — merge and rebase merges are switched off,
+for the reason in «Why the changelog once listed everything twice» below. What
+lands is worth knowing exactly, because it decides what reaches the changelog:
+
+| Part of the commit | Comes from |
+| --- | --- |
+| subject | the pull-request title — **unless the branch holds exactly one commit**, in which case that commit's subject wins |
+| body | the branch commits' messages, as a bulleted list |
+| **not** included | the pull-request description |
+
+Three consequences:
+
+- **A `BREAKING CHANGE:` footer belongs in a branch commit, not only in the
+  pull-request description.** From the description it never reaches `main`, and
+  the breaking-changes section then repeats the title instead of saying what
+  broke. A `!` in the title still marks the break either way.
+- The nested-parenthesis trap below applies to the title and to branch commits.
+  It does **not** apply to a pull-request description, which is not carried over.
+- With a single-commit branch, that commit's subject is what counts. Keep it and
+  the pull-request title in step, or the changelog quotes the one you were not
+  looking at.
+
 ## The trap: a commit body that will not parse
 
 Release Please parses the **whole** commit message, not only the subject. A
@@ -211,11 +235,33 @@ earns its keep in a monorepo, where it tells several packages apart. This
 repository has one package at the root and no component in the tag, so it buys
 nothing and breaks the round trip.
 
-**Squash the release pull request.** Merging it with a merge commit puts two
-commits on `main` — the branch commit and the merge — and Release Please writes a
-changelog line for each, so every change appears twice, once under its real
-commit and once under the merge with the pull-request title. Squashing gives one
-entry per pull request.
+### Why the changelog once listed everything twice
+
+**Every pull request is squashed, and the repository enforces it.** Merge and
+rebase merges are switched off. This paragraph used to say «squash the release
+pull request», meaning only the one Release Please opens — and because it read as
+advice about that one case, ordinary pull requests kept being merged with merge
+commits, and 0.3.1 and 0.3.2 each carry every entry twice.
+
+Why a merge commit duplicates: Release Please cannot parse the subject GitHub
+writes, «Merge pull request #11 from …», so it falls back to the body — which
+the repository configures to be the pull-request title, and that title is a
+valid conventional commit because a CI check requires it. The change is then
+counted once under its real commit and once under the merge. Two rules working
+against each other rather than a mistake anyone made.
+
+It looked inconsistent because it is: the fallback silently declines a body
+marked breaking. Verified against Release Please's own parser:
+
+| Merge commit body | Changelog entries |
+| --- | --- |
+| `fix: …` or `feat: …` | 1 — the duplicate |
+| `fix!: …` or `feat!: …` | 0 |
+| empty | 0 |
+
+So #9 came through clean and #11 did not, purely because one was a breaking
+change. Nobody would guess that, which is why the setting now decides rather
+than a habit.
 
 ### Verifying it before the irreversible part
 
