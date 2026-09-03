@@ -78,6 +78,16 @@ public sealed partial class ProductService
 
     private string BasePath => $"/product/{_tenant}/products";
 
+    /// <summary>Reads that resolve the product type instead of assuming BASIC.</summary>
+    /// <remarks>
+    /// The methods on this service return <see cref="BasicProductWithId"/> for
+    /// every product, because the specification declares a product read as a
+    /// <c>oneOf</c> over five schemas with no discriminator. That is right for a
+    /// catalogue of plain products and wrong the moment a bundle or a variant
+    /// appears. These reads return whichever shape <c>productType</c> names.
+    /// </remarks>
+    public ProductAnyTypeOperations AnyType => new(this);
+
     // ----- Reads -----
 
     /// <summary>Fetches a product by its id.</summary>
@@ -948,4 +958,147 @@ public sealed class ProductTemplateOperations
             },
             cancellationToken);
     }
+}
+
+/// <summary>
+/// Product reads that resolve <c>productType</c> into its own generated type.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Reached through <c>client.Products.AnyType</c>. Every method mirrors the one
+/// on <see cref="ProductService"/> — same parameters, same defaults, same
+/// addresses — and returns <see cref="IEmporixProduct"/> instead of
+/// <see cref="BasicProductWithId"/>, so the caller can pattern match:
+/// </para>
+/// <code>
+/// var product = await client.Products.AnyType.GetAsync(id);
+///
+/// if (product is BundleProductWithId bundle)
+/// {
+///     foreach (var item in bundle.BundledProducts) { }
+/// }
+/// </code>
+/// <para>
+/// <b>One limitation.</b> The specification does not require <c>productType</c>
+/// on a variant, so a variant sent without it resolves to
+/// <see cref="BasicProductWithId"/> and its <c>parentVariantId</c> is reachable
+/// only through the extension data. Whether Emporix ever omits it is not
+/// established; deriving the type from other fields would be guessing.
+/// </para>
+/// </remarks>
+public sealed class ProductAnyTypeOperations
+{
+    private readonly ProductService _products;
+
+    // Holds the service rather than the http client and tenant, because the
+    // point of this group is to reuse its cores — the paths and query
+    // parameters exist once, and this only substitutes the type.
+    internal ProductAnyTypeOperations(ProductService products) => _products = products;
+
+    /// <summary>Fetches a product by its id, as its own shape.</summary>
+    /// <param name="productId">The product id.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<IEmporixProduct?> GetAsync(
+        string productId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => _products.GetOneCoreAsync(
+            productId, ProductJsonContext.Default.IEmporixProduct, auth, cancellationToken);
+
+    /// <summary>Fetches a product by its code, as its own shape.</summary>
+    /// <param name="code">The product code.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<IEmporixProduct?> GetByCodeAsync(
+        string code,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => _products.GetOneByCodeCoreAsync(
+            code, ProductJsonContext.Default.ListIEmporixProduct, auth, cancellationToken);
+
+    /// <summary>Lists products, each as its own shape.</summary>
+    /// <param name="options">Paging; the first page of 60 when omitted.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<PaginatedItems<IEmporixProduct>> ListAsync(
+        ProductPageOptions? options = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => _products.ListPageAsync(
+            options ?? new ProductPageOptions(),
+            query: null,
+            ProductJsonContext.Default.ListIEmporixProduct,
+            auth,
+            cancellationToken);
+
+    /// <summary>Searches products with an Emporix <c>q</c> filter.</summary>
+    /// <param name="query">The filter.</param>
+    /// <param name="options">Paging; the first page of 60 when omitted.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<PaginatedItems<IEmporixProduct>> SearchAsync(
+        string query,
+        ProductPageOptions? options = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+
+        return _products.ListPageAsync(
+            options ?? new ProductPageOptions(),
+            query,
+            ProductJsonContext.Default.ListIEmporixProduct,
+            auth,
+            cancellationToken);
+    }
+
+    /// <summary>Searches products by name.</summary>
+    /// <param name="term">The search term.</param>
+    /// <param name="options">Paging; the first page of 60 when omitted.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<PaginatedItems<IEmporixProduct>> SearchByNameAsync(
+        string term,
+        ProductPageOptions? options = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => _products.SearchByNameCoreAsync(
+            term, options, ProductJsonContext.Default.ListIEmporixProduct, auth, cancellationToken);
+
+    /// <summary>Fetches several products by id, as their own shapes.</summary>
+    /// <param name="productIds">The ids.</param>
+    /// <param name="chunkSize">How many ids per request.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task<IReadOnlyList<IEmporixProduct>> GetManyByIdAsync(
+        IReadOnlyCollection<string> productIds,
+        int chunkSize = ProductService.DefaultChunkSize,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(productIds);
+
+        return _products.SearchInChunksAsync(
+            "id", productIds, chunkSize,
+            ProductJsonContext.Default.ListIEmporixProduct, auth, cancellationToken);
+    }
+
+    /// <summary>Fetches several products by code, as their own shapes.</summary>
+    /// <param name="codes">The codes. Duplicates are collapsed.</param>
+    /// <param name="chunkSize">How many codes per request.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Codes containing parentheses, commas, quotes or whitespace are skipped
+    /// and logged, exactly as on <see cref="ProductService.GetManyByCodeAsync"/>
+    /// — both go through the same core, so the two cannot drift apart.
+    /// </remarks>
+    public Task<IReadOnlyList<IEmporixProduct>> GetManyByCodeAsync(
+        IReadOnlyCollection<string> codes,
+        int chunkSize = ProductService.DefaultChunkSize,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => _products.GetManyByCodeCoreAsync(
+            codes, chunkSize, ProductJsonContext.Default.ListIEmporixProduct, auth, cancellationToken);
 }
