@@ -85,9 +85,16 @@ jobs:
 
           # Merge commits are excluded. GitHub writes «Merge pull request #2
           # from …», which is not a conventional commit and never will be, and
-          # Release Please ignores merge commits anyway — what they merged is
-          # described by the commits inside them, which are checked here.
-          # Without --no-merges this check fails on every merged pull request.
+          # without --no-merges this check fails on every merged pull request.
+          # What they merged is described by the commits inside them, which are
+          # checked here.
+          #
+          # This comment used to add «Release Please ignores merge commits
+          # anyway». It does not: when the subject fails to parse it falls back
+          # to the body, and with the body set to the pull-request title that is
+          # a second, duplicate changelog entry. The repository now allows only
+          # squash merges, so none should reach main — but a merge made locally
+          # still can, which is why the flag stays.
           #
           # The first push to a branch reports an all-zero «before». Nothing to
           # compare against, so check the head commit alone, unless it is itself
