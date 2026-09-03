@@ -42,10 +42,19 @@ internal sealed class SearchQueryBody
 /// </remarks>
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    Converters = [typeof(EmporixProductConverter)])]
 [JsonSerializable(typeof(SearchQueryBody))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.BasicProductWithId))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BasicProductWithId>))]
+// The resolving read returns the interface; the four types below never
+// travelled over the wire before, because every read produced the basic shape.
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.IEmporixProduct))]
+[JsonSerializable(typeof(List<Viu.Emporix.ProductModels.IEmporixProduct>))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.BundleProductWithId))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ParentVariantProductWithId))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.VariantProductWithId))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantProductWithId))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.BasicProductCreation))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.BasicProductUpdate))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BasicProductCreation>))]

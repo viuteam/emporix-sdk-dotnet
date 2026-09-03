@@ -358,6 +358,45 @@ await client.Products.UpdateAsync("p1", changes);
 await client.Products.DeleteAsync("p1", force: true);
 ```
 
+### Bundles, variants and the other product shapes
+
+Emporix returns five shapes from a product read — basic, bundle, parent
+variant, variant and dynamic variant — and the specification declares them as a
+union with no discriminator. The methods above return the basic shape for all
+five, which is right for a catalogue of plain products. Where bundles or
+variants matter, `AnyType` resolves them:
+
+```csharp
+var product = await client.Products.AnyType.GetAsync(id);
+
+if (product is BundleProductWithId bundle)
+{
+    foreach (var item in bundle.BundledProducts)
+        Console.WriteLine($"{item.ProductId} x{item.Amount}");
+}
+else if (product is VariantProductWithId variant)
+{
+    Console.WriteLine($"a variant of {variant.ParentVariantId}");
+}
+```
+
+The same seven reads exist there — `GetAsync`, `GetByCodeAsync`, `ListAsync`,
+`SearchAsync`, `SearchByNameAsync`, `GetManyByIdAsync`, `GetManyByCodeAsync` —
+with identical parameters, so a mixed search resolves each result on its own.
+
+Nothing is lost through the plain methods either: unknown fields land in the
+`AdditionalProperties` extension data and can be read from there. `AnyType`
+gives you the typed path instead of that.
+
+**One limitation:** the specification does not require `productType` on a
+variant. A variant sent without it resolves to the basic shape. Deriving the
+type from other fields would be guessing, so the SDK does not.
+
+A `productType` the vendored specification does not list makes the read throw,
+here and on the plain methods alike — the generated enum property refuses an
+unknown value, and it carries the converter as an attribute, which no setting
+of ours overrides. Worth knowing because Emporix has extended that list before.
+
 ### Localized text
 
 Names and descriptions are `LocalizedString`, not `string`. Emporix returns the
