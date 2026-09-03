@@ -159,17 +159,18 @@ public class EmporixOptionsValidatorTests
         Assert.Contains(result.Failures!, f => f.Contains("Backend", StringComparison.Ordinal));
     }
 
-    [Fact]
-    public void A_custom_set_named_like_the_default_in_another_casing_is_allowed()
+    [Theory]
+    [InlineData("Backend")]
+    [InlineData("BACKEND")]
+    public void A_custom_set_named_like_the_default_is_rejected_whatever_its_casing(string key)
     {
-        // The dictionary is ordinal, and so is the lookup, so «Backend» is a
-        // different key from «backend» and does resolve. Confusing to read, but
-        // rejecting it would be inventing a rule the resolver does not apply.
+        // Names are compared without regard to case, so «Backend» addresses the
+        // same set as «backend» and is just as unreachable.
         EmporixOptions options = Minimal();
-        options.Credentials.Custom["Backend"] =
+        options.Credentials.Custom[key] =
             new EmporixServiceCredentials { ClientId = "id", Secret = "secret" };
 
-        Assert.True(Validate(options).Succeeded);
+        Assert.True(Validate(options).Failed);
     }
 
     [Fact]

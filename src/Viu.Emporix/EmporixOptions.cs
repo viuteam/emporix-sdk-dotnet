@@ -66,8 +66,16 @@ public sealed class EmporixCredentials
     /// Additional named client-credential sets, for example for partner
     /// integrations. Addressed by their key.
     /// </summary>
+    /// <remarks>
+    /// Names are compared without regard to case, matching how the rest of .NET
+    /// configuration behaves. The keys often arrive from an environment
+    /// variable — <c>Emporix__Credentials__Custom__import-writer__ClientId</c> —
+    /// where the casing is easy to get wrong, and an ordinal comparison would
+    /// bind the set cleanly, validate it, and then fail on the first call with
+    /// «not configured».
+    /// </remarks>
     public IDictionary<string, EmporixServiceCredentials> Custom { get; }
-        = new Dictionary<string, EmporixServiceCredentials>(StringComparer.Ordinal);
+        = new Dictionary<string, EmporixServiceCredentials>(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>A client-credentials pair for the OAuth2 client-credentials flow.</summary>

@@ -164,6 +164,55 @@ public class DefaultTokenProviderTests
     }
 
     [Fact]
+    public async Task A_credential_set_resolves_whatever_casing_the_call_uses()
+    {
+        // The name usually comes from configuration, often from an environment
+        // variable, where the casing is easy to get wrong. An ordinal lookup
+        // would bind and validate the set and then fail here.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, ServiceTokenBody);
+        using DefaultTokenProvider provider = Create(
+            handler,
+            out _,
+            o => o.Credentials.Custom["import-writer"] =
+                new EmporixServiceCredentials { ClientId = "w", Secret = "ws" });
+
+        await provider.GetServiceTokenAsync("IMPORT-WRITER");
+
+        Assert.Equal(1, handler.CallCount);
+        Assert.Contains("client_id=w&", handler.RequestBodies[0] + "&", StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task One_set_means_one_cached_token_however_it_is_spelled()
+    {
+        // The cache is keyed by the same name, so a differently spelled call
+        // must hit the same entry rather than fetching a second token.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, ServiceTokenBody);
+        using DefaultTokenProvider provider = Create(handler, out _);
+
+        await provider.GetServiceTokenAsync("backend");
+        await provider.GetServiceTokenAsync("Backend");
+
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Invalidating_a_set_reaches_it_whatever_casing_is_used()
+    {
+        // Same reasoning for the other direction: an invalidation spelled
+        // differently from the fetch would silently leave the stale token in
+        // place, which is the failure a 401 retry depends on not happening.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, ServiceTokenBody);
+        using DefaultTokenProvider provider = Create(handler, out _);
+
+        await provider.GetServiceTokenAsync("backend");
+        provider.InvalidateServiceToken("BACKEND");
+        await provider.GetServiceTokenAsync("backend");
+
+        Assert.Equal(2, handler.CallCount);
+    }
+
+    [Fact]
     public async Task Unknown_credential_set_is_a_configuration_error()
     {
         StubHttpMessageHandler handler = new(HttpStatusCode.OK, ServiceTokenBody);
