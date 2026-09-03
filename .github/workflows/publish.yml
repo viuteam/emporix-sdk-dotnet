@@ -103,7 +103,19 @@ jobs:
             exit 1
           fi
 
-          echo "All packages at $versions."
+          # A package without a readme reaches nuget.org showing nothing but its
+          # description, and the version cannot be replaced. The tool shipped
+          # that way once. Same class of mistake as the version: a new packable
+          # project inherits neither, because there is no shared props layer.
+          for package in artifacts/*.nupkg; do
+            if ! unzip -l "$package" | grep -q 'README\.md'; then
+              echo "::error::$(basename "$package") carries no README.md"
+              echo "Add PackageReadmeFile and a None Include entry to its csproj." >&2
+              exit 1
+            fi
+          done
+
+          echo "All packages at $versions, each with a readme."
 
       # Trusted publishing: the workflow proves its identity to nuget.org over
       # OIDC and receives a key valid only for this run. No long-lived secret in

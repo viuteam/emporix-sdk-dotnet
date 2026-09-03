@@ -3,13 +3,46 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Viu.Emporix.MixinSync</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Package metadata, deliberately the same shape as the library's. It shipped
+    once with only an id, a description and tags, so nuget.org showed the tool
+    with no readme, no licence and no project link. The two lists are kept
+    side by side rather than shared: a props layer for two projects would be
+    more structure than benefit, and a missing field is visible on the package
+    page within minutes of a release.
+  -->
+  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>emporix-mixins</ToolCommandName>
     <PackageId>Viu.Emporix.MixinSync</PackageId>
-    <Description>Generates typed C# for an Emporix tenant's mixins and detects schema drift.</Description>
-    <PackageTags>emporix;mixins;json-schema;codegen</PackageTags>
+    <Authors>viu</Authors>
+    <Company>VIU AG</Company>
+    <Description>
+      Generates typed C# for an Emporix tenant's mixins and detects schema drift.
+      Companion tool to the Viu.Emporix SDK. Built and maintained by viu, not an
+      official product of Emporix AG.
+    </Description>
+    <PackageTags>emporix;mixins;json-schema;codegen;dotnet-tool</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/viuteam/emporix-sdk-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/viuteam/emporix-sdk-dotnet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <!--
+    Its own readme rather than the repository's: that one is SDK documentation,
+    and a reader who installs a command-line tool wants the commands.
+  -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../LICENSE" Pack="true" PackagePath="/" Condition="Exists('../../LICENSE')" />
+  </ItemGroup>
 
   <!--
     A developer-machine tool, so the trimming and AOT requirements from
