@@ -9,6 +9,35 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.3.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.2.1...v0.3.0) (2026-09-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* SchemaService.ListAsync returns PaginatedItems rather than IReadOnlyList, and takes a query plus paging parameters.
+
+### Added
+
+* add mixin filter conditions ([9f976da](https://github.com/viuteam/emporix-sdk-dotnet/commit/9f976da7567722bfb41227a8c4b90f3332e46c03))
+* add the mixin sync tool skeleton ([2cd3729](https://github.com/viuteam/emporix-sdk-dotnet/commit/2cd3729898ad300977dd9b0b0249f40019ccd201))
+* assemble mixin values and schema urls for writing ([0fe0946](https://github.com/viuteam/emporix-sdk-dotnet/commit/0fe09469a78d7868a39c4ab8372f9bf934a8f8ba))
+* build type-safe q filters over mixin attributes ([c3c3218](https://github.com/viuteam/emporix-sdk-dotnet/commit/c3c321881471756e22011f2e522ceaf4eca18dcb))
+* convert schema attributes to json schema as a fallback ([f57f345](https://github.com/viuteam/emporix-sdk-dotnet/commit/f57f345dc24dd79b41f797fcfd4aa23d69215451))
+* detect mixin schema drift for ci ([b54aee3](https://github.com/viuteam/emporix-sdk-dotnet/commit/b54aee3b49cf639e614977b15f021770c6d228b2))
+* gate compound mixin queries by target service ([0cfdd6c](https://github.com/viuteam/emporix-sdk-dotnet/commit/0cfdd6c9886f27a153a0a284a4210e380693867d))
+* generate typed mixins with one namespace and context each ([b7d0c7a](https://github.com/viuteam/emporix-sdk-dotnet/commit/b7d0c7a3d20ded5baa5f2911923af1f739fc9ee8))
+* page the schema listing ([3857c9a](https://github.com/viuteam/emporix-sdk-dotnet/commit/3857c9a2487e14af82c967c1fc5cd9dfcd38e969))
+* pull mixins from a tenant's schema service ([9778136](https://github.com/viuteam/emporix-sdk-dotnet/commit/977813606a2fdec149e331cfddfc90dbaea19a8d))
+* read typed mixin values off an entity ([7cc5e6b](https://github.com/viuteam/emporix-sdk-dotnet/commit/7cc5e6b5a275b5a65acd743d8928df6470bd725a))
+* track mixin schema state in a lockfile ([40a3c8f](https://github.com/viuteam/emporix-sdk-dotnet/commit/40a3c8f8e8ecb5757a94e8e85a0cf4385ff212ff))
+
+
+### Documentation
+
+* design typed mixin support and correct the source generator claim ([00a5139](https://github.com/viuteam/emporix-sdk-dotnet/commit/00a513939bceb87657984742ba9d4ef567e35e4a))
+* document the mixin tooling and pack it ([4f47aa1](https://github.com/viuteam/emporix-sdk-dotnet/commit/4f47aa1e09d6ae7401daf0c8e280bf284533cb33))
+* plan the mixin implementation in fourteen tasks ([28f6b09](https://github.com/viuteam/emporix-sdk-dotnet/commit/28f6b0940404a92800c3613f1e3dc6883da5e5fc))
+
 ## [0.2.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.2.0...v0.2.1) (2026-09-02)
 
 
