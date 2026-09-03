@@ -25,8 +25,13 @@ public sealed class DefaultTokenProvider : ITokenProvider, IDisposable
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<DefaultTokenProvider> _logger;
 
-    private readonly ConcurrentDictionary<string, CachedToken> _serviceTokens = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _serviceGates = new(StringComparer.Ordinal);
+    // Keyed the same way credential sets are named, so one set means one cached
+    // token and one gate no matter how a call spelled it.
+    private readonly ConcurrentDictionary<string, CachedToken> _serviceTokens =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _serviceGates =
+        new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _anonymousGate = new(1, 1);
 
     private AnonymousSession? _anonymousSession;
@@ -192,7 +197,7 @@ public sealed class DefaultTokenProvider : ITokenProvider, IDisposable
 
     private EmporixServiceCredentials ResolveCredentials(string credentialSet)
     {
-        if (string.Equals(credentialSet, AuthContext.DefaultCredentialSet, StringComparison.Ordinal))
+        if (string.Equals(credentialSet, AuthContext.DefaultCredentialSet, StringComparison.OrdinalIgnoreCase))
         {
             return _options.Credentials.Backend
                 ?? throw new EmporixConfigurationException(
