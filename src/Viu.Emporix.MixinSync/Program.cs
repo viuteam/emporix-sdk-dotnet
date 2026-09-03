@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Viu.Emporix;
 using Viu.Emporix.MixinSync;
 
 // Generates typed C# for an Emporix tenant's mixins and detects schema drift.
@@ -51,8 +53,52 @@ static int Usage(int code, string? problem = null)
     return code;
 }
 
-static Task<int> PullAsync(MixinConfig config, string configPath)
-    => throw new NotImplementedException("Task 10 implements pull.");
+static async Task<int> PullAsync(MixinConfig config, string configPath)
+{
+    string root = RootOf(configPath);
+
+    using EmporixClient client = ClientFor(config);
+    using HttpClient http = new() { Timeout = TimeSpan.FromSeconds(30) };
+
+    IReadOnlyList<RawMixin> mixins = await new SchemaSource(client, http).ListAsync();
+
+    string lockPath = Path.Combine(root, config.LockFile);
+    string snapshotPath = SnapshotPathFor(lockPath, root);
+
+    Directory.CreateDirectory(Path.GetDirectoryName(snapshotPath)!);
+    File.WriteAllText(snapshotPath, JsonSerializer.Serialize(mixins, MixinJson.Options));
+    Lockfile.Write(lockPath, Lockfile.Build(mixins, DateTimeOffset.UtcNow));
+
+    Console.WriteLine($"Pulled {mixins.Count} mixins into {snapshotPath} and {lockPath}.");
+
+    return 0;
+}
+
+/// The directory the config sits in; every configured path is relative to it.
+static string RootOf(string configPath)
+    => Path.GetDirectoryName(Path.GetFullPath(configPath)) ?? Directory.GetCurrentDirectory();
+
+/// The snapshot lives beside the lockfile: the two are written together and
+/// read together, and keeping them adjacent makes that visible in a review.
+static string SnapshotPathFor(string lockPath, string root)
+    => Path.Combine(Path.GetDirectoryName(lockPath) ?? root, "mixins.snapshot.json");
+
+static EmporixClient ClientFor(MixinConfig config)
+{
+    string? clientId = Environment.GetEnvironmentVariable("EMPORIX_BACKEND_CLIENT_ID");
+    string? secret = Environment.GetEnvironmentVariable("EMPORIX_BACKEND_SECRET");
+
+    if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
+    {
+        throw new InvalidOperationException(
+            "Set EMPORIX_BACKEND_CLIENT_ID and EMPORIX_BACKEND_SECRET. The Schema Service is seller-side.");
+    }
+
+    EmporixOptions options = new() { Tenant = config.Tenant };
+    options.Credentials.Backend = new EmporixServiceCredentials { ClientId = clientId, Secret = secret };
+
+    return new EmporixClient(options);
+}
 
 static int Generate(MixinConfig config, string configPath)
     => throw new NotImplementedException("Task 11 implements generate.");

@@ -372,4 +372,68 @@ public class MixinSyncTests
 
         Assert.Contains("q=types", handler.RequestUris[0].PathAndQuery, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task A_schema_becomes_one_raw_mixin_per_entity_type()
+    {
+        // One schema assigned to PRODUCT and CATEGORY is two descriptors, as in
+        // the Node SDK: the entity is part of a mixin's identity for the caller.
+        SchemaResponse schema = new()
+        {
+            Id = "deliveryOptions",
+            Types = [SchemaType.PRODUCT, SchemaType.CATEGORY],
+            Metadata = new SchemaMetadata { Version = 6, Url = "https://cdn/d.v6.json" },
+        };
+
+        IReadOnlyList<RawMixin> mixins = await SchemaSource.ToRawMixins(
+            [schema], _ => Task.FromResult<string?>("""{"type":"object"}"""));
+
+        Assert.Equal(2, mixins.Count);
+        Assert.Equal(["CATEGORY", "PRODUCT"], mixins.Select(m => m.Entity).Order().ToArray());
+        Assert.All(mixins, m => Assert.Equal(6, m.Version));
+    }
+
+    [Fact]
+    public async Task A_schema_without_an_id_version_or_url_is_skipped()
+    {
+        SchemaResponse[] unusable =
+        [
+            new() { Id = null, Types = [SchemaType.PRODUCT], Metadata = new SchemaMetadata { Version = 1, Url = "u" } },
+            new() { Id = "a", Types = [SchemaType.PRODUCT], Metadata = new SchemaMetadata { Version = null, Url = "u" } },
+            new() { Id = "b", Types = [SchemaType.PRODUCT], Metadata = new SchemaMetadata { Version = 1, Url = null } },
+        ];
+
+        Assert.Empty(await SchemaSource.ToRawMixins(unusable, _ => Task.FromResult<string?>("{}")));
+    }
+
+    [Fact]
+    public async Task A_schema_whose_url_cannot_be_fetched_falls_back_to_its_attributes()
+    {
+        SchemaResponse schema = new()
+        {
+            Id = "deliveryOptions",
+            Types = [SchemaType.PRODUCT],
+            Metadata = new SchemaMetadata { Version = 6, Url = "https://cdn/gone.v6.json" },
+            Attributes = [new SchemaAttribute { Key = "packaging", Type = SchemaAttributeType.TEXT }],
+        };
+
+        IReadOnlyList<RawMixin> mixins = await SchemaSource.ToRawMixins(
+            [schema], _ => Task.FromResult<string?>(null));
+
+        Assert.Single(mixins);
+        Assert.Contains("packaging", mixins[0].Schema, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_schema_assigned_to_no_entity_type_yields_nothing()
+    {
+        SchemaResponse schema = new()
+        {
+            Id = "orphan",
+            Types = [],
+            Metadata = new SchemaMetadata { Version = 1, Url = "https://cdn/o.v1.json" },
+        };
+
+        Assert.Empty(await SchemaSource.ToRawMixins([schema], _ => Task.FromResult<string?>("{}")));
+    }
 }
