@@ -51,12 +51,12 @@ jobs:
       # may no longer exist.
       - name: Check out the release branch
         if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         if: steps.release.outputs.pr && steps.release.outputs.releases_created != 'true'
         with:
           dotnet-version: '10.0.x'
