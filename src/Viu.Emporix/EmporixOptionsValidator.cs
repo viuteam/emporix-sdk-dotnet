@@ -54,6 +54,21 @@ internal sealed partial class EmporixOptionsValidator : IValidateOptions<Emporix
             ValidateService(credentials, $"{nameof(EmporixCredentials.Custom)}[\"{key}\"]", failures);
         }
 
+        // A custom set under the default name can never be resolved: the token
+        // provider matches that name against Credentials.Backend and never
+        // reaches the dictionary. Left unchecked it fails in two unhelpful ways
+        // — with Backend also set the two silently disagree about which client
+        // id is in use, and without it the error says Backend is missing, which
+        // reads as nonsense to someone who just configured «backend».
+        if (options.Credentials.Custom.ContainsKey(AuthContext.DefaultCredentialSet))
+        {
+            failures.Add(
+                $"{nameof(EmporixCredentials.Custom)}[\"{AuthContext.DefaultCredentialSet}\"] is never used: "
+                + $"that name addresses {nameof(EmporixCredentials.Backend)}. "
+                + $"Move it to {nameof(EmporixOptions.Credentials)}.{nameof(EmporixCredentials.Backend)}, "
+                + "or give the set a different name.");
+        }
+
         if (options.Credentials.Storefront is { } storefront
             && string.IsNullOrWhiteSpace(storefront.ClientId))
         {
