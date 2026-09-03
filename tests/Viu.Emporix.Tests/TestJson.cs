@@ -53,3 +53,19 @@ internal sealed class TestLocalizedNote
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 internal sealed partial class TestJsonContext : JsonSerializerContext;
+
+/// <summary>
+/// A stand-in for a context the mixin generator emits.
+/// </summary>
+/// <remarks>
+/// Separate from <see cref="TestJsonContext"/> for one reason: it sets
+/// <see cref="JsonIgnoreCondition.WhenWritingNull"/>, which every generated
+/// mixin context does. A schema declaring <c>additionalProperties: false</c> has
+/// no use for an explicit null, so suppressing them belongs to the context that
+/// describes the mixin — not to the writer, which would otherwise need its own
+/// serializer options and a resolver to go with them.
+/// </remarks>
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(TestDeliveryMixin))]
+[JsonSerializable(typeof(TestLocalizedNote))]
+internal sealed partial class TestMixinContext : JsonSerializerContext;

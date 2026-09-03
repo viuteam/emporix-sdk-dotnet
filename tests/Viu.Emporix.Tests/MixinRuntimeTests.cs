@@ -21,7 +21,7 @@ public class MixinRuntimeTests
         Entity = "PRODUCT",
         Url = "https://cdn.emporix.io/deliveryOptionsMixIn.v6.json",
         Version = 6,
-        TypeInfo = TestJsonContext.Default.TestDeliveryMixin,
+        TypeInfo = TestMixinContext.Default.TestDeliveryMixin,
         Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["Packaging"] = "packaging",
@@ -97,5 +97,65 @@ public class MixinRuntimeTests
             TestJsonContext.Default.JsonElement);
 
         Assert.Equal(7, MixinReader.SavedVersion(metadata, "deliveryOptions"));
+    }
+
+    [Fact]
+    public void The_writer_produces_the_value_and_the_schema_url_separately()
+    {
+        MixinWriter writer = MixinWriter.Create()
+            .Set(Delivery, new TestDeliveryMixin { Packaging = "Paper", Weight = 2.5 });
+
+        Assert.Equal(
+            """{"deliveryOptions":{"packaging":"Paper","weight":2.5}}""",
+            writer.Values.GetRawText());
+        Assert.Equal(
+            "https://cdn.emporix.io/deliveryOptionsMixIn.v6.json",
+            writer.SchemaUrls["deliveryOptions"]);
+    }
+
+    [Fact]
+    public void The_writer_omits_null_attributes()
+    {
+        // A schema declaring additionalProperties:false has no use for an
+        // explicit null, and it is payload the tenant did not ask for. The
+        // suppression comes from the mixin's own context, which is what the
+        // generator emits.
+        MixinWriter writer = MixinWriter.Create()
+            .Set(Delivery, new TestDeliveryMixin { Packaging = "Paper" });
+
+        Assert.DoesNotContain("null", writer.Values.GetRawText(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_writer_carries_several_mixins_at_once()
+    {
+        MixinDescriptor<TestLocalizedNote> other = new()
+        {
+            Key = "banner",
+            Entity = "PRODUCT",
+            Url = "https://cdn.emporix.io/bannerMixIn.v2.json",
+            Version = 2,
+            TypeInfo = TestMixinContext.Default.TestLocalizedNote,
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal) { ["En"] = "en" },
+        };
+
+        MixinWriter writer = MixinWriter.Create()
+            .Set(Delivery, new TestDeliveryMixin { Packaging = "Paper" })
+            .Set(other, new TestLocalizedNote { En = "Sale" });
+
+        Assert.Equal(2, writer.SchemaUrls.Count);
+        Assert.True(writer.Values.TryGetProperty("banner", out _));
+    }
+
+    [Fact]
+    public void A_round_trip_through_the_writer_reads_back_typed()
+    {
+        MixinWriter writer = MixinWriter.Create()
+            .Set(Delivery, new TestDeliveryMixin { Packaging = "Plastic", Weight = 1.25 });
+
+        TestDeliveryMixin? read = MixinReader.Read(writer.Values, Delivery);
+
+        Assert.Equal("Plastic", read?.Packaging);
+        Assert.Equal(1.25, read?.Weight);
     }
 }
