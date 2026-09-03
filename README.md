@@ -659,8 +659,10 @@ nothing. The full picture, including what is deliberately still manual, is in
 
 ## Contributing
 
-The types under `src/Viu.Emporix/Generated/` are produced from the Emporix
-specifications and are **not edited by hand**:
+[CONTRIBUTING.md](CONTRIBUTING.md) covers the commit convention, the pull-request
+flow and the handful of mistakes that cost time in this repository. The one worth
+repeating here: the types under `src/Viu.Emporix/Generated/` are produced from
+the Emporix specifications and are **not edited by hand**:
 
 ```bash
 dotnet tool restore
