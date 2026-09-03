@@ -1,1 +1,19 @@
 #nullable enable
+Viu.Emporix.Mixins.MixinDescriptor<T>
+Viu.Emporix.Mixins.MixinDescriptor<T>.Attributes.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Attributes.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Entity.get -> string!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Entity.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Key.get -> string!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Key.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.MixinDescriptor() -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.TypeInfo.get -> System.Text.Json.Serialization.Metadata.JsonTypeInfo<T>!
+Viu.Emporix.Mixins.MixinDescriptor<T>.TypeInfo.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Url.get -> string!
+Viu.Emporix.Mixins.MixinDescriptor<T>.Url.init -> void
+Viu.Emporix.Mixins.MixinDescriptor<T>.Version.get -> int
+Viu.Emporix.Mixins.MixinDescriptor<T>.Version.init -> void
+Viu.Emporix.Mixins.MixinReader
+static Viu.Emporix.Mixins.MixinReader.Read<T>(object? mixins, Viu.Emporix.Mixins.MixinDescriptor<T>! descriptor) -> T?
+static Viu.Emporix.Mixins.MixinReader.SavedVersion(System.Collections.Generic.IDictionary<string!, string!>? metadataMixins, string! key) -> int?
+static Viu.Emporix.Mixins.MixinReader.SavedVersion(object? metadataMixins, string! key) -> int?
