@@ -137,4 +137,111 @@ public class MixinQueryTests
         Assert.Contains("compoundLogicalQuery:", built, StringComparison.Ordinal);
         Assert.Contains("published:true", built, StringComparison.Ordinal);
     }
+
+    private static MixinDescriptor<TestDeliveryMixin> Delivery => new()
+    {
+        Key = "deliveryOptions",
+        Entity = "PRODUCT",
+        Url = "https://cdn.emporix.io/deliveryOptionsMixIn.v6.json",
+        Version = 6,
+        TypeInfo = TestMixinContext.Default.TestDeliveryMixin,
+        Attributes = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Packaging"] = "packaging",
+            ["Weight"] = "weight",
+            ["Note"] = "note",
+        },
+    };
+
+    [Fact]
+    public void A_clause_targets_the_namespaced_attribute_path()
+    {
+        string q = MixinQuery.For(Delivery)
+            .Where(d => d.Packaging, Condition.EqualTo("Paper"))
+            .Build()
+            .Build();
+
+        Assert.Equal("mixins.deliveryOptions.packaging:Paper", q);
+    }
+
+    [Fact]
+    public void Several_clauses_are_anded_by_a_space()
+    {
+        string q = MixinQuery.For(Delivery)
+            .Where(d => d.Packaging, Condition.EqualTo("Paper"))
+            .Where(d => d.Weight, Condition.Between(1.0, 5.0))
+            .Build()
+            .Build();
+
+        Assert.Equal(
+            "mixins.deliveryOptions.packaging:Paper mixins.deliveryOptions.weight:(>=1 AND <=5)",
+            q);
+    }
+
+    [Fact]
+    public void A_localized_clause_carries_the_language_segment()
+    {
+        string q = MixinQuery.For(Delivery)
+            .WhereLocalized(d => d.Note, "en", Condition.EqualTo("Sale"))
+            .Build()
+            .Build();
+
+        Assert.Equal("mixins.deliveryOptions.note.en:Sale", q);
+    }
+
+    [Fact]
+    public void Presence_works_on_an_attribute_of_any_type()
+    {
+        string q = MixinQuery.For(Delivery)
+            .Where(d => d.Note, Condition.Present())
+            .Build()
+            .Build();
+
+        Assert.Equal("mixins.deliveryOptions.note:exists", q);
+    }
+
+    [Fact]
+    public void An_expression_that_is_not_a_property_selector_is_refused()
+    {
+        ArgumentException error = Assert.Throws<ArgumentException>(
+            () => MixinQuery.For(Delivery).Where(d => "constant", Condition.EqualTo("x")));
+
+        Assert.Contains("property", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_property_that_is_not_an_attribute_of_this_mixin_is_refused()
+    {
+        MixinDescriptor<TestDeliveryMixin> incomplete = new()
+        {
+            Key = "deliveryOptions",
+            Entity = "PRODUCT",
+            Url = "https://cdn.emporix.io/deliveryOptionsMixIn.v6.json",
+            Version = 6,
+            TypeInfo = TestMixinContext.Default.TestDeliveryMixin,
+            Attributes = new Dictionary<string, string>(StringComparer.Ordinal) { ["Packaging"] = "packaging" },
+        };
+
+        ArgumentException error = Assert.Throws<ArgumentException>(
+            () => MixinQuery.For(incomplete).Where(d => d.Weight, Condition.AtLeast(1)));
+
+        Assert.Contains("Weight", error.Message, StringComparison.Ordinal);
+        Assert.Contains("deliveryOptions", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Building_without_a_condition_is_refused()
+    {
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+            () => MixinQuery.For(Delivery).Build());
+
+        Assert.Contains("deliveryOptions", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_empty_language_is_refused()
+    {
+        Assert.Throws<ArgumentException>(
+            () => MixinQuery.For(Delivery).WhereLocalized(d => d.Note, "  ", Condition.EqualTo("Sale")));
+    }
 }

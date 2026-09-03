@@ -62,3 +62,14 @@ static Viu.Emporix.Mixins.EmporixQuery.QuoteSearch.get -> Viu.Emporix.Mixins.Emp
 static Viu.Emporix.Mixins.EmporixQuery.SchemaSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
 static Viu.Emporix.Mixins.EmporixQuery.VendorSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
 static Viu.Emporix.Mixins.MixinFilter.Raw(string! fragment) -> Viu.Emporix.Mixins.MixinFilter!
+Viu.Emporix.Mixins.MixinQuery
+Viu.Emporix.Mixins.MixinQueryBuilder<T>
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Build() -> Viu.Emporix.Mixins.MixinFilter!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, bool?>!>! selector, Viu.Emporix.Mixins.BoolCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, double?>!>! selector, Viu.Emporix.Mixins.NumberCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, int?>!>! selector, Viu.Emporix.Mixins.NumberCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where(System.Linq.Expressions.Expression<System.Func<T, string?>!>! selector, Viu.Emporix.Mixins.TextCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.Where<TAttr>(System.Linq.Expressions.Expression<System.Func<T, TAttr?>!>! selector, Viu.Emporix.Mixins.AnyCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.WhereEnum<TEnum>(System.Linq.Expressions.Expression<System.Func<T, TEnum?>!>! selector, TEnum value) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+Viu.Emporix.Mixins.MixinQueryBuilder<T>.WhereLocalized<TAttr>(System.Linq.Expressions.Expression<System.Func<T, TAttr?>!>! selector, string! language, Viu.Emporix.Mixins.TextCondition condition) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
+static Viu.Emporix.Mixins.MixinQuery.For<T>(Viu.Emporix.Mixins.MixinDescriptor<T>! descriptor) -> Viu.Emporix.Mixins.MixinQueryBuilder<T>!
