@@ -620,7 +620,7 @@ the facade, never generator work again.
 | npm provenance | NuGet Trusted Publishing (OIDC) | **V1**, if available |
 | `check:treeshake` | `EnablePackageValidation` | **V1** |
 | Playwright end-to-end | — | **Dropped** |
-| `@viu/emporix-mixins` code generation | CLI tool plus core runtime (not a source generator) | **Designed** |
+| `@viu/emporix-mixins` code generation | CLI tool plus core runtime (not a source generator) | **V1** |
 | React/Next/Angular bindings | — | **Dropped** |
 
 ---

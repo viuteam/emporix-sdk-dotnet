@@ -23,6 +23,20 @@ dotnet test --filter "FullyQualifiedName~Import" # one subject
 ./scripts/promote-public-api.sh                 # Unshipped → Shipped; runs itself on the release PR
 ```
 
+`Viu.Emporix.MixinSync` is the second published project — a `dotnet tool` that
+generates typed mixins into a consumer's repository. It is the only project
+besides `tools/Viu.Emporix.SpecSync` that opts out of `IsAotCompatible`, because
+NJsonSchema cannot satisfy it and pulls Newtonsoft. It shares the core's version
+line: one tag, one Release Please package, two `dotnet pack` calls in
+`publish.yml`. Because it lives under `src/` rather than `tools/`, the
+console-application exception in `.editorconfig` names it explicitly.
+
+```bash
+dotnet tool install --global Viu.Emporix.MixinSync
+emporix-mixins pull && emporix-mixins generate   # in a consumer repository
+emporix-mixins check                             # CI drift gate
+```
+
 ```bash
 dotnet run --project tools/Viu.Emporix.SpecSync             # fetch and generate
 dotnet run --project tools/Viu.Emporix.SpecSync -- fetch    # download and repair specs only

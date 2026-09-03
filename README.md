@@ -229,6 +229,95 @@ Useful for least privilege — a writing client for the import job, a read-only 
 for the dashboard. It cannot reach another tenant, because the tenant lives on the
 options and not on the `AuthContext`.
 
+## Mixins
+
+A mixin is a set of tenant-defined fields under `entity.mixins.<key>`, described
+by a JSON Schema that Emporix versions for you. The SDK reads and writes them
+typed, and filters on them:
+
+```csharp
+var delivery = MixinReader.Read(product.Mixins, Mixins.DeliveryOptions);
+
+var w = MixinWriter.Create()
+    .Set(Mixins.DeliveryOptions, new DeliveryOptionsMixinV6 { Packaging = "Paper" });
+
+product.Mixins          = w.Values;
+product.Metadata.Mixins = w.SchemaUrls;   // Emporix leaves a mixin unvalidated without this
+
+string q = MixinQuery.For(Mixins.DeliveryOptions)
+    .Where(d => d.Packaging, Condition.EqualTo("Paper"))
+    .Where(d => d.Weight, Condition.AtLeast(2))
+    .Build()
+    .Build();
+
+await client.Products.SearchAsync(q);
+```
+
+The condition decides which operators an attribute accepts, so
+`Condition.AtLeast` on a text attribute is a compile error rather than a query
+the backend rejects. `Or` needs `compoundLogicalQuery`, which only some services
+support, so it returns a type whose `Build` requires naming the endpoint:
+
+```csharp
+a.Or(b).Build(EmporixQuery.ProductSearch);    // fine
+a.Or(b).Build(EmporixQuery.CategorySearch);   // throws — Category cannot run it
+a.Or(b).Build();                              // does not compile
+```
+
+The types come from your tenant, so they are generated into your repository:
+
+```bash
+dotnet tool install --global Viu.Emporix.MixinSync
+
+emporix-mixins pull && emporix-mixins generate    # commit the output
+emporix-mixins check                              # for CI; exits 1 on drift
+```
+
+`emporix-mixins.json` sits beside your solution; credentials come from
+`EMPORIX_BACKEND_CLIENT_ID` and `EMPORIX_BACKEND_SECRET`, so the file carries
+nothing secret:
+
+```json
+{
+  "tenant": "acme",
+  "namespace": "Acme.Mixins",
+  "out": "src/Acme.Shop/Mixins/Generated",
+  "lockFile": "src/Acme.Shop/Mixins/mixins.lock.json"
+}
+```
+
+`check` is the part worth automating. Emporix assigns a new schema version on
+every change, so put this in your own repository:
+
+```yaml
+on:
+  schedule: [{ cron: "0 6 * * *" }]
+  workflow_dispatch: {}
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+      - run: dotnet tool install --global Viu.Emporix.MixinSync
+      - run: emporix-mixins pull && emporix-mixins generate
+        env:
+          EMPORIX_BACKEND_CLIENT_ID: ${{ secrets.EMPORIX_BACKEND_CLIENT_ID }}
+          EMPORIX_BACKEND_SECRET: ${{ secrets.EMPORIX_BACKEND_SECRET }}
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          title: "chore: sync mixin schema versions"
+          branch: mixins/sync
+```
+
+A raised version then arrives as a pull request with the type diff beside it.
+
+Five `q` forms come from the Node SDK and are **not yet verified against a live
+tenant** — the range syntax, the localized path, `exists`/`missing` semantics,
+whitespace escaping, and whether `metadata.mixins` must be resent on `PATCH`.
+They are listed in
+[the design spec](docs/superpowers/specs/2026-09-03-mixin-codegen-design.md).
+
 ## Products
 
 ```csharp
