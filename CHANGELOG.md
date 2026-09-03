@@ -9,6 +9,14 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.3.2](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.1...v0.3.2) (2026-09-03)
+
+
+### Fixed
+
+* give the mixin tool a readme and the rest of its package metadata ([0e39706](https://github.com/viuteam/emporix-sdk-dotnet/commit/0e39706a8de14137d7bfb2c0d24c4a5ccfb51f13))
+* give the mixin tool a readme and the rest of its package metadata ([46b6f19](https://github.com/viuteam/emporix-sdk-dotnet/commit/46b6f19b3a982e57a1f6c4d2c751e97531010107))
+
 ## [0.3.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.0...v0.3.1) (2026-09-03)
 
 
