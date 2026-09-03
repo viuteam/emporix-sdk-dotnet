@@ -306,6 +306,21 @@ and it is exactly what this repository forbids: guessing. **This belongs in the
 smoke test**, against a tenant with variant products, and until then in the XML
 documentation of the group as a stated limitation.
 
+As of the implementation this is still open — the smoke test carries a comment
+at the product section naming what to check and what a tenant with variants
+would settle.
+
+**A second question the implementation answered, badly.** An unknown
+`productType` was meant to fall back to the basic shape. It does route there,
+and then the generated enum property refuses the value: NSwag emits
+`JsonStringEnumConverter<ProductType>` as a property-level attribute, which
+beats any converter the context declares. Every plain read on `ProductService`
+has behaved that way all along, so the resolving reads are no worse — but the
+graceful degradation this design claimed does not exist. It is asserted in
+`EmporixProductConverterTests` in both places, and the fix belongs in a
+`SpecSync` `GeneratedCodeFixer` rule, since it affects every enum in every
+specification rather than products alone.
+
 ## Follow-up work
 
 Deliberately outside this design. Recorded here so the next piece of work

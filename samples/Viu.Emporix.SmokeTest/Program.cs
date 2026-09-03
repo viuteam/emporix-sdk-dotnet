@@ -73,6 +73,12 @@ string? productId = await runner.RunAsync("anonymous session and product list", 
         : Step.Ok($"{page.Items.Count} products", productIds[0]);
 });
 
+// Not covered here: whether Emporix sends productType on a VARIANT. The
+// specification leaves it optional there, and the resolving reads on
+// Products.AnyType fall back to the basic shape without it. Establishing this
+// needs a tenant with variant products — read one back through
+// Products.AnyType.GetAsync and check the returned type is
+// VariantProductWithId rather than BasicProductWithId.
 await runner.RunAsync("fetch one product", async () =>
 {
     if (productId is null)
