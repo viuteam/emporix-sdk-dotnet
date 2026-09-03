@@ -452,8 +452,12 @@ public class MixinSyncTests
 
         Assert.Contains("namespace Acme.Mixins.Delivery", files["Delivery.g.cs"], StringComparison.Ordinal);
         Assert.Contains("namespace Acme.Mixins.Warranty", files["Warranty.g.cs"], StringComparison.Ordinal);
-        Assert.Contains("DeliveryContext", files["Delivery.g.cs"], StringComparison.Ordinal);
-        Assert.Contains("WarrantyContext", files["Warranty.g.cs"], StringComparison.Ordinal);
+
+        // The context sits in its own file: it is the one part that needs the
+        // System.Text.Json generator to have run, so separating it lets the
+        // compilation test check the types on their own.
+        Assert.Contains("DeliveryContext", files["Delivery.Context.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("WarrantyContext", files["Warranty.Context.g.cs"], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -501,8 +505,10 @@ public class MixinSyncTests
                 Schema = """{"type":"object","properties":{"a":{"type":"string"}}}""" },
         ], "Acme.Mixins");
 
-        Assert.Single(files.Keys, k => !string.Equals(k, "Registry.g.cs", StringComparison.Ordinal));
+        // One type file plus one context file plus the registry.
+        Assert.Equal(3, files.Count);
         Assert.Contains("\"68e27d7a68ce91215abc0f23\"", files["Registry.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("class Mixin68", files["Mixin68e27d7a68ce91215abc0f23.g.cs"], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -514,7 +520,7 @@ public class MixinSyncTests
                 Schema = """{"type":"object","properties":{"packaging":{"type":"string"}}}""" },
         ], "Acme.Mixins");
 
-        Assert.Contains("WhenWritingNull", files["Delivery.g.cs"], StringComparison.Ordinal);
+        Assert.Contains("WhenWritingNull", files["Delivery.Context.g.cs"], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -528,7 +534,9 @@ public class MixinSyncTests
                 Schema = """{"type":"object","properties":{"a":{"type":"string"}}}""" },
         ], "Acme.Mixins");
 
-        Assert.Equal(2, files.Count);
+        // One type file and one context file for the shared schema, plus the
+        // registry — the entity is not part of the generated shape.
+        Assert.Equal(3, files.Count);
         Assert.Contains("Shared =", files["Registry.g.cs"], StringComparison.Ordinal);
         Assert.Contains("SharedOnCategory =", files["Registry.g.cs"], StringComparison.Ordinal);
     }

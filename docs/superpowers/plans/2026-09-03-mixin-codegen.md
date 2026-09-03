@@ -2844,7 +2844,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 **The three collisions this must handle**, all reproduced against NJsonSchema 11.6.1:
 
-1. Two mixins each declaring a `note` object emit two `Note` classes. **One namespace per mixin** — `{root}.{PascalKey}` — resolves it.
+1. Two mixins each declaring a `note` object emit two `partial class Note`, which merge instead of clashing — a wrong type that compiles. **One namespace per mixin** — `{root}.{PascalKey}` — resolves it.
 2. One shared `JsonSerializerContext` over both hits `SYSLIB1031`, an error under warnings-as-errors. **One context per mixin.**
 3. `x-custom` and `xCustom` both emit `XCustom`, giving `CS0102` in code the consumer cannot fix. **Detect and refuse**, naming both attributes.
 
@@ -2857,7 +2857,7 @@ Append to `MixinSyncTests.cs`:
     public void Each_mixin_gets_its_own_namespace_and_context()
     {
         // Two mixins both declaring «note» would otherwise emit two Note classes
-        // into one namespace, which is CS0101.
+        // into one namespace, where they merge rather than clash.
         IReadOnlyDictionary<string, string> files = Generator.Generate(
         [
             new RawMixin { Key = "delivery", Entity = "PRODUCT", Version = 6, Url = "https://cdn/d.v6.json",
@@ -3348,7 +3348,7 @@ public class MixinGeneratorCompilationTests
     [Fact]
     public void Two_mixins_with_a_same_named_nested_object_compile()
     {
-        // Without one namespace per mixin this is CS0101: two Note classes.
+        // Without one namespace per mixin, two «partial class Note» merge.
         AssertCompiles(
         [
             Mixin("delivery", 6, """

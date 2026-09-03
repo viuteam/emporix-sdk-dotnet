@@ -37,16 +37,23 @@ public static partial class Generator
         // A schema assigned to several entity types arrives several times. The
         // generated type is identical, so emit it once and let the registry
         // carry one descriptor per entity.
+        //
+        // Each mixin gets its own namespace. NJsonSchema names a nested object
+        // after its property, so two schemas both declaring «note» produce two
+        // «partial class Note» — and because they are partial, halves with
+        // differing members merge silently into a type carrying both mixins'
+        // fields. It compiles, and it is wrong.
         foreach (IGrouping<string, RawMixin> group in mixins.GroupBy(m => m.Key, StringComparer.Ordinal))
         {
             RawMixin mixin = group.First();
             string identifier = Identifier(mixin.Key);
             string mixinNamespace = $"{rootNamespace}.{identifier}";
 
-            (string code, string typeName) = Emit(mixin, identifier, mixinNamespace);
-            IReadOnlyDictionary<string, string> attributes = AttributeTable(code, mixin.Key);
+            (string types, string context, string typeName) = Emit(mixin, identifier, mixinNamespace);
+            IReadOnlyDictionary<string, string> attributes = AttributeTable(types, mixin.Key);
 
-            files[$"{identifier}.g.cs"] = code;
+            files[$"{identifier}.g.cs"] = types;
+            files[$"{identifier}.Context.g.cs"] = context;
 
             foreach (RawMixin perEntity in group)
             {
@@ -62,7 +69,7 @@ public static partial class Generator
     // Returns the code and the type name NJsonSchema actually emitted, which is
     // not always the one it was asked for — it renormalises the name, and
     // everything downstream has to use what came back.
-    private static (string Code, string TypeName) Emit(
+    private static (string Types, string Context, string TypeName) Emit(
         RawMixin mixin,
         string identifier,
         string mixinNamespace)
@@ -91,9 +98,10 @@ public static partial class Generator
         // WhenWritingNull because a schema with additionalProperties:false has
         // no use for an explicit null.
         string context = $$"""
-
+            {{Banner}}
             namespace {{mixinNamespace}}
             {
+                /// <summary>Serialization for the «{{mixin.Key}}» mixin.</summary>
                 [System.Text.Json.Serialization.JsonSourceGenerationOptions(
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
                 [System.Text.Json.Serialization.JsonSerializable(typeof({{emitted}}))]
@@ -103,7 +111,7 @@ public static partial class Generator
 
             """;
 
-        return ($"{Banner}{Environment.NewLine}{types}{context}", emitted);
+        return ($"{Banner}{Environment.NewLine}{types}", context, emitted);
     }
 
     private static string RegistryEntry(

@@ -66,13 +66,21 @@ of `analysis.md` needs correcting as part of this work.**
 
 | Collision | Symptom | Resolution |
 |---|---|---|
-| Nested types across mixins | two `Note` classes → `CS0101` | one namespace per mixin |
+| Nested types across mixins | two `partial class Note` — same member gives `CS0102`, differing members **merge silently** | one namespace per mixin |
 | One shared serializer context | `SYSLIB1031`, an error under warnings-as-errors | one context per mixin |
 | Attribute names normalising alike | `x-custom` + `xCustom` → both `XCustom` → `CS0102` | detect at `generate`, report, refuse |
 
 The third was found by probing, not by reasoning: NJsonSchema appends no
 disambiguating suffix, so a tenant with both keys receives code that does not
 compile, with a diagnostic that names no Emporix concept.
+
+**Correction, made while implementing.** The first row originally read
+`CS0101`. It does not: NJsonSchema emits `partial` classes, so two same-named
+nested types in one namespace merge rather than clash. Identical members then
+give `CS0102`, and differing members compile into a type carrying both mixins'
+fields. That makes the namespace split more important than first stated — the
+failure mode is silence, not a build error. Found by writing the compilation
+test, which is the point of having it.
 
 ### The generator already exists
 
