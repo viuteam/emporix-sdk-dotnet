@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Viu.Emporix.MixinSync;
+using Viu.Emporix.SchemaModels;
 
 namespace Viu.Emporix.Tests;
 
@@ -148,6 +150,193 @@ public class MixinSyncTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Scalar_attributes_convert_to_json_schema_types()
+    {
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute { Key = "title", Type = SchemaAttributeType.TEXT },
+            new SchemaAttribute { Key = "weight", Type = SchemaAttributeType.DECIMAL },
+            new SchemaAttribute { Key = "count", Type = SchemaAttributeType.NUMBER },
+            new SchemaAttribute { Key = "active", Type = SchemaAttributeType.BOOLEAN },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+        JsonElement properties = parsed.RootElement.GetProperty("properties");
+
+        Assert.Equal("string", properties.GetProperty("title").GetProperty("type").GetString());
+        Assert.Equal("number", properties.GetProperty("weight").GetProperty("type").GetString());
+        Assert.Equal("boolean", properties.GetProperty("active").GetProperty("type").GetString());
+        Assert.False(parsed.RootElement.GetProperty("additionalProperties").GetBoolean());
+    }
+
+    [Fact]
+    public void Date_and_time_attributes_carry_a_format()
+    {
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute { Key = "from", Type = SchemaAttributeType.DATE },
+            new SchemaAttribute { Key = "at", Type = SchemaAttributeType.DATE_TIME },
+            new SchemaAttribute { Key = "clock", Type = SchemaAttributeType.TIME },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+        JsonElement properties = parsed.RootElement.GetProperty("properties");
+
+        Assert.Equal("date", properties.GetProperty("from").GetProperty("format").GetString());
+        Assert.Equal("date-time", properties.GetProperty("at").GetProperty("format").GetString());
+        Assert.Equal("time", properties.GetProperty("clock").GetProperty("format").GetString());
+    }
+
+    [Fact]
+    public void An_enum_attribute_carries_its_values()
+    {
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute
+            {
+                Key = "packaging",
+                Type = SchemaAttributeType.ENUM,
+                Values = [new SchemaAttributeValue { Value = "Paper" }, new SchemaAttributeValue { Value = "Plastic" }],
+            },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+        JsonElement values = parsed.RootElement
+            .GetProperty("properties").GetProperty("packaging").GetProperty("enum");
+
+        Assert.Equal(["Paper", "Plastic"], values.EnumerateArray().Select(v => v.GetString()));
+    }
+
+    [Fact]
+    public void An_enum_without_values_stays_a_plain_string()
+    {
+        // An empty enum would generate an unusable type.
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute { Key = "packaging", Type = SchemaAttributeType.ENUM },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+        JsonElement property = parsed.RootElement.GetProperty("properties").GetProperty("packaging");
+
+        Assert.Equal("string", property.GetProperty("type").GetString());
+        Assert.False(property.TryGetProperty("enum", out _));
+    }
+
+    [Fact]
+    public void An_array_of_enums_keeps_its_element_values()
+    {
+        // ArrayType carries its own type and values, so this need not degrade to
+        // an array of strings.
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute
+            {
+                Key = "sizes",
+                Type = SchemaAttributeType.ARRAY,
+                ArrayType = new ArrayType
+                {
+                    Type = SchemaAttributeType.ENUM,
+                    Values = [new SchemaAttributeValue { Value = "S" }, new SchemaAttributeValue { Value = "M" }],
+                },
+            },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+        JsonElement items = parsed.RootElement
+            .GetProperty("properties").GetProperty("sizes").GetProperty("items");
+
+        Assert.Equal(["S", "M"], items.GetProperty("enum").EnumerateArray().Select(v => v.GetString()));
+    }
+
+    [Fact]
+    public void A_localized_attribute_becomes_a_map_of_languages()
+    {
+        // What makes MixinQuery.WhereLocalized's path valid: the value is keyed
+        // by language rather than being the scalar the type names.
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute
+            {
+                Key = "title",
+                Type = SchemaAttributeType.TEXT,
+                Metadata = new SchemaAttributeMetadata { Localized = true },
+            },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+        JsonElement property = parsed.RootElement.GetProperty("properties").GetProperty("title");
+
+        Assert.Equal("object", property.GetProperty("type").GetString());
+        Assert.Equal("string", property.GetProperty("additionalProperties").GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public void A_nested_object_attribute_recurses()
+    {
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute
+            {
+                Key = "note",
+                Type = SchemaAttributeType.OBJECT,
+                Attributes = [new SchemaAttribute { Key = "en", Type = SchemaAttributeType.TEXT }],
+            },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+
+        Assert.Equal("string", parsed.RootElement
+            .GetProperty("properties").GetProperty("note")
+            .GetProperty("properties").GetProperty("en")
+            .GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public void A_required_attribute_is_listed_as_required()
+    {
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute
+            {
+                Key = "title",
+                Type = SchemaAttributeType.TEXT,
+                Metadata = new SchemaAttributeMetadata { Required = true },
+            },
+            new SchemaAttribute { Key = "subtitle", Type = SchemaAttributeType.TEXT },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+
+        Assert.Equal(["title"], parsed.RootElement.GetProperty("required")
+            .EnumerateArray().Select(v => v.GetString()));
+    }
+
+    [Fact]
+    public void A_reference_attribute_becomes_a_string()
+    {
+        // A reference is an id, and the tool has nothing to resolve it against.
+        string schema = AttributeSchema.FromAttributes([
+            new SchemaAttribute { Key = "parent", Type = SchemaAttributeType.REFERENCE },
+        ]);
+
+        using JsonDocument parsed = JsonDocument.Parse(schema);
+
+        Assert.Equal("string", parsed.RootElement
+            .GetProperty("properties").GetProperty("parent").GetProperty("type").GetString());
+    }
+
+    [Fact]
+    public void Every_attribute_type_produces_something_parseable()
+    {
+        // The guard against a new enum value arriving unhandled: eleven values
+        // exist today, all must convert into a schema NJsonSchema can read.
+        foreach (SchemaAttributeType type in Enum.GetValues<SchemaAttributeType>())
+        {
+            string schema = AttributeSchema.FromAttributes([
+                new SchemaAttribute { Key = "field", Type = type },
+            ]);
+
+            using JsonDocument parsed = JsonDocument.Parse(schema);
+            Assert.True(
+                parsed.RootElement.GetProperty("properties").TryGetProperty("field", out _),
+                $"{type} produced no property");
         }
     }
 }
