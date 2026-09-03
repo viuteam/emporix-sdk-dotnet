@@ -1,1 +1,15 @@
 #nullable enable
+Viu.Emporix.ProductModels.BasicProductWithId
+Viu.Emporix.ProductModels.BasicProductWithId.BasicProductWithId() -> void
+Viu.Emporix.ProductModels.BundleProductWithId
+Viu.Emporix.ProductModels.BundleProductWithId.BundleProductWithId() -> void
+Viu.Emporix.ProductModels.DynamicVariantProductWithId
+Viu.Emporix.ProductModels.DynamicVariantProductWithId.DynamicVariantProductWithId() -> void
+Viu.Emporix.ProductModels.IEmporixProduct
+Viu.Emporix.ProductModels.IEmporixProduct.Code.get -> string?
+Viu.Emporix.ProductModels.IEmporixProduct.Id.get -> string?
+Viu.Emporix.ProductModels.IEmporixProduct.ProductType.get -> Viu.Emporix.ProductModels.ProductType?
+Viu.Emporix.ProductModels.ParentVariantProductWithId
+Viu.Emporix.ProductModels.ParentVariantProductWithId.ParentVariantProductWithId() -> void
+Viu.Emporix.ProductModels.VariantProductWithId
+Viu.Emporix.ProductModels.VariantProductWithId.VariantProductWithId() -> void
