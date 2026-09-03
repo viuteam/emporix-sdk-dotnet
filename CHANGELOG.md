@@ -9,6 +9,26 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.3.3](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.2...v0.3.3) (2026-09-03)
+
+
+### Fixed
+
+* compare credential set names without regard to case ([4bff5b1](https://github.com/viuteam/emporix-sdk-dotnet/commit/4bff5b1ed71afbec1bb506f5d8fd0fb7df50bae8))
+* compare credential set names without regard to case ([762b993](https://github.com/viuteam/emporix-sdk-dotnet/commit/762b993291dfedbe55fa37bdf6d11f193abde96d))
+* reject a custom credential set named like the default ([c1b623a](https://github.com/viuteam/emporix-sdk-dotnet/commit/c1b623a9acec42694af57628388228e85c946715))
+* reject a custom credential set named like the default ([3d8c329](https://github.com/viuteam/emporix-sdk-dotnet/commit/3d8c329a58a6313b22beb5151bdcd1910b925069))
+
+
+### Documentation
+
+* record that only squash merges are allowed, and why ([#22](https://github.com/viuteam/emporix-sdk-dotnet/issues/22)) ([43fa194](https://github.com/viuteam/emporix-sdk-dotnet/commit/43fa19423c5963a1283c00c6ec9c9f83d3683347))
+
+
+### Dependencies
+
+* Bump the development group with 3 updates ([f6612da](https://github.com/viuteam/emporix-sdk-dotnet/commit/f6612da0290faa16e60eff92076feadb92d8bd53))
+
 ## [0.3.2](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.1...v0.3.2) (2026-09-03)
 
 
