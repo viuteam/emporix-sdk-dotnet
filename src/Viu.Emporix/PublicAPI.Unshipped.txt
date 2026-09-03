@@ -42,3 +42,23 @@ static Viu.Emporix.Mixins.Condition.Missing() -> Viu.Emporix.Mixins.AnyCondition
 static Viu.Emporix.Mixins.Condition.OneOf(params string![]! values) -> Viu.Emporix.Mixins.TextCondition
 static Viu.Emporix.Mixins.Condition.Present() -> Viu.Emporix.Mixins.AnyCondition
 static Viu.Emporix.Mixins.Condition.True() -> Viu.Emporix.Mixins.BoolCondition
+Viu.Emporix.Mixins.CompoundMixinFilter
+Viu.Emporix.Mixins.CompoundMixinFilter.And(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.CompoundMixinFilter!
+Viu.Emporix.Mixins.CompoundMixinFilter.Build(Viu.Emporix.Mixins.EmporixQuery! target) -> string!
+Viu.Emporix.Mixins.CompoundMixinFilter.Or(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.CompoundMixinFilter!
+Viu.Emporix.Mixins.EmporixQuery
+Viu.Emporix.Mixins.MixinFilter
+Viu.Emporix.Mixins.MixinFilter.And(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.MixinFilter!
+Viu.Emporix.Mixins.MixinFilter.Build() -> string!
+Viu.Emporix.Mixins.MixinFilter.Or(Viu.Emporix.Mixins.MixinFilter! other) -> Viu.Emporix.Mixins.CompoundMixinFilter!
+static Viu.Emporix.Mixins.EmporixQuery.ApprovalSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.AuditLogSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.AvailabilitySearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.CategorySearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.CustomerAdminSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.OrderList.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.ProductSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.QuoteSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.SchemaSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.EmporixQuery.VendorSearch.get -> Viu.Emporix.Mixins.EmporixQuery!
+static Viu.Emporix.Mixins.MixinFilter.Raw(string! fragment) -> Viu.Emporix.Mixins.MixinFilter!

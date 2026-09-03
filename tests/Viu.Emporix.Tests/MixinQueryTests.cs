@@ -58,4 +58,83 @@ public class MixinQueryTests
     {
         Assert.Throws<ArgumentException>(() => Condition.EqualTo(""));
     }
+
+    [Fact]
+    public void Plain_filters_join_with_a_space_which_every_q_endpoint_understands()
+    {
+        MixinFilter joined = MixinFilter.Raw("mixins.a.x:1").And(MixinFilter.Raw("mixins.a.y:2"));
+
+        Assert.Equal("mixins.a.x:1 mixins.a.y:2", joined.Build());
+    }
+
+    [Fact]
+    public void Or_produces_a_compound_query()
+    {
+        CompoundMixinFilter either = MixinFilter.Raw("mixins.a.x:1").Or(MixinFilter.Raw("mixins.a.x:2"));
+
+        Assert.Equal(
+            "compoundLogicalQuery:((mixins.a.x:1) OR (mixins.a.x:2))",
+            either.Build(EmporixQuery.ProductSearch));
+    }
+
+    [Fact]
+    public void A_compound_query_is_refused_for_a_service_that_cannot_run_it()
+    {
+        CompoundMixinFilter either = MixinFilter.Raw("mixins.a.x:1").Or(MixinFilter.Raw("mixins.a.x:2"));
+
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+            () => either.Build(EmporixQuery.CategorySearch));
+
+        Assert.Contains("Category", error.Message, StringComparison.Ordinal);
+        Assert.Contains("And", error.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Every_capability_value_either_allows_or_refuses_a_compound_query(bool allowed)
+    {
+        EmporixQuery[] targets = allowed
+            ? [EmporixQuery.ProductSearch, EmporixQuery.AvailabilitySearch, EmporixQuery.QuoteSearch,
+               EmporixQuery.ApprovalSearch, EmporixQuery.SchemaSearch, EmporixQuery.AuditLogSearch]
+            : [EmporixQuery.CategorySearch, EmporixQuery.OrderList,
+               EmporixQuery.VendorSearch, EmporixQuery.CustomerAdminSearch];
+
+        CompoundMixinFilter either = MixinFilter.Raw("a:1").Or(MixinFilter.Raw("a:2"));
+
+        foreach (EmporixQuery target in targets)
+        {
+            if (allowed)
+            {
+                Assert.StartsWith("compoundLogicalQuery:", either.Build(target), StringComparison.Ordinal);
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() => either.Build(target));
+            }
+        }
+    }
+
+    [Fact]
+    public void A_compound_filter_is_not_a_plain_filter()
+    {
+        // The reason Or returns a separate type rather than a subclass: an
+        // inherited argumentless Build would let the capability gate be skipped
+        // silently. If this fails, someone made the types related and the gate
+        // is now optional.
+        Assert.False(typeof(MixinFilter).IsAssignableFrom(typeof(CompoundMixinFilter)));
+        Assert.False(typeof(CompoundMixinFilter).IsAssignableFrom(typeof(MixinFilter)));
+    }
+
+    [Fact]
+    public void Anding_onto_a_compound_query_stays_compound()
+    {
+        string built = MixinFilter.Raw("a:1")
+            .Or(MixinFilter.Raw("a:2"))
+            .And(MixinFilter.Raw("published:true"))
+            .Build(EmporixQuery.ProductSearch);
+
+        Assert.Contains("compoundLogicalQuery:", built, StringComparison.Ordinal);
+        Assert.Contains("published:true", built, StringComparison.Ordinal);
+    }
 }
