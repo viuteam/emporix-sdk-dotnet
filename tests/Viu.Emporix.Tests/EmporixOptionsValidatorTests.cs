@@ -141,6 +141,38 @@ public class EmporixOptionsValidatorTests
     }
 
     [Fact]
+    public void A_custom_set_named_like_the_default_fails_because_it_is_unreachable()
+    {
+        // «backend» addresses Credentials.Backend, so a custom set under that
+        // key can never be resolved: the token provider checks the default name
+        // first and never reaches the dictionary. Configured together, the two
+        // silently disagree about which client id is in use; configured alone,
+        // the error says Backend is not set, which reads as nonsense to someone
+        // who just configured «backend».
+        EmporixOptions options = Minimal();
+        options.Credentials.Custom[AuthContext.DefaultCredentialSet] =
+            new EmporixServiceCredentials { ClientId = "id", Secret = "secret" };
+
+        ValidateOptionsResult result = Validate(options);
+
+        Assert.True(result.Failed);
+        Assert.Contains(result.Failures!, f => f.Contains("Backend", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_custom_set_named_like_the_default_in_another_casing_is_allowed()
+    {
+        // The dictionary is ordinal, and so is the lookup, so «Backend» is a
+        // different key from «backend» and does resolve. Confusing to read, but
+        // rejecting it would be inventing a rule the resolver does not apply.
+        EmporixOptions options = Minimal();
+        options.Credentials.Custom["Backend"] =
+            new EmporixServiceCredentials { ClientId = "id", Secret = "secret" };
+
+        Assert.True(Validate(options).Succeeded);
+    }
+
+    [Fact]
     public void Connect_timeout_larger_than_read_timeout_fails()
     {
         // The overall limit includes the connect limit — the other way round the
