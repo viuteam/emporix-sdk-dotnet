@@ -1,4 +1,6 @@
+using System.Net;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using Viu.Emporix.MixinSync;
 using Viu.Emporix.SchemaModels;
 
@@ -338,5 +340,36 @@ public class MixinSyncTests
                 parsed.RootElement.GetProperty("properties").TryGetProperty("field", out _),
                 $"{type} produced no property");
         }
+    }
+
+    [Fact]
+    public async Task The_schema_listing_sends_paging_parameters()
+    {
+        // specs/schema.yml declares trait_paged_pageNumber, trait_paged_pageSize,
+        // trait_sort and trait_q_param on GET-schema-retrieve-schemas. The facade
+        // sent none of them, so a tenant with more schemas than one page reported
+        // a partial list with nothing to signal it — and the generator would then
+        // have emitted too few mixins in silence.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        IOptions<EmporixOptions> options = Options.Create(new EmporixOptions { Tenant = "acme" });
+        SchemaService schemas = new(new EmporixHttpClient(new HttpClient(handler), options), options);
+
+        await schemas.ListAsync(pageNumber: 3, pageSize: 200);
+
+        string query = handler.RequestUris[0].PathAndQuery;
+        Assert.Contains("pageNumber=3", query, StringComparison.Ordinal);
+        Assert.Contains("pageSize=200", query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_schema_listing_passes_a_q_filter_when_given_one()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        IOptions<EmporixOptions> options = Options.Create(new EmporixOptions { Tenant = "acme" });
+        SchemaService schemas = new(new EmporixHttpClient(new HttpClient(handler), options), options);
+
+        await schemas.ListAsync("types:PRODUCT");
+
+        Assert.Contains("q=types", handler.RequestUris[0].PathAndQuery, StringComparison.Ordinal);
     }
 }

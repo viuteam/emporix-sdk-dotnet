@@ -52,20 +52,51 @@ public sealed class SchemaService
     }
 
     /// <summary>Lists the schemas.</summary>
+    /// <param name="query">An Emporix <c>q</c> filter, or nothing.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<SchemaResponse>> ListAsync(
+    /// <remarks>
+    /// This shipped returning a bare list and sending no paging parameters,
+    /// which <c>GET-schema-retrieve-schemas</c> declares. A tenant with more
+    /// schemas than one page then reported a partial list with nothing to signal
+    /// it — found by reading the specification against the code, not by a test.
+    /// </remarks>
+    public async Task<PaginatedItems<SchemaResponse>> ListAsync(
+        string? query = null,
+        int pageNumber = 1,
+        int pageSize = 60,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => await _http.SendAsync(
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        List<KeyValuePair<string, string?>> parameters =
+        [
+            new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
+            new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+        ];
+
+        if (query is { Length: > 0 })
+        {
+            parameters.Add(new KeyValuePair<string, string?>("q", query));
+        }
+
+        return await _http.SendPageAsync(
             new EmporixRequest
             {
                 Method = HttpMethod.Get,
                 Path = BasePath,
                 Auth = Defaults.Service(auth),
+                Query = parameters,
             },
             SchemaJsonContext.Default.ListSchemaResponse,
-            cancellationToken).ConfigureAwait(false) ?? [];
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>Fetches a schema.</summary>
     /// <param name="id">The schema id.</param>

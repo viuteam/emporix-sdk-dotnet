@@ -29,10 +29,25 @@ done
 
 # Everything but the header, from both files. Sorting the union is what the
 # analyzer's own code fix produces, and it keeps the diff readable.
+#
+# A «*REMOVED*<signature>» line in Unshipped retires a symbol that was already
+# shipped — the analyzer's own way of recording a deliberate break. Promoting it
+# means dropping the signature from Shipped and dropping the marker with it;
+# carrying either forward would leave Shipped describing an API that no longer
+# exists, and the next build would fail on RS0017 during a release.
+removed="$(grep -h '^\*REMOVED\*' "$unshipped" 2>/dev/null | sed 's/^\*REMOVED\*//' || true)"
+
 entries="$(cat "$shipped" "$unshipped" \
   | grep -vxF "$header" \
   | grep -v '^[[:space:]]*$' \
+  | grep -v '^\*REMOVED\*' \
   | sort -u || true)"
+
+if [[ -n "$removed" ]]; then
+  entries="$(printf '%s\n' "$entries" | grep -vxF "$removed" || true)"
+  retired="$(printf '%s\n' "$removed" | wc -l | tr -d ' ')"
+  echo "Retiring $retired shipped symbol(s) marked *REMOVED*."
+fi
 
 if [[ -z "$entries" ]]; then
   echo "Nothing recorded in either file — leaving both alone."
