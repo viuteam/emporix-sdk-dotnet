@@ -83,8 +83,27 @@ jobs:
       # honest place to read it: `-getProperty:PackageVersion` answers 1.0.0,
       # because MinVer sets the version in a target that the query does not run.
       # Printed before pushing, so the log says what went out.
-      - name: Report what will be pushed
-        run: ls -1 artifacts/
+      #
+      # The two packages share one version line, so disagreement means a project
+      # is not seeing MinVer and packed the SDK default instead. That shipped
+      # once: 0.3.0 for the library beside 1.0.0 for the tool, and nuget.org
+      # would have held the wrong number forever. Checked before the push, since
+      # a version cannot be withdrawn afterwards.
+      - name: Report what will be pushed, and check the versions agree
+        run: |
+          ls -1 artifacts/
+
+          versions="$(ls -1 artifacts/*.nupkg \
+            | sed -E 's/.*[^0-9]([0-9]+\.[0-9]+\.[0-9]+.*)\.nupkg/\1/' \
+            | sort -u)"
+
+          if [ "$(printf '%s\n' "$versions" | wc -l)" -ne 1 ]; then
+            echo "::error::The packages disagree on the version: $(printf '%s ' $versions)"
+            echo "Every packable project needs the MinVer reference. Check its csproj." >&2
+            exit 1
+          fi
+
+          echo "All packages at $versions."
 
       # Trusted publishing: the workflow proves its identity to nuget.org over
       # OIDC and receives a key valid only for this run. No long-lived secret in

@@ -23,7 +23,19 @@
     <EnableSingleFileAnalyzer>false</EnableSingleFileAnalyzer>
   </PropertyGroup>
 
+  <!--
+    The same version line as the library, from the same tags. Without this the
+    tool packs as 1.0.0 — the SDK default — which is not a version anybody
+    tagged, and which nuget.org would then hold forever. It shipped that way
+    once: MinVer sat only in the library's project, and nothing said so until
+    the release log showed Viu.Emporix.0.3.0 next to MixinSync.1.0.0.
+  -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+
   <ItemGroup>
+    <PackageReference Include="MinVer" PrivateAssets="all" />
     <PackageReference Include="NJsonSchema.CodeGeneration.CSharp" />
   </ItemGroup>
 
