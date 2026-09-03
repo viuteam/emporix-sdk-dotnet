@@ -22,3 +22,23 @@ Viu.Emporix.Mixins.MixinWriter.SchemaUrls.get -> System.Collections.Generic.IDic
 Viu.Emporix.Mixins.MixinWriter.Set<T>(Viu.Emporix.Mixins.MixinDescriptor<T>! descriptor, T value) -> Viu.Emporix.Mixins.MixinWriter!
 Viu.Emporix.Mixins.MixinWriter.Values.get -> System.Text.Json.JsonElement
 static Viu.Emporix.Mixins.MixinWriter.Create() -> Viu.Emporix.Mixins.MixinWriter!
+Viu.Emporix.Mixins.AnyCondition
+Viu.Emporix.Mixins.AnyCondition.AnyCondition() -> void
+Viu.Emporix.Mixins.BoolCondition
+Viu.Emporix.Mixins.BoolCondition.BoolCondition() -> void
+Viu.Emporix.Mixins.NumberCondition
+Viu.Emporix.Mixins.NumberCondition.NumberCondition() -> void
+Viu.Emporix.Mixins.TextCondition
+Viu.Emporix.Mixins.TextCondition.TextCondition() -> void
+Viu.Emporix.Mixins.Condition
+static Viu.Emporix.Mixins.Condition.AtLeast(double value) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.AtMost(double value) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.Between(double low, double high) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.EqualTo(double value) -> Viu.Emporix.Mixins.NumberCondition
+static Viu.Emporix.Mixins.Condition.EqualTo(string! value) -> Viu.Emporix.Mixins.TextCondition
+static Viu.Emporix.Mixins.Condition.False() -> Viu.Emporix.Mixins.BoolCondition
+static Viu.Emporix.Mixins.Condition.Matching(string! regex) -> Viu.Emporix.Mixins.TextCondition
+static Viu.Emporix.Mixins.Condition.Missing() -> Viu.Emporix.Mixins.AnyCondition
+static Viu.Emporix.Mixins.Condition.OneOf(params string![]! values) -> Viu.Emporix.Mixins.TextCondition
+static Viu.Emporix.Mixins.Condition.Present() -> Viu.Emporix.Mixins.AnyCondition
+static Viu.Emporix.Mixins.Condition.True() -> Viu.Emporix.Mixins.BoolCondition
