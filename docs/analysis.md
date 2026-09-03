@@ -426,8 +426,18 @@ query the backend cannot execute.
 
 > **Scope proposal: no mixin code generation in v1.** The `q` string and the
 > `BuiltQuery` abstraction belong in the core; the schema-to-type generator is a
-> project of its own. In .NET it would be a source generator — feasible, but not
-> for v1.
+> project of its own.
+
+> **Correction, 2026-09-03.** This section previously added «in .NET it would be
+> a source generator — feasible, but not for v1». That is wrong, and not for
+> effort reasons: a Roslyn generator cannot produce a `JsonSerializerContext`
+> from schema files. `RegisterSourceOutput` — the only phase that can read
+> `AdditionalFiles` — emits code the `System.Text.Json` generator never sees
+> (`CS0534`), and a hand-written context over generator-emitted types fails the
+> same way (`SYSLIB1030`). Generators do not observe each other's output. The
+> workable shape is a CLI writing `.cs` files into the consumer's repository,
+> exactly as the Node package writes `.ts` — see
+> [the design spec](superpowers/specs/2026-09-03-mixin-codegen-design.md).
 
 ---
 
@@ -610,7 +620,7 @@ the facade, never generator work again.
 | npm provenance | NuGet Trusted Publishing (OIDC) | **V1**, if available |
 | `check:treeshake` | `EnablePackageValidation` | **V1** |
 | Playwright end-to-end | — | **Dropped** |
-| `@viu/emporix-mixins` code generation | source generator | **Later** |
+| `@viu/emporix-mixins` code generation | CLI tool plus core runtime (not a source generator) | **Designed** |
 | React/Next/Angular bindings | — | **Dropped** |
 
 ---
