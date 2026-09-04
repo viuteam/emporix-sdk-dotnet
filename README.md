@@ -449,7 +449,10 @@ nullable on this type and carries a default instance on the bundle types, so
 
 If you are coming from an earlier version, `UpdateAsync` is the one write call
 whose signature broke. It used to take `BasicProductUpdate`, which had no
-property for any of those fields.
+property for any of those fields — and which also sent `productType`, a field
+this body does not declare. Emporix was verified to discard that silently, so
+nothing you sent before was doing anything; the change costs you an edit and
+buys the fields you could not reach.
 
 ### Localized text
 
