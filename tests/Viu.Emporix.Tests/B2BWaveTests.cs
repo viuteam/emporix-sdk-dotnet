@@ -138,6 +138,68 @@ public class B2BWaveTests
     }
 
     [Fact]
+    public async Task A_quote_can_be_created_from_a_cart()
+    {
+        // The capability that did not exist. specs/quote.yml declares the create
+        // body as a oneOf over two schemas the specification itself calls
+        // opposites — one for building a quote «manually» with its own items,
+        // one for building it «from the cart» with a required cartId. The SDK
+        // sent only the first, and QuoteCreateRequest has no cartId and no
+        // extension data, so there was no way to ask for the second at all.
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, "{}");
+        QuoteService quotes = new(Http(handler), Options());
+
+        await quotes.CreateAsync(new QuoteModels.QuoteCreateFromCartRequest { CartId = "cart-1" });
+
+        Assert.Equal("/quote/acme/quotes", Uri(handler));
+        Assert.Contains("\"cartId\":\"cart-1\"", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_manually_built_quote_still_sends_its_items()
+    {
+        // The other branch, unchanged. A converter that resolved both to the
+        // same contract would drop whichever fields the other one adds, and the
+        // two schemas share almost nothing.
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, "{}");
+        QuoteService quotes = new(Http(handler), Options());
+
+        await quotes.CreateAsync(new QuoteModels.QuoteCreateRequest { CustomerId = "c1" });
+
+        Assert.Contains("\"customerId\":\"c1\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.DoesNotContain("cartId", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_quote_from_a_cart_is_never_repeatable_either()
+    {
+        // Same reasoning as the manual branch: a retry is a second quote.
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, "{}");
+        QuoteService quotes = new(Http(handler), Options());
+
+        await quotes.CreateAsync(new QuoteModels.QuoteCreateFromCartRequest { CartId = "cart-1" });
+
+        Assert.False(IsRepeatable(handler));
+    }
+
+    [Fact]
+    public void A_type_outside_the_two_branches_is_refused()
+    {
+        // The interface is public, so a consumer can implement it and reach the
+        // converter with something the specification does not permit. Exact-type
+        // dispatch turns that into a message naming the two, rather than a body
+        // Emporix rejects for reasons nobody can see.
+        NotSupportedException error = Assert.Throws<NotSupportedException>(
+            () => System.Text.Json.JsonSerializer.Serialize(
+                new NotAQuote(), QuoteJsonContext.Default.IEmporixQuoteCreation));
+
+        Assert.Contains("NotAQuote", error.Message, StringComparison.Ordinal);
+        Assert.Contains("QuoteCreateFromCartRequest", error.Message, StringComparison.Ordinal);
+    }
+
+    private sealed class NotAQuote : QuoteModels.IEmporixQuoteCreation;
+
+    [Fact]
     public async Task Rendering_a_quote_returns_the_response_unread()
     {
         // A PDF is not JSON, so it comes back raw and the caller decides whether

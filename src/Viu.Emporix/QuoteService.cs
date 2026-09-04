@@ -102,7 +102,13 @@ public sealed class QuoteService
     }
 
     /// <summary>Requests a quote.</summary>
-    /// <param name="quote">What is being asked for.</param>
+    /// <param name="quote">
+    /// What is being asked for: a <see cref="QuoteCreateRequest"/> to build one
+    /// by hand, or a <see cref="QuoteCreateFromCartRequest"/> to have Emporix
+    /// build it from a cart. The specification declares this body as a
+    /// <c>oneOf</c> over the two, and they share almost no fields — the second
+    /// names a <c>cartId</c> and carries no items at all.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
@@ -110,7 +116,7 @@ public sealed class QuoteService
     /// same enquiry, and a seller then prices the same thing twice.
     /// </remarks>
     public async Task<QuoteIdResponse?> CreateAsync(
-        QuoteCreateRequest quote,
+        IEmporixQuoteCreation quote,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -124,7 +130,7 @@ public sealed class QuoteService
                 Auth = Defaults.Service(auth),
                 Content = EmporixJsonContent.Create(
                     quote,
-                    QuoteJsonContext.Default.QuoteCreateRequest),
+                    QuoteJsonContext.Default.IEmporixQuoteCreation),
             },
             QuoteJsonContext.Default.QuoteIdResponse,
             cancellationToken).ConfigureAwait(false);
