@@ -340,8 +340,12 @@ Recorded so the next piece of work starts from what is known.
    injects a `title` rather than a `GeneratedCodeFixer` rename: the `Anonymous`
    numbering is positional, so a rule keyed on `Anonymous2` would retitle the
    wrong type after any upstream edit that inserts an anonymous schema earlier.
-4. **`ListAllAsync` and `ListVariantsAsync` have no `AnyType` counterpart.**
-   Mechanical once the group exists; unchanged by this design.
+4. **`ListAllAsync` and `ListVariantsAsync` have no `AnyType` counterpart —
+   done.** Both walk on the group's own paged reads, so they resolve per element
+   rather than per page. `ListVariantsAsync` turned out to be the read where the
+   plain method is most clearly wrong: its filter pins `productType` to
+   `VARIANT`, so every result is known to be a variant and the basic shape is
+   never the right answer.
 5. **Extension data cannot be written.** Described above. The realistic fix is
    registering `JsonElement` on each context, which covers the round-trip case —
    a product read back carries `JsonElement` values — without pretending to

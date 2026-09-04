@@ -369,25 +369,38 @@ public sealed partial class ProductService
     /// <param name="cancellationToken">Cancels the walk.</param>
     public IAsyncEnumerable<BasicProductWithId> ListVariantsAsync(
         string parentVariantId,
-        int pageSize = 200,
+        int pageSize = DefaultVariantPageSize,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(parentVariantId);
 
-        // A space combines the two conditions with AND. Keeping this syntax here
-        // means nobody has to reconstruct it.
-        string query = $"productType:VARIANT parentVariantId:{parentVariantId}";
-
         return PaginatedItems.EnumerateAllAsync(
             (pageNumber, token) => SearchAsync(
-                query,
+                VariantsQuery(parentVariantId),
                 new ProductPageOptions { PageNumber = pageNumber, PageSize = pageSize },
                 auth,
                 token),
             startPage: 1,
             cancellationToken);
     }
+
+    /// <summary>The page size the variant walk uses when none is given.</summary>
+    /// <remarks>
+    /// A constant rather than a literal in two default parameter values. The
+    /// resolving walk on <see cref="ProductAnyTypeOperations"/> has to page the
+    /// same way, and two literals that disagree would do so silently.
+    /// </remarks>
+    internal const int DefaultVariantPageSize = 200;
+
+    /// <summary>The filter that selects the variants of one parent.</summary>
+    /// <remarks>
+    /// A space combines the two conditions with AND. Keeping this syntax in one
+    /// place means nobody has to reconstruct it — and that the resolving walk
+    /// cannot end up asking a different question than this one.
+    /// </remarks>
+    internal static string VariantsQuery(string parentVariantId)
+        => $"productType:VARIANT parentVariantId:{parentVariantId}";
 
     // ----- Writes. Service token by default, so server-side only. -----
 
@@ -1116,4 +1129,60 @@ public sealed class ProductAnyTypeOperations
         CancellationToken cancellationToken = default)
         => _products.GetManyByCodeCoreAsync(
             codes, chunkSize, ProductJsonContext.Default.ListIEmporixProduct, auth, cancellationToken);
+
+    /// <summary>Walks the whole catalogue, each product as its own shape.</summary>
+    /// <param name="pageSize">The page size; 60 when omitted.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the walk.</param>
+    /// <remarks>
+    /// Resolves per element rather than per page, so a page of plain products
+    /// followed by a page of bundles arrives as both.
+    /// </remarks>
+    public IAsyncEnumerable<IEmporixProduct> ListAllAsync(
+        int? pageSize = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => PaginatedItems.EnumerateAllAsync(
+            (pageNumber, token) => ListAsync(
+                new ProductPageOptions
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize ?? ProductPageOptions.DefaultPageSize,
+                },
+                auth,
+                token),
+            startPage: 1,
+            cancellationToken);
+
+    /// <summary>Walks the variants of a parent product, each as its own shape.</summary>
+    /// <param name="parentVariantId">The id of the parent product.</param>
+    /// <param name="pageSize">The page size; 200 when omitted.</param>
+    /// <param name="auth">What to authorise with; anonymous when omitted.</param>
+    /// <param name="cancellationToken">Cancels the walk.</param>
+    /// <remarks>
+    /// The read where the plain method is most clearly wrong. Its filter pins
+    /// <c>productType</c> to <c>VARIANT</c>, so every result is known to be a
+    /// variant — and <see cref="ProductService.ListVariantsAsync"/> still hands
+    /// back <see cref="BasicProductWithId"/>, leaving
+    /// <c>parentVariantId</c> and <c>parentVariantPath</c> reachable only
+    /// through the extension data. This one returns
+    /// <see cref="VariantProductWithId"/>.
+    /// </remarks>
+    public IAsyncEnumerable<IEmporixProduct> ListVariantsAsync(
+        string parentVariantId,
+        int pageSize = ProductService.DefaultVariantPageSize,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(parentVariantId);
+
+        return PaginatedItems.EnumerateAllAsync(
+            (pageNumber, token) => SearchAsync(
+                ProductService.VariantsQuery(parentVariantId),
+                new ProductPageOptions { PageNumber = pageNumber, PageSize = pageSize },
+                auth,
+                token),
+            startPage: 1,
+            cancellationToken);
+    }
 }
