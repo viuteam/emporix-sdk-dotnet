@@ -80,10 +80,18 @@ string? productId = await runner.RunAsync("anonymous session and product list", 
 // Products.AnyType.GetAsync and check the returned type is
 // VariantProductWithId rather than BasicProductWithId.
 //
-// Also not covered: whether Emporix accepts a mixed array on PUT /products/bulk,
-// and whether PATCH rejects productType or ignores it. Both are writes, and the
-// seller-side pass here is read-only by design — establishing them needs an
-// opt-in write step against a scratch tenant.
+// Two write questions that were open here have since been answered against the
+// live viu tenant, on 2026-09-04, by a throwaway probe rather than by this
+// file — the seller-side pass stays read-only by design:
+//
+//   PUT /products/bulk accepts a mixed array. One BASIC and one BUNDLE in a
+//   single call came back as two entries, which is what the specification's
+//   array of oneOf promised and nothing had confirmed.
+//
+//   PATCH silently discards productType. A BASIC product patched with
+//   productType BUNDLE answered 204 and read back as BASIC, unchanged. So the
+//   field the SDK used to send in that body was never doing anything, and no
+//   caller was harmed by it.
 await runner.RunAsync("fetch one product", async () =>
 {
     if (productId is null)

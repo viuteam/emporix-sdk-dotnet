@@ -284,19 +284,32 @@ the converters when the dispatch rules change.
 
 ## Open questions
 
-**Does `PATCH` reject `productType` or ignore it?** The field travels in a body
-that does not declare it. Emporix presumably ignores it, and after this design
-the SDK stops sending it — but knowing which would say whether today's callers
-were ever affected. This needs a deliberate write against a scratch tenant; the
-smoke test's seller-side pass is read-only by design.
+Both were answered on 2026-09-04, against the live `viu` tenant, by a throwaway
+probe that created two unpublished products and deleted them again. Kept here
+with their reasoning because the answers are the interesting part.
 
-**Does Emporix accept a mixed array on `PUT /products/bulk`?** The
-specification's `oneOf` inside `items` says yes. No call has been made. This is
-the one capability of this design that rests on the specification alone.
+**Does `PATCH` reject `productType` or ignore it?** — **It ignores it.** A
+`BASIC` product patched with `productType: "BUNDLE"` answered `204`, and a
+service-token read afterwards returned `BasicProductWithId` with
+`productType: BASIC`, unchanged. So the field the SDK used to send in that body
+was never doing anything, and no caller was ever harmed by it. Note that `204`
+alone did not settle this: accepted and applied looks identical to accepted and
+discarded until something reads the product back.
 
-As of the implementation both remain open. The smoke test carries a comment at
-the product section naming them, and follow-up 1 is the opt-in write step that
-would settle them.
+**Does Emporix accept a mixed array on `PUT /products/bulk`?** — **Yes.** One
+`BasicProductBulkUpdate` and one `BundleProductBulkUpdate` in a single call came
+back as two entries. This was the one capability of this design resting on the
+specification alone, and it holds.
+
+**A third thing the probe found, unasked.** Writing any product whose
+`AdditionalProperties` is populated throws `NotSupportedException`: the
+extension dictionary is `IDictionary<string, object>`, so System.Text.Json
+resolves each value's runtime type and the context has metadata for none of
+them. This predates the write interfaces — it reproduces through
+`ProductJsonContext.Default.BasicProductCreation`, which is exactly what
+`CreateAsync` used before this branch. It means a product read from Emporix
+cannot be written back with its unknown fields intact, which is the natural
+thing to try. Recorded as follow-up 5.
 
 **A third thing the implementation found.** `scripts/update-public-api.sh`
 recorded only additions. It parsed `RS0016` and ignored `RS0017`, so the five
@@ -310,10 +323,11 @@ signatures: removals are now recorded as `*REMOVED*` lines, which
 
 Recorded so the next piece of work starts from what is known.
 
-1. **A write path for the smoke test.** Two of the open questions above need one
-   deliberate write against a scratch tenant. The smoke test is read-only on the
-   seller side, which is the right default — this would be an opt-in step behind
-   its own environment variable.
+1. **A write path for the smoke test.** No longer needed for the two questions
+   above — a throwaway probe answered both. It would still be worth having for
+   the next question of this kind, as an opt-in step behind its own environment
+   variable, since the seller-side pass is read-only by design and should stay
+   that way.
 2. **Unknown enum values still break reads.** Carried over from the read-side
    design: NSwag emits the enum converter as a property-level attribute, so a
    `productType` the vendored specification does not list makes the read throw.
@@ -325,3 +339,8 @@ Recorded so the next piece of work starts from what is known.
    bundle *writer* touches, not just a reader — which raises this from cosmetic.
 4. **`ListAllAsync` and `ListVariantsAsync` have no `AnyType` counterpart.**
    Mechanical once the group exists; unchanged by this design.
+5. **Extension data cannot be written.** Described above. The realistic fix is
+   registering `JsonElement` on each context, which covers the round-trip case —
+   a product read back carries `JsonElement` values — without pretending to
+   handle an arbitrary object a caller put there. It affects every service, not
+   products alone.
