@@ -138,4 +138,101 @@ public class ProductAnyTypeTests
         Assert.Contains("code:(good)", handler.RequestBodies[0], StringComparison.Ordinal);
         Assert.DoesNotContain("bad", handler.RequestBodies[0], StringComparison.Ordinal);
     }
+
+    // ---------- Walking every page ----------
+
+    [Fact]
+    public async Task ListAll_resolves_each_element_across_page_boundaries()
+    {
+        // The core of these two methods: a walker that resolves per element,
+        // not per page. A page of bundles followed by a page of variants has to
+        // come out as bundles and variants, not as whichever the first page was.
+        StubHttpMessageHandler handler = new((request, _) =>
+        {
+            bool first = request.RequestUri!.Query.Contains("pageNumber=1", StringComparison.Ordinal);
+
+            return StubHttpMessageHandler.Json(
+                HttpStatusCode.OK,
+                first
+                    ? """[{"id":"b1","productType":"BASIC"},{"id":"g1","productType":"BUNDLE"}]"""
+                    : """[{"id":"v1","productType":"VARIANT"}]""");
+        });
+        ProductService products = Create(handler);
+
+        List<IEmporixProduct> all = [];
+
+        await foreach (IEmporixProduct product in products.AnyType.ListAllAsync(pageSize: 2))
+        {
+            all.Add(product);
+        }
+
+        Assert.Collection(
+            all,
+            p => Assert.IsType<BasicProductWithId>(p),
+            p => Assert.IsType<BundleProductWithId>(p),
+            p => Assert.IsType<VariantProductWithId>(p));
+
+        Assert.Equal(2, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ListVariants_builds_the_same_filter_as_the_plain_walker()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        ProductService products = Create(handler);
+
+        await foreach (IEmporixProduct _ in products.AnyType.ListVariantsAsync("parent-1"))
+        {
+            // The constructed filter is what is under test.
+        }
+
+        string decoded = System.Uri.UnescapeDataString(handler.RequestUris[0].PathAndQuery);
+
+        Assert.Contains("productType:VARIANT parentVariantId:parent-1", decoded, StringComparison.Ordinal);
+        Assert.Contains("pageSize=200", decoded, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ListVariants_returns_variants_as_variants()
+    {
+        // Why this method is worth having at all. The filter pins productType
+        // to VARIANT, so every result is known to be one — and the plain walker
+        // still hands back the basic shape, with parentVariantId reachable only
+        // through the extension data.
+        StubHttpMessageHandler handler = new((request, _) =>
+        {
+            bool first = request.RequestUri!.Query.Contains("pageNumber=1", StringComparison.Ordinal);
+
+            return StubHttpMessageHandler.Json(
+                HttpStatusCode.OK,
+                first
+                    ? """[{"id":"v1","productType":"VARIANT","parentVariantId":"parent-1"}]"""
+                    : "[]");
+        });
+        ProductService products = Create(handler);
+
+        List<string?> parents = [];
+
+        await foreach (IEmporixProduct product in products.AnyType.ListVariantsAsync("parent-1", pageSize: 1))
+        {
+            VariantProductWithId variant = Assert.IsType<VariantProductWithId>(product);
+            parents.Add(variant.ParentVariantId);
+        }
+
+        Assert.Equal(["parent-1"], parents);
+    }
+
+    [Fact]
+    public async Task ListAll_defaults_to_the_same_page_size_as_the_plain_walker()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        ProductService products = Create(handler);
+
+        await foreach (IEmporixProduct _ in products.AnyType.ListAllAsync())
+        {
+            // The page size is what is under test.
+        }
+
+        Assert.Contains("pageSize=60", handler.RequestUris[0].PathAndQuery, StringComparison.Ordinal);
+    }
 }

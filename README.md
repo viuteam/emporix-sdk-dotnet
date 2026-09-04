@@ -380,9 +380,24 @@ else if (product is VariantProductWithId variant)
 }
 ```
 
-The same seven reads exist there — `GetAsync`, `GetByCodeAsync`, `ListAsync`,
-`SearchAsync`, `SearchByNameAsync`, `GetManyByIdAsync`, `GetManyByCodeAsync` —
-with identical parameters, so a mixed search resolves each result on its own.
+Every read exists there — `GetAsync`, `GetByCodeAsync`, `ListAsync`,
+`ListAllAsync`, `SearchAsync`, `SearchByNameAsync`, `GetManyByIdAsync`,
+`GetManyByCodeAsync` and `ListVariantsAsync` — with identical parameters, so a
+mixed search resolves each result on its own. The two walkers resolve per
+element rather than per page:
+
+```csharp
+await foreach (var product in client.Products.AnyType.ListVariantsAsync("shirt"))
+{
+    var variant = (VariantProductWithId)product;
+    Console.WriteLine(variant.ParentVariantId);
+}
+```
+
+That one is worth singling out. Its filter pins `productType` to `VARIANT`, so
+every result is known to be a variant — and the plain `ListVariantsAsync` still
+returns the basic shape, leaving `parentVariantId` reachable only through the
+extension data.
 
 Nothing is lost through the plain methods either: unknown fields land in the
 `AdditionalProperties` extension data and can be read from there. `AnyType`
