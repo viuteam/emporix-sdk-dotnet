@@ -342,10 +342,12 @@ whole problem.
 
 ### 2. The `Anonymous` type names
 
-`BundledProducts` is a `Collection<Anonymous>`. The element carries the right
-fields — `productId` as `string`, `amount` as `int` — but the specification
-defines it inline without a name, so NSwag called it `Anonymous`. There are
-three such types in `Product.cs`: `Anonymous`, `Anonymous2`, `Anonymous3`.
+**Done.** `BundledProducts` is now a `Collection<BundledProduct>`.
+
+The element carried the right fields — `productId` as `string`, `amount` as
+`int` — but the specification defines it inline without a name, so NSwag called
+it `Anonymous`. What this section got wrong is the scale: not three types in
+`Product.cs` but twenty-six across twelve services, all the same mechanism.
 
 It reads badly at the call site:
 
