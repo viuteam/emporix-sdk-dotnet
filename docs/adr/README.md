@@ -15,6 +15,7 @@ one supersedes the old and marks it as superseded.
 | [0007](0007-streaming.md) | Streaming: expose the response, parse with the framework | **Decided** |
 | [0008](0008-long-running-jobs.md) | Long-running jobs: one waiting helper, no job abstraction | **Decided** |
 | [0009](0009-cloud-functions.md) | Cloud functions: the caller brings the type information | **Decided** |
+| [0010](0010-unknown-enum-values.md) | Unknown enum values: null where there is room, strict where there is not | **Decided** |
 
 ## What was measured
 

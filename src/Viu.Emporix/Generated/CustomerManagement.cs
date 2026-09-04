@@ -196,7 +196,7 @@ namespace Viu.Emporix.CustomerManagementModels
         /// The type of the legal entity.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LegalEntityType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LegalEntityType>))]
         public LegalEntityType? Type { get; set; } = default!;
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace Viu.Emporix.CustomerManagementModels
         /// The type of the legal entity. Default value if not provided is: `COMPANY`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LegalEntityCreateType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LegalEntityCreateType>))]
         public LegalEntityCreateType? Type { get; set; } = default!;
 
         /// <summary>
@@ -550,7 +550,7 @@ namespace Viu.Emporix.CustomerManagementModels
         /// The type of the customer assignment.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ContactAssignmentType>))]
         public ContactAssignmentType? Type { get; set; } = default!;
 
         /// <summary>
@@ -602,7 +602,7 @@ namespace Viu.Emporix.CustomerManagementModels
         /// The type of the customer assignment.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentWithoutExpandedLegalEntityType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ContactAssignmentWithoutExpandedLegalEntityType>))]
         public ContactAssignmentWithoutExpandedLegalEntityType? Type { get; set; } = default!;
 
         /// <summary>
@@ -651,7 +651,7 @@ namespace Viu.Emporix.CustomerManagementModels
         /// The type of the customer assignment. If not provided, it is set to `Contact` by default.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ContactAssignmentCreateType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ContactAssignmentCreateType>))]
         public ContactAssignmentCreateType? Type { get; set; } = default!;
 
         /// <summary>
@@ -749,7 +749,7 @@ namespace Viu.Emporix.CustomerManagementModels
         /// The type of the location.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LocationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LocationType>))]
         public LocationType? Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("contactDetails")]

@@ -100,6 +100,68 @@ internal static partial class GeneratedCodeFixer
     }
 
     /// <summary>
+    /// Lets a nullable enum property read an unrecognised value as
+    /// <see langword="null"/> instead of throwing.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// NSwag puts <c>JsonStringEnumConverter</c> on each scalar enum property,
+    /// and that converter refuses a value the vendored specification does not
+    /// list. Because a property-level attribute beats anything a
+    /// <c>JsonSerializerContext</c> declares, this cannot be fixed from
+    /// <c>JsonContexts.cs</c> — the attribute itself has to change.
+    /// </para>
+    /// <para>
+    /// The cost of refusing is out of proportion to the field: a single
+    /// unrecognised value makes the entire response unreadable, so one product
+    /// Emporix has extended takes a page of sixty with it.
+    /// </para>
+    /// <para>
+    /// <b>Nullable properties only.</b> A converter can only answer with a
+    /// value of the type it converts, so tolerance needs somewhere to put
+    /// «I did not recognise this», and only <c>T?</c> has one. Registering a
+    /// converter on the enum type instead would reach every property — probed,
+    /// it does — but could then only return <c>default(T)</c>, which for
+    /// <c>ProductType</c> means <c>BASIC</c>: a wrong value that looks right,
+    /// which is worse than the throw it replaced.
+    /// </para>
+    /// <para>
+    /// The 75 non-nullable enum properties keep the strict converter. The
+    /// specifications mark those required, so an unrecognised value there is a
+    /// broken contract rather than a field to shrug off.
+    /// </para>
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Tolerated) TolerateUnknownEnumValues(string source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        List<string> tolerated = [];
+
+        string result = StrictEnumProperty().Replace(source, match =>
+        {
+            string name = match.Groups["name"].Value;
+
+            // Only where the property is «T?». A non-nullable one has nowhere
+            // to put the absence, and the type in the attribute has to be the
+            // property's own type — a converter for the wrong enum compiles
+            // into an exception at first use rather than a build failure.
+            if (match.Groups["type"].Value != name || match.Groups["nullable"].Value.Length == 0)
+            {
+                return match.Value;
+            }
+
+            tolerated.Add($"{name} {match.Groups["property"].Value}");
+
+            return match.Value.Replace(
+                $"System.Text.Json.Serialization.JsonStringEnumConverter<{name}>",
+                $"Viu.Emporix.NullOnUnknownEnumConverter<{name}>",
+                StringComparison.Ordinal);
+        });
+
+        return (result, tolerated);
+    }
+
+    /// <summary>
     /// Puts the string-enum converter on the enum types themselves.
     /// </summary>
     /// <remarks>
@@ -503,6 +565,23 @@ internal static partial class GeneratedCodeFixer
     /// <summary>The alias as the sole type argument, for example in a collection.</summary>
     private static Regex GenericArgument(string alias)
         => new($@"<{Regex.Escape(alias)}>", RegexOptions.None, TimeSpan.FromSeconds(5));
+
+    /// <summary>
+    /// A scalar enum property carrying NSwag's strict string-enum converter.
+    /// </summary>
+    /// <remarks>
+    /// The attribute and the declaration are matched together because the
+    /// decision needs both: the enum named in the attribute, and whether the
+    /// property that follows it is nullable. Other attributes may sit between
+    /// them, so they are allowed for and carried through unchanged.
+    /// </remarks>
+    [GeneratedRegex(
+        @"\[System\.Text\.Json\.Serialization\.JsonConverter\(typeof\("
+        + @"System\.Text\.Json\.Serialization\.JsonStringEnumConverter<(?<name>\w+)>\)\)\]"
+        + @"(?<between>(?:\r?\n[ \t]*\[[^\]]*\])*)"
+        + @"\r?\n[ \t]*public (?<type>\w+)(?<nullable>\?)? (?<property>\w+) \{ get; set; \}",
+        RegexOptions.None)]
+    private static partial Regex StrictEnumProperty();
 
     [GeneratedRegex(
         @"(?<attributes>(?:^[ \t]*(?:\[[^\]]*\]|///[^\n]*)\r?\n)*)" +

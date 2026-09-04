@@ -58,7 +58,7 @@ namespace Viu.Emporix.CouponModels
         /// 'PERCENT' for relative values, 'ABSOLUTE' for float values, referring to a specific currency, 'FREE_SHIPPING' for reducing the shipping cost to 0.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<BaseCouponDiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<BaseCouponDiscountType>))]
         public BaseCouponDiscountType? DiscountType { get; set; } = default!;
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Viu.Emporix.CouponModels
         /// Determines whether the coupon is applied to the total or subtotal value of the order.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountCalculationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<BaseCouponDiscountCalculationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<BaseCouponDiscountCalculationType>))]
         public BaseCouponDiscountCalculationType? DiscountCalculationType { get; set; } = Viu.Emporix.CouponModels.BaseCouponDiscountCalculationType.SUBTOTAL;
 
         [System.Text.Json.Serialization.JsonPropertyName("categoryRestricted")]
@@ -186,7 +186,7 @@ namespace Viu.Emporix.CouponModels
         /// 'PERCENT' for relative values, 'ABSOLUTE' for float values, referring to a specific currency, 'FREE_SHIPPING' for reducing the shipping cost to 0.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponCreationDiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CouponCreationDiscountType>))]
         public CouponCreationDiscountType? DiscountType { get; set; } = Viu.Emporix.CouponModels.CouponCreationDiscountType.ABSOLUTE;
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Viu.Emporix.CouponModels
         /// Determines whether the coupon is applied to the total or subtotal value of the order.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountCalculationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponCreationDiscountCalculationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CouponCreationDiscountCalculationType>))]
         public CouponCreationDiscountCalculationType? DiscountCalculationType { get; set; } = Viu.Emporix.CouponModels.CouponCreationDiscountCalculationType.SUBTOTAL;
 
         [System.Text.Json.Serialization.JsonPropertyName("categoryRestricted")]
@@ -458,7 +458,7 @@ namespace Viu.Emporix.CouponModels
         /// Current status of the coupon (read-only). 'INACTIVE': the coupon is only valid in the future; 'VALID': can be used; 'EXPIRED': the coupon validity period has expired; 'USED': the maximum number of redemptions for the coupon has been reached.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponWithIdAndStatusStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CouponWithIdAndStatusStatus>))]
         public CouponWithIdAndStatusStatus? Status { get; set; } = default!;
 
     }

@@ -431,7 +431,7 @@ namespace Viu.Emporix.ReturnsModels
         public bool? Received { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("approvalStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FullCustomerReturnApprovalStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<FullCustomerReturnApprovalStatus>))]
         public FullCustomerReturnApprovalStatus? ApprovalStatus { get; set; } = default!;
 
         /// <summary>
@@ -664,7 +664,7 @@ namespace Viu.Emporix.ReturnsModels
         /// Indicates an operation type done by an employee on behalf of a customer. Available options: `CREATE` and `UPDATE_STATUS`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("operation")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssistedBuyingEntryOperation>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AssistedBuyingEntryOperation>))]
         public AssistedBuyingEntryOperation? Operation { get; set; } = default!;
 
         /// <summary>
@@ -914,7 +914,7 @@ namespace Viu.Emporix.ReturnsModels
         /// Indicates whether the return must be approved by a user or a group. Possible values: `USER` or `GROUP`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApproverType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ApproverType>))]
         public ApproverType? Type { get; set; } = default!;
 
         /// <summary>
@@ -1015,7 +1015,7 @@ namespace Viu.Emporix.ReturnsModels
         /// Indicates whether the return needs to be approved by a particular user or a user group. Possible values: `USER` or `GROUP`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Approver2Type>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Approver2Type>))]
         public Approver2Type? Type { get; set; } = default!;
 
         /// <summary>
@@ -1162,7 +1162,7 @@ namespace Viu.Emporix.ReturnsModels
         /// Indicates whether the return needs to be approved by a particular user or user group.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Approver3Type>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Approver3Type>))]
         public Approver3Type? Type { get; set; } = default!;
 
         /// <summary>

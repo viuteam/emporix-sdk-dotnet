@@ -199,7 +199,7 @@ namespace Viu.Emporix.CustomerSegmentModels
         public Customer? Customer { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("assignmentType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomerAssignmentB2CResponseAssignmentType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CustomerAssignmentB2CResponseAssignmentType>))]
         public CustomerAssignmentB2CResponseAssignmentType? AssignmentType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
@@ -254,7 +254,7 @@ namespace Viu.Emporix.CustomerSegmentModels
         /// Determines whether item is a `PRODUCT` or `CATEGORY`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ItemAssignmentResponseType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ItemAssignmentResponseType>))]
         public ItemAssignmentResponseType? Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
@@ -674,7 +674,7 @@ namespace Viu.Emporix.CustomerSegmentModels
         /// Determines whether the customer segment is active or not. If not provided the value is set to `INACTIVE`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SegmentCoreStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SegmentCoreStatus>))]
         public SegmentCoreStatus? Status { get; set; } = default!;
 
         /// <summary>

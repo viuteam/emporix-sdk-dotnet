@@ -365,7 +365,7 @@ namespace Viu.Emporix.PickPackModels
         /// The current packing status of the order
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("packingStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderPackingStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<OrderPackingStatus>))]
         public OrderPackingStatus? PackingStatus { get; set; } = default!;
 
         /// <summary>
@@ -901,7 +901,7 @@ namespace Viu.Emporix.PickPackModels
         public string? Message { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("jobOrderStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobOrderJobOrderStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<RecalculationJobOrderJobOrderStatus>))]
         public RecalculationJobOrderJobOrderStatus? JobOrderStatus { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -923,14 +923,14 @@ namespace Viu.Emporix.PickPackModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("jobType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobJobType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<RecalculationJobJobType>))]
         public RecalculationJobJobType? JobType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("orders")]
         public System.Collections.Generic.ICollection<RecalculationJobOrder>? Orders { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("jobStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<RecalculationJobJobStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<RecalculationJobJobStatus>))]
         public RecalculationJobJobStatus? JobStatus { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("startedAt")]
@@ -1060,7 +1060,7 @@ namespace Viu.Emporix.PickPackModels
         /// The current status of the order
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("packingStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderListPackingStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<OrderListPackingStatus>))]
         public OrderListPackingStatus? PackingStatus { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productsTotal")]

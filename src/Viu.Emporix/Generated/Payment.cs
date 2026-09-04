@@ -185,7 +185,7 @@ namespace Viu.Emporix.PaymentModels
         /// Indicates which provider should be used.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("provider")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Provider>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Provider>))]
         public Provider? Provider { get; set; } = default!;
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace Viu.Emporix.PaymentModels
         /// Indicates a type of the mode integration.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("integrationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PaymentModeFrontendResponseIntegrationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<PaymentModeFrontendResponseIntegrationType>))]
         public PaymentModeFrontendResponseIntegrationType? IntegrationType { get; set; } = default!;
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace Viu.Emporix.PaymentModels
         /// Indicates which provider should be used.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("provider")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Provider>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Provider>))]
         public Provider? Provider { get; set; } = default!;
 
         /// <summary>
@@ -731,7 +731,7 @@ namespace Viu.Emporix.PaymentModels
         /// Event type.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<EntriesType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<EntriesType>))]
         public EntriesType? Type { get; set; } = default!;
 
         /// <summary>

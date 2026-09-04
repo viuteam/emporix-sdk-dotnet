@@ -211,6 +211,11 @@ static async Task<IReadOnlyList<string>> PostProcessAsync(
         GeneratedCodeFixer.ResolveCaseInsensitiveCollisions(content);
     (content, IReadOnlyList<string> enums) = GeneratedCodeFixer.AnnotateEnums(content);
 
+    // After AnnotateEnums, which only adds a type-level attribute where NSwag
+    // left none. This rewrites the property-level ones, which win over it.
+    (content, IReadOnlyList<string> tolerated) =
+        GeneratedCodeFixer.TolerateUnknownEnumValues(content);
+
     if (renamed.Count > 0)
     {
         resolved = [.. resolved, .. renamed];
@@ -219,6 +224,11 @@ static async Task<IReadOnlyList<string>> PostProcessAsync(
     if (retyped.Count > 0)
     {
         resolved = [.. resolved, .. retyped.Select(name => $"{name} → LocalizedString")];
+    }
+
+    if (tolerated.Count > 0)
+    {
+        resolved = [.. resolved, $"{tolerated.Count} nullable enum(s) tolerate an unknown value"];
     }
 
     if (untyped.Count > 0)

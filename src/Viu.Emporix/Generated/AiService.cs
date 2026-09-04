@@ -1082,7 +1082,7 @@ namespace Viu.Emporix.AiServiceModels
         public bool? Enabled { get; set; } = false;
 
         [System.Text.Json.Serialization.JsonPropertyName("transport")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomMcpServerTransportType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CustomMcpServerTransportType>))]
         public CustomMcpServerTransportType? Transport { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -1172,7 +1172,7 @@ namespace Viu.Emporix.AiServiceModels
         public McpToolInvocationMethod Method { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("argsLocation")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<McpToolInvocationArgsLocation>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<McpToolInvocationArgsLocation>))]
         public McpToolInvocationArgsLocation? ArgsLocation { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -1197,11 +1197,11 @@ namespace Viu.Emporix.AiServiceModels
         public string? FunctionId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("method")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<McpToolInvocationMethod>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<McpToolInvocationMethod>))]
         public McpToolInvocationMethod? Method { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("argsLocation")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<McpToolInvocationArgsLocation>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<McpToolInvocationArgsLocation>))]
         public McpToolInvocationArgsLocation? ArgsLocation { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -1380,7 +1380,7 @@ namespace Viu.Emporix.AiServiceModels
         /// For custom MCP servers it has to be set to `custom` or omitted. Defaults to `custom`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ManagedMcpServerType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ManagedMcpServerType>))]
         public ManagedMcpServerType? Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("config")]
@@ -1451,7 +1451,7 @@ namespace Viu.Emporix.AiServiceModels
         /// For dynamic MCP servers it has to be set to `dynamic`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ManagedMcpServerType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ManagedMcpServerType>))]
         public ManagedMcpServerType? Type { get; set; } = default!;
 
         /// <summary>
@@ -1798,7 +1798,7 @@ namespace Viu.Emporix.AiServiceModels
         /// Optional. Indicates which cloud LLM provider API the self-hosted endpoint is compatible with (OPENAI, GOOGLE, or ANTHROPIC). Applies when provider is self_hosted_ollama or self_hosted_vllm. Used to select the correct request/response conventions for that backend. Ignored for non–self-hosted providers.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("baseProvider")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SelfHostedLlmBaseProvider>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SelfHostedLlmBaseProvider>))]
         public SelfHostedLlmBaseProvider? BaseProvider { get; set; } = default!;
 
     }
@@ -2460,7 +2460,7 @@ namespace Viu.Emporix.AiServiceModels
         public bool? HandOff { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AgentType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AgentType>))]
         public AgentType? Type { get; set; } = default!;
 
         /// <summary>
@@ -2568,15 +2568,15 @@ namespace Viu.Emporix.AiServiceModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("agentType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AgentType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AgentType>))]
         public AgentType? AgentType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<JobStatus>))]
         public JobStatus? Status { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<JobType>))]
         public JobType? Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("exportResult")]
@@ -2697,7 +2697,7 @@ namespace Viu.Emporix.AiServiceModels
         /// State of the imported entity.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("state")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportedEntityState>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportedEntityState>))]
         public ImportedEntityState? State { get; set; } = default!;
 
         /// <summary>
@@ -2725,7 +2725,7 @@ namespace Viu.Emporix.AiServiceModels
         /// Machine-readable reason code for UI localization.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("code")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportDetailsCode>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportDetailsCode>))]
         public ImportDetailsCode? Code { get; set; } = default!;
 
         /// <summary>
@@ -2789,7 +2789,7 @@ namespace Viu.Emporix.AiServiceModels
         public string? AgentId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("agentType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AgentType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AgentType>))]
         public AgentType? AgentType { get; set; } = default!;
 
         /// <summary>
@@ -2872,7 +2872,7 @@ namespace Viu.Emporix.AiServiceModels
         public System.DateTimeOffset? Timestamp { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("severity")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LogSeverity>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LogSeverity>))]
         public LogSeverity? Severity { get; set; } = default!;
 
         /// <summary>
@@ -2945,7 +2945,7 @@ namespace Viu.Emporix.AiServiceModels
         public System.Collections.Generic.ICollection<string>? CollaborationAgents { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("severity")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LogSeverity>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LogSeverity>))]
         public LogSeverity? Severity { get; set; } = default!;
 
         /// <summary>
@@ -2991,7 +2991,7 @@ namespace Viu.Emporix.AiServiceModels
         public string? TriggerAgentId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("severity")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LogSeverity>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LogSeverity>))]
         public LogSeverity? Severity { get; set; } = default!;
 
         /// <summary>
@@ -3508,7 +3508,7 @@ namespace Viu.Emporix.AiServiceModels
         /// Time bucket used for periods and series (enum constant name).
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("granularity")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ExecutionsResponseGranularity>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ExecutionsResponseGranularity>))]
         public ExecutionsResponseGranularity? Granularity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("periods")]

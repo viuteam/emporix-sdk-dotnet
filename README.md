@@ -392,10 +392,9 @@ gives you the typed path instead of that.
 variant. A variant sent without it resolves to the basic shape. Deriving the
 type from other fields would be guessing, so the SDK does not.
 
-A `productType` the vendored specification does not list makes the read throw,
-here and on the plain methods alike — the generated enum property refuses an
-unknown value, and it carries the converter as an attribute, which no setting
-of ours overrides. Worth knowing because Emporix has extended that list before.
+A `productType` the vendored specification does not list resolves to the basic
+shape too, and reads back as `null` rather than throwing — see
+«[Values the specification has not caught up with](#values-the-specification-has-not-caught-up-with)».
 
 ### Writing a bundle or a variant
 
@@ -624,6 +623,36 @@ detail. Two endpoints stream their progress instead of being polled;
 response unread, and `System.Net.ServerSentEvents` — already in the `net10.0`
 shared framework — parses it in three lines
 ([ADR-0007](docs/adr/0007-streaming.md)).
+
+## Values the specification has not caught up with
+
+The vendored specifications declare 240 enums, and Emporix can add a value to
+one of them at any time. When that happens the SDK reads the field as `null`
+rather than failing:
+
+```csharp
+// productType: "SOMETHING_NEW" — a value this copy of the specification lacks
+var product = await client.Products.GetAsync(id);
+
+product.Id           // "b1"      — the rest of the object is intact
+product.ProductType  // null      — «not a value I know»
+```
+
+The alternative was worse than it sounds. Before this, one unrecognised value
+threw and took the **whole response** with it — a page of sixty products lost
+because one of them had a field the vendored copy did not list.
+
+Two limits worth knowing:
+
+- **`null` means «absent» and «unrecognised» alike.** Neither leaves you a
+  usable value, and neither is sent back: a null enum is omitted from every
+  write, so it cannot clear a field by accident.
+- **Fields the specification marks required stay strict.** There is nowhere to
+  put an absence in a non-nullable enum, and mapping to the first member would
+  turn an unreadable value into a wrong one. Those still throw.
+
+The reasoning, and the three alternatives rejected, are in
+[ADR-0010](docs/adr/0010-unknown-enum-values.md).
 
 ## Error handling
 

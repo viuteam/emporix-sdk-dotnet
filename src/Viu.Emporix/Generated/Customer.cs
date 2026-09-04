@@ -396,7 +396,7 @@ namespace Viu.Emporix.CustomerModels
         /// Property indicating business model of customer. When customer is assigned to any company then it is `B2B`. Otherwise it is `B2C`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("businessModel")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomerBusinessModel>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CustomerBusinessModel>))]
         public CustomerBusinessModel? BusinessModel { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("b2b")]

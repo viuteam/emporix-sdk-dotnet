@@ -86,14 +86,14 @@ namespace Viu.Emporix.InvoiceModels
         /// Status of the processed job. Possible values: `DONE`,` IN_PROGRESS`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("jobStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobStatusResponseJobStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<JobStatusResponseJobStatus>))]
         public JobStatusResponseJobStatus? JobStatus { get; set; } = default!;
 
         /// <summary>
         /// Job type determines if the orders are provided manually or searched by a parametrized query.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("jobType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobStatusResponseJobType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<JobStatusResponseJobType>))]
         public JobStatusResponseJobType? JobType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("orders")]
@@ -196,7 +196,7 @@ namespace Viu.Emporix.InvoiceModels
         /// Status determining if the order was processed successfully.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("orderStatus")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<OrderStatus>))]
         public OrderStatus? OrderStatus { get; set; } = default!;
 
         /// <summary>

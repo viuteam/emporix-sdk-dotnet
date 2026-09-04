@@ -99,7 +99,7 @@ namespace Viu.Emporix.AuditLogsChangelogModels
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChangelogChangeItemType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ChangelogChangeItemType>))]
         public ChangelogChangeItemType? Type { get; set; } = default!;
 
         /// <summary>

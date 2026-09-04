@@ -167,7 +167,7 @@ namespace Viu.Emporix.MediaModels
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("access")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssetAccess>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AssetAccess>))]
         public AssetAccess? Access { get; set; } = default!;
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace Viu.Emporix.MediaModels
         /// Asset type. This property is immutable.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GetAssetType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<GetAssetType>))]
         public GetAssetType? Type { get; set; } = default!;
 
         /// <summary>

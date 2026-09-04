@@ -440,7 +440,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Determines whether the coupon is applied to the total or subtotal value of the order.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountCalculationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DiscountCalculationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DiscountCalculationType>))]
         public DiscountCalculationType? DiscountCalculationType { get; set; } = default!;
 
         /// <summary>
@@ -788,7 +788,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Payment status.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PaymentStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<PaymentStatus>))]
         public PaymentStatus? Status { get; set; } = default!;
 
         /// <summary>
@@ -1196,7 +1196,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Type of the product. Possible values: `BASIC`, `VARIANT`, `BUNDLE`, `DYNAMIC_VARIANT`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductType>))]
         public ProductType? ProductType { get; set; } = default!;
 
         /// <summary>
@@ -1590,7 +1590,7 @@ namespace Viu.Emporix.OrderV2Models
         public FeeYrnAggregate? FeeYrnAggregate { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<OrderStatus>))]
         public OrderStatus? Status { get; set; } = default!;
 
         /// <summary>
@@ -1603,7 +1603,7 @@ namespace Viu.Emporix.OrderV2Models
         public Vendor? Vendor { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("orderType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SplitOrderType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SplitOrderType>))]
         public SplitOrderType? OrderType { get; set; } = default!;
 
         /// <summary>
@@ -1753,7 +1753,7 @@ namespace Viu.Emporix.OrderV2Models
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<OrderStatus>))]
         public OrderStatus? Status { get; set; } = default!;
 
         /// <summary>
@@ -1978,7 +1978,7 @@ namespace Viu.Emporix.OrderV2Models
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("splitBy")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SplitBy>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SplitBy>))]
         public SplitBy? SplitBy { get; set; } = default!;
 
         /// <summary>
@@ -2033,7 +2033,7 @@ namespace Viu.Emporix.OrderV2Models
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("splitBy")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SplitBy>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SplitBy>))]
         public SplitBy? SplitBy { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -2058,7 +2058,7 @@ namespace Viu.Emporix.OrderV2Models
         public string? MasterOrder { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("splitBy")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SplitBy>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SplitBy>))]
         public SplitBy? SplitBy { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("subOrders")]
@@ -2135,7 +2135,7 @@ namespace Viu.Emporix.OrderV2Models
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OrderStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<OrderStatus>))]
         public OrderStatus? Status { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -2275,7 +2275,7 @@ namespace Viu.Emporix.OrderV2Models
         /// 'Indicates an operation type done by an employee on behalf of a customer. Available options: `CREATE` and `UPDATE_STATUS`'
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("operation")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssistedBuyingEntryOperation>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AssistedBuyingEntryOperation>))]
         public AssistedBuyingEntryOperation? Operation { get; set; } = default!;
 
         /// <summary>
@@ -2468,7 +2468,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Type of the fee.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedFeeType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CalculatedFeeType>))]
         public CalculatedFeeType? Type { get; set; } = default!;
 
         /// <summary>
@@ -2514,7 +2514,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Type of the fee.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedPaymentFeeType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CalculatedPaymentFeeType>))]
         public CalculatedPaymentFeeType? Type { get; set; } = default!;
 
         /// <summary>
@@ -2569,14 +2569,14 @@ namespace Viu.Emporix.OrderV2Models
         /// The discount type which shows how the discount was calculated.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedAppliedDiscountDiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CalculatedAppliedDiscountDiscountType>))]
         public CalculatedAppliedDiscountDiscountType? DiscountType { get; set; } = default!;
 
         /// <summary>
         /// Indicates whether the discount is from internal coupon (INTERNAL) or external discount (EXTERNAL).
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("origin")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedAppliedDiscountOrigin>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CalculatedAppliedDiscountOrigin>))]
         public CalculatedAppliedDiscountOrigin? Origin { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -2601,7 +2601,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Indicates whether discounts were calculated using net or gross price values.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("calculationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CalculatedTotalDiscountCalculationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CalculatedTotalDiscountCalculationType>))]
         public CalculatedTotalDiscountCalculationType? CalculationType { get; set; } = default!;
 
         /// <summary>
@@ -3535,7 +3535,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Type of the payment fee. PERCENT for the fee’s `feePercentage`` multiplied by sum of line items `finalPrice` plus shipping cost. ABSOLUTE - monetary amount that is assigned to the payment method.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PaymentFeesType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<PaymentFeesType>))]
         public PaymentFeesType? Type { get; set; } = default!;
 
         /// <summary>
@@ -3597,7 +3597,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Indicates whether discounts were applied to net or gross values.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("calculationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TotalDiscountCalculationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<TotalDiscountCalculationType>))]
         public TotalDiscountCalculationType? CalculationType { get; set; } = default!;
 
         /// <summary>
@@ -3793,7 +3793,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Indicates how the line item price was determined. - `INTERNAL` — Calculated by Emporix using unit price × quantity. - `EXTERNAL` — Provided externally with `lineTax`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("calculated")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Price5Calculated>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Price5Calculated>))]
         public Price5Calculated? Calculated { get; set; } = default!;
 
     }
@@ -3890,7 +3890,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for fee percentage of the item's line `price.netValue` - unit price x quantity. ABSOLUTE for the absolute amount assigned to the item line. ABSOLUTE_MULTIPLY_ITEMQUANTITY for the monetary amount multiplied by the item quantity and assigned to the item line.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Fees3Type>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Fees3Type>))]
         public Fees3Type? Type { get; set; } = default!;
 
         /// <summary>
@@ -3966,7 +3966,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Indicates whether discounts were applied to net or gross values.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("calculationType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<TotalDiscount2CalculationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<TotalDiscount2CalculationType>))]
         public TotalDiscount2CalculationType? CalculationType { get; set; } = default!;
 
         /// <summary>
@@ -4453,7 +4453,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts and ABSOLUTE for amount applied to the fee.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscountsDiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscountsDiscountType>))]
         public AppliedDiscountsDiscountType? DiscountType { get; set; } = default!;
 
     }
@@ -4491,7 +4491,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts, ABSOLUTE for monetary amount and FREE_SHIPPING is shipping is fully discounted.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts2DiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscounts2DiscountType>))]
         public AppliedDiscounts2DiscountType? DiscountType { get; set; } = default!;
 
     }
@@ -4516,7 +4516,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts and ABSOLUTE for amount applied to the line item.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts3DiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscounts3DiscountType>))]
         public AppliedDiscounts3DiscountType? DiscountType { get; set; } = default!;
 
     }
@@ -4572,7 +4572,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts and ABSOLUTE for amount applied to the line item.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts4DiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscounts4DiscountType>))]
         public AppliedDiscounts4DiscountType? DiscountType { get; set; } = default!;
 
     }
@@ -4707,7 +4707,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts and ABSOLUTE for amount applied to the line item.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts5DiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscounts5DiscountType>))]
         public AppliedDiscounts5DiscountType? DiscountType { get; set; } = default!;
 
     }
@@ -4745,7 +4745,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts, ABSOLUTE for monetary amount and FREE_SHIPPING is shipping is fully discounted.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts6DiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscounts6DiscountType>))]
         public AppliedDiscounts6DiscountType? DiscountType { get; set; } = default!;
 
     }
@@ -4870,7 +4870,7 @@ namespace Viu.Emporix.OrderV2Models
         /// PERCENT for percentage discounts and ABSOLUTE for amount applied to the line item.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AppliedDiscounts7DiscountType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AppliedDiscounts7DiscountType>))]
         public AppliedDiscounts7DiscountType? DiscountType { get; set; } = default!;
 
     }
