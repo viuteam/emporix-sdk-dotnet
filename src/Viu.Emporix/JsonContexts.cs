@@ -446,9 +446,14 @@ internal sealed partial class LegalEntityJsonContext : JsonSerializerContext;
 /// <summary>Serialization for the quote service. See <see cref="ProductJsonContext"/>.</summary>
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    Converters = [typeof(EmporixQuoteCreationConverter)])]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteResponse))]
 [JsonSerializable(typeof(List<Viu.Emporix.QuoteModels.QuoteResponse>))]
+// The create body is a oneOf over the two below: one quote built by hand, one
+// built from a cart. The interface is the parameter type that carries either.
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.IEmporixQuoteCreation))]
+[JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteCreateFromCartRequest))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteCreateRequest))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteUpdateRequest))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteUpdateStatus))]

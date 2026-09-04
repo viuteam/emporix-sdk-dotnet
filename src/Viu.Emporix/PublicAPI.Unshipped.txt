@@ -69,3 +69,10 @@ Viu.Emporix.NullOnUnknownEnumConverter<T>
 Viu.Emporix.NullOnUnknownEnumConverter<T>.NullOnUnknownEnumConverter() -> void
 override Viu.Emporix.NullOnUnknownEnumConverter<T>.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> T?
 override Viu.Emporix.NullOnUnknownEnumConverter<T>.Write(System.Text.Json.Utf8JsonWriter! writer, T? value, System.Text.Json.JsonSerializerOptions! options) -> void
+Viu.Emporix.QuoteModels.IEmporixQuoteCreation
+Viu.Emporix.QuoteModels.QuoteCreateFromCartRequest
+Viu.Emporix.QuoteModels.QuoteCreateFromCartRequest.QuoteCreateFromCartRequest() -> void
+Viu.Emporix.QuoteModels.QuoteCreateRequest
+Viu.Emporix.QuoteModels.QuoteCreateRequest.QuoteCreateRequest() -> void
+Viu.Emporix.QuoteService.CreateAsync(Viu.Emporix.QuoteModels.IEmporixQuoteCreation! quote, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.QuoteModels.QuoteIdResponse?>!
+*REMOVED*Viu.Emporix.QuoteService.CreateAsync(Viu.Emporix.QuoteModels.QuoteCreateRequest! quote, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.QuoteModels.QuoteIdResponse?>!
