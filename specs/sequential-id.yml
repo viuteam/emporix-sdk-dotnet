@@ -481,6 +481,7 @@ components:
       additionalProperties:
         type: object
         description: Properties used as placeholders.
+        title: placeholderDefinition
         properties:
           required:
             type: boolean
@@ -569,6 +570,7 @@ components:
       type: object
       additionalProperties:
         type: object
+        title: nextIdRequest
         properties:
           numberOfIds:
             type: number
@@ -587,6 +589,7 @@ components:
       additionalProperties:
         type: object
         description: Properties used as placeholders.
+        title: nextIdResult
         properties:
           ids:
             type: array

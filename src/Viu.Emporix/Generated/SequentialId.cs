@@ -66,7 +66,7 @@ namespace Viu.Emporix.SequentialIdModels
     /// Placeholder definitions used in `preText` and `postText`. Names must start and end with `__`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Placeholders : System.Collections.Generic.Dictionary<string, Anonymous3>
+    public partial class Placeholders : System.Collections.Generic.Dictionary<string, PlaceholderDefinition>
     {
 
     }
@@ -196,13 +196,13 @@ namespace Viu.Emporix.SequentialIdModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class SchemaBatchNextIdRequest : System.Collections.Generic.Dictionary<string, Anonymous>
+    public partial class SchemaBatchNextIdRequest : System.Collections.Generic.Dictionary<string, NextIdRequest>
     {
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class SchemaBatchNextIdResponse : System.Collections.Generic.Dictionary<string, Anonymous2>
+    public partial class SchemaBatchNextIdResponse : System.Collections.Generic.Dictionary<string, NextIdResult>
     {
 
     }
@@ -281,7 +281,7 @@ namespace Viu.Emporix.SequentialIdModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class NextIdRequest
     {
 
         /// <summary>
@@ -335,7 +335,7 @@ namespace Viu.Emporix.SequentialIdModels
     /// Properties used as placeholders.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class NextIdResult
     {
 
         /// <summary>
@@ -394,7 +394,7 @@ namespace Viu.Emporix.SequentialIdModels
     /// Properties used as placeholders.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous3
+    public partial class PlaceholderDefinition
     {
 
         /// <summary>

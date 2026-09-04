@@ -2375,6 +2375,7 @@ components:
       description: 'List of bundled products'
       items:
         type: object
+        title: bundledProduct
         properties:
           productId:
             type: string
@@ -2432,6 +2433,7 @@ components:
       type: array
       items:
         description: Mixins of the `salePricesData`.
+        title: salePrice
         properties:
           salePricesAmount:
             type: number
@@ -2683,6 +2685,7 @@ components:
       items:
         type: object
         additionalProperties: false
+        title: productMediaFile
         properties:
           id:
             type: string

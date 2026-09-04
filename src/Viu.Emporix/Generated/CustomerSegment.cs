@@ -30,7 +30,7 @@ namespace Viu.Emporix.CustomerSegmentModels
     
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CommonSegment : Anonymous2
+    public partial class CommonSegment : SegmentCore
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
@@ -217,7 +217,7 @@ namespace Viu.Emporix.CustomerSegmentModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ItemAssignmentUpsert : Anonymous3
+    public partial class ItemAssignmentUpsert : ItemAssignmentCore
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
@@ -263,7 +263,7 @@ namespace Viu.Emporix.CustomerSegmentModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CategoryTreeResponse : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class CategoryTreeResponse : System.Collections.ObjectModel.Collection<CategoryTreeNode>
     {
 
     }
@@ -571,7 +571,7 @@ namespace Viu.Emporix.CustomerSegmentModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class CategoryTreeNode
     {
 
         /// <summary>
@@ -649,7 +649,7 @@ namespace Viu.Emporix.CustomerSegmentModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class SegmentCore
     {
 
         /// <summary>
@@ -674,8 +674,8 @@ namespace Viu.Emporix.CustomerSegmentModels
         /// Determines whether the customer segment is active or not. If not provided the value is set to `INACTIVE`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Status>))]
-        public Status? Status { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SegmentCoreStatus>))]
+        public SegmentCoreStatus? Status { get; set; } = default!;
 
         /// <summary>
         /// Determines for which site the customer segment is available.
@@ -714,7 +714,7 @@ namespace Viu.Emporix.CustomerSegmentModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous3
+    public partial class ItemAssignmentCore
     {
 
         /// <summary>
@@ -887,8 +887,8 @@ namespace Viu.Emporix.CustomerSegmentModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Status>))]
-    public enum Status
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SegmentCoreStatus>))]
+    public enum SegmentCoreStatus
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"ACTIVE")]

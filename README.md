@@ -406,7 +406,7 @@ The write calls take the same five shapes. `CreateAsync`, `ReplaceAsync`,
 await client.Products.CreateAsync(new BundleProductCreation
 {
     Code = "gift-box",
-    BundledProducts = { new Anonymous { ProductId = "p1", Amount = 2 } },
+    BundledProducts = { new BundledProduct { ProductId = "p1", Amount = 2 } },
 });
 
 await client.Products.CreateAsync(new VariantProductCreation
@@ -426,7 +426,7 @@ await client.Products.UpdateManyAsync(
     new BundleProductBulkUpdate
     {
         Id = "g1",
-        BundledProducts = { new Anonymous { ProductId = "p2", Amount = 1 } },
+        BundledProducts = { new BundledProduct { ProductId = "p2", Amount = 1 } },
     },
 ]);
 ```
@@ -439,7 +439,7 @@ carries the union of the type-specific fields, `BundledProducts`,
 ```csharp
 await client.Products.UpdateAsync("g1", new ProductPartialUpdate
 {
-    BundledProducts = [new Anonymous { ProductId = "p2", Amount = 1 }],
+    BundledProducts = [new BundledProduct { ProductId = "p2", Amount = 1 }],
 });
 ```
 

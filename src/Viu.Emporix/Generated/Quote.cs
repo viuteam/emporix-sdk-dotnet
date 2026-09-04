@@ -240,7 +240,7 @@ namespace Viu.Emporix.QuoteModels
     /// Quote item ID.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class QuoteItemsReplaceUpdate : System.Collections.ObjectModel.Collection<Anonymous3>
+    public partial class QuoteItemsReplaceUpdate : System.Collections.ObjectModel.Collection<QuoteItemReplacement>
     {
 
     }
@@ -739,7 +739,7 @@ namespace Viu.Emporix.QuoteModels
     /// List of item IDs.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class QuoteItemIds : System.Collections.ObjectModel.Collection<Anonymous4>
+    public partial class QuoteItemIds : System.Collections.ObjectModel.Collection<QuoteItemReference>
     {
 
     }
@@ -748,7 +748,7 @@ namespace Viu.Emporix.QuoteModels
     /// Quote update operation list.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class QuoteUpdateRequest : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class QuoteUpdateRequest : System.Collections.ObjectModel.Collection<PatchOperation>
     {
 
     }
@@ -772,7 +772,7 @@ namespace Viu.Emporix.QuoteModels
     /// Quote update operation list.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class QuoteHistory : System.Collections.ObjectModel.Collection<Anonymous2>
+    public partial class QuoteHistory : System.Collections.ObjectModel.Collection<QuoteHistoryEntry>
     {
 
     }
@@ -835,16 +835,16 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class PatchOperation
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("op")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Op>))]
-        public Op Op { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationOp>))]
+        public PatchOperationOp Op { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("path")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Path>))]
-        public Path Path { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationPath>))]
+        public PatchOperationPath Path { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("value")]
         public QuoteUpdateValues? Value { get; set; } = default!;
@@ -933,7 +933,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class QuoteHistoryEntry
     {
 
         /// <summary>
@@ -946,15 +946,15 @@ namespace Viu.Emporix.QuoteModels
         /// operation type
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("op")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Op2>))]
-        public Op2? Op { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryOp>))]
+        public QuoteHistoryEntryOp? Op { get; set; } = default!;
 
         /// <summary>
         /// Path that indicates on which element the update has been executed.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("path")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Path2>))]
-        public Path2? Path { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryPath>))]
+        public QuoteHistoryEntryPath? Path { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("newValue")]
         public QuoteUpdateValues? NewValue { get; set; } = default!;
@@ -984,8 +984,8 @@ namespace Viu.Emporix.QuoteModels
         public string? UserLastName { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("userType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserType>))]
-        public UserType? UserType { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryUserType>))]
+        public QuoteHistoryEntryUserType? UserType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("restriction")]
         public string? Restriction { get; set; } = default!;
@@ -1074,7 +1074,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous3 : QuoteItemUpdate
+    public partial class QuoteItemReplacement : QuoteItemUpdate
     {
 
         /// <summary>
@@ -1615,7 +1615,7 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous4
+    public partial class QuoteItemReference
     {
 
         /// <summary>
@@ -1636,8 +1636,8 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Op>))]
-    public enum Op
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationOp>))]
+    public enum PatchOperationOp
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"ADD")]
@@ -1652,8 +1652,8 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Path>))]
-    public enum Path
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationPath>))]
+    public enum PatchOperationPath
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"/status")]
@@ -1734,8 +1734,8 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Op2>))]
-    public enum Op2
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryOp>))]
+    public enum QuoteHistoryEntryOp
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"ADD")]
@@ -1753,8 +1753,8 @@ namespace Viu.Emporix.QuoteModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Path2>))]
-    public enum Path2
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryPath>))]
+    public enum QuoteHistoryEntryPath
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"/quote")]
@@ -1819,8 +1819,8 @@ namespace Viu.Emporix.QuoteModels
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UserType>))]
-    public enum UserType
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryUserType>))]
+    public enum QuoteHistoryEntryUserType
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"EMPLOYEE")]

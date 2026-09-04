@@ -1086,6 +1086,7 @@ components:
       description: Approval partial update operation list.
       items:
         type: object
+        title: patchOperation
         properties:
           op:
             anyOf:

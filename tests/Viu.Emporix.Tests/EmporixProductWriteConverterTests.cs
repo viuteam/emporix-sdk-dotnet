@@ -200,7 +200,7 @@ public class EmporixProductWriteConverterTests
         BundleProductCreation original = new()
         {
             Code = "gift",
-            BundledProducts = { new Anonymous { ProductId = "p1", Amount = 2 } },
+            BundledProducts = { new BundledProduct { ProductId = "p1", Amount = 2 } },
         };
 
         string json = Write<IEmporixProductCreation>(

@@ -107,6 +107,14 @@ internal static partial class SpecPatches
                     ReplaceAll(
                         "        itemRef:\n          type: object\n          description: Item (product or price) for which the price was matched.",
                         "        itemId:\n          type: object\n          description: Item (product or price) for which the price was matched.")),
+                new SpecPatch(
+                    "upstream: the element schema of a price-search response is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it ItemPrices.",
+                    Title(
+                        "itemPrices",
+                        "                items:\n                  type: object\n                  properties:",
+                        "                items:\n                  type: object\n                  title: itemPrices\n                  properties:")),
             ],
 
             ["cart"] =
@@ -200,6 +208,266 @@ internal static partial class SpecPatches
 
                         return next == yaml ? null : next;
                     }),
+                new SpecPatch(
+                    "upstream: the element schema of updateApprovalRequest is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it PatchOperation.",
+                    Title(
+                        "patchOperation",
+                        "      items:\n        type: object\n        properties:",
+                        "      items:\n        type: object\n        title: patchOperation\n        properties:")),
+            ],
+            ["ai-service"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of the partial-update operation list is "
+                    + "written inline with no title, so the generator has no name for it "
+                    + "and emits Anonymous. A title names it PatchOperation.",
+                    Title(
+                        "patchOperation",
+                        "      description: Partial update operation list.\n      items:\n        type: object\n        properties:",
+                        "      description: Partial update operation list.\n      items:\n        type: object\n        title: patchOperation\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of agentCollaborations is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it AgentCollaboration.",
+                    Title(
+                        "agentCollaboration",
+                        "      description: List of agent collaborations which allows an agent to hand off its task to other agents.\n      items:\n        type: object\n        properties:",
+                        "      description: List of agent collaborations which allows an agent to hand off its task to other agents.\n      items:\n        type: object\n        title: agentCollaboration\n        properties:")),
+            ],
+            ["category"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of BulkAssignmentRequest is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it BulkAssignment.",
+                    Title(
+                        "bulkAssignment",
+                        "    BulkAssignmentRequest:\n      type: array\n      minItems: 1\n      maxItems: 200\n      items:\n        type: object\n        properties:",
+                        "    BulkAssignmentRequest:\n      type: array\n      minItems: 1\n      maxItems: 200\n      items:\n        type: object\n        title: bulkAssignment\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of BulkAssignmentUpsertRequest is "
+                    + "written inline with no title, so the generator has no name for it "
+                    + "and emits Anonymous. A title names it BulkAssignmentUpsert.",
+                    Title(
+                        "bulkAssignmentUpsert",
+                        "    BulkAssignmentUpsertRequest:\n      type: array\n      minItems: 1\n      maxItems: 200\n      items:\n        type: object\n        properties:",
+                        "    BulkAssignmentUpsertRequest:\n      type: array\n      minItems: 1\n      maxItems: 200\n      items:\n        type: object\n        title: bulkAssignmentUpsert\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of BulkAssignmentResponse is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it BulkAssignmentResult.",
+                    Title(
+                        "bulkAssignmentResult",
+                        "      type: array\n      items:\n        type: object\n        properties:",
+                        "      type: array\n      items:\n        type: object\n        title: bulkAssignmentResult\n        properties:")),
+            ],
+            ["customer-segment"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of CategoryTreeResponse is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it CategoryTreeNode.",
+                    Title(
+                        "categoryTreeNode",
+                        "      items:\n        type: object\n        properties:",
+                        "      items:\n        type: object\n        title: categoryTreeNode\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the object member composed into CommonSegment is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it SegmentCore.",
+                    Title(
+                        "segmentCore",
+                        "    CommonSegment:\n      type: object\n      description: |\n\n      allOf:\n        - type: object\n          properties:",
+                        "    CommonSegment:\n      type: object\n      description: |\n\n      allOf:\n        - type: object\n          title: segmentCore\n          properties:")),
+
+                new SpecPatch(
+                    "upstream: the object member composed into ItemAssignmentUpsert is "
+                    + "written inline with no title, so the generator has no name for it "
+                    + "and emits Anonymous. A title names it ItemAssignmentCore.",
+                    Title(
+                        "itemAssignmentCore",
+                        "    ItemAssignmentUpsert:\n      type: object\n      description: |\n\n      allOf:\n        - type: object\n          properties:",
+                        "    ItemAssignmentUpsert:\n      type: object\n      description: |\n\n      allOf:\n        - type: object\n          title: itemAssignmentCore\n          properties:")),
+            ],
+            ["label-service"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of the 400 response's details list is "
+                    + "written inline with no title, so the generator has no name for it "
+                    + "and emits Anonymous. A title names it ErrorDetail.",
+                    Title(
+                        "errorDetail",
+                        "            items:\n              type: object\n              properties:",
+                        "            items:\n              type: object\n              title: errorDetail\n              properties:")),
+            ],
+            ["product"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of bundledProducts, which is the type a "
+                    + "caller has to name when building a bundle is written inline with no "
+                    + "title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it BundledProduct.",
+                    Title(
+                        "bundledProduct",
+                        "      items:\n        type: object\n        properties:",
+                        "      items:\n        type: object\n        title: bundledProduct\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of salePricesData is written inline "
+                    + "with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it SalePrice.",
+                    Title(
+                        "salePrice",
+                        "      items:\n        description: Mixins of the `salePricesData`.\n        properties:",
+                        "      items:\n        description: Mixins of the `salePricesData`.\n        title: salePrice\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of productMedia is written inline with "
+                    + "no title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it ProductMediaFile.",
+                    Title(
+                        "productMediaFile",
+                        "        type: object\n        additionalProperties: false\n        properties:",
+                        "        type: object\n        additionalProperties: false\n        title: productMediaFile\n        properties:")),
+            ],
+            ["quote"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of QuoteUpdateRequest is written inline "
+                    + "with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it PatchOperation.",
+                    Title(
+                        "patchOperation",
+                        "    QuoteUpdateRequest:\n      type: array\n      description: Quote update operation list.\n      items:\n        type: object\n        properties:",
+                        "    QuoteUpdateRequest:\n      type: array\n      description: Quote update operation list.\n      items:\n        type: object\n        title: patchOperation\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of QuoteHistory is written inline with "
+                    + "no title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it QuoteHistoryEntry.",
+                    Title(
+                        "quoteHistoryEntry",
+                        "    QuoteHistory:\n      type: array\n      description: Quote update operation list.\n      items:\n        type: object\n        properties:",
+                        "    QuoteHistory:\n      type: array\n      description: Quote update operation list.\n      items:\n        type: object\n        title: quoteHistoryEntry\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the object member composed into the "
+                    + "QuoteItemsReplaceUpdate element is written inline with no title, so "
+                    + "the generator has no name for it and emits Anonymous. A title names "
+                    + "it QuoteItemReplacement.",
+                    Title(
+                        "quoteItemReplacement",
+                        "      description: Quote item ID.\n      items:\n        allOf:",
+                        "      description: Quote item ID.\n      items:\n        title: quoteItemReplacement\n        allOf:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of QuoteItemIds is written inline with "
+                    + "no title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it QuoteItemReference.",
+                    Title(
+                        "quoteItemReference",
+                        "      description: List of item IDs.\n      items:\n        type: object\n        properties:",
+                        "      description: List of item IDs.\n      items:\n        type: object\n        title: quoteItemReference\n        properties:")),
+            ],
+            ["schema"] =
+            [
+                new SpecPatch(
+                    "upstream: the object member composed into a schema-update response "
+                    + "element is written inline with no title, so the generator has no "
+                    + "name for it and emits Anonymous. A title names it SchemaReference.",
+                    Title(
+                        "schemaReference",
+                        "              type: array\n              items:\n                allOf:",
+                        "              type: array\n              items:\n                title: schemaReference\n                allOf:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of BulkResponse is written inline with "
+                    + "no title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it BulkResponseEntry.",
+                    Title(
+                        "bulkResponseEntry",
+                        "      items:\n        type: object\n        properties:",
+                        "      items:\n        type: object\n        title: bulkResponseEntry\n        properties:")),
+            ],
+            ["sequential-id"] =
+            [
+                new SpecPatch(
+                    "upstream: the value schema of SchemaBatchNextIdRequest is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it NextIdRequest.",
+                    Title(
+                        "nextIdRequest",
+                        "      additionalProperties:\n        type: object\n        properties:",
+                        "      additionalProperties:\n        type: object\n        title: nextIdRequest\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the value schema of SchemaBatchNextIdResponse is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it NextIdResult.",
+                    Title(
+                        "nextIdResult",
+                        "      type: object\n      additionalProperties:\n        type: object\n        description: Properties used as placeholders.\n        properties:",
+                        "      type: object\n      additionalProperties:\n        type: object\n        description: Properties used as placeholders.\n        title: nextIdResult\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the value schema of Placeholders is written inline with no "
+                    + "title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it PlaceholderDefinition.",
+                    Title(
+                        "placeholderDefinition",
+                        "      description: Placeholder definitions used in `preText` and `postText`. Names must start and end with `__`.\n      additionalProperties:\n        type: object\n        description: Properties used as placeholders.\n        properties:",
+                        "      description: Placeholder definitions used in `preText` and `postText`. Names must start and end with `__`.\n      additionalProperties:\n        type: object\n        description: Properties used as placeholders.\n        title: placeholderDefinition\n        properties:")),
+            ],
+            ["shipping"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of Patch is written inline with no "
+                    + "title, so the generator has no name for it and emits Anonymous. A "
+                    + "title names it PatchOperation.",
+                    Title(
+                        "patchOperation",
+                        "      items:\n        type: object\n        properties:",
+                        "      items:\n        type: object\n        title: patchOperation\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: the element schema of a bulk response is written inline "
+                    + "with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it BulkResponseEntry.",
+                    Title(
+                        "bulkResponseEntry",
+                        "                      - siteCode cannot be null\n                  type: object\n                  properties:",
+                        "                      - siteCode cannot be null\n                  type: object\n                  title: bulkResponseEntry\n                  properties:")),
+            ],
+            ["webhook"] =
+            [
+                new SpecPatch(
+                    "upstream: the object member composed into the single webhook-config "
+                    + "response is written inline with no title, so the generator has no "
+                    + "name for it and emits Anonymous. A title names it WebhookConfig. "
+                    + "These two response schemas are structurally identical and collapse "
+                    + "into one anonymous type today; distinct titles keep them apart, "
+                    + "which is what the specification describes.",
+                    Title(
+                        "webhookConfig",
+                        "        application/json:\n          schema:\n            allOf:",
+                        "        application/json:\n          schema:\n            title: webhookConfig\n            allOf:")),
+
+                new SpecPatch(
+                    "upstream: the object member composed into the webhook-config list "
+                    + "response is written inline with no title, so the generator has no "
+                    + "name for it and emits Anonymous. A title names it "
+                    + "WebhookConfigListItem. See the note on webhookConfig: the sibling "
+                    + "response is the same shape.",
+                    Title(
+                        "webhookConfigListItem",
+                        "            type: array\n            items:\n              allOf:",
+                        "            type: array\n            items:\n              title: webhookConfigListItem\n              allOf:")),
             ],
         };
 
@@ -256,6 +524,56 @@ internal static partial class SpecPatches
     /// <summary>A line consisting purely of whitespace.</summary>
     [GeneratedRegex(@"^[ \t]+$", RegexOptions.Multiline)]
     private static partial Regex WhitespaceOnlyLine();
+
+    /// <summary>
+    /// Names an anonymous schema by inserting a <c>title</c>, exactly once.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// NSwag names a generated class after the schema's key under
+    /// <c>components/schemas</c>, or after its <c>title</c> when it has no key.
+    /// A schema with neither — one written inline under <c>items</c>, under
+    /// <c>additionalProperties</c>, or as the object member of an
+    /// <c>allOf</c> — becomes <c>Anonymous</c>, <c>Anonymous2</c> and so on,
+    /// numbered in the order the generator happens to walk them.
+    /// </para>
+    /// <para>
+    /// Four rules, each established by generating and looking rather than by
+    /// reading NSwag's source:
+    /// </para>
+    /// <list type="number">
+    /// <item>Directly on an inline object schema a <c>title</c> simply works.</item>
+    /// <item>A schema that already has a key under <c>components/schemas</c>
+    /// ignores its <c>title</c> — the key wins.</item>
+    /// <item>For an <c>allOf</c> it depends on whether the composing schema is
+    /// named. Unnamed, as in a response body, the merged result is what needs
+    /// the title. Named, the key claims that name and the inline member becomes
+    /// a separate base class, so the title belongs on the member. Getting this
+    /// backwards leaves the type anonymous with no error.</item>
+    /// <item>Two schemas in one document that share a title collide, and one of
+    /// them stays anonymous after all. Titles are unique per specification.</item>
+    /// </list>
+    /// <para>
+    /// <para>
+    /// <b>Refuses an ambiguous anchor.</b> Unlike <see cref="ReplaceAll"/> this
+    /// returns <see langword="null"/> when the anchor occurs more than once, so
+    /// the run reports the patch as stale rather than titling a schema nobody
+    /// meant. That matters more here than anywhere else in this file: two
+    /// wrongly swapped titles both compile and both pass every test.
+    /// </para>
+    /// </remarks>
+    private static Func<string, string?> Title(string name, string find, string replace)
+        => yaml =>
+        {
+            int first = yaml.IndexOf(find, StringComparison.Ordinal);
+
+            if (first < 0 || yaml.IndexOf(find, first + 1, StringComparison.Ordinal) >= 0)
+            {
+                return null;
+            }
+
+            return yaml.Replace(find, replace, StringComparison.Ordinal);
+        };
 
     /// <summary>Replaces every occurrence; <see langword="null"/> when there is none.</summary>
     private static Func<string, string?> ReplaceAll(string find, string replace)

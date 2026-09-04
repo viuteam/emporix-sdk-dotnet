@@ -3222,6 +3222,7 @@ components:
       type: array
       items:
         type: object
+        title: bulkAssignmentResult
         properties:
           assignmentId:
             type: string
@@ -3266,6 +3267,7 @@ components:
       maxItems: 200
       items:
         type: object
+        title: bulkAssignment
         properties:
           ref:
             type: object
@@ -3298,6 +3300,7 @@ components:
       maxItems: 200
       items:
         type: object
+        title: bulkAssignmentUpsert
         properties:
           ref:
             type: object

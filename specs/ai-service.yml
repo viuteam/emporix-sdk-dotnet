@@ -3467,6 +3467,7 @@ components:
       description: List of agent collaborations which allows an agent to hand off its task to other agents.
       items:
         type: object
+        title: agentCollaboration
         properties:
           agentId:
             type: string
@@ -4132,6 +4133,7 @@ components:
       description: Partial update operation list.
       items:
         type: object
+        title: patchOperation
         properties:
           op:
             anyOf:

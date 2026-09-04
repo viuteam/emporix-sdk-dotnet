@@ -333,10 +333,13 @@ Recorded so the next piece of work starts from what is known.
    `productType` the vendored specification does not list makes the read throw.
    The fix belongs in a `SpecSync` `GeneratedCodeFixer` rule and affects every
    enum in every specification.
-3. **The `Anonymous` element type names.** `BundledProducts` is a
-   `Collection<Anonymous>`, so a caller creating a bundle writes
-   `new Anonymous { ProductId = …, Amount = … }`. That is now the first type a
-   bundle *writer* touches, not just a reader — which raises this from cosmetic.
+3. **The `Anonymous` element type names — done.** `BundledProducts` is now a
+   `Collection<BundledProduct>`. Being the first type a bundle *writer* touches
+   is what raised this from cosmetic. It turned out to be twenty-six types
+   across twelve services rather than three, and the fix is a `SpecPatch` that
+   injects a `title` rather than a `GeneratedCodeFixer` rename: the `Anonymous`
+   numbering is positional, so a rule keyed on `Anonymous2` would retitle the
+   wrong type after any upstream edit that inserts an anonymous schema earlier.
 4. **`ListAllAsync` and `ListVariantsAsync` have no `AnyType` counterpart.**
    Mechanical once the group exists; unchanged by this design.
 5. **Extension data cannot be written.** Described above. The realistic fix is
