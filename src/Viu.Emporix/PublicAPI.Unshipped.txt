@@ -22,3 +22,46 @@ Viu.Emporix.ProductAnyTypeOperations.ListAsync(Viu.Emporix.ProductPageOptions? o
 Viu.Emporix.ProductAnyTypeOperations.SearchAsync(string! query, Viu.Emporix.ProductPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.ProductModels.IEmporixProduct!>!>!
 Viu.Emporix.ProductAnyTypeOperations.SearchByNameAsync(string! term, Viu.Emporix.ProductPageOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.ProductModels.IEmporixProduct!>!>!
 Viu.Emporix.ProductService.AnyType.get -> Viu.Emporix.ProductAnyTypeOperations!
+Viu.Emporix.ProductModels.BasicProductBulkUpdate
+Viu.Emporix.ProductModels.BasicProductBulkUpdate.BasicProductBulkUpdate() -> void
+Viu.Emporix.ProductModels.BasicProductCreation
+Viu.Emporix.ProductModels.BasicProductCreation.BasicProductCreation() -> void
+Viu.Emporix.ProductModels.BasicProductUpdate
+Viu.Emporix.ProductModels.BasicProductUpdate.BasicProductUpdate() -> void
+Viu.Emporix.ProductModels.BundleProductBulkUpdate
+Viu.Emporix.ProductModels.BundleProductBulkUpdate.BundleProductBulkUpdate() -> void
+Viu.Emporix.ProductModels.BundleProductCreation
+Viu.Emporix.ProductModels.BundleProductCreation.BundleProductCreation() -> void
+Viu.Emporix.ProductModels.BundleProductUpdate
+Viu.Emporix.ProductModels.BundleProductUpdate.BundleProductUpdate() -> void
+Viu.Emporix.ProductModels.DynamicVariantProductBulkUpdate
+Viu.Emporix.ProductModels.DynamicVariantProductBulkUpdate.DynamicVariantProductBulkUpdate() -> void
+Viu.Emporix.ProductModels.DynamicVariantProductCreation
+Viu.Emporix.ProductModels.DynamicVariantProductCreation.DynamicVariantProductCreation() -> void
+Viu.Emporix.ProductModels.DynamicVariantProductUpdate
+Viu.Emporix.ProductModels.DynamicVariantProductUpdate.DynamicVariantProductUpdate() -> void
+Viu.Emporix.ProductModels.IEmporixProductBulkUpdate
+Viu.Emporix.ProductModels.IEmporixProductCreation
+Viu.Emporix.ProductModels.IEmporixProductUpdate
+Viu.Emporix.ProductModels.ParentVariantProductBulkUpdate
+Viu.Emporix.ProductModels.ParentVariantProductBulkUpdate.ParentVariantProductBulkUpdate() -> void
+Viu.Emporix.ProductModels.ParentVariantProductCreation
+Viu.Emporix.ProductModels.ParentVariantProductCreation.ParentVariantProductCreation() -> void
+Viu.Emporix.ProductModels.ParentVariantProductUpdate
+Viu.Emporix.ProductModels.ParentVariantProductUpdate.ParentVariantProductUpdate() -> void
+Viu.Emporix.ProductModels.VariantProductBulkUpdate
+Viu.Emporix.ProductModels.VariantProductBulkUpdate.VariantProductBulkUpdate() -> void
+Viu.Emporix.ProductModels.VariantProductCreation
+Viu.Emporix.ProductModels.VariantProductCreation.VariantProductCreation() -> void
+Viu.Emporix.ProductModels.VariantProductUpdate
+Viu.Emporix.ProductModels.VariantProductUpdate.VariantProductUpdate() -> void
+Viu.Emporix.ProductService.CreateAsync(Viu.Emporix.ProductModels.IEmporixProductCreation! product, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.ProductModels.ResourceLocation?>!
+Viu.Emporix.ProductService.CreateManyAsync(System.Collections.Generic.IReadOnlyCollection<Viu.Emporix.ProductModels.IEmporixProductCreation!>! products, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BulkResponse!>!>!
+Viu.Emporix.ProductService.ReplaceAsync(string! productId, Viu.Emporix.ProductModels.IEmporixProductUpdate! product, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.ProductService.UpdateAsync(string! productId, Viu.Emporix.ProductModels.ProductPartialUpdate! changes, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.ProductService.UpdateManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.ProductModels.IEmporixProductBulkUpdate!>! products, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BulkResponse!>!>!
+*REMOVED*Viu.Emporix.ProductService.CreateAsync(Viu.Emporix.ProductModels.BasicProductCreation! product, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.ProductModels.ResourceLocation?>!
+*REMOVED*Viu.Emporix.ProductService.CreateManyAsync(System.Collections.Generic.IReadOnlyCollection<Viu.Emporix.ProductModels.BasicProductCreation!>! products, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BulkResponse!>!>!
+*REMOVED*Viu.Emporix.ProductService.ReplaceAsync(string! productId, Viu.Emporix.ProductModels.BasicProductUpdate! product, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Viu.Emporix.ProductService.UpdateAsync(string! productId, Viu.Emporix.ProductModels.BasicProductUpdate! changes, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+*REMOVED*Viu.Emporix.ProductService.UpdateManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.ProductModels.BasicProductBulkUpdate!>! products, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BulkResponse!>!>!

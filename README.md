@@ -397,6 +397,60 @@ here and on the plain methods alike — the generated enum property refuses an
 unknown value, and it carries the converter as an attribute, which no setting
 of ours overrides. Worth knowing because Emporix has extended that list before.
 
+### Writing a bundle or a variant
+
+The write calls take the same five shapes. `CreateAsync`, `ReplaceAsync`,
+`CreateManyAsync` and `UpdateManyAsync` accept whichever one you pass:
+
+```csharp
+await client.Products.CreateAsync(new BundleProductCreation
+{
+    Code = "gift-box",
+    BundledProducts = { new Anonymous { ProductId = "p1", Amount = 2 } },
+});
+
+await client.Products.CreateAsync(new VariantProductCreation
+{
+    Code = "shirt-red-m",
+    ParentVariantId = "shirt",
+});
+```
+
+A bulk call may mix them, which is what the specification's array of `oneOf`
+permits:
+
+```csharp
+await client.Products.UpdateManyAsync(
+[
+    new BasicProductBulkUpdate { Id = "p1", Published = true },
+    new BundleProductBulkUpdate
+    {
+        Id = "g1",
+        BundledProducts = { new Anonymous { ProductId = "p2", Amount = 1 } },
+    },
+]);
+```
+
+**`PATCH` is the exception, and it is not per type.** The specification declares
+one flat schema there, so `UpdateAsync` takes `ProductPartialUpdate` — which
+carries the union of the type-specific fields, `BundledProducts`,
+`VariantAttributes` and `Template` included:
+
+```csharp
+await client.Products.UpdateAsync("g1", new ProductPartialUpdate
+{
+    BundledProducts = [new Anonymous { ProductId = "p2", Amount = 1 }],
+});
+```
+
+Note the assignment rather than a collection initializer: `BundledProducts` is
+nullable on this type and carries a default instance on the bundle types, so
+`= { … }` compiles here and throws at runtime.
+
+If you are coming from an earlier version, `UpdateAsync` is the one write call
+whose signature broke. It used to take `BasicProductUpdate`, which had no
+property for any of those fields.
+
 ### Localized text
 
 Names and descriptions are `LocalizedString`, not `string`. Emporix returns the

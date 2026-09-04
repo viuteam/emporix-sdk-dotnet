@@ -398,8 +398,13 @@ public sealed partial class ProductService
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <exception cref="EmporixValidationException">Emporix rejected the product.</exception>
     /// <exception cref="EmporixInsufficientScopeException">The token lacks <c>product.product_manage</c>.</exception>
+    /// <remarks>
+    /// Pass whichever of the five creation types fits — the specification
+    /// declares this body as a <c>oneOf</c> over all five, and the SDK sends
+    /// whichever one it receives.
+    /// </remarks>
     public async Task<ResourceLocation?> CreateAsync(
-        BasicProductCreation product,
+        IEmporixProductCreation product,
         ProductWriteOptions? options = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -415,7 +420,7 @@ public sealed partial class ProductService
                 Query = WriteQuery(options),
                 Content = EmporixJsonContent.Create(
                     product,
-                    ProductJsonContext.Default.BasicProductCreation),
+                    ProductJsonContext.Default.IEmporixProductCreation),
             },
             ProductJsonContext.Default.ResourceLocation,
             cancellationToken).ConfigureAwait(false);
@@ -428,11 +433,21 @@ public sealed partial class ProductService
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
+    /// <para>
     /// Replaces only what is stated. For a full exchange see <see cref="ReplaceAsync"/>.
+    /// </para>
+    /// <para>
+    /// <b>Not per product type.</b> The specification declares this body as one
+    /// flat <c>productPartialUpdate</c> rather than a <c>oneOf</c>, and
+    /// <see cref="ProductPartialUpdate"/> carries the union of the
+    /// type-specific fields — <c>BundledProducts</c>, <c>VariantAttributes</c>
+    /// and <c>Template</c> among them. So a bundle's contents are patched
+    /// through this one type, with no bundle-specific alternative to choose.
+    /// </para>
     /// </remarks>
     public Task UpdateAsync(
         string productId,
-        BasicProductUpdate changes,
+        ProductPartialUpdate changes,
         ProductWriteOptions? options = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -449,7 +464,7 @@ public sealed partial class ProductService
                 Query = WriteQuery(options),
                 Content = EmporixJsonContent.Create(
                     changes,
-                    ProductJsonContext.Default.BasicProductUpdate),
+                    ProductJsonContext.Default.ProductPartialUpdate),
             },
             cancellationToken);
     }
@@ -462,7 +477,7 @@ public sealed partial class ProductService
     /// <param name="cancellationToken">Cancels the call.</param>
     public Task ReplaceAsync(
         string productId,
-        BasicProductUpdate product,
+        IEmporixProductUpdate product,
         ProductWriteOptions? options = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -479,7 +494,7 @@ public sealed partial class ProductService
                 Query = WriteQuery(options),
                 Content = EmporixJsonContent.Create(
                     product,
-                    ProductJsonContext.Default.BasicProductUpdate),
+                    ProductJsonContext.Default.IEmporixProductUpdate),
             },
             cancellationToken);
     }
@@ -526,7 +541,7 @@ public sealed partial class ProductService
     /// result one by one.
     /// </remarks>
     public async Task<IReadOnlyList<BulkResponse>> CreateManyAsync(
-        IReadOnlyCollection<BasicProductCreation> products,
+        IReadOnlyCollection<IEmporixProductCreation> products,
         ProductWriteOptions? options = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -547,7 +562,7 @@ public sealed partial class ProductService
                 Query = WriteQuery(options),
                 Content = EmporixJsonContent.Create(
                     [.. products],
-                    ProductJsonContext.Default.ListBasicProductCreation),
+                    ProductJsonContext.Default.ListIEmporixProductCreation),
             },
             ProductJsonContext.Default.ListBulkResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
@@ -717,13 +732,13 @@ public sealed partial class ProductService
     /// product was written.
     /// </remarks>
     public async Task<IReadOnlyList<BulkResponse>> UpdateManyAsync(
-        IEnumerable<BasicProductBulkUpdate> products,
+        IEnumerable<IEmporixProductBulkUpdate> products,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(products);
 
-        List<BasicProductBulkUpdate> body = [.. products];
+        List<IEmporixProductBulkUpdate> body = [.. products];
 
         return body.Count == 0
             ? []
@@ -735,7 +750,7 @@ public sealed partial class ProductService
                     Auth = Defaults.Service(auth),
                     Content = EmporixJsonContent.Create(
                         body,
-                        ProductJsonContext.Default.ListBasicProductBulkUpdate),
+                        ProductJsonContext.Default.ListIEmporixProductBulkUpdate),
                 },
                 ProductJsonContext.Default.ListBulkResponse,
                 cancellationToken).ConfigureAwait(false) ?? [];

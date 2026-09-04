@@ -365,7 +365,7 @@ public class ProductServiceTests
     public async Task Update_uses_patch_and_replace_uses_put()
     {
         StubHttpMessageHandler patchHandler = new(HttpStatusCode.NoContent, string.Empty);
-        await Create(patchHandler).UpdateAsync("p1", new BasicProductUpdate());
+        await Create(patchHandler).UpdateAsync("p1", new ProductPartialUpdate());
         Assert.Equal(HttpMethod.Patch, patchHandler.LastRequest!.Method);
 
         StubHttpMessageHandler putHandler = new(HttpStatusCode.NoContent, string.Empty);
@@ -477,5 +477,32 @@ public class ProductServiceTests
         await Assert.ThrowsAsync<ArgumentException>(async () => await products.GetAsync("  "));
         await Assert.ThrowsAsync<ArgumentException>(async () => await products.SearchAsync(""));
         Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Update_can_patch_a_bundles_contents()
+    {
+        // The capability the old signature withheld: BasicProductUpdate has no
+        // property for bundledProducts, so this body could not be built at all.
+        // The specification declares PATCH as productPartialUpdate, which
+        // carries the union of the type-specific fields.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, "");
+        ProductService products = Create(handler);
+
+        await products.UpdateAsync(
+            "g1",
+            new ProductPartialUpdate
+            {
+                // Assigned rather than initialized into: this property is
+                // nullable here, unlike on the bundle types, where it carries a
+                // default instance. The collection-initializer form compiles
+                // against the null and throws at runtime.
+                BundledProducts = [new Anonymous { ProductId = "p1", Amount = 3 }],
+            });
+
+        Assert.Equal(HttpMethod.Patch, handler.RequestMethods[0]);
+        Assert.Equal("/product/acme/products/g1", Uri(handler));
+        Assert.Contains("\"productId\":\"p1\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("\"amount\":3", handler.RequestBodies[0], StringComparison.Ordinal);
     }
 }
