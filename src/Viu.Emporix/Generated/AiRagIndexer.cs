@@ -57,7 +57,7 @@ namespace Viu.Emporix.AiRagIndexerModels
         /// Type of the field.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MetadataFilterType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<MetadataFilterType>))]
         public MetadataFilterType? Type { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;

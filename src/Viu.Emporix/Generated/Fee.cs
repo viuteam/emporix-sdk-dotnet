@@ -182,7 +182,7 @@ namespace Viu.Emporix.FeeModels
         /// <br/>paymenttype. 
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("itemType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FeeItemType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<FeeItemType>))]
         public FeeItemType? ItemType { get; set; } = default!;
 
         /// <summary>

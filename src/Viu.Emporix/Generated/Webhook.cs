@@ -43,7 +43,7 @@ namespace Viu.Emporix.WebhookModels
         /// Indicates which provider should be used.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("provider")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Provider>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Provider>))]
         public Provider? Provider { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -413,7 +413,7 @@ namespace Viu.Emporix.WebhookModels
         /// Status of the subscription.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("subscription")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<WebhookSubscriptionSubscription>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<WebhookSubscriptionSubscription>))]
         public WebhookSubscriptionSubscription? Subscription { get; set; } = default!;
 
         /// <summary>
@@ -459,7 +459,7 @@ namespace Viu.Emporix.WebhookModels
         /// Indicates whether the event should be subscribed to or unsubscribed from.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("action")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<WebhookSubscriptionUpdateItemAction>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<WebhookSubscriptionUpdateItemAction>))]
         public WebhookSubscriptionUpdateItemAction? Action { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]

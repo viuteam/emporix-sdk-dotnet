@@ -809,7 +809,7 @@ namespace Viu.Emporix.ProductModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductType>))]
         public ProductType? ProductType { get; set; } = default!;
 
     }
@@ -867,7 +867,7 @@ namespace Viu.Emporix.ProductModels
         public ProductMetadataWithVersion? Metadata { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductTypeUpdate>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductTypeUpdate>))]
         public ProductTypeUpdate? ProductType { get; set; } = default!;
 
     }
@@ -920,7 +920,7 @@ namespace Viu.Emporix.ProductModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductType>))]
         public ProductType? ProductType { get; set; } = default!;
 
     }
@@ -1023,7 +1023,7 @@ namespace Viu.Emporix.ProductModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductType>))]
         public ProductType? ProductType { get; set; } = default!;
 
     }
@@ -1081,7 +1081,7 @@ namespace Viu.Emporix.ProductModels
         public ProductMetadataWithVersion? Metadata { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductTypeUpdate>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductTypeUpdate>))]
         public ProductTypeUpdate? ProductType { get; set; } = default!;
 
     }
@@ -1133,7 +1133,7 @@ namespace Viu.Emporix.ProductModels
         public string? ParentVariantId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductType>))]
         public ProductType? ProductType { get; set; } = default!;
 
     }
@@ -1191,7 +1191,7 @@ namespace Viu.Emporix.ProductModels
         public VariantProductMetadataWithVersion? Metadata { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductTypeUpdate>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductTypeUpdate>))]
         public ProductTypeUpdate? ProductType { get; set; } = default!;
 
         /// <summary>
@@ -1472,7 +1472,7 @@ namespace Viu.Emporix.ProductModels
         public string? Id { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductType>))]
         public ProductType? ProductType { get; set; } = default!;
 
     }
@@ -1639,7 +1639,7 @@ namespace Viu.Emporix.ProductModels
         public ProductMetadataWithVersion? Metadata { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("productType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProductTypeUpdate>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ProductTypeUpdate>))]
         public ProductTypeUpdate? ProductType { get; set; } = default!;
 
     }
@@ -1734,7 +1734,7 @@ namespace Viu.Emporix.ProductModels
         public System.Collections.Generic.ICollection<string>? RequestedByIds { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DynamicVariantRecalculationJobStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DynamicVariantRecalculationJobStatus>))]
         public DynamicVariantRecalculationJobStatus? Status { get; set; } = default!;
 
         /// <summary>

@@ -45,8 +45,11 @@ fi
   printf '#nullable enable\n'
   # Keep existing entries: Unshipped accumulates until the next release.
   tail -n +2 "$api_file" 2>/dev/null || true
-  [[ -n "$symbols" ]] && printf '%s\n' "$symbols"
-  [[ -n "$removed" ]] && printf '%s\n' "$removed"
+  # «test && printf» would abort the whole group under «set -e» whenever the
+  # variable is empty, which is the normal case for one of the two. An if does
+  # not, and this script writes the file that gates every build.
+  if [[ -n "$symbols" ]]; then printf '%s\n' "$symbols"; fi
+  if [[ -n "$removed" ]]; then printf '%s\n' "$removed"; fi
 } | awk 'NR==1 || (!seen[$0]++ && $0 != "#nullable enable")' > "$api_file.tmp"
 
 mv "$api_file.tmp" "$api_file"

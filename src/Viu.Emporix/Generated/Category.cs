@@ -418,7 +418,7 @@ namespace Viu.Emporix.CategoryModels
         /// Category type, by default it is `STANDARD`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CategoryCreateRequestType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CategoryCreateRequestType>))]
         public CategoryCreateRequestType? Type { get; set; } = default!;
 
         /// <summary>

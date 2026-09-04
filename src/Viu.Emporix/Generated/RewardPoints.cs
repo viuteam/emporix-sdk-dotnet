@@ -353,7 +353,7 @@ namespace Viu.Emporix.RewardPointsModels
         /// Current status of the coupon (read-only). 'INACTIVE': the coupon is only valid in the future; 'VALID': can be used; 'EXPIRED': the coupon validity period has expired; 'USED': the maximum number of redemptions for the coupon has been reached.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CouponStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<CouponStatus>))]
         public CouponStatus? Status { get; set; } = default!;
 
         /// <summary>

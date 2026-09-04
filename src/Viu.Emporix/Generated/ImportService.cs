@@ -205,7 +205,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// How the stream contributes to the target.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mode")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamMode>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamMode>))]
         public ImportStreamMode? Mode { get; set; } = default!;
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// How the delta field's values are formatted, so they can be compared correctly.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("deltaFieldFormat")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamDeltaFieldFormat>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamDeltaFieldFormat>))]
         public ImportStreamDeltaFieldFormat? DeltaFieldFormat { get; set; } = default!;
 
         /// <summary>
@@ -243,14 +243,14 @@ namespace Viu.Emporix.ImportServiceModels
         /// How a composite child's records reach the parent object.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("childStrategy")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamChildStrategy>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamChildStrategy>))]
         public ImportStreamChildStrategy? ChildStrategy { get; set; } = default!;
 
         /// <summary>
         /// How an existing target object is updated. `PATCH` changes only the mapped fields and preserves everything else; `REPLACE_PUT` replaces the whole object, so fields this import does not manage are cleared.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("writeStrategy")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamWriteStrategy>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamWriteStrategy>))]
         public ImportStreamWriteStrategy? WriteStrategy { get; set; } = default!;
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// What happens when a record deleted in the target is seen in the source again.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("onTargetReappear")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamOnTargetReappear>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamOnTargetReappear>))]
         public ImportStreamOnTargetReappear? OnTargetReappear { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("healthThresholds")]
@@ -387,7 +387,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// What triggered the run.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("trigger")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportRunTrigger>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunTrigger>))]
         public ImportRunTrigger? Trigger { get; set; } = default!;
 
         /// <summary>
@@ -406,14 +406,14 @@ namespace Viu.Emporix.ImportServiceModels
         /// The run status.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportRunStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunStatus>))]
         public ImportRunStatus? Status { get; set; } = default!;
 
         /// <summary>
         /// The run mode.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mode")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportRunMode>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunMode>))]
         public ImportRunMode? Mode { get; set; } = default!;
 
         /// <summary>
@@ -558,7 +558,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// The stream's status within the run.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportRunStreamStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunStreamStatus>))]
         public ImportRunStreamStatus? Status { get; set; } = default!;
 
         /// <summary>
@@ -1324,7 +1324,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// The stream's health verdict.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("health")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamHealthHealth>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamHealthHealth>))]
         public ImportStreamHealthHealth? Health { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("thresholds")]
@@ -1574,7 +1574,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// The run mode. When omitted, defaults to `DELTA`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mode")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<BodyMode>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<BodyMode>))]
         public BodyMode? Mode { get; set; } = default!;
 
         /// <summary>

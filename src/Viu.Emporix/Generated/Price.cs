@@ -1336,7 +1336,7 @@ namespace Viu.Emporix.PriceModels
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("searchMode")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SearchPricesSearchMode>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<SearchPricesSearchMode>))]
         public SearchPricesSearchMode? SearchMode { get; set; } = Viu.Emporix.PriceModels.SearchPricesSearchMode.ALL_PRICES;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;

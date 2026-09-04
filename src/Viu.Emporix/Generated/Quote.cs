@@ -322,7 +322,7 @@ namespace Viu.Emporix.QuoteModels
         /// Type of the quote reason.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteReasonResponseType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<QuoteReasonResponseType>))]
         public QuoteReasonResponseType? Type { get; set; } = default!;
 
         /// <summary>
@@ -371,7 +371,7 @@ namespace Viu.Emporix.QuoteModels
         /// Business model of the quote.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("businessModel")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteResponseBusinessModel>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<QuoteResponseBusinessModel>))]
         public QuoteResponseBusinessModel? BusinessModel { get; set; } = default!;
 
         /// <summary>
@@ -946,14 +946,14 @@ namespace Viu.Emporix.QuoteModels
         /// operation type
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("op")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryOp>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<QuoteHistoryEntryOp>))]
         public QuoteHistoryEntryOp? Op { get; set; } = default!;
 
         /// <summary>
         /// Path that indicates on which element the update has been executed.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("path")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryPath>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<QuoteHistoryEntryPath>))]
         public QuoteHistoryEntryPath? Path { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("newValue")]
@@ -984,7 +984,7 @@ namespace Viu.Emporix.QuoteModels
         public string? UserLastName { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("userType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<QuoteHistoryEntryUserType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<QuoteHistoryEntryUserType>))]
         public QuoteHistoryEntryUserType? UserType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("restriction")]
@@ -1909,7 +1909,7 @@ namespace Viu.Emporix.QuoteModels
         /// Defines if product is external or internal. If the product is internal, it's taken from the Emporix Product Service. If the price is external, it's a custom product from external system.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PriceType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<PriceType>))]
         public PriceType? Type { get; set; } = default!;
 
         /// <summary>
@@ -1979,7 +1979,7 @@ namespace Viu.Emporix.QuoteModels
         /// Defines if product is external or internal. If the product is internal, it's taken from the Emporix Product Service. If the price is external, it's a custom product from external system.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Product2Type>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Product2Type>))]
         public Product2Type? Type { get; set; } = default!;
 
         /// <summary>
@@ -2067,7 +2067,7 @@ namespace Viu.Emporix.QuoteModels
         /// Defines if product is external or internal. If the product is internal, it's taken from the Emporix Product Service. If the price is external, it's a custom product from external system.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Product3Type>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Product3Type>))]
         public Product3Type? Type { get; set; } = default!;
 
         /// <summary>
@@ -2119,7 +2119,7 @@ namespace Viu.Emporix.QuoteModels
         /// Defines if price is internal or external. If the price is internal, it's taken from the Emporix Price Service. If the price is external, it's a custom price from external system.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Price2Type>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<Price2Type>))]
         public Price2Type? Type { get; set; } = default!;
 
         /// <summary>

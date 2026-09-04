@@ -130,8 +130,9 @@ typed, one method per kind. `CloudFunctions` has no specification at all.
 
 ### Decisions
 
-`docs/adr/` holds nine ADRs. 0001 type generation, 0004 AOT and trimming, 0005
-retry and backoff, 0007 streaming, 0008 long-running jobs, 0009 cloud functions.
+`docs/adr/` holds ten ADRs. 0001 type generation, 0004 AOT and trimming, 0005
+retry and backoff, 0007 streaming, 0008 long-running jobs, 0009 cloud functions,
+0010 unknown enum values.
 Read the relevant one before changing behaviour it covers.
 
 ## Public API surface

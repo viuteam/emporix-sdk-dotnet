@@ -52,7 +52,7 @@ namespace Viu.Emporix.AvailabilityModels
         public int? Popularity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("distributionChannel")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DistributionChannel>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DistributionChannel>))]
         public DistributionChannel? DistributionChannel { get; set; } = default!;
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Viu.Emporix.AvailabilityModels
         public int? Popularity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("distributionChannel")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DistributionChannel>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DistributionChannel>))]
         public DistributionChannel? DistributionChannel { get; set; } = default!;
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace Viu.Emporix.AvailabilityModels
         public int? Popularity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("distributionChannel")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DistributionChannel>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DistributionChannel>))]
         public DistributionChannel? DistributionChannel { get; set; } = default!;
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace Viu.Emporix.AvailabilityModels
         public int? Popularity { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("distributionChannel")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DistributionChannel>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DistributionChannel>))]
         public DistributionChannel? DistributionChannel { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("bundleAvailabilities")]

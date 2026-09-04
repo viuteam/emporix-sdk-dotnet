@@ -163,7 +163,7 @@ namespace Viu.Emporix.VendorServiceModels
         /// The type of the vendor.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<VendorType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<VendorType>))]
         public VendorType? Type { get; set; } = default!;
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace Viu.Emporix.VendorServiceModels
         /// The type of the vendor. If not provided, the default value is: `COMPANY`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<VendorCreateType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<VendorCreateType>))]
         public VendorCreateType? Type { get; set; } = default!;
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace Viu.Emporix.VendorServiceModels
         /// The type of the location.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LocationType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<LocationType>))]
         public LocationType? Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("contactDetails")]

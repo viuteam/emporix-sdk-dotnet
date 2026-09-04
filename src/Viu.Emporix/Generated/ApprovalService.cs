@@ -82,7 +82,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("resourceType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ResourceType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ResourceType>))]
         public ResourceType? ResourceType { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("details")]
@@ -208,7 +208,7 @@ namespace Viu.Emporix.ApprovalServiceModels
         /// Type of the address data, for example `BILLING` or `SHIPPING`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AddressType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AddressType>))]
         public AddressType? Type { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -427,7 +427,7 @@ namespace Viu.Emporix.ApprovalServiceModels
         public User? Approver { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApprovalStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ApprovalStatus>))]
         public ApprovalStatus? Status { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("expiryDate")]
@@ -1109,7 +1109,7 @@ namespace Viu.Emporix.ApprovalServiceModels
         public ApprovalAction Action { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ApprovalStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ApprovalStatus>))]
         public ApprovalStatus? Status { get; set; } = default!;
 
         /// <summary>

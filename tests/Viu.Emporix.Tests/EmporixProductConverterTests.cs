@@ -106,29 +106,28 @@ public class EmporixProductConverterTests
     }
 
     [Fact]
-    public void An_unknown_product_type_throws_the_way_the_plain_read_does()
+    public void An_unknown_product_type_falls_back_to_the_basic_shape()
     {
-        // The converter routes an unrecognised value to the basic shape, and
-        // then the generated enum property refuses it: NSwag emits
-        // JsonStringEnumConverter<ProductType> as a property-level attribute,
-        // which beats any converter the context declares.
+        // What this design promised from the start, and could not deliver until
+        // the generated enum property stopped refusing an unlisted value.
         //
-        // So this is not the resolving read's behaviour but the SDK's — the
-        // same JSON through ProductJsonContext.Default.BasicProductWithId
-        // throws identically, which is what every plain read on ProductService
-        // uses. Emporix has extended the list before, so it is a real defect;
-        // it belongs in a SpecSync GeneratedCodeFixer rule, since it affects
-        // every enum in every specification rather than products alone.
+        // The converter always routed an unrecognised productType here; it was
+        // the property that then threw, because NSwag emits the strict enum
+        // converter as a property-level attribute. A SpecSync rule now rewrites
+        // that attribute on nullable enum properties, so the value reads as
+        // null and the surrounding object survives.
         //
-        // Asserted rather than left undiscovered: if a fix lands upstream this
-        // test fails and says where to look.
-        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(
+        // This test asserted the throw until then, so that the day the fix
+        // landed it would fail and point here. It did.
+        IEmporixProduct? product = JsonSerializer.Deserialize(
             """{"id":"x1","code":"new","productType":"SOMETHING_NEW"}""",
-            ProductJsonContext.Default.IEmporixProduct));
+            ProductJsonContext.Default.IEmporixProduct);
 
-        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize(
-            """{"id":"x1","code":"new","productType":"SOMETHING_NEW"}""",
-            ProductJsonContext.Default.BasicProductWithId));
+        BasicProductWithId basic = Assert.IsType<BasicProductWithId>(product);
+
+        Assert.Equal("x1", basic.Id);
+        Assert.Equal("new", basic.Code);
+        Assert.Null(basic.ProductType);
     }
 
     [Fact]

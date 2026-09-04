@@ -134,7 +134,7 @@ namespace Viu.Emporix.IamModels
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("restrictedTo")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AccessControlQueryDocumentRestrictedTo>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AccessControlQueryDocumentRestrictedTo>))]
         public AccessControlQueryDocumentRestrictedTo? RestrictedTo { get; set; } = default!;
 
         /// <summary>
@@ -202,7 +202,7 @@ namespace Viu.Emporix.IamModels
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("restrictedTo")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AccessControlUpsertRequestRestrictedTo>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AccessControlUpsertRequestRestrictedTo>))]
         public AccessControlUpsertRequestRestrictedTo? RestrictedTo { get; set; } = default!;
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace Viu.Emporix.IamModels
         /// Assignment type, possible values: CUSTOMER, EMPLOYEE
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("userType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AssignmentCreateRequestUserType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<AssignmentCreateRequestUserType>))]
         public AssignmentCreateRequestUserType? UserType { get; set; } = Viu.Emporix.IamModels.AssignmentCreateRequestUserType.EMPLOYEE;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
@@ -456,7 +456,7 @@ namespace Viu.Emporix.IamModels
         /// The type of the group. Possible values: 'CUSTOMER', 'EMPLOYEE'. Default value 'EMPLOYEE' if not provided.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("userType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GroupCreateRequestUserType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<GroupCreateRequestUserType>))]
         public GroupCreateRequestUserType? UserType { get; set; } = Viu.Emporix.IamModels.GroupCreateRequestUserType.EMPLOYEE;
 
         /// <summary>
@@ -517,7 +517,7 @@ namespace Viu.Emporix.IamModels
         /// The type of the group. Possible values: 'CUSTOMER', 'EMPLOYEE'. Default value 'EMPLOYEE' if not provided
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("userType")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GroupUpdateRequestUserType>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<GroupUpdateRequestUserType>))]
         public GroupUpdateRequestUserType? UserType { get; set; } = Viu.Emporix.IamModels.GroupUpdateRequestUserType.EMPLOYEE;
 
         /// <summary>

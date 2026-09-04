@@ -143,7 +143,7 @@ namespace Viu.Emporix.IndexingServiceModels
         public string? Message { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("status")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReindexJobStatus>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ReindexJobStatus>))]
         public ReindexJobStatus? Status { get; set; } = default!;
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace Viu.Emporix.IndexingServiceModels
         /// Index provider name. Supported providers: `ALGOLIA` (https://www.algolia.com), `BATTERY_INCLUDED` (https://www.batteryincluded.io). Only one provider can be active per tenant at a time.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("provider")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<IndexPublicConfigurationProvider>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<IndexPublicConfigurationProvider>))]
         public IndexPublicConfigurationProvider? Provider { get; set; } = default!;
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace Viu.Emporix.IndexingServiceModels
         /// Indicates reindex mode. Supported modes: `FULL`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mode")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ReindexMode>))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ReindexMode>))]
         public ReindexMode? Mode { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
