@@ -294,6 +294,18 @@ smoke test's seller-side pass is read-only by design.
 specification's `oneOf` inside `items` says yes. No call has been made. This is
 the one capability of this design that rests on the specification alone.
 
+As of the implementation both remain open. The smoke test carries a comment at
+the product section naming them, and follow-up 1 is the opt-in write step that
+would settle them.
+
+**A third thing the implementation found.** `scripts/update-public-api.sh`
+recorded only additions. It parsed `RS0016` and ignored `RS0017`, so the five
+removed signatures were never written to the baseline and the build kept
+failing after a clean run of the script. Every earlier change to this SDK only
+added public API, which is why nothing noticed. Fixed in the same commit as the
+signatures: removals are now recorded as `*REMOVED*` lines, which
+`promote-public-api.sh` already knew how to read.
+
 ## Follow-up work
 
 Recorded so the next piece of work starts from what is known.

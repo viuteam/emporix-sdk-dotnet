@@ -79,6 +79,11 @@ string? productId = await runner.RunAsync("anonymous session and product list", 
 // needs a tenant with variant products — read one back through
 // Products.AnyType.GetAsync and check the returned type is
 // VariantProductWithId rather than BasicProductWithId.
+//
+// Also not covered: whether Emporix accepts a mixed array on PUT /products/bulk,
+// and whether PATCH rejects productType or ignores it. Both are writes, and the
+// seller-side pass here is read-only by design — establishing them needs an
+// opt-in write step against a scratch tenant.
 await runner.RunAsync("fetch one product", async () =>
 {
     if (productId is null)
