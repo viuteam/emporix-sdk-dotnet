@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Records the public API surface in PublicAPI.Unshipped.txt.
+# Records the public API surface in PublicAPI.Unshipped.txt — additions and removals.
 #
 # Microsoft.CodeAnalysis.PublicApiAnalyzers reports every public symbol that is
 # not yet declared as RS0016. IDEs offer a code fix for this; on the command line
@@ -23,7 +23,20 @@ symbols="$(printf '%s\n' "$build_output" \
   | sed "s/RS0016: Symbol '//; s/'$//" \
   | sort -u || true)"
 
-if [[ -z "$symbols" ]]; then
+# The other direction. A symbol that the baseline declares and the assembly no
+# longer has is RS0017, and it is recorded by a «*REMOVED*» line rather than by
+# deleting the entry — promote-public-api.sh reads those when moving Unshipped
+# into Shipped, so a deletion would leave the shipped entry standing forever.
+#
+# This half was missing until the first change that removed a public symbol.
+# Every earlier change only added, so the script only ever needed RS0016, and
+# the gap looked like a script that had stopped working.
+removed="$(printf '%s\n' "$build_output" \
+  | grep -o "RS0017: Symbol '[^']*'" \
+  | sed "s/RS0017: Symbol '/*REMOVED*/; s/'$//" \
+  | sort -u || true)"
+
+if [[ -z "$symbols" && -z "$removed" ]]; then
   echo "No missing entries — PublicAPI.Unshipped.txt is up to date."
   exit 0
 fi
@@ -32,8 +45,13 @@ fi
   printf '#nullable enable\n'
   # Keep existing entries: Unshipped accumulates until the next release.
   tail -n +2 "$api_file" 2>/dev/null || true
-  printf '%s\n' "$symbols"
+  [[ -n "$symbols" ]] && printf '%s\n' "$symbols"
+  [[ -n "$removed" ]] && printf '%s\n' "$removed"
 } | awk 'NR==1 || (!seen[$0]++ && $0 != "#nullable enable")' > "$api_file.tmp"
 
 mv "$api_file.tmp" "$api_file"
-echo "$(($(wc -l < "$api_file") - 1)) symbols in $api_file."
+echo "$(($(wc -l < "$api_file") - 1)) entries in $api_file."
+
+if [[ -n "$removed" ]]; then
+  echo "$(printf '%s\n' "$removed" | wc -l | tr -d ' ') of them record a removed symbol."
+fi
