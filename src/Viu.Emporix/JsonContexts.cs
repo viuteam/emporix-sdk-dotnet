@@ -43,7 +43,12 @@ internal sealed class SearchQueryBody
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    Converters = [typeof(EmporixProductConverter)])]
+    Converters = [
+        typeof(EmporixProductConverter),
+        typeof(EmporixProductCreationConverter),
+        typeof(EmporixProductUpdateConverter),
+        typeof(EmporixProductBulkUpdateConverter),
+    ])]
 [JsonSerializable(typeof(SearchQueryBody))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.BasicProductWithId))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BasicProductWithId>))]
@@ -65,6 +70,29 @@ internal sealed class SearchQueryBody
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationResponse))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationJobResponse))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.DynamicVariantRecalculationJobResponse>))]
+// The write bodies. Four of the five are a oneOf in the specification, so the
+// parameter type is an interface and the concrete types below are what the
+// converters serialize as.
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.IEmporixProductCreation))]
+[JsonSerializable(typeof(List<Viu.Emporix.ProductModels.IEmporixProductCreation>))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.IEmporixProductUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.IEmporixProductBulkUpdate))]
+[JsonSerializable(typeof(List<Viu.Emporix.ProductModels.IEmporixProductBulkUpdate>))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.BundleProductCreation))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ParentVariantProductCreation))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.VariantProductCreation))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantProductCreation))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.BundleProductUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ParentVariantProductUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.VariantProductUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantProductUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.BasicProductBulkUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.BundleProductBulkUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ParentVariantProductBulkUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.VariantProductBulkUpdate))]
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantProductBulkUpdate))]
+// PATCH /products/{productId} declares this single flat schema — not a oneOf.
+[JsonSerializable(typeof(Viu.Emporix.ProductModels.ProductPartialUpdate))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.ProductTemplateResponse))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.ProductTemplateResponse>))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.ProductTemplateCreation))]
