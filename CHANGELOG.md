@@ -9,6 +9,30 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.4.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.3...v0.4.0) (2026-09-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* CreateAsync takes IEmporixQuoteCreation rather than QuoteCreateRequest. Existing source keeps compiling, since the concrete type converts to its interface implicitly, but the signature changed and a consumer has to recompile.
+* twenty-six generated types are renamed, and six nested enums with them. Anonymous becomes BundledProduct, SalePrice, ProductMediaFile, PatchOperation, BulkResponseEntry and so on, per service. Exactly four call sites in this repository referenced any of them, all in product tests written last week; a consumer that named one has the same edit to make.
+* UpdateAsync takes ProductPartialUpdate rather than BasicProductUpdate. The two are unrelated classes, so every PATCH call needs editing. The old signature sent a schema the specification does not declare, and keeping it beside the new one would trip RS0026 and need a renamed sibling, so the break is taken rather than carried forward.
+
+### Added
+
+* let a quote be created from a cart ([#31](https://github.com/viuteam/emporix-sdk-dotnet/issues/31)) ([85a4194](https://github.com/viuteam/emporix-sdk-dotnet/commit/85a4194c858295114318afe5adb58d1f79565165))
+* name the schemas the generator called Anonymous ([#28](https://github.com/viuteam/emporix-sdk-dotnet/issues/28)) ([c316d4d](https://github.com/viuteam/emporix-sdk-dotnet/commit/c316d4d20ff26141f88c1c4b9e2b7a5cbea5d2e1))
+* read an unlisted enum value as null instead of failing the response ([#29](https://github.com/viuteam/emporix-sdk-dotnet/issues/29)) ([7adf2fc](https://github.com/viuteam/emporix-sdk-dotnet/commit/7adf2fc2aa05d4831c425afbf33aa32e9472dbf1))
+* resolve the product type on reads ([#25](https://github.com/viuteam/emporix-sdk-dotnet/issues/25)) ([7937a59](https://github.com/viuteam/emporix-sdk-dotnet/commit/7937a59799ca37635ce9d5482c6816cc60409ec2))
+* walk the catalogue and a parent's variants with the type resolved ([#30](https://github.com/viuteam/emporix-sdk-dotnet/issues/30)) ([212deb0](https://github.com/viuteam/emporix-sdk-dotnet/commit/212deb07184794eb66ff83a72e78d3a70188a858))
+* write products as their own type ([#26](https://github.com/viuteam/emporix-sdk-dotnet/issues/26)) ([6735461](https://github.com/viuteam/emporix-sdk-dotnet/commit/673546171ac47b8f0df134c94235b14cf944ae37))
+
+
+### Documentation
+
+* add a contributing guide ([#23](https://github.com/viuteam/emporix-sdk-dotnet/issues/23)) ([a686ab9](https://github.com/viuteam/emporix-sdk-dotnet/commit/a686ab995a28d0ad609dd3325bcdd96073f90895))
+* answer both write questions against the live tenant ([#27](https://github.com/viuteam/emporix-sdk-dotnet/issues/27)) ([98a6c90](https://github.com/viuteam/emporix-sdk-dotnet/commit/98a6c903ecfcf615098abfb86524d663a5521830))
+
 ## [0.3.3](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.3.2...v0.3.3) (2026-09-03)
 
 
