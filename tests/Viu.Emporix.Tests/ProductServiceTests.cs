@@ -497,7 +497,7 @@ public class ProductServiceTests
                 // nullable here, unlike on the bundle types, where it carries a
                 // default instance. The collection-initializer form compiles
                 // against the null and throws at runtime.
-                BundledProducts = [new Anonymous { ProductId = "p1", Amount = 3 }],
+                BundledProducts = [new BundledProduct { ProductId = "p1", Amount = 3 }],
             });
 
         Assert.Equal(HttpMethod.Patch, handler.RequestMethods[0]);

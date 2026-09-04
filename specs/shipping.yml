@@ -1597,6 +1597,7 @@ paths:
                     details:
                       - siteCode cannot be null
                   type: object
+                  title: bulkResponseEntry
                   properties:
                     id:
                       type: string
@@ -2454,6 +2455,7 @@ components:
       type: array
       items:
         type: object
+        title: patchOperation
         properties:
           op:
             type: string

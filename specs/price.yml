@@ -875,6 +875,7 @@ paths:
                 type: array
                 items:
                   type: object
+                  title: itemPrices
                   properties:
                     itemId:
                       type: string

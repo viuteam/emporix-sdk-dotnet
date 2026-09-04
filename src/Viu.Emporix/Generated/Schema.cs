@@ -944,7 +944,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class BulkResponse : System.Collections.ObjectModel.Collection<Anonymous2>
+    public partial class BulkResponse : System.Collections.ObjectModel.Collection<BulkResponseEntry>
     {
 
     }
@@ -1091,7 +1091,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous : CustomInstanceUpdate
+    public partial class SchemaReference : CustomInstanceUpdate
     {
 
         /// <summary>
@@ -1226,7 +1226,7 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class BulkResponseEntry
     {
 
         /// <summary>

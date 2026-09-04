@@ -144,7 +144,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class BulkAssignmentResponse : System.Collections.ObjectModel.Collection<Anonymous3>
+    public partial class BulkAssignmentResponse : System.Collections.ObjectModel.Collection<BulkAssignmentResult>
     {
 
     }
@@ -171,13 +171,13 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class BulkAssignmentRequest : System.Collections.ObjectModel.Collection<Anonymous2>
+    public partial class BulkAssignmentRequest : System.Collections.ObjectModel.Collection<BulkAssignment>
     {
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class BulkAssignmentUpsertRequest : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class BulkAssignmentUpsertRequest : System.Collections.ObjectModel.Collection<BulkAssignmentUpsert>
     {
 
     }
@@ -1215,7 +1215,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class BulkAssignmentUpsert
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("ref")]
@@ -1233,7 +1233,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class BulkAssignment
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("ref")]
@@ -1271,7 +1271,7 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous3
+    public partial class BulkAssignmentResult
     {
 
         /// <summary>

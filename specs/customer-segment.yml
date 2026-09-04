@@ -1164,6 +1164,7 @@ components:
 
       allOf:
         - type: object
+          title: segmentCore
           properties:
             name:
               type: object
@@ -1320,6 +1321,7 @@ components:
 
       allOf:
         - type: object
+          title: itemAssignmentCore
           properties:
             mixins:
               type: object
@@ -1373,6 +1375,7 @@ components:
       type: array
       items:
         type: object
+        title: categoryTreeNode
         properties:
           id:
             type: string

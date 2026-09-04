@@ -240,7 +240,7 @@ namespace Viu.Emporix.LabelServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class ErrorDetail
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("message")]

@@ -340,7 +340,7 @@ namespace Viu.Emporix.ProductModels
     /// List of bundled products
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class BundledProducts : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class BundledProducts : System.Collections.ObjectModel.Collection<BundledProduct>
     {
 
     }
@@ -410,7 +410,7 @@ namespace Viu.Emporix.ProductModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class SalePricesData : System.Collections.ObjectModel.Collection<Anonymous2>
+    public partial class SalePricesData : System.Collections.ObjectModel.Collection<SalePrice>
     {
 
     }
@@ -619,7 +619,7 @@ namespace Viu.Emporix.ProductModels
     /// Media files attached to the product.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ProductMedia : System.Collections.ObjectModel.Collection<Anonymous3>
+    public partial class ProductMedia : System.Collections.ObjectModel.Collection<ProductMediaFile>
     {
 
     }
@@ -2137,7 +2137,7 @@ namespace Viu.Emporix.ProductModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class BundledProduct
     {
 
         /// <summary>
@@ -2167,7 +2167,7 @@ namespace Viu.Emporix.ProductModels
     /// Mixins of the `salePricesData`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class SalePrice
     {
 
         /// <summary>
@@ -2389,7 +2389,7 @@ namespace Viu.Emporix.ProductModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous3
+    public partial class ProductMediaFile
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("id")]

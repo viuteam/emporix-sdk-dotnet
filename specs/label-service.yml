@@ -368,6 +368,7 @@ components:
             type: array
             items:
               type: object
+              title: errorDetail
               properties:
                 message:
                   type: string

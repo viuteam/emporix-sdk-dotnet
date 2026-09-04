@@ -36,7 +36,7 @@ namespace Viu.Emporix.ShippingModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Patch : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class Patch : System.Collections.ObjectModel.Collection<PatchOperation>
     {
 
     }
@@ -1143,7 +1143,7 @@ namespace Viu.Emporix.ShippingModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class PatchOperation
     {
 
         /// <summary>
@@ -1218,7 +1218,7 @@ namespace Viu.Emporix.ShippingModels
     /// Schema for API bulk response.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous2
+    public partial class BulkResponseEntry
     {
 
         /// <summary>

@@ -838,7 +838,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     /// Approval partial update operation list.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class UpdateApprovalRequest : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class UpdateApprovalRequest : System.Collections.ObjectModel.Collection<PatchOperation>
     {
 
     }
@@ -962,7 +962,7 @@ namespace Viu.Emporix.ApprovalServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class PatchOperation
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("op")]

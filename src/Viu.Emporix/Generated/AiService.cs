@@ -2116,7 +2116,7 @@ namespace Viu.Emporix.AiServiceModels
     /// List of agent collaborations which allows an agent to hand off its task to other agents.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class AgentCollaborations : System.Collections.ObjectModel.Collection<Anonymous3>
+    public partial class AgentCollaborations : System.Collections.ObjectModel.Collection<AgentCollaboration>
     {
 
     }
@@ -3120,7 +3120,7 @@ namespace Viu.Emporix.AiServiceModels
     /// Partial update operation list.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class PatchRequest : System.Collections.ObjectModel.Collection<Anonymous>
+    public partial class PatchRequest : System.Collections.ObjectModel.Collection<PatchOperation>
     {
 
     }
@@ -3548,7 +3548,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous
+    public partial class PatchOperation
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("op")]
@@ -3889,7 +3889,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous3
+    public partial class AgentCollaboration
     {
 
         /// <summary>

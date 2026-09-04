@@ -1612,6 +1612,7 @@ components:
       type: array
       description: Quote item ID.
       items:
+        title: quoteItemReplacement
         allOf:
           - $ref: '#/components/schemas/QuoteItemUpdate'
           - type: object
@@ -2274,6 +2275,7 @@ components:
       description: List of item IDs.
       items:
         type: object
+        title: quoteItemReference
         properties:
           itemId:
             type: string
@@ -2283,6 +2285,7 @@ components:
       description: Quote update operation list.
       items:
         type: object
+        title: patchOperation
         properties:
           op:
             type: string
@@ -2333,6 +2336,7 @@ components:
       description: Quote update operation list.
       items:
         type: object
+        title: quoteHistoryEntry
         properties:
           id:
             description: The unique ID of the audit log.

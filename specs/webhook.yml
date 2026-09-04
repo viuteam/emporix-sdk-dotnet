@@ -1043,6 +1043,7 @@ components:
       content:
         application/json:
           schema:
+            title: webhookConfig
             allOf:
               - $ref: '#/components/schemas/AbstractWebhookConfig'
               - type: object
@@ -1061,6 +1062,7 @@ components:
           schema:
             type: array
             items:
+              title: webhookConfigListItem
               allOf:
                 - $ref: '#/components/schemas/AbstractWebhookConfig'
                 - type: object

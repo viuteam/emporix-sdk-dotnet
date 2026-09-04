@@ -1724,6 +1724,7 @@ paths:
             schema:
               type: array
               items:
+                title: schemaReference
                 allOf:
                   - type: object
                     properties:
@@ -2518,6 +2519,7 @@ components:
       type: array
       items:
         type: object
+        title: bulkResponseEntry
         properties:
           index:
             type: integer

@@ -732,7 +732,7 @@ namespace Viu.Emporix.WebhookModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Anonymous : AbstractWebhookConfig
+    public partial class WebhookConfigListItem : AbstractWebhookConfig
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("code")]
@@ -744,7 +744,7 @@ namespace Viu.Emporix.WebhookModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response3 : AbstractWebhookConfig
+    public partial class WebhookConfig : AbstractWebhookConfig
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("code")]
