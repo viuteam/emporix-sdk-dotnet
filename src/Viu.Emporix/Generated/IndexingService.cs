@@ -247,7 +247,7 @@ namespace Viu.Emporix.IndexingServiceModels
     {
 
         /// <summary>
-        /// API key used for write purposes.
+        /// API key used for write purposes. For `BATTERY_INCLUDED`, this key is validated before the configuration is created or updated.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("writeKey")]
         public string? WriteKey { get; set; } = default!;

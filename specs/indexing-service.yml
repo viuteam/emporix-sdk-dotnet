@@ -19,6 +19,10 @@ paths:
 
         Identifier of a newly created configuration is a provider name.
         Only one provider can be active per tenant at a time.
+
+        For `BATTERY_INCLUDED`, the service validates `indexName` and `writeKey` before saving.
+        Invalid credentials return `400`. If credential validation is temporarily unavailable,
+        the request returns `502`. In both cases, the configuration is not stored.
       security:
         - OAuth2:
             - indexing.search_manage
@@ -68,6 +72,8 @@ paths:
           $ref: '#/components/responses/Unauthorized_401'
         '403':
           $ref: '#/components/responses/Forbidden_403'
+        '502':
+          $ref: '#/components/responses/BadGateway_502'
       operationId: POST-indexing-create-config
       tags:
         - Configuration
@@ -160,7 +166,12 @@ paths:
       operationId: GET-indexing-retrieve-config
     put:
       summary: Update configuration by provider name
-      description: Updates an existing index configuration.
+      description: |-
+        Updates an existing index configuration.
+
+        For `BATTERY_INCLUDED`, the service validates `indexName` and `writeKey` before saving.
+        Invalid credentials return `400`. If credential validation is temporarily unavailable,
+        the request returns `502`. In both cases, the configuration is left unchanged.
       security:
         - OAuth2:
             - indexing.search_manage
@@ -197,6 +208,8 @@ paths:
           $ref: '#/components/responses/Forbidden_403'
         '404':
           $ref: '#/components/responses/NotFound_404'
+        '502':
+          $ref: '#/components/responses/BadGateway_502'
       operationId: PUT-indexing-update-config
       tags:
         - Configuration
@@ -312,12 +325,16 @@ paths:
           $ref: '#/components/responses/Unauthorized_401'
         '403':
           $ref: '#/components/responses/Forbidden_403'
+        '502':
+          $ref: '#/components/responses/BadGateway_502'
       tags:
         - Reindex
       description: |-
         Triggers indexing process of products for the tenant. The reindex works with a `FULL` mode - all products are reindexed.
 
         This endpoint is marked as deprecated. Use the [Creating reindex job](https://developer.emporix.io/api-references/api-guides/configuration/indexing-service/api-reference/reindex#post-indexing-tenant-reindex-jobs) endpoint instead.
+
+        For tenants on `BATTERY_INCLUDED`, the same credential validation runs before the reindex job is started.
       security:
         - OAuth2:
             - indexing.search_manage
@@ -377,10 +394,14 @@ paths:
           $ref: '#/components/responses/Unauthorized_401'
         '403':
           $ref: '#/components/responses/Forbidden_403'
+        '502':
+          $ref: '#/components/responses/BadGateway_502'
       tags:
         - Reindex
       description: |-
         Triggers indexing process of given entities for the tenant. The reindex works with a `FULL` mode - all entities are reindexed. It returns a reindex job which allows to track the progress. The `SUCCESS` means that all entities events are indexed.
+
+        When the active search provider is `BATTERY_INCLUDED` and `entityType` is `PRODUCT`, the service validates stored credentials before creating the job. Invalid credentials return `400`. If credential validation is temporarily unavailable, the request returns `502`. In both cases, no job is created.
       security:
         - OAuth2:
             - indexing.search_manage
@@ -590,7 +611,9 @@ components:
           properties:
             writeKey:
               type: string
-              description: API key used for write purposes.
+              description: >-
+                API key used for write purposes. For `BATTERY_INCLUDED`, this key is validated
+                before the configuration is created or updated.
             excludedMixinKeys:
               type: array
               items:
@@ -690,11 +713,28 @@ components:
           schema:
             $ref: '#/components/schemas/errorMessage'
           examples:
-            Example 1:
+            Unsupported provider:
               value:
                 code: 400
                 status: Bad Request
                 message: The provider UNKNOWN_PROVIDER is not supported.
+            Battery Included invalid credentials:
+              value:
+                code: 400
+                status: Bad Request
+                message: Battery Included credentials are invalid. Verify the write key and index name.
+    BadGateway_502:
+      description: Upstream dependency was unavailable. Details will be provided in the response payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Battery Included credential validation unavailable:
+              value:
+                code: 502
+                status: Bad Gateway
+                message: Battery Included credential validation is temporarily unavailable. Try again later.
     NotFound_404:
       description: Resource has not been found.
       content:
