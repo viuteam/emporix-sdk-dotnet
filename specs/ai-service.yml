@@ -3640,6 +3640,19 @@ components:
                   description: List of events that trigger the agent.
                 filter:
                   $ref: '#/components/schemas/CommerceEventTriggerFilter'
+                eventScopes:
+                  type: array
+                  description: >-
+                    Optional IAM scopes used to obtain an Emporix token when the agent
+                    runs from a Commerce Event. When omitted or empty, the agent does
+                    not receive `emporix-token`. Each value must be a scope the caller
+                    is allowed to grant.
+                  items:
+                    type: string
+                  uniqueItems: true
+                  example:
+                    - order.order_read
+                    - product.product_read
               required:
                 - events
           required:
