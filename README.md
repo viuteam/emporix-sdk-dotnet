@@ -774,6 +774,13 @@ every call is a `GET` or a search — and it covers the services no browser ever
 sees: taxes, sites, shipping zones, IAM, custom entities, imports, indexing,
 reward options, AI agents and tools, shopping lists and the audit log.
 
+A third pass writes, and exists because the read-only one could not: it creates
+a media asset, patches it, attaches a reference, detaches it and deletes the
+asset again, reading back after each step because this service answers `204` to
+writes it discards. Attaching an asset to a product had been broken since the
+day it shipped, and nothing had noticed. Every step verifies its own effect, and
+the delete runs even when a step before it fails.
+
 ```bash
 EMPORIX_BACKEND_CLIENT_ID=your-client-id EMPORIX_BACKEND_SECRET=your-secret dotnet run --project samples/Viu.Emporix.SmokeTest
 ```

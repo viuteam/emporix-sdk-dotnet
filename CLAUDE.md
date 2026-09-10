@@ -52,7 +52,9 @@ The live smoke test needs credentials from the environment and is the only thing
 that catches a request body the API rejects. `samples/Viu.Emporix.SmokeTest`
 walks the anonymous storefront flow; with `EMPORIX_BACKEND_CLIENT_ID` and
 `EMPORIX_BACKEND_SECRET` it also makes a read-only pass over the seller-side
-services. See the README section «Before releasing: the smoke test».
+services and one writing pass over media, which undoes everything it does. See
+the README section «Before releasing: the smoke test». A step there reads back
+what it wrote: several Emporix writes answer `204` and discard the change.
 
 ## The rule that matters most
 
