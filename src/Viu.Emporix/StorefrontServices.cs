@@ -1374,6 +1374,53 @@ public sealed class MediaService
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Changes individual fields of an asset.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="operations">The JSON Patch operations to apply.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <para>
+    /// The only write that reaches a <c>BLOB</c> asset without re-uploading the
+    /// file, and the only one that changes a reference without reading the asset
+    /// first. <c>type</c> and <c>access</c> are immutable: the API rejects a
+    /// patch naming either.
+    /// </para>
+    /// <para>
+    /// Not repeatable, and cannot be marked so. Appending through the path
+    /// <c>/refIds/-</c> adds an entry every time it runs, so a retry after a
+    /// timeout would leave the same reference twice.
+    /// </para>
+    /// <para>
+    /// <see cref="MediaModels.PatchOperation.Op"/> is a non-nullable generated
+    /// enum whose default is <c>Add</c>, so an operation built without setting
+    /// it means «add» rather than failing.
+    /// </para>
+    /// </remarks>
+    public Task PatchAsync(
+        string assetId,
+        IEnumerable<MediaModels.PatchOperation> operations,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+        ArgumentNullException.ThrowIfNull(operations);
+
+        List<MediaModels.PatchOperation> body = [.. operations];
+        ArgumentOutOfRangeException.ThrowIfZero(body.Count, nameof(operations));
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Patch,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    body, MediaJsonContext.Default.ListPatchOperation),
+            },
+            cancellationToken);
+    }
+
     /// <summary>Lists the assets attached to a product.</summary>
     /// <param name="productId">The product.</param>
     /// <param name="pageNumber">The page number, counting from 1.</param>

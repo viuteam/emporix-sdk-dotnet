@@ -133,7 +133,7 @@ namespace Viu.Emporix.MediaModels
     {
 
         /// <summary>
-        /// Reference type. Can be one of the predefined types: `BRAND`, `CATEGORY`, `LABEL`, `PRODUCT`, `MODULE` or any custom schema type.
+        /// Reference type. Can be one of the predefined types: `BRAND`, `CATEGORY`, `LABEL`, `PRODUCT`, `MODULE`, `AGENT` or any custom schema type.
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
@@ -144,6 +144,44 @@ namespace Viu.Emporix.MediaModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         public string? Id { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class PatchOperation
+    {
+
+        /// <summary>
+        /// JSON Patch operation. Available operations: `add`, `remove`, and `replace`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("op")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationOp>))]
+        public PatchOperationOp Op { get; set; } = default!;
+
+        /// <summary>
+        /// Path to the field to update.
+        /// <br/>
+        /// <br/>Examples: `/url`, `/refIds`, `/refIds/-`.
+        /// <br/>
+        /// <br/>To append an item to an array, use `add` with a path ending in `/-`. The `-` means append after the last element.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("path")]
+        public string Path { get; set; } = default!;
+
+        /// <summary>
+        /// Value to add or replace. The value can be a primitive type, an object, or an array.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("value")]
+        public object? Value { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -498,6 +536,25 @@ namespace Viu.Emporix.MediaModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<PatchOperationOp>))]
+    public enum PatchOperationOp
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"add")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("add")]
+        Add = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"remove")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("remove")]
+        Remove = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"replace")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("replace")]
+        Replace = 2,
 
     }
 

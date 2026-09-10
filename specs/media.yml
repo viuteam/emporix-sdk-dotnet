@@ -24,7 +24,7 @@ paths:
 
         **Access and assignment rules:**
         - Assets assigned to predefined `refIds` types (such as `CATEGORY` or `PRODUCT`) require `PUBLIC` access.
-        - `PRIVATE` access assets can be linked to custom schema types or remain unassigned.
+        - `PRIVATE` access assets can be linked to `AGENT`, custom schema types, or remain unassigned.
       security:
         - OAuth2:
             - media.asset_manage
@@ -283,6 +283,54 @@ paths:
       operationId: PUT-media-update-asset
       tags:
         - Assets
+    patch:
+      summary: Partially updating an asset
+      description: |-
+        Partially updates an asset with a JSON Patch document that follows the [RFC-6902](https://datatracker.ietf.org/doc/html/rfc6902) standard.
+
+        Use this endpoint to change fields such as `refIds` without replacing the full asset. You can patch `BLOB` assets without re-uploading the file. The `type` and `access` properties are immutable.
+      security:
+        - OAuth2:
+            - media.asset_manage
+            - media.asset_manage_by_vendor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchOperation'
+            examples:
+              Append a reference:
+                value:
+                  - op: add
+                    path: /refIds/-
+                    value:
+                      id: product1
+                      type: PRODUCT
+              Replace a URL:
+                value:
+                  - op: replace
+                    path: /url
+                    value: 'https://emporix.io/docs/index.html'
+      responses:
+        '204':
+          description: The asset has been updated successfully.
+        '400':
+          $ref: '#/components/responses/BadRequest_400_Update'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          $ref: '#/components/responses/Conflict_409'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      operationId: PATCH-media-update-asset
+      tags:
+        - Assets
     delete:
       summary: Deleting an asset
       description: |-
@@ -400,10 +448,33 @@ components:
         type:
           type: string
           description: |
-            Reference type. Can be one of the predefined types: `BRAND`, `CATEGORY`, `LABEL`, `PRODUCT`, `MODULE` or any custom schema type.
+            Reference type. Can be one of the predefined types: `BRAND`, `CATEGORY`, `LABEL`, `PRODUCT`, `MODULE`, `AGENT` or any custom schema type.
         id:
           type: string
           description: Reference Id.
+    PatchOperation:
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+            - add
+            - remove
+            - replace
+          description: 'JSON Patch operation. Available operations: `add`, `remove`, and `replace`.'
+        path:
+          type: string
+          description: |-
+            Path to the field to update.
+
+            Examples: `/url`, `/refIds`, `/refIds/-`.
+
+            To append an item to an array, use `add` with a path ending in `/-`. The `-` means append after the last element.
+        value:
+          description: Value to add or replace. The value can be a primitive type, an object, or an array.
+      required:
+        - op
+        - path
     Asset:
       title: Asset
       type: object

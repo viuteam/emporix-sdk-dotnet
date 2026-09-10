@@ -1,1 +1,2 @@
 #nullable enable
+Viu.Emporix.MediaService.PatchAsync(string! assetId, System.Collections.Generic.IEnumerable<Viu.Emporix.MediaModels.PatchOperation!>! operations, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

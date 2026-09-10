@@ -948,6 +948,8 @@ paths:
       description: |-
         Updates or creates a specified product by replacing all of its existing data with data from the request body.
         If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
+
+        A full replacement (`partial=false`) removes mixin names that are omitted from the request body. To remove a mixin, omit it from `mixins` and `metadata.mixins`. The request body must include the complete product document.
         ***
 
         **Additional scope information**
@@ -1000,7 +1002,17 @@ paths:
         '500':
           $ref: '#/components/responses/common_response_InternalServerError_500'
       description: |-
-        Partially updates a specified product.
+        Partially updates a specified product. Omitted fields remain unchanged.
+
+        **Mixins**
+
+        * Mixin names omitted from the request remain on the product.
+        * Fields sent for a mixin are merged recursively. Fields omitted inside that mixin remain unchanged.
+        * A `null` value does not remove a mixin. The mixin remains on the product with the value `null`.
+
+        This endpoint does not accept JSON Patch operations (`op`, `path`, `value`).
+
+        To remove a mixin, retrieve the product and send a full replacement using [Upserting a product](https://developer.emporix.io/api-references/api-guides/products-labels-and-brands/product-service/api-reference/products#put-product-tenant-products-productid) with `partial=false`. Omit the mixin from `mixins` and `metadata.mixins`.
         ***
 
         **Additional scope information**
@@ -2099,8 +2111,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/productPartialUpdate'
-          example:
-            published: true
+          examples:
+            Update published flag:
+              value:
+                published: true
+            Update mixin fields:
+              summary: Merges the sent mixin fields. Other mixin names and omitted fields remain unchanged.
+              value:
+                mixins:
+                  productCustomAttributes:
+                    orderUnit: H87
+                metadata:
+                  version: 1
     productBulkUpdateBody:
       content:
         application/json:
@@ -2569,7 +2591,10 @@ components:
         Mixins of the `productVariantAttributes` which contains information about the variant attributes used from the product template in the form of a map, where 'key' is an attribute name and 'value' is the attribute value.
     productMixins:
       type: object
-      description: Mixins request.
+      description: |-
+        Custom product attributes, keyed by mixin name.
+
+        On a partial update, omitted mixin names remain on the product. Sent fields are merged recursively. A `null` value does not remove a mixin. To remove a mixin, send a full product replacement and omit the mixin name.
       additionalProperties: true
     productVariantMixins:
       type: object
