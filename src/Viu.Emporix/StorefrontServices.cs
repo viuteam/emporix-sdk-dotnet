@@ -1392,21 +1392,23 @@ public sealed class MediaService
     /// timeout would leave the same reference twice.
     /// </para>
     /// <para>
-    /// <see cref="MediaModels.PatchOperation.Op"/> is a non-nullable generated
-    /// enum whose default is <c>Add</c>, so an operation built without setting
-    /// it means «add» rather than failing.
+    /// Appending through <c>/refIds/-</c> needs the list to be there already:
+    /// on an asset created without references the API answers
+    /// «Missing field "refIds"» with a 400, which is RFC-6902 refusing to
+    /// append to something that does not exist. Add the whole array first.
+    /// Verified against tenant viu on 2026-09-10.
     /// </para>
     /// </remarks>
     public Task PatchAsync(
         string assetId,
-        IEnumerable<MediaModels.PatchOperation> operations,
+        IEnumerable<MediaPatchOperation> operations,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
         ArgumentNullException.ThrowIfNull(operations);
 
-        List<MediaModels.PatchOperation> body = [.. operations];
+        List<MediaPatchOperation> body = [.. operations];
         ArgumentOutOfRangeException.ThrowIfZero(body.Count, nameof(operations));
 
         return _http.SendAsync(
@@ -1416,7 +1418,7 @@ public sealed class MediaService
                 Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}",
                 Auth = Defaults.Service(auth),
                 Content = EmporixJsonContent.Create(
-                    body, MediaJsonContext.Default.ListPatchOperation),
+                    body, MediaJsonContext.Default.ListMediaPatchOperation),
             },
             cancellationToken);
     }
@@ -1517,6 +1519,11 @@ public sealed class MediaService
                     new MediaModels.AssetReferenceUpdate
                     {
                         Type = asset.Type?.ToString() ?? "BLOB",
+                        Access = asset.Access,
+                        Url = asset.Url,
+                        Metadata = asset.Metadata is { } read
+                            ? new MediaModels.MetadataUpdate { Version = read.Version }
+                            : null,
                         RefIds = references,
                     },
                     MediaJsonContext.Default.AssetReferenceUpdate),

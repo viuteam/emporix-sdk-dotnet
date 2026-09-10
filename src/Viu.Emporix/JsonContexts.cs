@@ -300,7 +300,7 @@ internal sealed partial class OrderJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetUpdateLink))]
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetReferenceUpdate))]
 // The body of a JSON Patch on an asset: an array, not an object.
-[JsonSerializable(typeof(List<Viu.Emporix.MediaModels.PatchOperation>))]
+[JsonSerializable(typeof(List<Viu.Emporix.MediaPatchOperation>))]
 internal sealed partial class MediaJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the tax service. See <see cref="ProductJsonContext"/>.</summary>

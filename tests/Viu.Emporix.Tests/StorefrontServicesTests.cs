@@ -342,11 +342,12 @@ public class StorefrontServicesTests
         await media.PatchAsync(
             "a1",
             [
-                new MediaModels.PatchOperation
+                new MediaPatchOperation
                 {
                     Op = MediaModels.PatchOperationOp.Add,
                     Path = "/refIds/-",
-                    Value = new MediaModels.RefId { Type = "PRODUCT", Id = "p1" },
+                    Value = System.Text.Json.JsonDocument
+                        .Parse("""{"type":"PRODUCT","id":"p1"}""").RootElement,
                 },
             ]);
 
@@ -368,7 +369,15 @@ public class StorefrontServicesTests
 
         await media.PatchAsync(
             "a1",
-            [new MediaModels.PatchOperation { Path = "/url", Value = "https://example.test/a" }]);
+            [
+                new MediaPatchOperation
+                {
+                    Op = MediaModels.PatchOperationOp.Replace,
+                    Path = "/url",
+                    Value = System.Text.Json.JsonDocument
+                        .Parse("\"https://example.test/a\"").RootElement,
+                },
+            ]);
 
         Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
     }
@@ -384,6 +393,34 @@ public class StorefrontServicesTests
             await media.PatchAsync("a1", []));
 
         Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Attaching_echoes_back_everything_the_replacement_needs()
+    {
+        // The endpoint replaces the asset rather than merging into it, and it
+        // rejected this body three times in a row against tenant viu: first for
+        // a missing access, then a missing url, then a missing metadata.version.
+        // Each is read from the asset first and sent back unchanged.
+        StubHttpMessageHandler handler = new((request, _) => StubHttpMessageHandler.Json(
+            HttpStatusCode.OK,
+            request.Method == HttpMethod.Get
+                ? """
+                  {"id":"a1","type":"LINK","access":"PUBLIC",
+                   "url":"https://example.test/a","refIds":[],
+                   "metadata":{"version":7}}
+                  """
+                : """{"id":"a1"}"""));
+        MediaService media = new(Http(handler), Options());
+
+        await media.AttachToProductAsync("a1", "p1");
+
+        string body = handler.RequestBodies[^1];
+
+        Assert.Contains("\"access\":\"PUBLIC\"", body, StringComparison.Ordinal);
+        Assert.Contains("https://example.test/a", body, StringComparison.Ordinal);
+        Assert.Contains("\"version\":7", body, StringComparison.Ordinal);
+        Assert.Contains("\"id\":\"p1\"", body, StringComparison.Ordinal);
     }
 
     // ---------- Shared ----------
