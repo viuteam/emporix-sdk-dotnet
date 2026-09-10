@@ -1657,57 +1657,75 @@ namespace Viu.Emporix.QuoteModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"/status")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/status")]
         _status = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/validTo")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/validTo")]
         _validTo = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/comment")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/comment")]
         _comment = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/billingAddressId")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/billingAddressId")]
         _billingAddressId = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/shippingAddressId")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/shippingAddressId")]
         _shippingAddressId = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/companyName")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/companyName")]
         _companyName = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/customerId")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/customerId")]
         _customerId = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/shipping")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/shipping")]
         _shipping = 7,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/restriction")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/restriction")]
         _restriction = 8,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items")]
         _items = 9,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}")]
         _items__itemId_ = 10,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/price")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/price")]
         _items__itemId__price = 11,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/mixins/{mixinsPath}")]
         _items__itemId__mixins__mixinsPath_ = 12,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/metadata/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/metadata/mixins/{mixinsPath}")]
         _items__itemId__metadata_mixins__mixinsPath_ = 13,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/product/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/product/mixins/{mixinsPath}")]
         _items__itemId__product_mixins__mixinsPath_ = 14,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/product/metadata/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/product/metadata/mixins/{mixinsPath}")]
         _items__itemId__product_metadata_mixins__mixinsPath_ = 15,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/mixins/{mixinsPath}")]
         _mixins__mixinsPath_ = 16,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/metadata/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/metadata/{mixinsPath}")]
         _metadata__mixinsPath_ = 17,
 
     }
@@ -1758,60 +1776,79 @@ namespace Viu.Emporix.QuoteModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"/quote")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/quote")]
         _quote = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/status")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/status")]
         _status = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/validTo")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/validTo")]
         _validTo = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/comment")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/comment")]
         _comment = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/billingAddressId")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/billingAddressId")]
         _billingAddressId = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/shippingAddressId")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/shippingAddressId")]
         _shippingAddressId = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/companyName")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/companyName")]
         _companyName = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/customerId")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/customerId")]
         _customerId = 7,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/shipping")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/shipping")]
         _shipping = 8,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/restriction")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/restriction")]
         _restriction = 9,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items")]
         _items = 10,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}")]
         _items__itemId_ = 11,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/price")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/price")]
         _items__itemId__price = 12,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/mixins/{mixinsPath}")]
         _items__itemId__mixins__mixinsPath_ = 13,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/metadata/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/metadata/mixins/{mixinsPath}")]
         _items__itemId__metadata_mixins__mixinsPath_ = 14,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/product/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/product/mixins/{mixinsPath}")]
         _items__itemId__product_mixins__mixinsPath_ = 15,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/items/{itemId}/product/metadata/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/items/{itemId}/product/metadata/mixins/{mixinsPath}")]
         _items__itemId__product_metadata_mixins__mixinsPath_ = 16,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/mixins/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/mixins/{mixinsPath}")]
         _mixins__mixinsPath_ = 17,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/metadata/{mixinsPath}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/metadata/{mixinsPath}")]
         _metadata__mixinsPath_ = 18,
 
     }

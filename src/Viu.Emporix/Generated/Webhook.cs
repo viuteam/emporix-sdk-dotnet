@@ -774,63 +774,83 @@ namespace Viu.Emporix.WebhookModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"/active")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/active")]
         _active = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration")]
         _configuration = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/svix/apiKey")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/svix/apiKey")]
         _configuration_svix_apiKey = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/headers")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/headers")]
         _configuration_http_headers = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/destinationUrl")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/destinationUrl")]
         _configuration_http_destinationUrl = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/secretKey")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/secretKey")]
         _configuration_http_secretKey = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfiguration")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfiguration")]
         _configuration_http_eventsConfiguration = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfiguration/{eventType}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfiguration/{eventType}")]
         _configuration_http_eventsConfiguration__eventType_ = 7,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfiguration/{eventType}/destinationUrl")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfiguration/{eventType}/destinationUrl")]
         _configuration_http_eventsConfiguration__eventType__destinationUrl = 8,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfiguration/{eventType}/secretKey")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfiguration/{eventType}/secretKey")]
         _configuration_http_eventsConfiguration__eventType__secretKey = 9,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfiguration/{eventType}/headers")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfiguration/{eventType}/headers")]
         _configuration_http_eventsConfiguration__eventType__headers = 10,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry")]
         _configuration_http_eventsConfigurationEntry = 11,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}")]
         _configuration_http_eventsConfigurationEntry__entryId_ = 12,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/destinationUrl")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/destinationUrl")]
         _configuration_http_eventsConfigurationEntry__entryId__destinationUrl = 13,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/secretKey")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/secretKey")]
         _configuration_http_eventsConfigurationEntry__entryId__secretKey = 14,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/headers")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/headers")]
         _configuration_http_eventsConfigurationEntry__entryId__headers = 15,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/filter")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/filter")]
         _configuration_http_eventsConfigurationEntry__entryId__filter = 16,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/excludedFields")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/excludedFields")]
         _configuration_http_eventsConfigurationEntry__entryId__excludedFields = 17,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/name")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/name")]
         _configuration_http_eventsConfigurationEntry__entryId__name = 18,
 
         [System.Runtime.Serialization.EnumMember(Value = @"/configuration/http/eventsConfigurationEntry/{entryId}/active")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("/configuration/http/eventsConfigurationEntry/{entryId}/active")]
         _configuration_http_eventsConfigurationEntry__entryId__active = 19,
 
     }

@@ -218,6 +218,70 @@ internal static partial class GeneratedCodeFixer
     }
 
     /// <summary>
+    /// Makes an enum member serialise as the value its specification declares.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// NSwag records the declared value in <c>[EnumMember]</c> and then names
+    /// the C# member in its own style: <c>add</c> becomes <c>Add</c>,
+    /// <c>/status</c> becomes <c>_status</c>, <c>role,resource</c> becomes
+    /// <c>Role_resource</c>. <c>JsonStringEnumConverter</c> ignores
+    /// <c>[EnumMember]</c> — probed, it writes the member name — so every such
+    /// member goes out as a value the API never declared. A JSON Patch built
+    /// from the generated types sent <c>"op":"Add"</c> where RFC-6902 and the
+    /// specification both say <c>add</c>.
+    /// </para>
+    /// <para>
+    /// <c>[JsonStringEnumMemberName]</c> is what that converter does read, so
+    /// one attribute per divergent member fixes reading and writing together.
+    /// Reads happened to survive the pure-case divergences, because the
+    /// converter parses case-insensitively; <c>/status</c> and
+    /// <c>role,resource</c> had no such luck and threw.
+    /// </para>
+    /// <para>
+    /// Members whose declared value already equals their C# name — 570 of 753 —
+    /// are left untouched, so the attribute appears only where it changes
+    /// something.
+    /// </para>
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Named) NameEnumMembersOnTheWire(string source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        List<string> named = [];
+
+        string result = EnumMemberValue().Replace(source, match =>
+        {
+            string wire = match.Groups["wire"].Value;
+            string member = match.Groups["member"].Value;
+
+            // Nothing to say where the generator already picked the declared
+            // value, and nothing to add twice: a second run must not stack.
+            if (wire == member
+                || match.Groups["between"].Value.Contains(
+                    "JsonStringEnumMemberName", StringComparison.Ordinal))
+            {
+                return match.Value;
+            }
+
+            named.Add($"{member} → {wire}");
+
+            string literal = wire
+                .Replace("\\", "\\\\", StringComparison.Ordinal)
+                .Replace("\"", "\\\"", StringComparison.Ordinal);
+
+            return match.Groups["attribute"].Value
+                + match.Groups["between"].Value
+                + match.Groups["indent"].Value
+                + $"[System.Text.Json.Serialization.JsonStringEnumMemberName(\"{literal}\")]"
+                + Environment.NewLine
+                + match.Groups["declaration"].Value;
+        });
+
+        return (result, named);
+    }
+
+    /// <summary>
     /// Replaces references to types that were never generated with raw JSON.
     /// </summary>
     /// <remarks>
@@ -588,6 +652,15 @@ internal static partial class GeneratedCodeFixer
         @"(?<declaration>^[ \t]*public enum (?<name>\w+)\r?$)",
         RegexOptions.Multiline)]
     private static partial Regex EnumDeclaration();
+
+    /// <summary>An enum member carrying the value its specification declares.</summary>
+    [GeneratedRegex(
+        @"(?<attribute>^(?<indent>[ \t]*)"
+        + @"\[System\.Runtime\.Serialization\.EnumMember\(Value = @""(?<wire>[^""]*)""\)\]\r?\n)"
+        + @"(?<between>(?:[ \t]*\[[^\]]*\]\r?\n)*)"
+        + @"(?<declaration>[ \t]*(?<member>\w+) = -?\d+,)",
+        RegexOptions.Multiline)]
+    private static partial Regex EnumMemberValue();
 
     [GeneratedRegex(@"^(?:System\.Collections\.Generic\.)?I?(?:Collection|List|Enumerable)<(.+)>$")]
     private static partial Regex CollectionElement();

@@ -211,6 +211,11 @@ static async Task<IReadOnlyList<string>> PostProcessAsync(
         GeneratedCodeFixer.ResolveCaseInsensitiveCollisions(content);
     (content, IReadOnlyList<string> enums) = GeneratedCodeFixer.AnnotateEnums(content);
 
+    // Members, not declarations: the converter the two steps above install still
+    // writes the C# name unless each divergent member says otherwise.
+    (content, IReadOnlyList<string> namedMembers) =
+        GeneratedCodeFixer.NameEnumMembersOnTheWire(content);
+
     // After AnnotateEnums, which only adds a type-level attribute where NSwag
     // left none. This rewrites the property-level ones, which win over it.
     (content, IReadOnlyList<string> tolerated) =
@@ -262,6 +267,17 @@ static async Task<IReadOnlyList<string>> PostProcessAsync(
     if (enums.Count > 0)
     {
         resolved = [.. resolved, $"{enums.Count} enum(s) annotated for string serialization"];
+    }
+
+    // A count as well: the names are the interesting part only when one is
+    // unexpected, and the diff shows those.
+    if (namedMembers.Count > 0)
+    {
+        resolved =
+        [
+            .. resolved,
+            $"{namedMembers.Count} enum member(s) named as the specification declares them",
+        ];
     }
 
     if (!content.StartsWith(marker, StringComparison.Ordinal))

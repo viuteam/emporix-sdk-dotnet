@@ -116,12 +116,15 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"generic")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("generic")]
         Generic = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"complaint")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("complaint")]
         Complaint = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"anti_fraud")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("anti_fraud")]
         Anti_fraud = 2,
 
     }
@@ -211,15 +214,19 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"slack")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("slack")]
         Slack = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"rag_custom")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("rag_custom")]
         Rag_custom = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"rag_emporix")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("rag_emporix")]
         Rag_emporix = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"teams")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("teams")]
         Teams = 3,
 
     }
@@ -303,6 +310,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"qdrant")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("qdrant")]
         Qdrant = 0,
 
     }
@@ -316,6 +324,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"product")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("product")]
         Product = 0,
 
     }
@@ -430,12 +439,15 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"emporix_openai")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("emporix_openai")]
         Emporix_openai = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"openai")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("openai")]
         Openai = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"self_hosted_ollama")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("self_hosted_ollama")]
         Self_hosted_ollama = 2,
 
     }
@@ -644,15 +656,19 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"sendMessage")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("sendMessage")]
         SendMessage = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"createChannel")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("createChannel")]
         CreateChannel = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"inviteParticipants")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("inviteParticipants")]
         InviteParticipants = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"collaborateOnChannel")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("collaborateOnChannel")]
         CollaborateOnChannel = 3,
 
     }
@@ -762,21 +778,27 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"sendMessage")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("sendMessage")]
         SendMessage = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"createChat")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("createChat")]
         CreateChat = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"createChannel")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("createChannel")]
         CreateChannel = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"inviteParticipants")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("inviteParticipants")]
         InviteParticipants = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"collaborateOnChannel")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("collaborateOnChannel")]
         CollaborateOnChannel = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"collaborateOnChat")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("collaborateOnChat")]
         CollaborateOnChat = 5,
 
     }
@@ -1109,9 +1131,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"custom")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("custom")]
         Custom = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"dynamic")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("dynamic")]
         Dynamic = 1,
 
     }
@@ -1150,9 +1174,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"body")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("body")]
         Body = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"query")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("query")]
         Query = 1,
 
     }
@@ -1497,12 +1523,15 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"custom")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("custom")]
         Custom = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"predefined")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("predefined")]
         Predefined = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"dynamic")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("dynamic")]
         Dynamic = 2,
 
     }
@@ -1516,9 +1545,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"streamable_http")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("streamable_http")]
         Streamable_http = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"sse")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("sse")]
         Sse = 1,
 
     }
@@ -1830,12 +1861,15 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"openai")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("openai")]
         Openai = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"google")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("google")]
         Google = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"anthropic")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("anthropic")]
         Anthropic = 2,
 
     }
@@ -2130,12 +2164,15 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"endpoint")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("endpoint")]
         Endpoint = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"slack")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("slack")]
         Slack = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"teams")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("teams")]
         Teams = 2,
 
     }
@@ -2149,6 +2186,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"commerce_events")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("commerce_events")]
         Commerce_events = 0,
 
     }
@@ -2162,9 +2200,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"$and")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$and")]
         _and = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"$or")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$or")]
         _or = 1,
 
     }
@@ -2522,15 +2562,19 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"in_progress")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("in_progress")]
         In_progress = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"success")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("success")]
         Success = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"failure")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("failure")]
         Failure = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"skipped")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("skipped")]
         Skipped = 3,
 
     }
@@ -3534,15 +3578,19 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"oauth")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("oauth")]
         Oauth = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"mcpServers")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("mcpServers")]
         McpServers = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"nativeTools")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("nativeTools")]
         NativeTools = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"token")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("token")]
         Token = 3,
 
     }
@@ -3577,6 +3625,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"token")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("token")]
         Token = 0,
 
     }
@@ -3587,6 +3636,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"token")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("token")]
         Token = 0,
 
     }
@@ -3597,6 +3647,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"token")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("token")]
         Token = 0,
 
     }
@@ -3758,18 +3809,23 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"customer")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("customer")]
         Customer = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"extensibility")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("extensibility")]
         Extensibility = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"order")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("order")]
         Order = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"product")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("product")]
         Product = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"frontend")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("frontend")]
         Frontend = 4,
 
     }
@@ -3823,18 +3879,23 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"customer")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("customer")]
         Customer = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"extensibility")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("extensibility")]
         Extensibility = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"order")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("order")]
         Order = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"product")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("product")]
         Product = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"frontend")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("frontend")]
         Frontend = 4,
 
     }
@@ -3845,6 +3906,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"emporix_openai")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("emporix_openai")]
         Emporix_openai = 0,
 
     }
@@ -3855,9 +3917,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"self_hosted_ollama")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("self_hosted_ollama")]
         Self_hosted_ollama = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"self_hosted_vllm")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("self_hosted_vllm")]
         Self_hosted_vllm = 1,
 
     }
@@ -3884,6 +3948,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"client_credentials")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("client_credentials")]
         Client_credentials = 0,
 
     }
@@ -3921,15 +3986,19 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"$exists")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$exists")]
         _exists = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"$notExists")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$notExists")]
         _notExists = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"$isEmpty")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$isEmpty")]
         _isEmpty = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"$notEmpty")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$notEmpty")]
         _notEmpty = 3,
 
     }
@@ -3940,9 +4009,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"$eq")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$eq")]
         _eq = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"$ne")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$ne")]
         _ne = 1,
 
     }
@@ -3953,9 +4024,11 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"$in")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$in")]
         _in = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"$notIn")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("$notIn")]
         _notIn = 1,
 
     }
@@ -3984,15 +4057,19 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"anonymous")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("anonymous")]
         Anonymous = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"customer")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("customer")]
         Customer = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"employee")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("employee")]
         Employee = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"integration")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("integration")]
         Integration = 3,
 
     }

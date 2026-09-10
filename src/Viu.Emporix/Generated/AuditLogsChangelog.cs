@@ -281,12 +281,15 @@ namespace Viu.Emporix.AuditLogsChangelogModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"create")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("create")]
         Create = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("update")]
         Update = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"delete")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("delete")]
         Delete = 2,
 
     }

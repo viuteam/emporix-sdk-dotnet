@@ -1050,6 +1050,7 @@ namespace Viu.Emporix.CustomerServiceModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"hybris-sha512-uid-salt")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("hybris-sha512-uid-salt")]
         HybrisSha512UidSalt = 0,
 
     }

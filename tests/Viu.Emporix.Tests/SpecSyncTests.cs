@@ -527,6 +527,88 @@ public class SpecSyncTests
     }
 
     [Fact]
+    public void An_enum_member_is_named_as_the_specification_declares_it()
+    {
+        // NSwag records the declared value in [EnumMember] and then renames the
+        // member in its own style. JsonStringEnumConverter ignores
+        // [EnumMember], so a JSON Patch built from the generated types sent
+        // "op":"Add" where RFC-6902 and the specification both say "add".
+        const string source = """
+            namespace X
+            {
+                public enum PatchOperationOp
+                {
+                    [System.Runtime.Serialization.EnumMember(Value = @"add")]
+                    Add = 0,
+
+                    [System.Runtime.Serialization.EnumMember(Value = @"replace")]
+                    Replace = 1,
+                }
+            }
+            """;
+
+        (string result, IReadOnlyList<string> named) =
+            GeneratedCodeFixer.NameEnumMembersOnTheWire(source);
+
+        Assert.Equal(["Add → add", "Replace → replace"], named);
+        Assert.Contains(
+            "[System.Text.Json.Serialization.JsonStringEnumMemberName(\"add\")]",
+            result,
+            StringComparison.Ordinal);
+
+        // Above the member, below the value it carries.
+        Assert.True(
+            result.IndexOf("EnumMember(Value = @\"add\")", StringComparison.Ordinal)
+            < result.IndexOf("JsonStringEnumMemberName", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_member_that_already_matches_its_declared_value_is_left_alone()
+    {
+        // 570 of 753 members are in this case. An attribute there would be
+        // noise in every diff and would say nothing.
+        const string source = """
+            namespace X
+            {
+                public enum ProductType
+                {
+                    [System.Runtime.Serialization.EnumMember(Value = @"BASIC")]
+                    BASIC = 0,
+                }
+            }
+            """;
+
+        (string result, IReadOnlyList<string> named) =
+            GeneratedCodeFixer.NameEnumMembersOnTheWire(source);
+
+        Assert.Empty(named);
+        Assert.Equal(source, result);
+    }
+
+    [Fact]
+    public void Naming_enum_members_twice_changes_nothing_the_second_time()
+    {
+        // The sync runs on a schedule; stacked attributes would not compile.
+        const string source = """
+            namespace X
+            {
+                public enum Op
+                {
+                    [System.Runtime.Serialization.EnumMember(Value = @"/status")]
+                    _status = 0,
+                }
+            }
+            """;
+
+        (string once, _) = GeneratedCodeFixer.NameEnumMembersOnTheWire(source);
+        (string twice, IReadOnlyList<string> again) =
+            GeneratedCodeFixer.NameEnumMembersOnTheWire(once);
+
+        Assert.Equal(once, twice);
+        Assert.Empty(again);
+    }
+
+    [Fact]
     public void Annotating_enums_twice_changes_nothing_the_second_time()
     {
         // Every repair in this pipeline has to be repeatable: the sync runs on a
