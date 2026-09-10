@@ -460,7 +460,7 @@ paths:
       operationId: POST-ai-agents-upload-attachment
       responses:
         '201':
-          description: Attachment response.
+          description: Attachment created.
           content:
             application/json:
               schema:
@@ -470,6 +470,8 @@ paths:
                   value:
                     id: 68835cc3ef4e8e1425c360ad
                     sessionId: 0499bef6-a4d2-45b9-86a0-2edf7d70d726
+        '204':
+          description: Existing attachment reused and assigned to the agent.
         '400':
           $ref: '#/components/responses/400_resp_common'
         '401':
@@ -479,7 +481,11 @@ paths:
         '500':
           $ref: '#/components/responses/500_resp_common'
       description: |-
-        Allows for upload of a file and assign it to the agent. Supported file extensions:
+        Uploads a new file and assigns it to the agent, or reuses an existing attachment in the current session.
+
+        Send exactly one of `attachment` or `attachmentId`. Sending both or neither returns `400`.
+
+        **Upload a file:** send the `attachment` form field. The response is `201` with the new attachment `id` and `sessionId`. Supported file extensions:
           - jpg
           - jpeg
           - png
@@ -487,18 +493,35 @@ paths:
           - csv
           - text
           - txt
+
+        **Reuse an attachment:** send the `attachmentId` form field and the `session-id` header of the session that already contains the attachment. The response is `204`.
+      security:
+        - OAuth2:
+            - ai.agentexecution_manage_own
+            - ai.agentexecution_manage
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
-              type: object
-              properties:
-                attachment:
-                  type: string
-                  format: binary
-                  description: Content of the file.
-              required:
-                - attachment
+              oneOf:
+                - type: object
+                  required:
+                    - attachment
+                  additionalProperties: false
+                  properties:
+                    attachment:
+                      type: string
+                      format: binary
+                      description: Content of the file. Use this field to upload a new file.
+                - type: object
+                  required:
+                    - attachmentId
+                  additionalProperties: false
+                  properties:
+                    attachmentId:
+                      type: string
+                      description: Identifier of an existing attachment to reuse in the current session.
       tags:
         - Agent Chat
   '/ai-service/{tenant}/agentic/templates':

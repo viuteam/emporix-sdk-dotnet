@@ -1,1 +1,16 @@
 #nullable enable
+Viu.Emporix.MediaPatchOperation
+Viu.Emporix.MediaPatchOperation.MediaPatchOperation() -> void
+Viu.Emporix.MediaPatchOperation.Op.get -> Viu.Emporix.MediaModels.PatchOperationOp
+Viu.Emporix.MediaPatchOperation.Op.init -> void
+Viu.Emporix.MediaPatchOperation.Path.get -> string!
+Viu.Emporix.MediaPatchOperation.Path.init -> void
+Viu.Emporix.MediaPatchOperation.Value.get -> System.Text.Json.JsonElement?
+Viu.Emporix.MediaPatchOperation.Value.init -> void
+Viu.Emporix.MediaService.PatchAsync(string! assetId, System.Collections.Generic.IEnumerable<Viu.Emporix.MediaPatchOperation!>! operations, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Access.get -> Viu.Emporix.MediaModels.AssetAccess?
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Access.init -> void
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Url.get -> string?
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Url.init -> void
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Metadata.get -> Viu.Emporix.MediaModels.MetadataUpdate?
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Metadata.init -> void

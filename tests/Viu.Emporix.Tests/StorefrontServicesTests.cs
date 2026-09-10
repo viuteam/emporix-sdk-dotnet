@@ -330,6 +330,99 @@ public class StorefrontServicesTests
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Patching_an_asset_sends_the_operations_as_an_array()
+    {
+        // The one endpoint that changes a BLOB asset without re-uploading the
+        // file. The body is a JSON Patch document, so it is an array at the top
+        // level rather than the object every other write here sends.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        MediaService media = new(Http(handler), Options());
+
+        await media.PatchAsync(
+            "a1",
+            [
+                new MediaPatchOperation
+                {
+                    Op = MediaModels.PatchOperationOp.Add,
+                    Path = "/refIds/-",
+                    Value = System.Text.Json.JsonDocument
+                        .Parse("""{"type":"PRODUCT","id":"p1"}""").RootElement,
+                },
+            ]);
+
+        Assert.Equal(HttpMethod.Patch, handler.LastRequest!.Method);
+        Assert.Equal("/media/acme/assets/a1", Uri(handler));
+        Assert.StartsWith("[", handler.RequestBodies[0].TrimStart(), StringComparison.Ordinal);
+        Assert.Contains("\"op\":\"add\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("/refIds/-", handler.RequestBodies[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Patching_an_asset_is_never_repeated()
+    {
+        // Appending to /refIds/- adds an entry each time it runs, so a retry
+        // after a timeout would leave the reference twice. The gate is per
+        // request, so no patch here may be marked repeatable.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        MediaService media = new(Http(handler), Options());
+
+        await media.PatchAsync(
+            "a1",
+            [
+                new MediaPatchOperation
+                {
+                    Op = MediaModels.PatchOperationOp.Replace,
+                    Path = "/url",
+                    Value = System.Text.Json.JsonDocument
+                        .Parse("\"https://example.test/a\"").RootElement,
+                },
+            ]);
+
+        Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
+    }
+
+    [Fact]
+    public async Task Patching_an_asset_with_no_operations_is_rejected()
+    {
+        // An empty JSON Patch document is a call that cannot change anything.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        MediaService media = new(Http(handler), Options());
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await media.PatchAsync("a1", []));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Attaching_echoes_back_everything_the_replacement_needs()
+    {
+        // The endpoint replaces the asset rather than merging into it, and it
+        // rejected this body three times in a row against tenant viu: first for
+        // a missing access, then a missing url, then a missing metadata.version.
+        // Each is read from the asset first and sent back unchanged.
+        StubHttpMessageHandler handler = new((request, _) => StubHttpMessageHandler.Json(
+            HttpStatusCode.OK,
+            request.Method == HttpMethod.Get
+                ? """
+                  {"id":"a1","type":"LINK","access":"PUBLIC",
+                   "url":"https://example.test/a","refIds":[],
+                   "metadata":{"version":7}}
+                  """
+                : """{"id":"a1"}"""));
+        MediaService media = new(Http(handler), Options());
+
+        await media.AttachToProductAsync("a1", "p1");
+
+        string body = handler.RequestBodies[^1];
+
+        Assert.Contains("\"access\":\"PUBLIC\"", body, StringComparison.Ordinal);
+        Assert.Contains("https://example.test/a", body, StringComparison.Ordinal);
+        Assert.Contains("\"version\":7", body, StringComparison.Ordinal);
+        Assert.Contains("\"id\":\"p1\"", body, StringComparison.Ordinal);
+    }
+
     // ---------- Shared ----------
 
     [Fact]
