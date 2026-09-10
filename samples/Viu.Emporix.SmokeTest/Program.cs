@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Viu.Emporix;
 using Viu.Emporix.SmokeTest;
 
@@ -14,7 +15,8 @@ using Viu.Emporix.SmokeTest;
 // and scopes a token turns out not to carry.
 //
 // Nothing here writes anything a tenant keeps: the cart it creates is deleted
-// again, and no order is placed. Run it before releasing.
+// again, the media asset at the end likewise, and no order is placed. Run it
+// before releasing.
 //
 //   EMPORIX_TENANT=… EMPORIX_CLIENT_ID=… \
 //   EMPORIX_SITE=main EMPORIX_CURRENCY=CHF EMPORIX_COUNTRY=CH \
@@ -500,6 +502,153 @@ await runner.RunAsync("audit log, last 30 days", async () =>
     return page is { Items.Count: > 0 }
         ? Step.Ok($"{page.TotalElements} change(s) in the window")
         : Step.Empty("no change recorded in the last 30 days");
+});
+
+// Media. The one pass that writes, and the reason it exists: attaching an asset
+// to a product was broken from the day it shipped and nothing noticed, because
+// the read-only pass above cannot reach a write. The endpoint replaces the asset
+// rather than merging into it, so the body needs access, url and
+// metadata.version, and the API refused it one missing field at a time.
+//
+// Everything here is undone: the asset is created by this pass and deleted at
+// the end, and the delete runs even when a step in between fails.
+//
+// The asset has to be born with a reference. Emporix ignores a reference written
+// onto an asset that has none — the PUT answers 204 with no body and the asset
+// reads back unchanged — so attaching can only ever add a second one. That is
+// also why the seed uses the real product from the storefront pass: a reference
+// given at creation is validated, and an unknown id answers 404. The one added
+// by the attach below is not validated, so it can stay synthetic.
+Console.WriteLine();
+Console.WriteLine("Service token — media, the pass that writes and cleans up");
+Console.WriteLine();
+
+const string mediaReference = "smoke-test-not-a-real-product";
+
+string? assetId = await runner.RunAsync("create a link asset", async () =>
+{
+    Viu.Emporix.MediaModels.GetAssetLink? created = await client.Media.CreateLinkAsync(
+        new Viu.Emporix.MediaModels.AssetCreateLink
+        {
+            Type = Viu.Emporix.MediaModels.AssetCreateLinkType.LINK,
+
+            // Required by the API and nullable in the generated type, because
+            // the composed Asset schema does not mark it required. Leaving it
+            // out answers «asset.access: must not be null».
+            Access = Viu.Emporix.MediaModels.AssetAccess.PUBLIC,
+            Url = "https://example.test/emporix-sdk-smoke-test",
+
+            // Seeded, so that the attach step has an array to append to. See
+            // the note above this pass.
+            RefIds = productId is { Length: > 0 } seed
+                ? [new Viu.Emporix.MediaModels.RefId { Type = "PRODUCT", Id = seed }]
+                : null,
+        },
+        service);
+
+    return created?.Id is { Length: > 0 } id
+        ? Step.Ok(productId is null ? "created without a seed reference" : "created", id)
+        : Step.Failed("no asset id came back");
+});
+
+await runner.RunAsync("patch the asset's url", async () =>
+{
+    if (assetId is null)
+    {
+        return Step.Skipped("no asset");
+    }
+
+    const string patched = "https://example.test/emporix-sdk-smoke-test-patched";
+
+    // Parsed rather than serialised: the value is a JsonElement precisely so
+    // that no serializer context has to know its shape, and JsonDocument.Parse
+    // uses no reflection. Clone outlives the document it came from.
+    using JsonDocument value = JsonDocument.Parse($"\"{patched}\"");
+
+    await client.Media.PatchAsync(
+        assetId,
+        [
+            new MediaPatchOperation
+            {
+                Op = Viu.Emporix.MediaModels.PatchOperationOp.Replace,
+                Path = "/url",
+                Value = value.RootElement.Clone(),
+            },
+        ],
+        service);
+
+    // Reading back is the whole point. This service answers 204 to a
+    // whole-array add or replace on /refIds and stores nothing, so a status
+    // code proves only that the request was accepted.
+    Viu.Emporix.MediaModels.GetAsset? asset = await client.Media.GetAsync(assetId, service);
+
+    return asset?.Url == patched
+        ? Step.Ok("read back changed")
+        : Step.Failed($"the patch was accepted and the url is {asset?.Url ?? "nothing"}");
+});
+
+await runner.RunAsync("attach it to a product", async () =>
+{
+    if (assetId is null)
+    {
+        return Step.Skipped("no asset");
+    }
+
+    if (productId is null)
+    {
+        // Without the seed the asset carries no reference list, and Emporix
+        // discards a write that would create one.
+        return Step.Skipped("the asset has no reference list to append to");
+    }
+
+    await client.Media.AttachToProductAsync(assetId, mediaReference, service);
+
+    Viu.Emporix.MediaModels.GetAsset? asset = await client.Media.GetAsync(assetId, service);
+
+    return asset?.RefIds?.Any(r => r.Id == mediaReference) == true
+        ? Step.Ok("reference added")
+        : Step.Failed("the attach was accepted and no reference is on the asset");
+});
+
+await runner.RunAsync("detach it again", async () =>
+{
+    if (assetId is null)
+    {
+        return Step.Skipped("no asset");
+    }
+
+    if (productId is null)
+    {
+        return Step.Skipped("nothing was attached");
+    }
+
+    await client.Media.DetachFromProductAsync(assetId, mediaReference, service);
+
+    Viu.Emporix.MediaModels.GetAsset? asset = await client.Media.GetAsync(assetId, service);
+
+    return asset?.RefIds?.Any(r => r.Id == mediaReference) != true
+        ? Step.Ok("reference removed")
+        : Step.Failed("the detach was accepted and the reference is still there");
+});
+
+await runner.RunAsync("delete the asset", async () =>
+{
+    if (assetId is null)
+    {
+        return Step.Skipped("nothing to clean up");
+    }
+
+    await client.Media.DeleteAsync(assetId, service);
+
+    try
+    {
+        await client.Media.GetAsync(assetId, service);
+        return Step.Failed("the asset survived its own delete");
+    }
+    catch (EmporixNotFoundException)
+    {
+        return Step.Ok("gone");
+    }
 });
 
 Console.WriteLine();

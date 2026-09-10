@@ -1447,9 +1447,20 @@ public sealed class MediaService
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
+    /// <para>
     /// References live in the asset's own list and the update replaces that
     /// list, so this reads first and writes the references back together with
     /// the new one. Attaching twice changes nothing.
+    /// </para>
+    /// <para>
+    /// <b>It cannot add the first reference.</b> Emporix discards a reference
+    /// written onto an asset that has none: the request answers 204 with no
+    /// body, so this returns <see langword="null"/> and the asset reads back
+    /// unchanged. An asset gets its first reference when it is created — and
+    /// there the id <em>is</em> validated, an unknown one answering 404, which
+    /// it is not here. Verified against tenant viu on 2026-09-10; the smoke
+    /// test's media pass covers the case that works.
+    /// </para>
     /// </remarks>
     public Task<MediaModels.GetAsset?> AttachToProductAsync(
         string assetId,
