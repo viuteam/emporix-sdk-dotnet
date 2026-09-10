@@ -260,9 +260,11 @@ namespace Viu.Emporix.CatalogModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"not_visible")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("not_visible")]
         Not_visible = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"visible")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("visible")]
         Visible = 1,
 
     }

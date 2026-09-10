@@ -125,33 +125,43 @@ namespace Viu.Emporix.AiRagIndexerModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"string")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("string")]
         String = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"integer")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("integer")]
         Integer = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"float")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("float")]
         Float = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"boolean")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("boolean")]
         Boolean = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"datetime")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("datetime")]
         Datetime = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"date")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("date")]
         Date = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"time")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("time")]
         Time = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"dictionary")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("dictionary")]
         Dictionary = 7,
 
         [System.Runtime.Serialization.EnumMember(Value = @"list")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("list")]
         List = 8,
 
         [System.Runtime.Serialization.EnumMember(Value = @"object")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("object")]
         Object = 9,
 
     }

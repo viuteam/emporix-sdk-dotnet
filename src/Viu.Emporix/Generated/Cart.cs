@@ -3478,9 +3478,11 @@ namespace Viu.Emporix.CartModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"validate")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("validate")]
         Validate = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"redeem")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("redeem")]
         Redeem = 1,
 
     }
@@ -3491,36 +3493,47 @@ namespace Viu.Emporix.CartModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"kg")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("kg")]
         Kg = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"g")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("g")]
         G = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"mg")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("mg")]
         Mg = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"l")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("l")]
         L = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"ml")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("ml")]
         Ml = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"lb")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("lb")]
         Lb = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"qt")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("qt")]
         Qt = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"qtr")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("qtr")]
         Qtr = 7,
 
         [System.Runtime.Serialization.EnumMember(Value = @"gal")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("gal")]
         Gal = 8,
 
         [System.Runtime.Serialization.EnumMember(Value = @"pt")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("pt")]
         Pt = 9,
 
         [System.Runtime.Serialization.EnumMember(Value = @"oz")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("oz")]
         Oz = 10,
 
         [System.Runtime.Serialization.EnumMember(Value = @"MTR")]

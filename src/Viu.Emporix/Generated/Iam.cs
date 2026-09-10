@@ -1417,15 +1417,19 @@ namespace Viu.Emporix.IamModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"role,resource")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("role,resource")]
         Role_resource = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"resource,role")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("resource,role")]
         Resource_role = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"role")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("role")]
         Role = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"resource")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("resource")]
         Resource = 3,
 
     }
@@ -1436,6 +1440,7 @@ namespace Viu.Emporix.IamModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"accessControls")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("accessControls")]
         AccessControls = 0,
 
     }
@@ -1446,6 +1451,7 @@ namespace Viu.Emporix.IamModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"groups")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("groups")]
         Groups = 0,
 
     }
@@ -1466,6 +1472,7 @@ namespace Viu.Emporix.IamModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"groups")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("groups")]
         Groups = 0,
 
     }
@@ -1476,6 +1483,7 @@ namespace Viu.Emporix.IamModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"groups")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("groups")]
         Groups = 0,
 
     }

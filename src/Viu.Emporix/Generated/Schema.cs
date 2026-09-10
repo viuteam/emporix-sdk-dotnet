@@ -1456,12 +1456,15 @@ namespace Viu.Emporix.SchemaModels
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"add")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("add")]
         Add = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"remove")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("remove")]
         Remove = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"replace")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("replace")]
         Replace = 2,
 
     }
