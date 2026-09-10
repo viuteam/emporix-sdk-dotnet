@@ -678,11 +678,25 @@ Viu.Emporix.LocationService.GetAsync(string! locationId, Viu.Emporix.AuthContext
 Viu.Emporix.LocationService.ListAsync(string? query = null, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.CustomerManagementModels.Location!>!>!
 Viu.Emporix.LocationService.ReplaceAsync(string! locationId, Viu.Emporix.CustomerManagementModels.LocationUpdate! location, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.MediaModels.AssetReferenceUpdate
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Access.get -> Viu.Emporix.MediaModels.AssetAccess?
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Access.init -> void
 Viu.Emporix.MediaModels.AssetReferenceUpdate.AssetReferenceUpdate() -> void
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Metadata.get -> Viu.Emporix.MediaModels.MetadataUpdate?
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Metadata.init -> void
 Viu.Emporix.MediaModels.AssetReferenceUpdate.RefIds.get -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.MediaModels.RefId!>!
 Viu.Emporix.MediaModels.AssetReferenceUpdate.RefIds.init -> void
 Viu.Emporix.MediaModels.AssetReferenceUpdate.Type.get -> string!
 Viu.Emporix.MediaModels.AssetReferenceUpdate.Type.init -> void
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Url.get -> string?
+Viu.Emporix.MediaModels.AssetReferenceUpdate.Url.init -> void
+Viu.Emporix.MediaPatchOperation
+Viu.Emporix.MediaPatchOperation.MediaPatchOperation() -> void
+Viu.Emporix.MediaPatchOperation.Op.get -> Viu.Emporix.MediaModels.PatchOperationOp
+Viu.Emporix.MediaPatchOperation.Op.init -> void
+Viu.Emporix.MediaPatchOperation.Path.get -> string!
+Viu.Emporix.MediaPatchOperation.Path.init -> void
+Viu.Emporix.MediaPatchOperation.Value.get -> System.Text.Json.JsonElement?
+Viu.Emporix.MediaPatchOperation.Value.init -> void
 Viu.Emporix.MediaService
 Viu.Emporix.MediaService.AttachToProductAsync(string! assetId, string! productId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAsset?>!
 Viu.Emporix.MediaService.CreateLinkAsync(Viu.Emporix.MediaModels.AssetCreateLink! asset, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAssetLink?>!
@@ -692,6 +706,7 @@ Viu.Emporix.MediaService.DownloadAsync(string! assetId, Viu.Emporix.AuthContext 
 Viu.Emporix.MediaService.GetAsync(string! assetId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAsset?>!
 Viu.Emporix.MediaService.ListAsync(int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), string? productId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.MediaModels.GetAsset!>!>!
 Viu.Emporix.MediaService.ListForProductAsync(string! productId, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.MediaModels.GetAsset!>!>!
+Viu.Emporix.MediaService.PatchAsync(string! assetId, System.Collections.Generic.IEnumerable<Viu.Emporix.MediaPatchOperation!>! operations, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.MediaService.ReplaceFileAsync(string! assetId, System.IO.Stream! content, string! fileName, string! mimeType, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAsset?>!
 Viu.Emporix.MediaService.UpdateLinkAsync(string! assetId, Viu.Emporix.MediaModels.AssetUpdateLink! asset, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAsset?>!
 Viu.Emporix.MediaService.UploadAsync(System.IO.Stream! content, string! fileName, string! mimeType, string? productId = null, bool isPublic = true, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.MediaModels.GetAsset?>!
