@@ -9,6 +9,18 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.5.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.4.2...v0.5.0) (2026-09-10)
+
+
+### Added
+
+* patch a media asset, and repair attaching one to a product ([#37](https://github.com/viuteam/emporix-sdk-dotnet/issues/37)) ([35ac077](https://github.com/viuteam/emporix-sdk-dotnet/commit/35ac07706d4afe23f843c0f8abf22cfbaaabf694))
+
+
+### Fixed
+
+* send the enum value the specification declares ([#36](https://github.com/viuteam/emporix-sdk-dotnet/issues/36)) ([ffa8b12](https://github.com/viuteam/emporix-sdk-dotnet/commit/ffa8b1206c8598bdae77f361af1c2bc63c61dc4c))
+
 ## [0.4.2](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.4.1...v0.4.2) (2026-09-09)
 
 
