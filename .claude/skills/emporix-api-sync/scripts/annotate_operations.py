@@ -19,6 +19,13 @@ every gap that gets filled.
 Paths are normalised the way the test normalises them — every `{param}` becomes
 `{}` — so a key from its output can be pasted in unchanged.
 
+`--from-test` runs the coverage test itself rather than reading a log, so the
+build has to be current: run `dotnet build` first or it measures stale binaries.
+When the test passes it says so and exits 0 — «no operation is uncovered beyond
+the known gaps», which is not the same as «nothing is missing». The known gaps
+are in `SpecPathTests.cs` and are frequently what someone is asking about; pass
+them as arguments to see what they are.
+
 No YAML dependency on purpose: the repo's own sync tool reads `info.version`
 with a regex rather than taking one, and this needs no more than that.
 """

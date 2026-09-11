@@ -8,7 +8,7 @@ description: >
   "sind die YAMLs noch aktuell", "verifiziere ob das Schema neue Endpoints
   erhalten hat", a link to developer.emporix.io/changelog or to
   emporix/api-references, "welche Endpoints fehlen noch", "sync the specs", "is
-  <service> fully covered", the daily `chore/spec-sync` PR needing review, or a
+  <service> fully covered", a failed or pending `chore/spec-sync` run, or a
   request to implement a newly documented Emporix endpoint. It applies even when
   the user only wants to *check* one service and has not asked for a PR, and
   even when they name the service rather than the spec file.
@@ -19,6 +19,39 @@ description: >
 Vendored specs level with upstream, every uncovered operation found, the gaps
 built to this repo's standard, one PR a reviewer can check. The deliverable is a
 number someone else can reproduce with one command — not an impression.
+
+**Paths in this file are relative to the skill's own directory**, printed as
+«Base directory for this skill» when the skill loads. Agents here are routinely
+launched into a git worktree, where `.claude/skills/` does not exist; a
+cwd-relative path is broken before you start. Set it once:
+
+```bash
+SKILL_DIR=<the base directory printed above>
+```
+
+## Most requests here are questions, not pull requests
+
+«Sind die YAMLs noch aktuell», «welche Endpoints fehlen in availability», «warum
+ist der Sync-Lauf rot» — each is answered in three commands, and the answer is
+usually *nothing to do*. Steps 5 to 8 are for the case where something has to be
+built. Do not read them to answer a question.
+
+```bash
+git fetch origin --prune && git log --oneline HEAD..origin/main   # am I current?
+dotnet run --project tools/Viu.Emporix.SpecSync -- fetch          # last line is the answer
+git checkout -- specs/                                            # undo the timestamp churn
+dotnet build && dotnet test --no-build --filter "SpecPathTests"   # 3 pass = fully covered
+```
+
+`fetch` rewrites `fetchedAt` for all 44 services whether or not anything moved,
+so a check-only run must put `specs/` back. If you must not write at all, read
+the upstream URL for one service out of `tools/Viu.Emporix.SpecSync/SpecCatalog.cs`,
+`curl` it to a scratch file and `diff` — SpecSync normalises trailing whitespace,
+so expect that difference and no other.
+
+Then answer, and stop. **Report «no drift, fully covered» as a result, not as a
+failure to find work.** That is the common outcome and it is worth a sentence,
+not a pull request.
 
 ## The one thing to get right
 
@@ -43,55 +76,57 @@ invisible to *both* directions, which is how 212 of 639 calls once went
 unchecked in silence. If it fails, fix the scanner before believing anything
 else in this file.
 
-## 1. Find out whether the bot already synced
+## 1. What state is upstream in
 
-`.github/workflows/spec-sync.yml` runs daily at 06:00 UTC and does the vendoring
-for you: fetch, regenerate, refresh the public API surface, build, test, then
-open or update **`chore/spec-sync`**.
+Run the fast path above first — it answers «did anything move» in one line, and
+you need that answer under every branch below. The state only decides what to do
+with it.
 
-```bash
-git fetch origin --prune
-git log --oneline HEAD..origin/main
-gh pr list --state all --limit 5 --json number,state,title,headRefName
-gh run list --workflow "Emporix specification sync" --limit 3
-```
-
-- **A sync PR is open** → that is the vendoring. Review it, measure coverage
-  against its head, and put facade work in a follow-up branch. Do not push to
-  `chore/spec-sync`; `peter-evans/create-pull-request` force-owns that branch and
-  you would be fighting a scheduled job.
-- **A sync PR merged recently** → the specs on `main` are current. Skip to
-  step 3; `fetch` will tell you nothing changed.
-- **The last run failed** → read it before anything else. **A failed run is the
-  interesting case, not the boring one.** The workflow builds and tests before
-  it opens anything, and `SpecPathTests` fails the moment a sync brings an
-  operation no facade wraps — so the run that found the most gets no PR at all.
-  The 2026-09-10 run failed exactly this way on `PATCH /media/{}/assets/{}`, and
-  from the outside it looked identical to a quiet day.
-
-  ```bash
-  gh run view <id> --log-failed | grep -E "Actual|Expected"
-  ```
-
-  That `Actual:` list is already the coverage measurement, taken on upstream's
-  current state. Start from it.
-- **Neither** → sync yourself, step 2.
-
-**Check `main` before branching, every time.** A daily job pushes here, so a
-checkout goes stale over a weekend and `git log -- specs/<svc>.yml` then answers
-truthfully about a file that moved two days ago on the real `main`. That has
-produced a confident wrong answer twice. The tell: the local
-`specs/sync-manifest.json` records a different `sha256` for a service than an
-open PR's own base side shows — impossible unless the checkout is behind.
-
-Then start clean:
+`.github/workflows/spec-sync.yml` is scheduled at 06:00 UTC and does the
+vendoring for you: fetch, regenerate, refresh the public API surface, build,
+test, then open or update **`chore/spec-sync`**. GitHub runs scheduled jobs late
+— observed starts are 09:57 to 11:08 UTC — so **check `gh run list`, never the
+clock**, before concluding that today's run happened.
 
 ```bash
-git status --porcelain     # must be empty
+gh pr list --state all --limit 8 --json number,state,title,headRefName
+gh run list --workflow "Emporix specification sync" --limit 5
 ```
 
-A spec left modified by an earlier `fetch` becomes part of your diff without
-appearing in your reasoning.
+| What you see | What it means |
+|---|---|
+| A `chore/spec-sync` PR is open | that is the vendoring. Review it, measure against its head, put facade work in a follow-up branch. **Never push to `chore/spec-sync`** — `peter-evans/create-pull-request` force-owns it |
+| The last run **failed** | the interesting case. See below |
+| The last run succeeded and its PR merged | the specs were current as of that run |
+| No run yet today | nothing has happened; your `fetch` is the only evidence |
+
+Vendoring is not only the bot's job. A person fixing a gap vendors the specs in
+the same PR — `feat!:` or `fix:`, not `chore:` — so «no sync PR» does not mean
+«no sync». `git log --oneline -8 -- specs/` shows who last touched them.
+
+### A failed run is a snapshot, not a task list
+
+The workflow builds and tests *before* it opens anything, and `SpecPathTests`
+fails the moment a sync brings an operation no facade wraps. So the run that
+found the most gets no PR at all, and from the outside it looks like a quiet
+day.
+
+```bash
+gh run view <id> --log-failed | grep -E "Actual|Expected"
+```
+
+`--log-failed` prints the whole job — thousands of lines, every step labelled
+`UNKNOWN STEP`. Grep it; do not read it.
+
+Two things about that output, and both have already caused wrong work:
+
+- **It is a snapshot of its head SHA.** Someone may have fixed it since, in
+  which case re-implementing is pure waste. Check today's `main` before treating
+  anything there as work — run the coverage test locally, which takes a minute
+  and is authoritative.
+- **xUnit elides the list** with `···` when it is long. What you see may be five
+  of six. Re-run the test locally for the complete set rather than trusting the
+  log.
 
 ## 2. Sync the specs yourself
 
@@ -104,11 +139,11 @@ Its **last line is the authoritative answer** to «did anything change»:
 `SyncManifest.Diff` — or `No content changes.`, in which case say so and stop;
 there is no PR to make.
 
-Never answer that question from `git diff specs/sync-manifest.json`. every `fetchedAt`
-plus `generatedAt` is rewritten on every run, so the manifest shows about 45
-changed lines on each side when no spec byte moved. Reporting drift that did not exist is the failure
-mode here. The workflow guards against it by discarding the manifest when no
-spec content changed; on your own branch nothing does that for you.
+Never answer that question from `git diff specs/sync-manifest.json`. Every
+`fetchedAt` plus `generatedAt` is rewritten on every run, so the manifest shows
+about 45 changed lines on each side when no spec byte moved. Reporting drift
+that did not exist is the failure mode here. The workflow discards the manifest
+when no spec content changed; on your own branch nothing does that for you.
 
 Watch the output for a patch reported **stale** — upstream fixed a defect that
 `tools/Viu.Emporix.SpecSync/SpecPatches.cs` was working around, so that entry
@@ -123,10 +158,10 @@ The generated diff must touch only the services `fetch` named, plus whatever a
 `GeneratedCodeFixer` rule reaches. Anything wider means the generator moved,
 which is a separate PR.
 
-Read the generated diff, don't skim it. A removed type is as interesting as an
-added one: when the AI attachment body became a `oneOf`, NSwag stopped emitting
+Read that diff, don't skim it. A removed type is as interesting as an added one:
+when the AI attachment body became a `oneOf`, NSwag stopped emitting
 `FileParameter` — harmless there because nothing referenced it, but the same
-shape of change can delete a type a facade names.
+change can delete a type a facade names.
 
 **Never hand-edit `src/Viu.Emporix/Generated/`.** A wrong generated type is
 fixed in `tools/Viu.Emporix.SpecSync` — a `SpecPatch` when the specification is
@@ -136,76 +171,98 @@ works until the next sync silently undoes it.
 ## 3. Measure coverage
 
 ```bash
-dotnet build
-dotnet test --no-build --filter "SpecPathTests"
+dotnet build && dotnet test --no-build --filter "SpecPathTests"
 ```
 
-A failure prints the uncovered set as `Actual:` — that list is the answer. Turn
-it into something you can act on:
+Three passes mean every operation is either wrapped or on one of the three
+decision lists in `SpecPathTests.cs`. A failure prints the uncovered set as
+`Actual:` — modulo the elision above.
 
 ```bash
-python3 .claude/skills/emporix-api-sync/scripts/annotate_operations.py --from-test
-python3 .claude/skills/emporix-api-sync/scripts/annotate_operations.py "PATCH /media/{}/assets/{}"
-python3 .claude/skills/emporix-api-sync/scripts/annotate_operations.py --spec media
+python3 "$SKILL_DIR"/scripts/annotate_operations.py --from-test
+python3 "$SKILL_DIR"/scripts/annotate_operations.py "PATCH /media/{}/assets/{}"
+python3 "$SKILL_DIR"/scripts/annotate_operations.py --spec availability
 ```
 
-It prints each operation's `operationId`, its OAuth scopes — which is what picks
-the auth default — and whether upstream marks it **`[deprecated]`**.
+`--from-test` runs the coverage test itself (so the build must be current) and
+annotates whatever it reports; on a green suite it says so and exits. The other
+two forms take keys or a whole spec. Each operation comes back with its
+`operationId`, its OAuth scopes — which is what picks the auth default — and
+whether upstream marks it **`[deprecated]`**.
 
-**Check that flag before building anything.** `SpecPathTests` does not exclude
-deprecated operations, so one appears as a gap like any other, and wrapping an
-endpoint Emporix has already retired is wasted work that then has to be
-supported. At the time of writing, all five entries in `KnownGaps` carry
-`deprecated: true` upstream — so that list currently says «retired», not «not
-built yet», whatever its comment says. Re-check rather than trusting this
-paragraph; it is exactly the kind of statement that goes stale.
+**«Which endpoints are missing in service X» is a two-part question**, because
+the test reports globally and the script has no coverage notion: read `KnownGaps`
+out of `SpecPathTests.cs` and filter it to the service, then run
+`--spec <service>` for the detail. A green test does **not** mean «nothing
+missing» — it means «nothing missing beyond the known gaps», and the known gaps
+are usually what the user is asking about.
 
-### Known gaps that are decisions, not work
+Facades are not one file per service. `AvailabilityService` lives in
+`StorefrontServices.cs`; grep for the path literal — `grep -rn "availability/"
+src/Viu.Emporix --include='*.cs'` — rather than looking for a filename.
 
-Three lists in `SpecPathTests.cs` carry them, and each is a different kind of
-«not a gap». Read them before reporting anything as missing:
+### The three decision lists
 
 | List | Meaning |
 |---|---|
 | `ImplementedWithoutAFacade` | reached, but not through a facade — the token endpoints belong to `DefaultTokenProvider`, the customer-session ones to a private helper in `CustomerService`. Covered by their own tests. |
-| `Superseded` | the specification marks it `deprecated: true` and the SDK uses its replacement |
+| `Superseded` | the specification marks it deprecated **and** the SDK uses its replacement |
 | `KnownGaps` | Emporix offers it, the SDK does not wrap it, and someone chose that |
 
-`KnownGaps` is the interesting one: it is the difference between a gap someone
-chose and a gap nobody noticed. When you fill one, delete its line — the test
-asserts set equality, so a filled gap left in the list fails just as loudly as a
-new one.
+**Check `[deprecated]` before building anything.** `SpecPathTests` does not
+exclude deprecated operations, so one appears as a gap like any other, and
+wrapping an endpoint Emporix has already retired is work that then has to be
+supported until it is removed again.
 
-## 4. Read the changelog for what the tests cannot see
+At the time of writing, all five entries in `KnownGaps` carry `deprecated: true`
+upstream — a sunset with no replacement, so neither `Superseded` (which assumes
+one) nor the list's own «does not implement yet» comment fits. Re-check rather
+than trusting this paragraph; it is exactly the kind of statement that goes
+stale. If it still holds, the action is not to build them: correct the comment,
+and expect to empty `KnownGaps` when upstream removes the operations, because
+the test asserts set equality in both directions.
 
-<https://developer.emporix.io/changelog> and the upstream PRs in
-`emporix/api-references`. Fetch the changelog through the **Emporix
-documentation MCP connector**; it is large, so grep the saved file for the
-`{% update date="…" %}` blocks newer than the last sync rather than reading all
-of it.
+When a deprecation decides the answer, find the **removal date** — the changelog
+entry and the service's documentation page have disagreed about it, so quote
+both rather than picking one.
 
-`SpecPathTests` finds missing *paths*. It cannot find:
+## 4. What the tests cannot see
 
-- **New fields.** Facades return generated types, so a field becomes usable the
-  moment the spec is vendored — no facade diff, no test, nothing to build. It
-  still needs saying, because nothing else announces it.
-- **New behaviour on an existing path.** A new `502`, a validation that now runs
-  before a write, a field that turns out to be immutable, a merge semantic. This
-  is often the more valuable half of the sync and it shows up as zero missing
-  endpoints.
+`SpecPathTests` finds missing *paths*. Two things get past it, and they are
+often the more valuable half of a sync:
 
-Both belong in the PR body. Where the behaviour changes what a caller must do,
-it belongs in the facade's XML docs too — that is where someone will actually
-meet it.
+**New behaviour on an existing path** — a new `502`, a validation that now runs
+before a write, a field that turns out to be immutable, a merge semantic. Zero
+missing endpoints, real consequences for callers. It belongs in the PR body, and
+where it changes what a caller must do, in the facade's XML docs.
+
+**New fields — and whether they are actually reachable.** A field on a named
+schema arrives free: facades return generated types, so it is usable the moment
+the spec is vendored. But «vendored» is not «reachable», and this repo has two
+live counterexamples from a single week:
+
+- `eventScopes` was added inside `AgentTrigger`, which is a bare `oneOf`. NSwag
+  emits that as a class with nothing but `AdditionalProperties` — and a
+  populated `AdditionalProperties` throws on every write. The field is in the
+  spec and unreachable from C#.
+- `attachmentId` was added as the alternative half of the attachment upload
+  body. The facade builds its multipart unconditionally with a file part, so the
+  «reuse an existing attachment» mode cannot be sent at all.
+
+So after a sync that adds fields: grep the generated type for the new name. If
+it is absent, or its parent is a `oneOf`, the field needs facade work and is a
+gap no test reports.
+
+Read the changelog for the same reason — <https://developer.emporix.io/changelog>,
+through the **Emporix documentation MCP connector**. It is large; grep the saved
+file for the `{% update date="…" %}` blocks newer than the last sync. Skip this
+step when `fetch` reported no change; there is nothing to read about.
 
 ## 5. Implement the gaps
 
 **Zero missing endpoints is a normal, frequent outcome.** Of three specs that
-moved on 2026-09-10, exactly one added an operation; the 2026-09-07 indexing
-sync added none and only documented a new `502`. Do not manufacture work to fill
-a PR. What remains in that case is real but small: document the new fields and
-the changed behaviour, and say plainly that the facades already covered
-everything.
+moved on 2026-09-10, exactly one added an operation; the sync before it added
+none and only documented a new `502`. Do not manufacture work to fill a PR.
 
 Read `references/facade-standard.md` — the facade method, the JSON context, the
 idempotency gate, the public API surface, the tests, and the traps that review
@@ -226,54 +283,12 @@ passes both ways tests nothing. Restore, re-run, quote the result.
 
 And understand the limit of all of it: **of the two dozen defects found in this
 SDK, none came from a unit test.** A stubbed `HttpMessageHandler` answers with
-whatever the test author already believed, so a wrong call and its test agree
-with each other. `SpecPathTests` closes the address half. What is left — a body
-the API rejects, a response that deserialises to nothing, a write the server
-accepts and discards — only a real call finds.
+whatever the test author already believed. `SpecPathTests` closes the address
+half. What is left — a body the API rejects, a response that deserialises to
+nothing, a write the server accepts and discards — only a real call finds, which
+is `references/live-verification.md`.
 
-## 7. Prove it against the live tenant
-
-Credentials live in `~/.emporix-smoke.env`, outside the repo. Source it, never
-read it; never echo a variable from it.
-
-```bash
-set -a; . ~/.emporix-smoke.env; set +a
-dotnet build --configuration Release
-dotnet run --project samples/Viu.Emporix.SmokeTest -c Release --no-build
-```
-
-`SCOPE` is not a failure — the address was right and the client is not entitled.
-`EMPTY` usually means the tenant has nothing configured for that step. Only
-`FAIL` is yours. Tenant `viu` refuses `importtool` and `changelog` for missing
-scopes; that pair is the expected baseline, not news.
-
-**If you wrote a new endpoint, the smoke test is where it belongs** — not in a
-throwaway probe. This is the sharpest lesson this repo has:
-
-> A one-off probe for the media patch was written to exercise the path its
-> author had in mind, and it passed. The same code added to the smoke test
-> failed on its first run, because the smoke test creates its asset the way a
-> caller would — without references — and Emporix discards a reference written
-> onto an asset that has none, answering `204` with no body. The probe had
-> seeded the asset with a reference and never met the case.
-
-So: a probe tells you whether the call *can* work; a smoke-test step tells you
-whether it works for someone who did not write it. Prefer the second. Three
-things make such a step earn its keep:
-
-1. **Read back after every write.** Several Emporix writes answer `204` and
-   discard the change — whole-array writes to `refIds`, `productType` in a
-   product `PATCH`. A status code proves the request was accepted, nothing more.
-2. **Clean up unconditionally.** Create what you need, delete it at the end, and
-   let the delete run even when a step before it failed. A crashed probe left
-   two assets in the tenant once.
-3. **Start from the state a caller starts from.** A fixture arranged to make the
-   call succeed is the probe mistake above.
-
-Anything the tenant's credentials cannot reach stays **unverified against a live
-tenant**, and the PR says so per method rather than implying coverage.
-
-## 8. Ship it
+## 7. Ship it
 
 Read `references/ship-it.md` — commit subject rules, the Release Please
 mechanics, and the `gh pr create` body that makes the diff reviewable.
