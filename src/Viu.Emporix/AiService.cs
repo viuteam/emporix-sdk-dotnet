@@ -325,6 +325,67 @@ public sealed class AiService
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Reuses an attachment already uploaded in this session.</summary>
+    /// <param name="agentId">Which agent to assign it to.</param>
+    /// <param name="attachmentId">An attachment already in the session.</param>
+    /// <param name="sessionId">
+    /// The session that already holds the attachment.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <para>
+    /// The same endpoint as <see cref="UploadAttachmentAsync"/>, and the
+    /// specification declares its body as a <c>oneOf</c> over two mutually
+    /// exclusive forms: a file, or the id of one already uploaded. Sending both
+    /// or neither answers <c>400</c>, which is why this is a method of its own
+    /// rather than an optional parameter on the upload.
+    /// </para>
+    /// <para>
+    /// The answers differ too: an upload is <c>201</c> with the new
+    /// attachment's id, a reuse is <c>204</c> with no body. There is nothing to
+    /// return here.
+    /// </para>
+    /// <para>
+    /// <paramref name="sessionId"/> is required, unlike on the upload, where
+    /// Emporix generates one when it is missing. Reuse resolves the attachment
+    /// inside a session, so without it there is nothing to resolve.
+    /// </para>
+    /// <para>
+    /// Not repeatable, on the same reasoning as the upload: the endpoint is a
+    /// <c>POST</c> whose other form creates something, and nothing in the
+    /// specification promises that assigning twice is free.
+    /// </para>
+    /// </remarks>
+    public Task ReuseAttachmentAsync(
+        string agentId,
+        string attachmentId,
+        string sessionId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(agentId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(attachmentId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+
+        // multipart/form-data, as the upload is — the specification gives the
+        // two forms one media type, so the id travels as a form field rather
+        // than as JSON.
+        MultipartFormDataContent form = [];
+        form.Add(new StringContent(attachmentId), "attachmentId");
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/agentic/{Uri.EscapeDataString(agentId)}/attachments",
+                Auth = Defaults.Service(auth),
+                Headers = SessionHeader(sessionId),
+                Content = form,
+            },
+            cancellationToken);
+    }
+
     /// <summary>Lists the language models available, by provider.</summary>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
