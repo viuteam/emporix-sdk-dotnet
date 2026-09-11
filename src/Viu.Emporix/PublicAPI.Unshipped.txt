@@ -1,2 +1,1 @@
 #nullable enable
-Viu.Emporix.AiService.ReuseAttachmentAsync(string! agentId, string! attachmentId, string! sessionId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!

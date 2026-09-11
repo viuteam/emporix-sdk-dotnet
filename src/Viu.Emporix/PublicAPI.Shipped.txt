@@ -83,6 +83,7 @@ Viu.Emporix.AiService.ListModelsAsync(Viu.Emporix.AuthContext auth = default(Viu
 Viu.Emporix.AiService.Logs.get -> Viu.Emporix.AiLogOperations!
 Viu.Emporix.AiService.McpServers.get -> Viu.Emporix.AiMcpServerOperations!
 Viu.Emporix.AiService.OAuths.get -> Viu.Emporix.AiOAuthOperations!
+Viu.Emporix.AiService.ReuseAttachmentAsync(string! agentId, string! attachmentId, string! sessionId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.AiService.StartChatAsync(Viu.Emporix.AiServiceModels.AgenticRequest! request, string? sessionId = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.AiServiceModels.JobIdResponse?>!
 Viu.Emporix.AiService.Templates.get -> Viu.Emporix.AiTemplateOperations!
 Viu.Emporix.AiService.Tokens.get -> Viu.Emporix.AiTokenOperations!
