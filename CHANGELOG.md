@@ -9,6 +9,18 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.6.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.5.0...v0.6.0) (2026-09-11)
+
+
+### Added
+
+* reuse an attachment an agent session already holds ([#42](https://github.com/viuteam/emporix-sdk-dotnet/issues/42)) ([32cad20](https://github.com/viuteam/emporix-sdk-dotnet/commit/32cad2073f101be18dc9d112422cbe0fb53d8549))
+
+
+### Documentation
+
+* say that the known gaps are deprecations, not a backlog ([#43](https://github.com/viuteam/emporix-sdk-dotnet/issues/43)) ([255b53a](https://github.com/viuteam/emporix-sdk-dotnet/commit/255b53a1b0bf27760544a7152067d94ea2c64388))
+
 ## [0.5.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.4.2...v0.5.0) (2026-09-10)
 
 
