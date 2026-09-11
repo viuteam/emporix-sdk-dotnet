@@ -463,6 +463,40 @@ public class OperationsWaveTests
         Assert.False(IsRepeatable(handler));
     }
 
+    [Fact]
+    public async Task Reusing_an_attachment_sends_the_id_instead_of_a_file()
+    {
+        // The same endpoint as the upload, and the specification declares its
+        // body as a oneOf: a file or an id, never both. So the reuse form must
+        // carry no file part at all — sending both answers 400.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        AiService ai = new(Http(handler), Options());
+
+        await ai.ReuseAttachmentAsync("a1", "att-1", "sess-1");
+
+        Assert.Equal("/ai-service/acme/agentic/a1/attachments", Uri(handler));
+        Assert.Contains("name=attachmentId", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.DoesNotContain("name=attachment;", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("att-1", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Equal("sess-1", handler.LastHeader("session-id"));
+        Assert.False(IsRepeatable(handler));
+    }
+
+    [Fact]
+    public async Task Reusing_an_attachment_without_a_session_is_rejected_before_the_call()
+    {
+        // Reuse resolves the attachment inside a session. Emporix generates a
+        // session for an upload that omits one; for a reuse there would be
+        // nothing to resolve, so this fails here rather than as a 400.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        AiService ai = new(Http(handler), Options());
+
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await ai.ReuseAttachmentAsync("a1", "att-1", "  "));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
     // ---------- RAG indexer ----------
 
     [Fact]
