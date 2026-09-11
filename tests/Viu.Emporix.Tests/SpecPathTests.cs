@@ -436,13 +436,35 @@ public class SpecPathTests
         call is "GET /category/{}/categories/categoryTree";
 
     /// <summary>
-    /// Operations Emporix offers and this SDK does not implement yet.
+    /// Operations a specification still declares and this SDK deliberately does
+    /// not wrap.
     /// </summary>
     /// <remarks>
-    /// Availability has two halves. The stock records are covered; the
-    /// locations a site ships from are not, and neither is the search across
-    /// them. Nothing depends on them today, and pinning them here is the
-    /// difference between a gap someone chose and a gap nobody noticed.
+    /// <para>
+    /// Pinning them is the difference between a gap someone chose and a gap
+    /// nobody noticed. The assertion is set equality in both directions, so a
+    /// new uncovered operation fails here — and so does one that someone
+    /// implemented and forgot to remove from this list.
+    /// </para>
+    /// <para>
+    /// All five are Emporix retiring a feature, not this SDK falling behind.
+    /// Availability has two halves: the stock records, which are covered, and
+    /// the locations a site ships from, which carry <c>deprecated: true</c>
+    /// upstream together with the search across them. The changelog entry of
+    /// 2026-05-28 gives the reason as the planned sunset of the functionality
+    /// behind them and names no replacement — which is why they are not in
+    /// <c>Superseded</c>. That list means the SDK already calls the successor,
+    /// and here there is none to call. Building these would mean supporting
+    /// them until they are deleted, and then removing them again.
+    /// </para>
+    /// <para>
+    /// The removal date is published twice and differently: that changelog
+    /// entry says 2026-09-01, the Availability Service documentation page says
+    /// 01 December 2026. The earlier date has passed and the operations are
+    /// still declared, so the later one is the one to expect — and to expect
+    /// this test to fail on. When the operations leave the specification the
+    /// uncovered set empties, and this list has to empty with it.
+    /// </para>
     /// </remarks>
     private static readonly string[] KnownGaps =
     [
