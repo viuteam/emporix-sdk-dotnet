@@ -251,20 +251,25 @@ where it changes what a caller must do, in the facade's XML docs.
 
 **New fields — and whether they are actually reachable.** A field on a named
 schema arrives free: facades return generated types, so it is usable the moment
-the spec is vendored. But «vendored» is not «reachable», and this repo has two
-live counterexamples from a single week:
+the spec is vendored. But «vendored» is not «reachable». `attachmentId` was
+added as the alternative half of the attachment upload body, and the facade
+built its multipart unconditionally with a file part — the field was in the spec
+and could not be sent at all. No test reports that, because the path is covered
+and only the shape moved.
 
-- `eventScopes` was added inside `AgentTrigger`, which is a bare `oneOf`. NSwag
-  emits that as a class with nothing but `AdditionalProperties` — and a
-  populated `AdditionalProperties` throws on every write. The field is in the
-  spec and unreachable from C#.
-- `attachmentId` was added as the alternative half of the attachment upload
-  body. The facade builds its multipart unconditionally with a file part, so the
-  «reuse an existing attachment» mode cannot be sent at all.
+**Answer it on the type the facade takes, not on the one the schema names.**
+The same week produced a case that looked identical and was not: `eventScopes`
+was added inside `AgentTrigger`, a bare `oneOf` that NSwag renders as a class
+with nothing but `AdditionalProperties`, which throws on every write. Reported
+as unreachable, and wrong — no facade uses `AgentTrigger`. A
+`GeneratedCodeFixer` rule had already retyped the property to
+`ICollection<JsonElement>` on the base the agent request inherits, so a caller
+can set the field today, and `AgentTrigger` is dead code referenced by nothing.
 
-So after a sync that adds fields: grep the generated type for the new name. If
-it is absent, or its parent is a `oneOf`, the field needs facade work and is a
-gap no test reports.
+So, in order: find the property a caller would set, on the type a facade method
+actually accepts; follow it to its declaration; and only then decide. A class
+that carries the schema's name may be nothing but an artefact — the generate log
+names every property the fixers retyped, which is the fastest way to notice.
 
 Read the changelog for the same reason — <https://developer.emporix.io/changelog>,
 through the **Emporix documentation MCP connector**. It is large; grep the saved
