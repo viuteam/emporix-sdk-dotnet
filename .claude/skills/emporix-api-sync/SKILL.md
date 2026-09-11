@@ -32,22 +32,35 @@ SKILL_DIR=<the base directory printed above>
 ## Most requests here are questions, not pull requests
 
 «Sind die YAMLs noch aktuell», «welche Endpoints fehlen in availability», «warum
-ist der Sync-Lauf rot» — each is answered in three commands, and the answer is
-usually *nothing to do*. Steps 5 to 8 are for the case where something has to be
-built. Do not read them to answer a question.
+ist der Sync-Lauf rot» — each is answered in a handful of commands, and the
+answer is usually *nothing to do*. Steps 5 to 7 are for the case where something
+has to be built. Do not read them to answer a question.
 
 ```bash
 git fetch origin --prune && git log --oneline HEAD..origin/main   # am I current?
 dotnet run --project tools/Viu.Emporix.SpecSync -- fetch          # last line is the answer
+git status --porcelain -- specs/                                  # which files actually moved
 git checkout -- specs/                                            # undo the timestamp churn
-dotnet build && dotnet test --no-build --filter "SpecPathTests"   # 3 pass = fully covered
+dotnet build && dotnet test --no-build --filter "SpecPathTests"   # 3 pass = no *unknown* gap
+grep -A 12 "KnownGaps =" tests/Viu.Emporix.Tests/SpecPathTests.cs # the gaps that are known
 ```
 
+The last two lines are one answer, not two. A green test means «nothing missing
+**beyond** the known gaps», and the known gaps are usually what the question is
+about — «fehlt noch ein Endpoint» is asking about exactly the list a green test
+stays silent on. Report both, and run them through
+`scripts/annotate_operations.py` (step 3) before calling any of them work: at the
+time of writing every one is deprecated upstream.
+
 `fetch` rewrites `fetchedAt` for all 44 services whether or not anything moved,
-so a check-only run must put `specs/` back. If you must not write at all, read
-the upstream URL for one service out of `tools/Viu.Emporix.SpecSync/SpecCatalog.cs`,
-`curl` it to a scratch file and `diff` — SpecSync normalises trailing whitespace,
-so expect that difference and no other.
+so a check-only run must put `specs/` back — and `git status --porcelain --
+specs/` before that restore is what proves the YAMLs themselves never moved. In
+a worktree-isolated run `git` through the agent's shell may be refused; spell it
+`/usr/bin/git` rather than skipping the restore. If you must not write at all,
+read one service's upstream URL out of
+`tools/Viu.Emporix.SpecSync/SpecCatalog.cs`, `curl` it to a scratch file and
+`diff`; that covers one service per run, so it answers «is *this* spec current»
+rather than «is anything stale».
 
 Then answer, and stop. **Report «no drift, fully covered» as a result, not as a
 failure to find work.** That is the common outcome and it is worth a sentence,
