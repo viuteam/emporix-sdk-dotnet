@@ -349,7 +349,11 @@ public sealed class AiService
     /// <para>
     /// <paramref name="sessionId"/> is required, unlike on the upload, where
     /// Emporix generates one when it is missing. Reuse resolves the attachment
-    /// inside a session, so without it there is nothing to resolve.
+    /// inside a session, so without it there is nothing to resolve — and the
+    /// session is not decoration: probed against tenant viu on 2026-09-11, the
+    /// same attachment id under a different session answered
+    /// «Cannot find attachment with id=… for session with id=… on tenant=…».
+    /// The upload's response carries the session to pass here.
     /// </para>
     /// <para>
     /// Not repeatable, on the same reasoning as the upload: the endpoint is a
