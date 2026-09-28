@@ -325,35 +325,36 @@ public sealed class AiService
             cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Reuses an attachment already uploaded in this session.</summary>
+    /// <summary>Assigns media that is already stored to an agent, as an attachment.</summary>
     /// <param name="agentId">Which agent to assign it to.</param>
-    /// <param name="attachmentId">An attachment already in the session.</param>
+    /// <param name="attachmentId">The media asset, or an attachment already in the session.</param>
     /// <param name="sessionId">
-    /// The session that already holds the attachment.
+    /// The session to continue. Emporix starts a new one when it is omitted.
     /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The attachment's id, and the session to chat in.</returns>
     /// <remarks>
     /// <para>
     /// The same endpoint as <see cref="UploadAttachmentAsync"/>, and the
     /// specification declares its body as a <c>oneOf</c> over two mutually
-    /// exclusive forms: a file, or the id of one already uploaded. Sending both
+    /// exclusive forms: a file, or the id of one already stored. Sending both
     /// or neither answers <c>400</c>, which is why this is a method of its own
     /// rather than an optional parameter on the upload.
     /// </para>
     /// <para>
-    /// The answers differ too: an upload is <c>201</c> with the new
-    /// attachment's id, a reuse is <c>204</c> with no body. There is nothing to
-    /// return here.
+    /// What may be assigned depends on the token. With
+    /// <c>ai.agentexecution_manage</c>, any media asset: Emporix adds an
+    /// <c>AGENT</c> reference to it and attaches it to the session. With only
+    /// <c>ai.agentexecution_manage_own</c>, the attachment must already belong to
+    /// <paramref name="sessionId"/>. Before the specification said so, a probe
+    /// against tenant viu on 2026-09-11 found the session enforced for a service
+    /// token too: the same attachment id under a different session answered
+    /// «Cannot find attachment with id=… for session with id=… on tenant=…».
     /// </para>
     /// <para>
-    /// <paramref name="sessionId"/> is required, unlike on the upload, where
-    /// Emporix generates one when it is missing. Reuse resolves the attachment
-    /// inside a session, so without it there is nothing to resolve — and the
-    /// session is not decoration: probed against tenant viu on 2026-09-11, the
-    /// same attachment id under a different session answered
-    /// «Cannot find attachment with id=… for session with id=… on tenant=…».
-    /// The upload's response carries the session to pass here.
+    /// Chat in the returned session, with this <paramref name="agentId"/> in the
+    /// request: a chat for another agent answers <c>400</c>.
     /// </para>
     /// <para>
     /// Not repeatable, on the same reasoning as the upload: the endpoint is a
@@ -361,24 +362,22 @@ public sealed class AiService
     /// specification promises that assigning twice is free.
     /// </para>
     /// </remarks>
-    public Task ReuseAttachmentAsync(
+    public async Task<AttachmentResponse?> ReuseAttachmentAsync(
         string agentId,
         string attachmentId,
-        string sessionId,
+        string? sessionId = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(agentId);
         ArgumentException.ThrowIfNullOrWhiteSpace(attachmentId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
 
-        // multipart/form-data, as the upload is — the specification gives the
-        // two forms one media type, so the id travels as a form field rather
-        // than as JSON.
+        // multipart/form-data, as the upload is. Emporix now also takes the id
+        // as JSON; the form field stays supported and is the form verified live.
         MultipartFormDataContent form = [];
         form.Add(new StringContent(attachmentId), "attachmentId");
 
-        return _http.SendAsync(
+        return await _http.SendAsync(
             new EmporixRequest
             {
                 Method = HttpMethod.Post,
@@ -387,7 +386,8 @@ public sealed class AiService
                 Headers = SessionHeader(sessionId),
                 Content = form,
             },
-            cancellationToken);
+            AiJsonContext.Default.AttachmentResponse,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Lists the language models available, by provider.</summary>

@@ -126,6 +126,35 @@ public sealed class ImportService
             cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Reads the order in which a configuration's streams run.</summary>
+    /// <param name="configId">The configuration id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Stream names in run order, and each stream's prerequisites. Read it rather
+    /// than working it out from the stream definitions: mapping transformations
+    /// add dependencies no single stream shows, so a computed order can differ
+    /// from the one a run uses.
+    /// </remarks>
+    public async Task<StreamOrder?> GetStreamOrderAsync(
+        string configId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(configId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/configs/{Uri.EscapeDataString(configId)}/stream-order",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            ImportJsonContext.Default.StreamOrder,
+            cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>Reads a configuration's schedule.</summary>
     /// <param name="configId">The configuration id.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
@@ -209,6 +238,15 @@ public sealed class ImportService
     /// <param name="mode">A full import or only what changed. Emporix defaults to <c>DELTA</c>.</param>
     /// <param name="dryRun">Map and validate, but write nothing.</param>
     /// <param name="force">Rewrite every record, even unchanged ones.</param>
+    /// <param name="streamIds">
+    /// Runs only these streams, still in the computed order — stream ids, not
+    /// names. Every stream runs when omitted.
+    /// </param>
+    /// <param name="mappings">
+    /// Which mappings a dry run uses: the published ones, which is what Emporix
+    /// assumes, or the drafts. A real run ignores it and always uses the
+    /// published mappings.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The run, already running — this call does not wait for it.</returns>
@@ -216,6 +254,14 @@ public sealed class ImportService
     /// <para>
     /// At most one run is active per configuration; starting a second answers
     /// <c>409</c>.
+    /// </para>
+    /// <para>
+    /// A run executes published mappings only. A stream whose mappings were
+    /// never published does not run: it reports <c>ABORTED</c> and the run
+    /// finishes <c>PARTIAL</c>. When <paramref name="streamIds"/> names such a
+    /// stream, or every enabled stream is in that state, the whole run is
+    /// refused — and this call still succeeds, because the refusal arrives later
+    /// as a run that finishes <c>ABORTED</c> with a message naming the streams.
     /// </para>
     /// <para>
     /// Deliberately not repeatable. A retried start imports the same source
@@ -227,12 +273,31 @@ public sealed class ImportService
         BodyMode? mode = null,
         bool? dryRun = null,
         bool? force = null,
+        IEnumerable<Guid>? streamIds = null,
+        BodyMappings? mappings = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(configId);
 
-        Body body = new() { Mode = mode, DryRun = dryRun, Force = force };
+        List<Guid>? streams = streamIds is null ? null : [.. streamIds];
+
+        // Emporix rejects an empty list rather than reading it as «all streams».
+        if (streams is not null)
+        {
+            ArgumentOutOfRangeException.ThrowIfZero(streams.Count, nameof(streamIds));
+        }
+
+        // Mappings is set even when null: the generated default is «published»,
+        // and a body should carry only what the caller chose.
+        Body body = new()
+        {
+            Mode = mode,
+            DryRun = dryRun,
+            Force = force,
+            StreamIds = streams,
+            Mappings = mappings,
+        };
 
         return await _http.SendAsync(
             new EmporixRequest
@@ -433,6 +498,93 @@ public sealed class ImportService
             },
             ImportJsonContext.Default.ErrorRecordPage,
             cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Lists the rows behind a run's repeated-key and unresolved-parent counters.</summary>
+    /// <param name="runId">The run id.</param>
+    /// <param name="streamId">Only the rows recorded for this stream.</param>
+    /// <param name="kind">Only the rows of this kind.</param>
+    /// <param name="limit">At most this many rows. Emporix returns up to 500 when omitted.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <para>
+    /// Neither counter is a failure, which is why these rows are kept apart from
+    /// <see cref="ListRunErrorsAsync"/>.
+    /// </para>
+    /// <para>
+    /// A capped sample, not the whole set: <see cref="DiagnosticPage.Recorded"/>
+    /// says how many rows were stored and <see cref="DiagnosticPage.SampleTruncated"/>
+    /// whether a stream reached the cap. The run's own counters give the total;
+    /// the rows returned here do not measure the size of the problem.
+    /// </para>
+    /// </remarks>
+    public async Task<DiagnosticPage?> ListRunDiagnosticsAsync(
+        string runId,
+        Guid? streamId = null,
+        DiagnosticRecordKind? kind = null,
+        int? limit = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/runs/{Uri.EscapeDataString(runId)}/diagnostics",
+                Auth = Defaults.Service(auth),
+                Query = DiagnosticsQuery(streamId, kind, limit),
+                Idempotent = true,
+            },
+            ImportJsonContext.Default.DiagnosticPage,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Downloads the same diagnostic rows as a CSV file.</summary>
+    /// <param name="runId">The run id.</param>
+    /// <param name="streamId">Only the rows recorded for this stream.</param>
+    /// <param name="kind">Only the rows of this kind.</param>
+    /// <param name="limit">At most this many rows. Emporix includes up to 50,000 when omitted.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The response, unread. The caller owns it and must dispose it.</returns>
+    /// <remarks>
+    /// <para>
+    /// For a spreadsheet or a ticket. Comment lines above the header say whether
+    /// the limit or the recording cap cut the rows short, so the file keeps that
+    /// context when it is passed on, and <c>Content-Disposition</c> suggests a
+    /// file name. Emporix quotes every value and prefixes one that begins with
+    /// <c>=</c>, <c>+</c>, <c>-</c> or <c>@</c> with an apostrophe, so that a
+    /// spreadsheet does not run source data as a formula.
+    /// </para>
+    /// <para>
+    /// <see cref="EmporixHttpClient.SendRawAsync"/> does not translate error
+    /// statuses into exceptions — check
+    /// <see cref="HttpResponseMessage.IsSuccessStatusCode"/> before reading.
+    /// </para>
+    /// </remarks>
+    public Task<HttpResponseMessage> DownloadRunDiagnosticsCsvAsync(
+        string runId,
+        Guid? streamId = null,
+        DiagnosticRecordKind? kind = null,
+        int? limit = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        return _http.SendRawAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/runs/{Uri.EscapeDataString(runId)}/diagnostics/csv",
+                Auth = Defaults.Service(auth),
+                Query = DiagnosticsQuery(streamId, kind, limit),
+                Headers = [new("Accept", "text/csv")],
+            },
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>Lists the target types that currently hold imported records.</summary>
@@ -663,6 +815,32 @@ public sealed class ImportService
         }
 
         query.AddRange(Paging(page, size));
+    }
+
+    private static List<KeyValuePair<string, string?>> DiagnosticsQuery(
+        Guid? streamId,
+        DiagnosticRecordKind? kind,
+        int? limit)
+    {
+        List<KeyValuePair<string, string?>> query = [];
+
+        if (streamId is not null)
+        {
+            query.Add(new("streamId", streamId.Value.ToString()));
+        }
+
+        if (kind is not null)
+        {
+            query.Add(new("kind", kind.Value.ToString()));
+        }
+
+        if (limit is not null)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(limit.Value, 1, nameof(limit));
+            query.Add(new("limit", limit.Value.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        return query;
     }
 
     // The import tool counts pages from zero and spells the parameters `page`

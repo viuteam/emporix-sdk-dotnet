@@ -103,7 +103,7 @@ namespace Viu.Emporix.AuditLogsChangelogModels
         public ChangelogChangeItemType? Type { get; set; } = default!;
 
         /// <summary>
-        /// Logical entity type of the changed document, for example `order`, `customer`, `company`, `product`, `segment`, `group`, `group-assignment`, `coupon`, or a custom entity created with the Schema Service.
+        /// Logical entity type of the changed document, for example `order`, `customer`, `company`, `product`, `segment`, `group`, `group-assignment`, `coupon`, `quote`, `site`, or a custom entity created with the Schema Service.
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("entity")]

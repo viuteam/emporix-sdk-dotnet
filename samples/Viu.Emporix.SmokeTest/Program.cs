@@ -15,7 +15,7 @@ using Viu.Emporix.SmokeTest;
 // and scopes a token turns out not to carry.
 //
 // Nothing here writes anything a tenant keeps: the cart it creates is deleted
-// again, the media asset at the end likewise, and no order is placed. Run it
+// again, the media assets at the end likewise, and no order is placed. Run it
 // before releasing.
 //
 //   EMPORIX_TENANT=… EMPORIX_CLIENT_ID=… \
@@ -415,6 +415,25 @@ await runner.RunAsync("IAM groups", async () =>
         : Step.Empty("no IAM group is defined");
 });
 
+await runner.RunAsync("customer segments and their group assignments", async () =>
+{
+    PaginatedItems<Viu.Emporix.CustomerSegmentModels.SegmentResponse> segments =
+        await client.Segments.ListAsync(pageSize: 5, auth: service);
+
+    if (segments.Items.Count == 0 || segments.Items[0].Id is not { Length: > 0 } segmentId)
+    {
+        return Step.Empty("no customer segment is defined");
+    }
+
+    // Whether a group is assigned is the tenant's business. That the address
+    // answers, and with a shape that reads, is this package's.
+    PaginatedItems<Viu.Emporix.CustomerSegmentModels.GroupAssignmentResponse> groups =
+        await client.Segments.Groups(segmentId).ListAsync(pageSize: 5, auth: service);
+
+    return Step.Ok(
+        $"{segments.Items.Count} segment(s), {groups.Items.Count} group(s) on the first");
+});
+
 await runner.RunAsync("custom entity types", async () =>
 {
     IReadOnlyList<Viu.Emporix.SchemaModels.CustomSchemaTypeResponse> types =
@@ -427,14 +446,50 @@ await runner.RunAsync("custom entity types", async () =>
 
 // ---- Wave 5. None of these had ever been called live before this pass. ----
 
-await runner.RunAsync("import configurations", async () =>
+string? importConfigId = await runner.RunAsync("import configurations", async () =>
 {
     IReadOnlyList<Viu.Emporix.ImportServiceModels.ImportConfig> configs =
         await client.Imports.ListConfigsAsync(service);
 
     return configs.Count > 0
-        ? Step.Ok($"{configs.Count} configuration(s)")
+        ? Step.Ok($"{configs.Count} configuration(s)", configs[0].Id?.ToString())
         : Step.Empty("the import tool is not configured on this tenant");
+});
+
+await runner.RunAsync("import stream order", async () =>
+{
+    if (importConfigId is null)
+    {
+        return Step.Skipped("no import configuration");
+    }
+
+    Viu.Emporix.ImportServiceModels.StreamOrder? order =
+        await client.Imports.GetStreamOrderAsync(importConfigId, service);
+
+    return order?.Order is { Count: > 0 } names
+        ? Step.Ok(string.Join(" → ", names.Take(5)))
+        : Step.Empty("the first configuration has no stream");
+});
+
+await runner.RunAsync("import run diagnostics", async () =>
+{
+    if (importConfigId is null)
+    {
+        return Step.Skipped("no import configuration");
+    }
+
+    Viu.Emporix.ImportServiceModels.ImportRunPage? runs =
+        await client.Imports.ListRunsAsync(importConfigId, size: 1, auth: service);
+
+    if (runs?.Content?.FirstOrDefault()?.Id is not { } runId)
+    {
+        return Step.Empty("the first configuration has never run");
+    }
+
+    Viu.Emporix.ImportServiceModels.DiagnosticPage? diagnostics =
+        await client.Imports.ListRunDiagnosticsAsync(runId.ToString(), limit: 5, auth: service);
+
+    return Step.Ok($"{diagnostics?.Recorded ?? 0} row(s) recorded for the latest run");
 });
 
 await runner.RunAsync("public index configuration", async () =>
@@ -551,6 +606,27 @@ string? assetId = await runner.RunAsync("create a link asset", async () =>
         : Step.Failed("no asset id came back");
 });
 
+await runner.RunAsync("ask where the asset downloads from", async () =>
+{
+    if (assetId is null)
+    {
+        return Step.Skipped("no asset");
+    }
+
+    // The way Emporix recommends for every download. A link asset answers with
+    // the URL it stores, so the answer can be checked without a file.
+    Viu.Emporix.MediaModels.DownloadUrl? url =
+        await client.Media.GetDownloadUrlAsync(assetId, auth: service);
+
+    return url is
+    {
+        Provider: Viu.Emporix.MediaModels.DownloadUrlProvider.LINK,
+        Url: "https://example.test/emporix-sdk-smoke-test",
+    }
+        ? Step.Ok("the link it stores")
+        : Step.Failed($"answered {url?.Provider.ToString() ?? "nothing"} {url?.Url}");
+});
+
 await runner.RunAsync("patch the asset's url", async () =>
 {
     if (assetId is null)
@@ -644,6 +720,149 @@ await runner.RunAsync("delete the asset", async () =>
     {
         await client.Media.GetAsync(assetId, service);
         return Step.Failed("the asset survived its own delete");
+    }
+    catch (EmporixNotFoundException)
+    {
+        return Step.Ok("gone");
+    }
+});
+
+// Direct upload is switched on per tenant by Emporix Support. Until it is, this
+// answers 403 «direct upload is not enabled for this tenant» and creates
+// nothing, which the runner reports as SCOPE. Where it is on, the session
+// creates a pending asset, and this deletes it again without sending a file —
+// left alone, it would only go when the session expires.
+await runner.RunAsync("start a direct upload, and abandon it", async () =>
+{
+    Viu.Emporix.MediaModels.UploadSession? session = await client.Media.StartUploadSessionAsync(
+        new Viu.Emporix.MediaModels.UploadSessionRequest
+        {
+            Type = Viu.Emporix.MediaModels.AssetCreateBlobType.BLOB,
+            Access = Viu.Emporix.MediaModels.AssetAccess.PRIVATE,
+            Details = new Viu.Emporix.MediaModels.AssetDetailsCreate
+            {
+                Filename = "emporix-sdk-smoke-test.txt",
+                MimeType = "text/plain",
+            },
+        },
+        service);
+
+    if (session?.Id is not { Length: > 0 } pendingId)
+    {
+        return Step.Failed("no session came back");
+    }
+
+    await client.Media.DeleteAsync(pendingId, service);
+
+    return Step.Ok($"{session.Provider} {session.Upload.Method}, and the pending asset deleted");
+});
+
+// Segments, for the group assignments Emporix added on 2026-09-16. The upsert
+// takes a body with nothing required in it, and whether an empty one assigns
+// the group is something only a live call can say.
+//
+// Nothing here reaches a segment that grants anything. The segment is created
+// by this pass without a status, which Emporix stores as INACTIVE, and without
+// items, so it reaches nobody even while a group is in it. It is deleted at the
+// end, and the delete runs even when a step in between fails.
+Console.WriteLine();
+Console.WriteLine("Service token — segments, the pass that writes and cleans up");
+Console.WriteLine();
+
+string? segmentId = await runner.RunAsync("create an inactive, empty segment", async () =>
+{
+    // The name is localised, and in a language the tenant defines: tenant viu
+    // answered «Language en is not defined in the system» to a hardcoded en.
+    Viu.Emporix.SiteSettingsServiceModels.SiteDto? site =
+        await client.Sites.GetAsync(configuration.Site, service);
+    string language = site?.DefaultLanguage is { Length: > 0 } defined ? defined : "en";
+
+    Viu.Emporix.CustomerSegmentModels.SegmentResponse? created = await client.Segments.CreateAsync(
+        new Viu.Emporix.CustomerSegmentModels.SegmentCreation
+        {
+            Name = new Dictionary<string, string> { [language] = "emporix-sdk smoke test" },
+            SiteCode = configuration.Site,
+        },
+        service);
+
+    return created?.Id is { Length: > 0 } id
+        ? Step.Ok("created", id)
+        : Step.Failed("no segment id came back");
+});
+
+string? customerGroupId = await runner.RunAsync("find a customer group", async () =>
+{
+    // Only groups for customers can be assigned. userType is a plain string in
+    // the IAM specification, so the filter runs here rather than as a query.
+    PaginatedItems<Viu.Emporix.IamModels.GroupsQueryDocument> groups =
+        await client.Iam.Groups.ListAsync(auth: service);
+
+    return groups.Items.FirstOrDefault(g => g.UserType == "CUSTOMER")?.Id is { Length: > 0 } id
+        ? Step.Ok($"one of {groups.Items.Count} on the first page", id)
+        : Step.Empty("no IAM group has userType CUSTOMER, so there is nothing to assign");
+});
+
+await runner.RunAsync("assign the group to the segment", async () =>
+{
+    if (segmentId is null || customerGroupId is null)
+    {
+        return Step.Skipped("no segment or no customer group");
+    }
+
+    SegmentGroupOperations groups = client.Segments.Groups(segmentId);
+
+    await groups.UpsertAsync(
+        customerGroupId, new Viu.Emporix.CustomerSegmentModels.GroupAssignmentUpsert(), service);
+
+    // A 204 proves the request was accepted, nothing more. Read it back, and
+    // find it through the search as well.
+    Viu.Emporix.CustomerSegmentModels.GroupAssignmentResponse? assignment =
+        await groups.GetAsync(customerGroupId, service);
+    PaginatedItems<Viu.Emporix.CustomerSegmentModels.GroupAssignmentResponse> found =
+        await groups.SearchAsync($"group.id:{customerGroupId}", auth: service);
+
+    return assignment?.Group?.Id == customerGroupId && found.Items.Count == 1
+        ? Step.Ok("read back, and found by search")
+        : Step.Failed(
+            $"the upsert was accepted; read back {assignment?.Group?.Id ?? "nothing"}, "
+            + $"search found {found.Items.Count}");
+});
+
+await runner.RunAsync("take the group out again", async () =>
+{
+    if (segmentId is null || customerGroupId is null)
+    {
+        return Step.Skipped("nothing was assigned");
+    }
+
+    SegmentGroupOperations groups = client.Segments.Groups(segmentId);
+
+    await groups.DeleteAsync(customerGroupId, service);
+
+    try
+    {
+        await groups.GetAsync(customerGroupId, service);
+        return Step.Failed("the assignment survived its own delete");
+    }
+    catch (EmporixNotFoundException)
+    {
+        return Step.Ok("gone");
+    }
+});
+
+await runner.RunAsync("delete the segment", async () =>
+{
+    if (segmentId is null)
+    {
+        return Step.Skipped("nothing to clean up");
+    }
+
+    await client.Segments.DeleteAsync(segmentId, service);
+
+    try
+    {
+        await client.Segments.GetAsync(segmentId, service);
+        return Step.Failed("the segment survived its own delete");
     }
     catch (EmporixNotFoundException)
     {

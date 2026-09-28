@@ -899,6 +899,8 @@ paths:
       operationId: POST-shipping-calculate-shipping-cost
       description: |-
         The endpoint returns shipping methods, which contain the matching fee for all zones.
+
+        The storefront uses this endpoint to list available methods for a destination and cart total. Checkout Service calls the same endpoint again to re-price the selected method and zone.
       parameters:
         - $ref: '#/components/parameters/tenant'
         - $ref: '#/components/parameters/site'
@@ -935,7 +937,9 @@ paths:
       summary: Calculating the minimum shipping cost
       operationId: POST-shipping-calculate-min-shipping-cost
       description: |-
-        Retrieves the minimum shipping cost.
+        Retrieves the minimum shipping cost for a destination and cart total.
+
+        Cart Service uses this endpoint to show an estimated shipping amount on the cart when no delivery window is set. Checkout Service does not call this endpoint.
       parameters:
         - $ref: '#/components/parameters/tenant'
         - $ref: '#/components/parameters/site'
@@ -974,7 +978,9 @@ paths:
       summary: Calculating the shipping cost for a given slot
       operationId: POST-shipping-calculate-slot-shipping-cost
       description: |-
-        Retrieves the minimum shipping cost related to a particular slot.
+        Retrieves the shipping cost related to a particular delivery slot.
+
+        Cart Service uses this endpoint to show an estimated shipping amount when the cart has a delivery window and a slot. This is not a checkout step.
       parameters:
         - $ref: '#/components/parameters/tenant'
         - $ref: '#/components/parameters/site'

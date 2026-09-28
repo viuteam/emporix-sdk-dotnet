@@ -331,6 +331,52 @@ public class StorefrontServicesTests
     }
 
     [Fact]
+    public async Task A_download_url_spells_the_disposition_as_the_specification_does()
+    {
+        // The members are Inline and Attachment. ToString would send those, and
+        // the specification allows only the lowercase values.
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """{"provider":"GCS","url":"https://storage.example/a1","expiresAt":"2026-09-28T12:15:00Z"}""");
+        MediaService media = new(Http(handler), Options());
+
+        MediaModels.DownloadUrl? plain = await media.GetDownloadUrlAsync("a1");
+        await media.GetDownloadUrlAsync("a1", MediaModels.Disposition.Inline);
+
+        Assert.Equal("/media/acme/assets/a1/download-url", Uri(handler, 0));
+        Assert.Equal("/media/acme/assets/a1/download-url?disposition=inline", Uri(handler, 1));
+        Assert.Equal(MediaModels.DownloadUrlProvider.GCS, plain!.Provider);
+        Assert.Equal("https://storage.example/a1", plain.Url);
+    }
+
+    [Fact]
+    public async Task Starting_an_upload_session_is_not_repeatable()
+    {
+        // Each call creates another pending asset.
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.Created,
+            """
+            {"id":"a2","provider":"GCS","status":"PENDING","expiresAt":"2026-09-28T13:00:00Z",
+             "upload":{"method":"PUT","url":"https://storage.example/a2","headers":{"Content-Type":"application/pdf"}}}
+            """);
+        MediaService media = new(Http(handler), Options());
+
+        MediaModels.UploadSession? session = await media.StartUploadSessionAsync(
+            new MediaModels.UploadSessionRequest { Type = MediaModels.AssetCreateBlobType.BLOB });
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/media/acme/assets/upload-session", Uri(handler));
+        Assert.Contains("\"type\":\"BLOB\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        // The generated default, in the specification's spelling rather than
+        // the member's — Put would not be a value Emporix declares.
+        Assert.Contains("\"uploadType\":\"put\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
+        Assert.Equal("a2", session!.Id);
+        Assert.Equal(MediaModels.UploadMethod.PUT, session.Upload.Method);
+        Assert.Equal("application/pdf", session.Upload.Headers!["Content-Type"]);
+    }
+
+    [Fact]
     public async Task Patching_an_asset_sends_the_operations_as_an_array()
     {
         // The one endpoint that changes a BLOB asset without re-uploading the

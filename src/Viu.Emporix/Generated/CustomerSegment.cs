@@ -216,6 +216,97 @@ namespace Viu.Emporix.CustomerSegmentModels
 
     }
 
+    /// <summary>
+    /// Request body for creating or updating an IAM group assignment.
+    /// <br/>
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class GroupAssignmentUpsert
+    {
+
+        /// <summary>
+        /// A key-value map of additional attributes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public MetadataUpdate? Metadata { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// IAM group assigned to the customer segment.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Group
+    {
+
+        /// <summary>
+        /// Unique identifier of an existing IAM group, generated when the group is created through the IAM Service.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// Localized name of the group.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public System.Collections.Generic.IDictionary<string, string>? Name { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class GroupAssignmentResponse
+    {
+
+        /// <summary>
+        /// Unique identifier of the customer segment.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("segmentId")]
+        public string? SegmentId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("group")]
+        public Group? Group { get; set; } = default!;
+
+        /// <summary>
+        /// A key-value map of additional attributes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public MetadataResponse? Metadata { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class ItemAssignmentUpsert : ItemAssignmentCore
     {

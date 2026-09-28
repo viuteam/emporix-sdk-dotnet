@@ -266,17 +266,12 @@ namespace Viu.Emporix.ImportServiceModels
         public System.Collections.Generic.IDictionary<string, string>? DiscriminatorMap { get; set; } = default!;
 
         /// <summary>
-        /// Whether the stream reacts to its target objects being deleted outside the import.
+        /// How deletes are detected in the source and propagated to the target. Omit for an upsert-only
+        /// <br/>stream. `MARKER`: a field on the record flags it as deleted. `TOMBSTONE`: a separate source
+        /// <br/>record lists the deleted IDs.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("targetDeleteSubscriptionEnabled")]
-        public bool? TargetDeleteSubscriptionEnabled { get; set; } = default!;
-
-        /// <summary>
-        /// What happens when a record deleted in the target is seen in the source again.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("onTargetReappear")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamOnTargetReappear>))]
-        public ImportStreamOnTargetReappear? OnTargetReappear { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("deleteConfig")]
+        public DeleteConfig? DeleteConfig { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("healthThresholds")]
         public HealthThresholds? HealthThresholds { get; set; } = default!;
@@ -403,7 +398,7 @@ namespace Viu.Emporix.ImportServiceModels
         public string? Origin { get; set; } = default!;
 
         /// <summary>
-        /// The run status.
+        /// The run status. `ABORTED` means the service refused to start the run because of the import configuration, for example mappings that have never been published or a changed target schema. Nothing was read or written.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunStatus>))]
@@ -512,6 +507,18 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("dryRunSampleSize")]
         public int? DryRunSampleSize { get; set; } = default!;
 
+        /// <summary>
+        /// Dry-run only. Whether the dry run used the published mappings (`true`) or the draft mappings (`false`).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("dryRunPublished")]
+        public bool? DryRunPublished { get; set; } = default!;
+
+        /// <summary>
+        /// The published mapping version each stream uses in this run, fixed when the run starts. Version `0` means that the stream has no published mappings. The field is absent on a dry run of the draft mappings and on runs recorded before it existed.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mappingVersions")]
+        public System.Collections.Generic.ICollection<MappingVersions>? MappingVersions { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -555,7 +562,7 @@ namespace Viu.Emporix.ImportServiceModels
         public string? StreamName { get; set; } = default!;
 
         /// <summary>
-        /// The stream's status within the run.
+        /// The stream's status within the run. `ABORTED` means the service refused to run the stream because of its configuration, for example because its mappings have never been published. It indicates a configuration problem to fix. The `message` field gives the reason.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunStreamStatus>))]
@@ -896,6 +903,139 @@ namespace Viu.Emporix.ImportServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("content")]
         public System.Collections.Generic.ICollection<ImportRun>? Content { get; set; } = default!;
+
+    }
+
+    /// <summary>
+    /// A page of diagnostic rows with metadata that indicates whether the response contains all recorded rows or only part of a capped sample. Use `recorded`, `cap`, and `sampleTruncated` to interpret the page. The run's counters show the total number of affected rows.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class DiagnosticPage
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("rows")]
+        public System.Collections.Generic.ICollection<DiagnosticRecord>? Rows { get; set; } = default!;
+
+        /// <summary>
+        /// How many rows this response contains.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("returned")]
+        public int? Returned { get; set; } = default!;
+
+        /// <summary>
+        /// How many rows were recorded in total for this scope.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("recorded")]
+        public int? Recorded { get; set; } = default!;
+
+        /// <summary>
+        /// The per-stream, per-kind recording cap.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("cap")]
+        public int? Cap { get; set; } = default!;
+
+        /// <summary>
+        /// Whether at least one stream reached the cap. When true, these rows are a sample, and the run's
+        /// <br/>own counters show the total number of affected rows.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("sampleTruncated")]
+        public bool? SampleTruncated { get; set; } = default!;
+
+        /// <summary>
+        /// A human-readable statement of what this response is.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("note")]
+        public string? Note { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// One row behind a feed-quality counter.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class DiagnosticRecord
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public System.Guid? Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("runId")]
+        public System.Guid? RunId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("streamId")]
+        public System.Guid? StreamId { get; set; } = default!;
+
+        /// <summary>
+        /// The stream that recorded the row.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("streamName")]
+        public string? StreamName { get; set; } = default!;
+
+        /// <summary>
+        /// `UNRESOLVED_PARENT`: a child line whose parent instance did not exist when it was written.
+        /// <br/>`REPEATED_KEY`: a source row whose natural key this run had already imported.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("kind")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DiagnosticRecordKind>))]
+        public DiagnosticRecordKind? Kind { get; set; } = default!;
+
+        /// <summary>
+        /// The record's own natural key in the source.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("naturalKey")]
+        public string? NaturalKey { get; set; } = default!;
+
+        /// <summary>
+        /// `UNRESOLVED_PARENT` only. The field that points at the parent.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("linkingField")]
+        public string? LinkingField { get; set; } = default!;
+
+        /// <summary>
+        /// `UNRESOLVED_PARENT` only. The parent key the line pointed at — the value to look up in the
+        /// <br/>source system.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("linkingValue")]
+        public string? LinkingValue { get; set; } = default!;
+
+        /// <summary>
+        /// The target type the row was headed for.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("targetType")]
+        public string? TargetType { get; set; } = default!;
+
+        /// <summary>
+        /// `UNRESOLVED_PARENT` only. The number of child lines waiting for this parent.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("waitingLines")]
+        public int? WaitingLines { get; set; } = default!;
+
+        /// <summary>
+        /// `REPEATED_KEY` only. How many times this key had already been seen in this run.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("occurrence")]
+        public int? Occurrence { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public System.DateTimeOffset? CreatedAt { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -1584,6 +1724,13 @@ namespace Viu.Emporix.ImportServiceModels
         public bool? DryRun { get; set; } = default!;
 
         /// <summary>
+        /// Dry-run only. Which mappings the dry run uses. `published` uses each stream's published mappings, which is what a real run executes. `draft` uses the draft mappings, so you can check them before publishing. When omitted, defaults to `published`. A dry run with `published` handles streams whose mappings have never been published in the same way as a real run. The field has no effect when `dryRun` is `false`, because a real run always uses the published mappings.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mappings")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<BodyMappings>))]
+        public BodyMappings? Mappings { get; set; } = Viu.Emporix.ImportServiceModels.BodyMappings.Published;
+
+        /// <summary>
         /// When `true`, every extracted record is rewritten, even if unchanged. It bypasses the idempotency `skip-if-unchanged` check. Use it to force target IDs and values to be rewritten.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("force")]
@@ -1601,6 +1748,14 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("origin")]
         public string? Origin { get; set; } = default!;
 
+        /// <summary>
+        /// The stream identifiers to run. Omit the field to run every stream in the configuration. Send a list of stream IDs to run only those streams. Do not send stream names; use the `id` values from the stream resource.
+        /// <br/>The service rejects an empty list. It also rejects a list that includes no stream from this configuration. Listed streams still run in the computed stream order, not in list order.
+        /// <br/>The service also rejects a stream that cannot produce data on its own. A `COMPOSITE_CHILD` stream with `childStrategy` set to `EMBED` is written by its parent. A child that reads values captured during the parent run also cannot run alone. Either stream without its parent would complete successfully without importing records.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("streamIds")]
+        public System.Collections.Generic.ICollection<System.Guid>? StreamIds { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -1609,6 +1764,19 @@ namespace Viu.Emporix.ImportServiceModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Kind>))]
+    public enum Kind
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"UNRESOLVED_PARENT")]
+        UNRESOLVED_PARENT = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"REPEATED_KEY")]
+        REPEATED_KEY = 1,
 
     }
 
@@ -1691,6 +1859,72 @@ namespace Viu.Emporix.ImportServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class StreamOrder
+    {
+
+        /// <summary>
+        /// Stream names in the order they run.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("order")]
+        public System.Collections.Generic.ICollection<string>? Order { get; set; } = default!;
+
+        /// <summary>
+        /// For each stream name, the streams that must run before it. A stream with no dependencies has an empty list.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("prereqs")]
+        public System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<string>>? Prereqs { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Response2
+    {
+
+        /// <summary>
+        /// When the error occurred.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
+        public System.DateTimeOffset? Timestamp { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status code.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int? Status { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status reason phrase.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("error")]
+        public string? Error { get; set; } = default!;
+
+        /// <summary>
+        /// The request path.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("path")]
+        public string? Path { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamMode>))]
     public enum ImportStreamMode
     {
@@ -1752,15 +1986,45 @@ namespace Viu.Emporix.ImportServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamOnTargetReappear>))]
-    public enum ImportStreamOnTargetReappear
+    public partial class DeleteConfig
     {
 
-        [System.Runtime.Serialization.EnumMember(Value = @"IGNORE")]
-        IGNORE = 0,
+        /// <summary>
+        /// How a deleted record is recognised.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mode")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DeleteConfigMode>))]
+        public DeleteConfigMode? Mode { get; set; } = default!;
 
-        [System.Runtime.Serialization.EnumMember(Value = @"READD")]
-        READD = 1,
+        /// <summary>
+        /// `MARKER` only. The source field that flags a record as deleted.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("markerField")]
+        public string? MarkerField { get; set; } = default!;
+
+        /// <summary>
+        /// `MARKER` only. The values of `markerField` that mean deleted.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("markerValues")]
+        public System.Collections.Generic.ICollection<string>? MarkerValues { get; set; } = default!;
+
+        /// <summary>
+        /// `TOMBSTONE` only. The explicit name of the source record that lists deleted IDs. Omit this
+        /// <br/>property when the name can be derived from the imported record by adding a prefix or suffix —
+        /// <br/>for example, `invoice_deleted` for an `invoice` stream. Specify it when the deletion record
+        /// <br/>does not follow that naming convention.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("record")]
+        public string? Record { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -1839,6 +2103,9 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"CANCELLED")]
         CANCELLED = 5,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"ABORTED")]
+        ABORTED = 6,
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -1851,6 +2118,33 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"DELTA")]
         DELTA = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MappingVersions
+    {
+
+        /// <summary>
+        /// The stream identifier.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("streamId")]
+        public System.Guid? StreamId { get; set; } = default!;
+
+        /// <summary>
+        /// The published mapping version the stream uses.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("version")]
+        public int? Version { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -1876,6 +2170,22 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"SKIPPED")]
         SKIPPED = 5,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ABORTED")]
+        ABORTED = 6,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DiagnosticRecordKind>))]
+    public enum DiagnosticRecordKind
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"UNRESOLVED_PARENT")]
+        UNRESOLVED_PARENT = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"REPEATED_KEY")]
+        REPEATED_KEY = 1,
 
     }
 
@@ -1933,6 +2243,21 @@ namespace Viu.Emporix.ImportServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<BodyMappings>))]
+    public enum BodyMappings
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"published")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("published")]
+        Published = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"draft")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("draft")]
+        Draft = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Fault
     {
 
@@ -1950,6 +2275,19 @@ namespace Viu.Emporix.ImportServiceModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DeleteConfigMode>))]
+    public enum DeleteConfigMode
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MARKER")]
+        MARKER = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"TOMBSTONE")]
+        TOMBSTONE = 1,
 
     }
 

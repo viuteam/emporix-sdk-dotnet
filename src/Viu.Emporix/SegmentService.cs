@@ -10,13 +10,15 @@ namespace Viu.Emporix;
 /// <remarks>
 /// <para>
 /// A segment holds two kinds of membership and they are configured separately:
-/// <see cref="Customers"/> says who is in it, <see cref="Items"/> says what they
-/// may see. A segment with customers but no items grants nothing; one with items
-/// but no customers reaches nobody.
+/// <see cref="Customers"/> and <see cref="Groups"/> say who is in it — a
+/// customer directly, or through an IAM group — and <see cref="Items"/> says
+/// what they may see. A segment with members but no items grants nothing; one
+/// with items but no members reaches nobody.
 /// </para>
 /// <para>
 /// <see cref="MatchAsync"/> is the read a storefront makes: given a shopper and
-/// some items, which segments apply.
+/// some items, which segments apply. <see cref="ListMineAsync"/> asks the same
+/// of the shopper's own token.
 /// </para>
 /// </remarks>
 public sealed class SegmentService
@@ -41,6 +43,14 @@ public sealed class SegmentService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(segmentId);
         return new SegmentCustomerOperations(_http, $"{BasePath}/{Uri.EscapeDataString(segmentId)}/customers");
+    }
+
+    /// <summary>Which IAM groups belong to a segment.</summary>
+    /// <param name="segmentId">The segment.</param>
+    public SegmentGroupOperations Groups(string segmentId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(segmentId);
+        return new SegmentGroupOperations(_http, $"{BasePath}/{Uri.EscapeDataString(segmentId)}/groups");
     }
 
     /// <summary>What a segment grants access to.</summary>
@@ -163,6 +173,50 @@ public sealed class SegmentService
             },
             SegmentJsonContext.Default.ListSegmentResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Lists the segments the signed-in customer belongs to.</summary>
+    /// <param name="auth">The customer's own context. Required — there is no customer id in the address.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixConfigurationException">
+    /// <paramref name="auth"/> is not a customer context.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// Only active segments. Membership through an IAM group counts as well as a
+    /// direct assignment, and a group bound to a legal entity counts only while
+    /// the customer acts for that entity.
+    /// </para>
+    /// <para>
+    /// The customer's own token is enforced here, before the call. Emporix
+    /// accepts a service token too and answers it with an empty list — probed
+    /// against tenant viu on 2026-09-28 — which reads as «in no segment» rather
+    /// than as the mistake it is.
+    /// </para>
+    /// </remarks>
+    public async Task<PaginatedItems<SegmentResponse>> ListMineAsync(
+        AuthContext auth,
+        int pageNumber = 1,
+        int pageSize = 60,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/me",
+                Auth = CustomerService.RequireCustomer(auth),
+                Query = Paging(pageNumber, pageSize),
+            },
+            SegmentJsonContext.Default.ListSegmentResponse,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Creates a segment.</summary>
@@ -616,6 +670,165 @@ public sealed class SegmentCustomerOperations
         => legalEntityId is { Length: > 0 }
             ? $"{_basePath}/{Uri.EscapeDataString(customerId)}/{Uri.EscapeDataString(legalEntityId)}"
             : $"{_basePath}/{Uri.EscapeDataString(customerId)}";
+}
+
+/// <summary>
+/// Which IAM groups belong to one segment.
+/// </summary>
+/// <remarks>
+/// Reached through <see cref="SegmentService.Groups"/>. Every customer in an
+/// assigned group is in the segment, as if assigned directly. Only groups whose
+/// <c>userType</c> is <c>CUSTOMER</c> can be assigned, and a group bound to a
+/// legal entity counts only while its customer acts for that entity.
+/// </remarks>
+public sealed class SegmentGroupOperations
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _basePath;
+
+    internal SegmentGroupOperations(EmporixHttpClient http, string basePath)
+    {
+        _http = http;
+        _basePath = basePath;
+    }
+
+    /// <summary>Fetches one page of assigned groups.</summary>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<PaginatedItems<GroupAssignmentResponse>> ListAsync(
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = _basePath,
+                Auth = Defaults.Service(auth),
+                Query = SegmentService.Paging(pageNumber, pageSize),
+            },
+            SegmentJsonContext.Default.ListGroupAssignmentResponse,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Searches the assigned groups.</summary>
+    /// <param name="query">The Emporix query expression, for example <c>group.id:…</c>.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<PaginatedItems<GroupAssignmentResponse>> SearchAsync(
+        string query,
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{_basePath}/search",
+                Auth = Defaults.Service(auth),
+                Query = SegmentService.Paging(pageNumber, pageSize),
+                Content = EmporixJsonContent.Create(
+                    new SegmentsSearch { Q = query },
+                    SegmentJsonContext.Default.SegmentsSearch),
+                Idempotent = true,
+            },
+            SegmentJsonContext.Default.ListGroupAssignmentResponse,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads one group assignment.</summary>
+    /// <param name="groupId">The IAM group.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<GroupAssignmentResponse?> GetAsync(
+        string groupId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(groupId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{_basePath}/{Uri.EscapeDataString(groupId)}",
+                Auth = Defaults.Service(auth),
+            },
+            SegmentJsonContext.Default.GroupAssignmentResponse,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Puts a group into the segment, or updates its assignment.</summary>
+    /// <param name="groupId">The IAM group. Its <c>userType</c> must be <c>CUSTOMER</c>.</param>
+    /// <param name="assignment">The assignment; an empty one simply assigns the group.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>Repeating this changes nothing beyond the first call.</remarks>
+    public Task UpsertAsync(
+        string groupId,
+        GroupAssignmentUpsert assignment,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(groupId);
+        ArgumentNullException.ThrowIfNull(assignment);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{_basePath}/{Uri.EscapeDataString(groupId)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    assignment,
+                    SegmentJsonContext.Default.GroupAssignmentUpsert),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Takes a group out of the segment.</summary>
+    /// <param name="groupId">The IAM group.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Its customers leave the segment with it, unless they are also assigned
+    /// directly or through another group.
+    /// </remarks>
+    public Task DeleteAsync(
+        string groupId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(groupId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{_basePath}/{Uri.EscapeDataString(groupId)}",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
 }
 
 /// <summary>
