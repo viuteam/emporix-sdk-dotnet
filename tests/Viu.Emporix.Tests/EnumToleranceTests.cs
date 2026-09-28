@@ -75,6 +75,31 @@ public class EnumToleranceTests
     }
 
     [Fact]
+    public void A_nullable_enum_writes_the_value_the_specification_declares()
+    {
+        // The member is Kg, the specification declares kg. A required enum has
+        // sent the declared value since the fixer began naming members on the
+        // wire; a nullable one sent the member's name until it delegated too.
+        string json = JsonSerializer.Serialize(
+            new CartModels.MeasurementUnit { Quantity = 1, UnitCode = CartModels.MeasurementUnitUnitCode.Kg },
+            CartJsonContext.Default.MeasurementUnit);
+
+        Assert.Contains("\"unitCode\":\"kg\"", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_value_that_differs_from_its_member_beyond_case_is_read()
+    {
+        // No member is called /status — it is _status — so a case-insensitive
+        // parse of the member names found nothing and the path read as unknown.
+        QuoteModels.QuoteHistoryEntry? entry = JsonSerializer.Deserialize(
+            """{"id":"h1","path":"/status"}""",
+            QuoteJsonContext.Default.QuoteHistoryEntry);
+
+        Assert.Equal(QuoteModels.QuoteHistoryEntryPath._status, entry?.Path);
+    }
+
+    [Fact]
     public void A_numeric_string_does_not_smuggle_in_an_undefined_value()
     {
         // Enum.TryParse accepts «4» and hands back (ProductType)4 whether or not
