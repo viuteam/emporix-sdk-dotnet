@@ -625,7 +625,7 @@ public sealed class CustomerService
     /// A raw token is accepted too: it is how an externally issued customer
     /// token reaches the SDK.
     /// </remarks>
-    private static AuthContext RequireCustomer(AuthContext auth)
+    internal static AuthContext RequireCustomer(AuthContext auth)
         => auth.Kind is AuthKind.Customer or AuthKind.Raw
             ? auth
             : throw new EmporixConfigurationException(

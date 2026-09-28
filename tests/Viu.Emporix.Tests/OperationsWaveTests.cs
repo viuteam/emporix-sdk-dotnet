@@ -79,6 +79,85 @@ public class OperationsWaveTests
     }
 
     [Fact]
+    public async Task Starting_an_import_for_some_streams_sends_their_ids()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");
+        ImportService imports = new(Http(handler), Options());
+        Guid stream = Guid.Parse("7c9e6679-7425-40de-944b-e07fc1f90ae7");
+
+        await imports.StartRunAsync(
+            "cfg-1",
+            dryRun: true,
+            streamIds: [stream],
+            mappings: ImportServiceModels.BodyMappings.Draft);
+
+        Assert.Equal(
+            """{"dryRun":true,"mappings":"draft","streamIds":["7c9e6679-7425-40de-944b-e07fc1f90ae7"]}""",
+            handler.RequestBodies[0]);
+    }
+
+    [Fact]
+    public async Task An_empty_stream_list_is_refused_before_the_call()
+    {
+        // Emporix rejects an empty list; it does not read it as «every stream».
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");
+        ImportService imports = new(Http(handler), Options());
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await imports.StartRunAsync("cfg-1", streamIds: []));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task The_stream_order_is_read_per_configuration()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """{"order":["vendor","purchaseOrder"],"prereqs":{"vendor":[],"purchaseOrder":["vendor"]}}""");
+        ImportService imports = new(Http(handler), Options());
+
+        ImportServiceModels.StreamOrder? order = await imports.GetStreamOrderAsync("cfg-1");
+
+        Assert.Equal("/importtool/acme/configs/cfg-1/stream-order", Uri(handler));
+        Assert.Equal(["vendor", "purchaseOrder"], order!.Order);
+        Assert.Equal(["vendor"], order.Prereqs!["purchaseOrder"]);
+    }
+
+    [Fact]
+    public async Task Run_diagnostics_send_only_the_filters_that_were_set()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");
+        ImportService imports = new(Http(handler), Options());
+        Guid stream = Guid.Parse("7c9e6679-7425-40de-944b-e07fc1f90ae7");
+
+        await imports.ListRunDiagnosticsAsync("run-1");
+        await imports.ListRunDiagnosticsAsync(
+            "run-1",
+            stream,
+            ImportServiceModels.DiagnosticRecordKind.REPEATED_KEY,
+            limit: 10);
+
+        Assert.Equal("/importtool/acme/runs/run-1/diagnostics", Uri(handler, 0));
+        Assert.Equal(
+            "/importtool/acme/runs/run-1/diagnostics?streamId=7c9e6679-7425-40de-944b-e07fc1f90ae7&kind=REPEATED_KEY&limit=10",
+            Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task Run_diagnostics_as_csv_come_back_unread()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "stream,kind\n");
+        ImportService imports = new(Http(handler), Options());
+
+        using HttpResponseMessage response = await imports.DownloadRunDiagnosticsCsvAsync("run-1", limit: 5);
+
+        Assert.Equal("/importtool/acme/runs/run-1/diagnostics/csv?limit=5", Uri(handler));
+        Assert.Equal("text/csv", handler.LastHeader("Accept"));
+        Assert.Equal("stream,kind\n", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task Following_an_import_asks_for_an_event_stream()
     {
         // Without the header a server may answer with JSON, and the caller's SSE
@@ -417,32 +496,33 @@ public class OperationsWaveTests
         // The same endpoint as the upload, and the specification declares its
         // body as a oneOf: a file or an id, never both. So the reuse form must
         // carry no file part at all — sending both answers 400.
-        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"att-1","sessionId":"sess-1"}""");
         AiService ai = new(Http(handler), Options());
 
-        await ai.ReuseAttachmentAsync("a1", "att-1", "sess-1");
+        AiServiceModels.AttachmentResponse? attachment =
+            await ai.ReuseAttachmentAsync("a1", "att-1", "sess-1");
 
         Assert.Equal("/ai-service/acme/agentic/a1/attachments", Uri(handler));
         Assert.Contains("name=attachmentId", handler.RequestBodies[0], StringComparison.Ordinal);
         Assert.DoesNotContain("name=attachment;", handler.RequestBodies[0], StringComparison.Ordinal);
         Assert.Contains("att-1", handler.RequestBodies[0], StringComparison.Ordinal);
         Assert.Equal("sess-1", handler.LastHeader("session-id"));
+        Assert.Equal("att-1", attachment!.Id);
         Assert.False(IsRepeatable(handler));
     }
 
     [Fact]
-    public async Task Reusing_an_attachment_without_a_session_is_rejected_before_the_call()
+    public async Task Reusing_an_attachment_without_a_session_lets_Emporix_start_one()
     {
-        // Reuse resolves the attachment inside a session. Emporix generates a
-        // session for an upload that omits one; for a reuse there would be
-        // nothing to resolve, so this fails here rather than as a 400.
-        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        // Optional since the specification of 2026-09-25, as on the upload, and
+        // the answer names the session Emporix started — the one to chat in.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"att-1","sessionId":"sess-new"}""");
         AiService ai = new(Http(handler), Options());
 
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
-            await ai.ReuseAttachmentAsync("a1", "att-1", "  "));
+        AiServiceModels.AttachmentResponse? attachment = await ai.ReuseAttachmentAsync("a1", "att-1");
 
-        Assert.Equal(0, handler.CallCount);
+        Assert.Null(handler.LastHeader("session-id"));
+        Assert.Equal("sess-new", attachment!.SessionId);
     }
 
     // ---------- RAG indexer ----------

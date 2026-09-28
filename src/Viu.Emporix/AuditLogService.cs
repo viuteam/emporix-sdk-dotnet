@@ -11,7 +11,8 @@ namespace Viu.Emporix;
 /// <para>
 /// Emporix calls this the changelog service. It covers platform entities across
 /// the tenant: orders, customers, companies, products, segments, groups,
-/// coupons, and any custom entity defined through <see cref="SchemaService"/>.
+/// coupons, quotes, sites, and any custom entity defined through
+/// <see cref="SchemaService"/>. A site's entries carry its code as the entity id.
 /// </para>
 /// <para>
 /// Service accounts only. It needs <c>changelog.changelog_read</c> on the client
@@ -19,8 +20,8 @@ namespace Viu.Emporix;
 /// people — so this belongs on a server, never in something a browser downloads.
 /// </para>
 /// <para>
-/// Emporix marks the service as preview: nearly every field of an entry is
-/// optional, and the contract may change.
+/// Nearly every field of an entry is optional in the specification, so read
+/// them defensively.
 /// </para>
 /// </remarks>
 public sealed class AuditLogService

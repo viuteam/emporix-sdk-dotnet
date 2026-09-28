@@ -1203,9 +1203,18 @@ public sealed class MediaService
     /// The raw response. The caller owns it and has to dispose it.
     /// </returns>
     /// <remarks>
+    /// <para>
     /// Returns the response unread rather than a byte array: an asset can be
     /// large, and buffering it in memory should be the caller's decision. For a
     /// public asset Emporix answers with a redirect instead of the bytes.
+    /// </para>
+    /// <para>
+    /// Emporix keeps this for compatibility and recommends
+    /// <see cref="GetDownloadUrlAsync"/> instead, which lets the file travel
+    /// from storage to the caller directly. This one streams through the Media
+    /// API and refuses a file of known size above its limit, 30 MB unless the
+    /// tenant configured another.
+    /// </para>
     /// </remarks>
     public Task<HttpResponseMessage> DownloadAsync(
         string assetId,
@@ -1223,6 +1232,111 @@ public sealed class MediaService
             },
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
+    }
+
+    /// <summary>Asks where an asset can be downloaded from.</summary>
+    /// <param name="assetId">The asset id.</param>
+    /// <param name="disposition">
+    /// For a private asset, whether a browser should save the file or show it.
+    /// Emporix saves it when omitted; public and link assets ignore this.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <para>
+    /// The way Emporix recommends for every download, with no size limit. A
+    /// private file comes back as a signed storage URL that needs no Emporix
+    /// token and expires, after 15 minutes unless the tenant configured
+    /// another; a public file as its permanent URL; a link asset as the URL it
+    /// stores.
+    /// </para>
+    /// <para>
+    /// For an asset still pending from <see cref="StartUploadSessionAsync"/>,
+    /// this call completes it when the file has arrived in storage, and answers
+    /// <c>409</c> «Upload is not complete» when it has not.
+    /// </para>
+    /// </remarks>
+    public async Task<MediaModels.DownloadUrl?> GetDownloadUrlAsync(
+        string assetId,
+        MediaModels.Disposition? disposition = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(assetId);
+
+        // Not ToString: the members are Inline and Attachment, and the
+        // specification allows only the lowercase values — anything else
+        // answers 400.
+        string? value = disposition switch
+        {
+            null => null,
+            MediaModels.Disposition.Inline => "inline",
+            MediaModels.Disposition.Attachment => "attachment",
+            _ => throw new ArgumentOutOfRangeException(nameof(disposition)),
+        };
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(assetId)}/download-url",
+                Auth = Defaults.Service(auth),
+                Query = value is null ? null : [new("disposition", value)],
+            },
+            MediaJsonContext.Default.DownloadUrl,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Starts an upload that goes straight to storage.</summary>
+    /// <param name="request">The asset to create, and for a private one whether to upload by <c>PUT</c> or by form.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The pending asset's id and the instruction for sending the file.</returns>
+    /// <remarks>
+    /// <para>
+    /// The SDK does not send the file: the instruction points at Google Cloud
+    /// Storage or Cloudinary, not at Emporix, and must not carry the Emporix
+    /// token. Follow it with a plain <see cref="HttpClient"/> — for a
+    /// <c>PUT</c>, send the file with every header it lists; for a
+    /// <c>POST</c>, send every field unchanged as multipart form data and the
+    /// file as the last part.
+    /// </para>
+    /// <para>
+    /// Direct upload is switched on per tenant by Emporix Support. Until it is,
+    /// this answers <c>403</c> «direct upload is not enabled for this tenant» —
+    /// a <c>403</c> that says nothing about the token's scopes — and creates
+    /// nothing.
+    /// </para>
+    /// <para>
+    /// The asset stays <c>PENDING</c> until storage confirms the file, then
+    /// becomes <c>READY</c>. The instruction expires — a storage signature after
+    /// 15 minutes, a Cloudinary form after an hour, by default — and an expired
+    /// session with no file is cleaned up. Until the file is there, calls that
+    /// need it answer <c>409</c> «Upload is not complete».
+    /// </para>
+    /// <para>
+    /// Not repeatable: each call creates another pending asset.
+    /// </para>
+    /// </remarks>
+    public async Task<MediaModels.UploadSession?> StartUploadSessionAsync(
+        MediaModels.UploadSessionRequest request,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/upload-session",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    request,
+                    MediaJsonContext.Default.UploadSessionRequest),
+            },
+            MediaJsonContext.Default.UploadSession,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Deletes an asset.</summary>
@@ -1255,9 +1369,16 @@ public sealed class MediaService
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
+    /// <para>
     /// Sent as <c>multipart/form-data</c> with the bytes under <c>file</c> and
     /// the metadata as JSON under <c>body</c> — the shape Emporix expects, and
     /// the reason this is not an ordinary JSON call.
+    /// </para>
+    /// <para>
+    /// Up to 30 MB. A larger file, or one that should not pass through the
+    /// Media API at all, goes through <see cref="StartUploadSessionAsync"/>
+    /// where the tenant has direct upload.
+    /// </para>
     /// </remarks>
     public async Task<MediaModels.GetAsset?> UploadAsync(
         Stream content,
@@ -1309,7 +1430,8 @@ public sealed class MediaService
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
     /// The asset keeps its id, so anything referencing it keeps working — which
-    /// is the point of replacing rather than creating a new one.
+    /// is the point of replacing rather than creating a new one. Up to 30 MB, as
+    /// for <see cref="UploadAsync"/>.
     /// </remarks>
     public async Task<MediaModels.GetAsset?> ReplaceFileAsync(
         string assetId,

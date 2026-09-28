@@ -283,6 +283,59 @@ public class B2BWaveTests
         Assert.Equal(0, handler.CallCount);
     }
 
+    [Fact]
+    public async Task A_group_assignment_is_addressed_by_group_under_its_segment()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        SegmentGroupOperations groups = new SegmentService(Http(handler), Options()).Groups("s1");
+
+        await groups.UpsertAsync("g1", new CustomerSegmentModels.GroupAssignmentUpsert());
+        await groups.DeleteAsync("g1");
+
+        Assert.Equal(HttpMethod.Put, handler.RequestMethods[0]);
+        Assert.Equal("/customer-segment/acme/segments/s1/groups/g1", Uri(handler, 0));
+        Assert.Equal("{}", handler.RequestBodies[0]);
+        Assert.Equal(HttpMethod.Delete, handler.RequestMethods[1]);
+        Assert.Equal("/customer-segment/acme/segments/s1/groups/g1", Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task Searching_group_assignments_only_reads()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        SegmentService segments = new(Http(handler), Options());
+
+        await segments.Groups("s1").SearchAsync("group.id:g1");
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.StartsWith(
+            "/customer-segment/acme/segments/s1/groups/search?",
+            Uri(handler),
+            StringComparison.Ordinal);
+        Assert.Equal("""{"q":"group.id:g1"}""", handler.RequestBodies[0]);
+        Assert.True(IsRepeatable(handler));
+    }
+
+    [Fact]
+    public async Task Own_segments_are_read_with_the_customers_own_token()
+    {
+        // There is no customer id in the address: Emporix reads the customer
+        // from the token, and answers a service token with an empty list rather
+        // than an error. So the call refuses any other kind before it leaves.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        SegmentService segments = new(Http(handler), Options());
+
+        await Assert.ThrowsAsync<EmporixConfigurationException>(async () =>
+            await segments.ListMineAsync(AuthContext.Service()));
+        Assert.Equal(0, handler.CallCount);
+
+        await segments.ListMineAsync(AuthContext.Customer("token"));
+
+        Assert.StartsWith("/customer-segment/acme/segments/me?", Uri(handler), StringComparison.Ordinal);
+        handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Auth, out AuthContext auth);
+        Assert.Equal(AuthKind.Customer, auth.Kind);
+    }
+
     // ---------- Customer administration ----------
 
     [Fact]
