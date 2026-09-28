@@ -9,6 +9,24 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.7.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.6.0...v0.7.0) (2026-09-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* AiService.ReuseAttachmentAsync returns the attachment and the session instead of nothing, and its session id is optional. StartRunAsync on the import service takes two new optional parameters before auth, so a call that passes auth or the cancellation token by position must name them. The import stream lost TargetDeleteSubscriptionEnabled and OnTargetReappear, and the enum ImportStreamOnTargetReappear is gone, because Emporix removed both fields.
+* client.PickPack, PickPackService and every type in Viu.Emporix.PickPackModels are removed. The endpoints behind them no longer exist.
+
+### Added
+
+* remove the Pick-Pack service, which Emporix has retired ([#45](https://github.com/viuteam/emporix-sdk-dotnet/issues/45)) ([15de498](https://github.com/viuteam/emporix-sdk-dotnet/commit/15de49897be5227f1513c987cb4f87450765c210))
+* segment groups, import diagnostics and direct media uploads ([#47](https://github.com/viuteam/emporix-sdk-dotnet/issues/47)) ([6e8e683](https://github.com/viuteam/emporix-sdk-dotnet/commit/6e8e683247211326e2f34b5d459479082b1aecf5))
+
+
+### Fixed
+
+* send and read the declared value of a nullable enum ([#46](https://github.com/viuteam/emporix-sdk-dotnet/issues/46)) ([723c492](https://github.com/viuteam/emporix-sdk-dotnet/commit/723c49216297e78c4de5a3747935e7b81ba3041d))
+
 ## [0.6.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.5.0...v0.6.0) (2026-09-11)
 
 
