@@ -228,14 +228,18 @@ internal static partial class SpecPatches
                         "      description: Partial update operation list.\n      items:\n        type: object\n        properties:",
                         "      description: Partial update operation list.\n      items:\n        type: object\n        title: patchOperation\n        properties:")),
 
+                // Anchored on the element's own properties, not on the array's
+                // description: upstream reworded that description, the patch
+                // anchored there reported itself stale, and the defect stayed — the
+                // element came out as Anonymous2.
                 new SpecPatch(
-                    "upstream: the element schema of agentCollaborations is written "
+                    "upstream: the element schema of AgentCollaborations is written "
                     + "inline with no title, so the generator has no name for it and emits "
                     + "Anonymous. A title names it AgentCollaboration.",
                     Title(
                         "agentCollaboration",
-                        "      description: List of agent collaborations which allows an agent to hand off its task to other agents.\n      items:\n        type: object\n        properties:",
-                        "      description: List of agent collaborations which allows an agent to hand off its task to other agents.\n      items:\n        type: object\n        title: agentCollaboration\n        properties:")),
+                        "      items:\n        type: object\n        properties:\n          agentId:\n            type: string\n            description: Identifier of the agent.\n          description:\n            type: string\n            description: Description of the agent collaboration.",
+                        "      items:\n        type: object\n        title: agentCollaboration\n        properties:\n          agentId:\n            type: string\n            description: Identifier of the agent.\n          description:\n            type: string\n            description: Description of the agent collaboration.")),
             ],
             ["category"] =
             [
@@ -294,6 +298,17 @@ internal static partial class SpecPatches
                         "itemAssignmentCore",
                         "    ItemAssignmentUpsert:\n      type: object\n      description: |\n\n      allOf:\n        - type: object\n          properties:",
                         "    ItemAssignmentUpsert:\n      type: object\n      description: |\n\n      allOf:\n        - type: object\n          title: itemAssignmentCore\n          properties:")),
+            ],
+            ["import-service"] =
+            [
+                new SpecPatch(
+                    "upstream: the response of the stream-order read is written inline with "
+                    + "no title, so the generator numbers it — Response2, a name the next "
+                    + "inline response upstream would shift. A title names it StreamOrder.",
+                    Title(
+                        "streamOrder",
+                        "              schema:\n                type: object\n                properties:\n                  order:\n                    type: array\n                    items:\n                      type: string\n                    description: Stream names in the order they run.",
+                        "              schema:\n                type: object\n                title: streamOrder\n                properties:\n                  order:\n                    type: array\n                    items:\n                      type: string\n                    description: Stream names in the order they run.")),
             ],
             ["label-service"] =
             [
