@@ -23,19 +23,22 @@ namespace Viu.Emporix;
 /// than a field a caller can shrug off — and there is no null to put in it.
 /// </para>
 /// <para>
+/// <b>Both directions go through the strict converter</b>, so a nullable
+/// property puts the same value on the wire as a required one: the value the
+/// specification declares, which <c>GeneratedCodeFixer</c> records as
+/// <c>JsonStringEnumMemberName</c> wherever it differs from the member's name.
+/// This converter used to write the member's name itself. That matched the
+/// strict converter until the fixer taught the strict one the declared values,
+/// and from then on a nullable property sent <c>Kg</c> where the specification
+/// declares <c>kg</c> — and read <c>/status</c> as unknown, because no member
+/// is called that.
+/// </para>
+/// <para>
 /// <b>Case-insensitive, and that is a constraint rather than a choice.</b>
 /// <c>JsonStringEnumConverter</c> matches without regard to case, and 180
 /// generated members differ from their wire value in case alone — the
 /// specifications write <c>string</c> where NSwag had to emit <c>String</c> to
 /// get a legal identifier. Tightening this would break every one of them.
-/// </para>
-/// <para>
-/// Writing is unchanged from the strict converter: the member's name, which is
-/// what System.Text.Json has always sent. It ignores the
-/// <c>EnumMember</c> attributes NSwag emits, so those 180 differences are
-/// written in the member's casing today and stay that way here — this converter
-/// deliberately does not fix that, because doing so would change what the SDK
-/// puts on the wire.
 /// </para>
 /// <para>
 /// <b>Public because it has to be.</b> System.Text.Json's source generator
@@ -49,40 +52,43 @@ namespace Viu.Emporix;
 public sealed class NullOnUnknownEnumConverter<T> : JsonConverter<T?>
     where T : struct, Enum
 {
+    private JsonConverter<T>? _strict;
+
     /// <summary>
     /// Reads the value, or <see langword="null"/> when it is not one this
     /// enum declares.
     /// </summary>
     /// <param name="reader">The reader, positioned on the value.</param>
     /// <param name="typeToConvert">Unused; the type is the parameter.</param>
-    /// <param name="options">Unused; nothing here depends on them.</param>
+    /// <param name="options">Passed on to the strict converter.</param>
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType is JsonTokenType.Null)
-        {
-            return null;
-        }
-
         if (reader.TokenType is not JsonTokenType.String)
         {
             return null;
         }
 
-        // Enum.TryParse answers true for «99» and hands back the raw number
-        // whether or not a member carries it, so the parse alone is not enough:
-        // an out-of-range value would arrive looking like a real one. It also
-        // accepts comma-separated lists for flag enums, which none of these
-        // are. IsDefined closes both.
-        return Enum.TryParse(reader.GetString(), ignoreCase: true, out T value)
-            && Enum.IsDefined(value)
-            ? value
-            : null;
+        T value;
+
+        try
+        {
+            value = Strict(options).Read(ref reader, typeof(T), options);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        // The strict converter reads «99» as the raw number whether or not a
+        // member carries it, so an out-of-range value would arrive looking like
+        // a real one. IsDefined closes that.
+        return Enum.IsDefined(value) ? value : null;
     }
 
-    /// <summary>Writes the member's name, as the strict converter does.</summary>
+    /// <summary>Writes the value the specification declares, as the strict converter does.</summary>
     /// <param name="writer">The writer.</param>
     /// <param name="value">The value; a null is written as a JSON null.</param>
-    /// <param name="options">Unused; nothing here depends on them.</param>
+    /// <param name="options">Passed on to the strict converter.</param>
     public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)
     {
         ArgumentNullException.ThrowIfNull(writer);
@@ -97,6 +103,12 @@ public sealed class NullOnUnknownEnumConverter<T> : JsonConverter<T?>
             return;
         }
 
-        writer.WriteStringValue(value.Value.ToString());
+        Strict(options).Write(writer, value.Value, options);
     }
+
+    // The generic JsonStringEnumConverter is the trim-safe one: it reads the
+    // JsonStringEnumMemberName attributes without the reflection this SDK
+    // does not allow itself.
+    private JsonConverter<T> Strict(JsonSerializerOptions options)
+        => _strict ??= (JsonConverter<T>)new JsonStringEnumConverter<T>().CreateConverter(typeof(T), options);
 }
