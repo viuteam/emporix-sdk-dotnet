@@ -56,7 +56,6 @@ internal static class SpecCatalog
         new("oauth-service", $"{Base}/authentication/oauth-service/api-reference/api.yml"),
         new("order-v2", $"{Base}/orders/order/api-reference/api.yml"),
         new("payment", $"{Base}/checkout/payment-gateway/api-reference/api.yml"),
-        new("pick-pack", $"{Base}/orders/pick-pack/api-reference/api.yml"),
         new("price", $"{Base}/prices-and-taxes/price-service/api-reference/api.yml"),
         new("product", $"{Base}/products-labels-and-brands/product-service/api-reference/api.yml"),
         new("quote", $"{Base}/quotes/quote/api-reference/api.yaml"),

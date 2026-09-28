@@ -84,7 +84,6 @@ public sealed class EmporixClient : IDisposable
     private SessionContextService? _sessionContext;
     private ImportService? _import;
     private IndexingService? _indexing;
-    private PickPackService? _pickPack;
     private ShoppingListService? _shoppingList;
     private RewardPointsService? _rewardPoints;
     private AiService? _ai;
@@ -645,17 +644,6 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _indexing ??= new IndexingService(_http, _options);
-        }
-    }
-
-    /// <summary>The warehouse side of an order.</summary>
-    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
-    public PickPackService PickPack
-    {
-        get
-        {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            return _pickPack ??= new PickPackService(_http, _options);
         }
     }
 
