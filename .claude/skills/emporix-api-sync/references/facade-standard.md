@@ -93,7 +93,11 @@ and taking every other context with it. Grouping even three small services was
 enough.
 
 Every context sets `DefaultIgnoreCondition = WhenWritingNull`. That is what
-makes a partial update send only what the caller set.
+makes a partial update send only what the caller set — except for a generated
+property with a default. The import run's `Body.Mappings` starts as
+`Published`, so a facade that builds the body from its own parameters sends it
+on every run unless it sets the property, to null when the caller chose
+nothing. Set every property of a body the facade builds.
 
 Two generator rules worth knowing before they bite:
 
@@ -133,6 +137,11 @@ when you write a facade that takes one:
 - **`[JsonStringEnumMemberName]`** on every member whose declared value differs
   from its C# name, because `JsonStringEnumConverter` ignores `[EnumMember]` and
   would otherwise write `Add` for `add`, `_status` for `/status`.
+
+Neither converter sees a **query string**. `ToString` gives the member's name,
+which is right for `DAY` or `REPEATED_KEY` and wrong for the media download's
+`Inline`, which the specification spells `inline`. Where a member carries
+`[JsonStringEnumMemberName]`, map it to that value explicitly.
 
 A non-nullable generated enum defaults to its first member. `PatchOperationOp`
 defaults to `Add`, so an operation built without setting `Op` silently means

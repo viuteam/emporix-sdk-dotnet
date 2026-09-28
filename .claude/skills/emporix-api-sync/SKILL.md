@@ -52,7 +52,7 @@ stays silent on. Report both, and run them through
 `scripts/annotate_operations.py` (step 3) before calling any of them work: at the
 time of writing every one is deprecated upstream.
 
-`fetch` rewrites `fetchedAt` for all 44 services whether or not anything moved,
+`fetch` rewrites `fetchedAt` for every service whether or not anything moved,
 so a check-only run must put `specs/` back — and `git status --porcelain --
 specs/` before that restore is what proves the YAMLs themselves never moved. In
 a worktree-isolated run `git` through the agent's shell may be refused; spell it
@@ -117,7 +117,27 @@ Vendoring is not only the bot's job. A person fixing a gap vendors the specs in
 the same PR — `feat!:` or `fix:`, not `chore:` — so «no sync PR» does not mean
 «no sync». `git log --oneline -8 -- specs/` shows who last touched them.
 
-### A failed run is a snapshot, not a task list
+### A failed run: first ask which step failed
+
+Two steps fail, for different reasons, and their logs look nothing alike:
+
+```bash
+gh run view <id> --json jobs \
+  --jq '.jobs[].steps[] | select(.conclusion=="failure") | .name'
+```
+
+| Failed step | What happened |
+|---|---|
+| `Download the specifications` | `fetch` got a non-success status for one specification and threw. Nothing was vendored, for any service: the run stops before it writes the manifest. Read `references/upstream-removal.md` |
+| `Build and test` | the sync worked and a test refused it — usually `SpecPathTests` meeting an operation no facade wraps. Read on |
+
+A download failure repeats every day until someone acts, and each red run looks
+like the last, so the useful number is the date of the first one. List a month
+of runs and find where the failing step changed: from 2026-09-17 it was the
+Pick-Pack specification's `404`, eleven days in a row, and no service was
+synced in that time.
+
+### A failed test is a snapshot, not a task list
 
 The workflow builds and tests *before* it opens anything, and `SpecPathTests`
 fails the moment a sync brings an operation no facade wraps. So the run that
@@ -154,13 +174,18 @@ there is no PR to make.
 
 Never answer that question from `git diff specs/sync-manifest.json`. Every
 `fetchedAt` plus `generatedAt` is rewritten on every run, so the manifest shows
-about 45 changed lines on each side when no spec byte moved. Reporting drift
-that did not exist is the failure mode here. The workflow discards the manifest
-when no spec content changed; on your own branch nothing does that for you.
+a changed line per service, and one more, on each side when no spec byte moved.
+Reporting drift that did not exist is the failure mode here. The workflow
+discards the manifest when no spec content changed; on your own branch nothing
+does that for you.
 
-Watch the output for a patch reported **stale** — upstream fixed a defect that
-`tools/Viu.Emporix.SpecSync/SpecPatches.cs` was working around, so that entry
-should go, in its own commit with the reason.
+Watch the output for a patch reported **stale**. Stale means the text a patch
+in `tools/Viu.Emporix.SpecSync/SpecPatches.cs` is anchored on is gone, which is
+not the same as the defect being gone. Generate and look before removing
+anything: when upstream reworded the description of `AgentCollaborations`, the
+title patch anchored on it went stale and the element came back as
+`Anonymous2`. The fix there was a new anchor. Only when the generated type is
+right without the patch does the entry go, in its own commit with the reason.
 
 ```bash
 dotnet run --project tools/Viu.Emporix.SpecSync -- generate
