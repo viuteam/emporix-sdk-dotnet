@@ -37,6 +37,34 @@ open PR — then base on that branch, say so in the first line of the body, and
 note that GitHub retargets the base to `main` automatically once the parent
 merges.
 
+Retargeting is all GitHub does, and it leaves two things for you, both met with
+#46 and #47:
+
+- **It starts no CI.** A base change is an `edited` event. `commit-convention.yml`
+  listens for that and `ci.yml` does not, so the retargeted PR gets its two
+  convention checks back and no build, no test, no public API check.
+- **It keeps the parent's commits.** This repo squash-merges, so the parent lands
+  on `main` as a new commit while the child still carries the original: its
+  diff shows the parent's changes a second time.
+
+One rebase fixes both. Drop the parent's commits only once you have seen that
+the squash commit carries the same change — compare patches, not trees, since
+`main` may have moved in between — and push with a lease on the old tip, so that
+nothing someone pushed meanwhile gets overwritten:
+
+```bash
+git fetch origin --prune
+git diff <parent-base> <parent-tip> | git patch-id --stable   # as reviewed
+git show <squash-commit> | git patch-id --stable              # as it landed: same id
+git rebase --onto origin/main <parent-tip> <child-branch>
+git diff --stat <child-old-tip> <child-branch>   # only what landed on main since
+git push --force-with-lease=<child-branch>:<child-old-tip> origin <child-branch>
+```
+
+A grandchild follows its parent the same way, from the parent's old tip:
+`git rebase --onto <child-branch> <child-old-tip> <grandchild-branch>`. Rebasing
+rewrites a branch someone may be reviewing, so ask before doing it.
+
 Never push to `chore/spec-sync`.
 
 ## PR
