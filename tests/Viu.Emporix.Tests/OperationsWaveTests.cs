@@ -5,15 +5,14 @@ using Microsoft.Extensions.Options;
 namespace Viu.Emporix.Tests;
 
 /// <summary>
-/// The operational services: imports, indexing, pick-pack, shopping lists,
-/// reward points, AI, the RAG indexer and cloud functions.
+/// The operational services: imports, indexing, shopping lists, reward points,
+/// AI, the RAG indexer and cloud functions.
 /// </summary>
 /// <remarks>
 /// Aimed at the places where these differ from the rest of the API rather than
 /// where they agree with it: a service that pages from zero, one that leaves the
-/// tenant out of the address, one that needs a second credential in a header,
-/// and the calls that must never be retried because they move points or start
-/// work.
+/// tenant out of the address, and the calls that must never be retried because
+/// they move points or start work.
 /// </remarks>
 public class OperationsWaveTests
 {
@@ -150,57 +149,6 @@ public class OperationsWaveTests
     }
 
     // ---------- Pick and pack ----------
-
-    [Fact]
-    public async Task The_calls_that_change_an_order_carry_the_packers_second_credential()
-    {
-        // saas-token is a required header, separate from the OAuth token. A call
-        // that changes an order has to say who changed it.
-        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"message":"ok","code":200}""");
-        PickPackService pickPack = new(Http(handler), Options());
-
-        string? message = await pickPack.FinishOrderAsync("order-1", "signed-packer-token");
-
-        Assert.Equal("/pick-pack/acme/orders/order-1/finish", Uri(handler));
-        Assert.Equal("signed-packer-token", handler.LastHeader("saas-token"));
-        Assert.Equal("ok", message);
-        Assert.False(IsRepeatable(handler));
-    }
-
-    [Fact]
-    public async Task An_assignee_is_removed_at_its_own_address()
-    {
-        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
-        PickPackService pickPack = new(Http(handler), Options());
-
-        await pickPack.RemoveAssigneeAsync("order-1", "packer-7");
-
-        Assert.Equal("/pick-pack/acme/orders/order-1/assignees/packer-7", Uri(handler));
-        Assert.Equal(HttpMethod.Delete, handler.RequestMethods[0]);
-    }
-
-    [Fact]
-    public async Task Reporting_a_picking_event_is_not_repeatable()
-    {
-        // The event carries its own id and Emporix answers 409 to a repeat, but
-        // a 409 is a failure to the caller — so the SDK does not retry it.
-        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");
-        PickPackService pickPack = new(Http(handler), Options());
-
-        await pickPack.CreateEventAsync(
-            new PickPackModels.OrderEntryEventCreate
-            {
-                EventId = "e1",
-                OrderNumber = "o1",
-                ProductId = "p1",
-                Unit = "kg",
-            },
-            "signed-packer-token");
-
-        Assert.False(IsRepeatable(handler));
-    }
-
-    // ---------- Shopping lists ----------
 
     [Fact]
     public async Task Creating_a_list_for_oneself_and_for_a_customer_are_different_methods()

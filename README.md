@@ -109,7 +109,7 @@ unless an `ICustomerTokenRefresher` is registered.
 
 ## Environments
 
-**Emporix separates environments by tenant, not by host.** Every one of the 44
+**Emporix separates environments by tenant, not by host.** Every one of the 43
 vendored specifications points at `https://api.emporix.io`; there is no staging
 host. Dev, staging and production are three tenants with three sets of
 credentials, and `Host` stays at its default unless you are pointing at a proxy or
@@ -533,7 +533,6 @@ chose. Each service hangs off the client under a name that says what it owns:
 | `client.SessionContext` | what a session carries beyond its token |
 | `client.Imports` | bringing data in from somewhere else |
 | `client.Indexing` | which provider indexes the catalogue, and rebuilding it |
-| `client.PickPack` | the warehouse side of an order |
 | `client.ShoppingLists` | what a customer means to buy later |
 | `client.RewardPoints` | loyalty points, and what they buy |
 | `client.Ai` | text generation, and agents that do things |

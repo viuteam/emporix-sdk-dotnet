@@ -169,12 +169,6 @@
       "fetchedAt": "2026-09-10T11:02:42.140724+00:00",
       "sha256": "23999e8748cd164b7914a29feda57a5dfb49891871957a7253f7bbaad8b6d515"
     },
-    "pick-pack": {
-      "url": "https://raw.githubusercontent.com/emporix/api-references/refs/heads/main/orders/pick-pack/api-reference/api.yml",
-      "specVersion": "",
-      "fetchedAt": "2026-09-10T11:02:42.140724+00:00",
-      "sha256": "cb91e8e67dbfa64bc5c284c4fbb60b5375d5a9fec47365cc187cda5c78c300e2"
-    },
     "price": {
       "url": "https://raw.githubusercontent.com/emporix/api-references/refs/heads/main/prices-and-taxes/price-service/api-reference/api.yml",
       "specVersion": "",

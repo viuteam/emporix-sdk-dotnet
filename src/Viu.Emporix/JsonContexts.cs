@@ -775,27 +775,6 @@ internal sealed partial class ShoppingListJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(int))]
 internal sealed partial class RewardPointsJsonContext : JsonSerializerContext;
 
-/// <summary>Serialization for the pick-pack service. See <see cref="ProductJsonContext"/>.</summary>
-[JsonSourceGenerationOptions(
-    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Order))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderList))]
-[JsonSerializable(typeof(List<Viu.Emporix.PickPackModels.OrderList>))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderStatusChange))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Assignee))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.PackagingProductsChange))]
-[JsonSerializable(typeof(List<Viu.Emporix.PickPackModels.PackagingProductsChange>))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderEntryEventCreate))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.OrderEntryEventResponse))]
-[JsonSerializable(typeof(List<Viu.Emporix.PickPackModels.OrderEntryEventResponse>))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.RecalculationJobCreation))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.RecalculationJob))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Response))]
-[JsonSerializable(typeof(Viu.Emporix.PickPackModels.Response4))]
-[JsonSerializable(typeof(List<string>))]
-internal sealed partial class PickPackJsonContext : JsonSerializerContext;
-
 /// <summary>
 /// The <c>{ "id": … }</c> the AI service answers a successful <c>PUT</c> with.
 /// </summary>
