@@ -101,6 +101,7 @@ one the user wants if it is not obvious:
   `SpecPathTests` if a spec added an operation, with the list to work from.
 - **Catch up now.** A sync-and-facades PR stacked on the removal branch,
   following the rest of this skill. CI runs only for pull requests against
-  `main`, so a stacked PR shows no checks until GitHub retargets it after its
-  parent merges: run the full verification locally, and say so in its
-  description.
+  `main`, so a stacked PR shows no checks while it is stacked: run the full
+  verification locally, and say so in its description. Retargeting after the
+  parent merges does not start them either — see «Branch and base» in
+  `ship-it.md` for the rebase that does.
