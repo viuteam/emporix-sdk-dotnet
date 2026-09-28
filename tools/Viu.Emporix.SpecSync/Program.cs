@@ -47,7 +47,7 @@ async Task<int> FetchAsync()
             if (!response.IsSuccessStatusCode)
             {
                 throw new InvalidOperationException(
-                    $"{spec.Name}: {(int)response.StatusCode} von {spec.Url}");
+                    $"{spec.Name}: {(int)response.StatusCode} from {spec.Url}");
             }
 
             string raw = await response.Content.ReadAsStringAsync(cancellationToken);
