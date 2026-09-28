@@ -18,7 +18,7 @@ paths:
     post:
       summary: Creating an asset
       description: |-
-        Creates a new asset for the tenant. An asset represents a digital (max 10MB) object in the system, for example a video, image, or a document.
+        Creates a new asset for the tenant. An asset represents a digital (max 30 MB) object in the system, for example a video, image, or a document.
         - To create an asset of the `BLOB` type, use the `multipart/form-data` request body. 
         - To create an asset of the `LINK` type, use the `application/json` request body.
 
@@ -211,7 +211,7 @@ paths:
     put:
       summary: Updating an asset
       description: |-
-        Updates a given asset. The `type` and `access` properties are immutable. Accepts files of up to 10MB.
+        Updates a given asset. The `type` and `access` properties are immutable. Accepts files of up to 30 MB.
         - To update an asset of the `BLOB` type, use `multipart/form-data` request body. 
         - To update an asset of the `LINK` type, use `application/json` request body.
       security:
@@ -359,6 +359,12 @@ paths:
       summary: Downloading an asset
       description: |-
         Downloads an asset by its unique identifier.
+
+        {% hint style="info" %}
+        **Recommendation:** Use [Retrieving a download URL](https://developer.emporix.io/api-documentation/api-guides/media/media/api-reference/assets#get-media-tenant-assets-assetid-download-url) for every download. That call is always faster because the file travels from storage to the client and does not pass through the Media API.
+        {% endhint %}
+
+        If the asset is `PENDING` and its file is not yet available in storage, this endpoint returns `409`. If the known value of `details.bytes` exceeds the configured streaming limit, it returns `413`. The default limit is 31,457,280 bytes (30 MB). Assets without a known byte count are not rejected by this size check. The download URL endpoint has no size limit.
       security:
         - OAuth2:
             - media.asset_read
@@ -375,9 +381,238 @@ paths:
           $ref: '#/components/responses/Forbidden_403'
         '404':
           $ref: '#/components/responses/NotFound_404'
+        '409':
+          description: The upload is not complete because the file is not available in storage yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Upload is not complete:
+                  $ref: '#/components/examples/UploadNotComplete409_Example'
+        '413':
+          description: The known file size exceeds the configured streaming download limit, which is 31,457,280 bytes (30 MB) by default.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                File exceeds the streaming download limit:
+                  value:
+                    code: 413
+                    status: Request Entity Too Large
+                    message: please use /download-url for files bigger than 10 megabytes
+                    resourceId: 68d67e9a3f7c2b1e4a8d6501
         '500':
           $ref: '#/components/responses/InternalServiceError_500'
       operationId: GET-media-download-asset
+      tags:
+        - Assets
+  '/media/{tenant}/assets/upload-session':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+    post:
+      summary: Starting an upload session
+      description: |-
+        Starts an upload session for a `BLOB` asset and returns a short-lived upload instruction. The file is sent directly to storage. The Media API does not receive the file bytes.
+
+        {% hint style="info" %}
+        Direct upload is enabled separately for each tenant. Contact [Emporix Support](mailto:support@emporix.com) to activate it. If direct upload is not active, the endpoint returns `403` with the message `direct upload is not enabled for this tenant` and does not create a pending asset.
+        {% endhint %}
+
+        For a private asset, omit `uploadType` or set it to `put` to receive a signed Google Cloud Storage `PUT` request. Send the file with every returned header. Set `uploadType` to `form` to receive a Google Cloud Storage multipart `POST` policy. For a public asset, the service always returns a Cloudinary multipart `POST` form, regardless of `uploadType`. For either multipart flow, send every returned field unchanged and append the file part last. Google Cloud Storage form fields do not include `x-goog-if-generation-match`.
+
+        The created asset remains `PENDING` until storage confirms the upload, and then becomes `READY`. Google Cloud Storage credentials are valid for 15 minutes by default. Cloudinary forms are valid for one hour. The upload session expires after one hour by default. Cleanup removes an expired session when no file is found. If a storage notification is delayed, retrieving the asset or cleanup can detect the stored file and complete the asset. The service emits `media.asset-created` only after completion is confirmed. Operations that require the stored file return `409` with `Upload is not complete` while the file is missing.
+      operationId: POST-media-start-upload-session
+      security:
+        - OAuth2:
+            - media.asset_manage
+        - OAuth2:
+            - media.asset_manage_by_vendor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadSessionRequest'
+            examples:
+              Private PUT upload session:
+                value:
+                  type: BLOB
+                  access: PRIVATE
+                  uploadType: put
+                  details:
+                    filename: installation-guide.pdf
+                    mimeType: application/pdf
+              Private form upload session:
+                value:
+                  type: BLOB
+                  access: PRIVATE
+                  uploadType: form
+                  details:
+                    filename: installation-guide.pdf
+                    mimeType: application/pdf
+              Public upload session:
+                value:
+                  type: BLOB
+                  access: PUBLIC
+                  details:
+                    filename: product-image.png
+                    mimeType: image/png
+      responses:
+        '201':
+          description: The request was successful. The upload session has been created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadSession'
+              examples:
+                Private PUT upload session:
+                  value:
+                    id: 68d67e9a3f7c2b1e4a8d6501
+                    provider: GCS
+                    status: PENDING
+                    expiresAt: '2026-09-25T14:15:00Z'
+                    upload:
+                      method: PUT
+                      url: 'https://storage.googleapis.com/{{GCS_BUCKET}}/{{tenant}}/assets/68d67e9a3f7c2b1e4a8d6501?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=%5Bredacted%5D&X-Goog-Date=20260925T131500Z&X-Goog-Expires=900&X-Goog-SignedHeaders=content-type%3Bhost%3Bx-goog-meta-emporix-upload&ifGenerationMatch=0&X-Goog-Signature=%5Bredacted%5D'
+                      headers:
+                        Content-Type: application/pdf
+                        x-goog-meta-emporix-upload: session
+                Private form upload session:
+                  value:
+                    id: 68d67ec13f7c2b1e4a8d6502
+                    provider: GCS
+                    status: PENDING
+                    expiresAt: '2026-09-25T14:20:00Z'
+                    upload:
+                      method: POST
+                      url: 'https://storage.googleapis.com/{{GCS_BUCKET}}'
+                      fields:
+                        key: '{{tenant}}/assets/68d67ec13f7c2b1e4a8d6502'
+                        content-type: application/pdf
+                        x-goog-meta-emporix-upload: session
+                        success_action_status: '204'
+                        x-goog-algorithm: GOOG4-RSA-SHA256
+                        x-goog-credential: '[redacted]'
+                        x-goog-date: 20260925T132000Z
+                        policy: '[redacted]'
+                        x-goog-signature: '[redacted]'
+                Public upload session:
+                  value:
+                    id: 68d67ef03f7c2b1e4a8d6503
+                    provider: CLOUDINARY
+                    status: PENDING
+                    expiresAt: '2026-09-25T14:25:00Z'
+                    upload:
+                      method: POST
+                      url: 'https://api.cloudinary.com/v1_1/{{CLOUDINARY_CLOUD}}/auto/upload'
+                      fields:
+                        api_key: '[redacted]'
+                        timestamp: '1790342700'
+                        signature: '[redacted]'
+                        public_id: 68d67ef03f7c2b1e4a8d6503
+                        folder: '{{tenant}}/media'
+                        use_filename: 'true'
+                        unique_filename: 'false'
+                        overwrite: 'false'
+                        notification_url: '[redacted]'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          description: The caller lacks a required management scope, or direct upload is not enabled for the tenant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Direct upload is not enabled:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: direct upload is not enabled for this tenant
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Assets
+  '/media/{tenant}/assets/{assetId}/download-url':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_asset_id_path'
+    get:
+      summary: Retrieving a download URL
+      description: |-
+        Returns a URL for an asset that is already stored.
+
+        Use this endpoint as the default method for downloading assets. It is always faster than [Downloading an asset](#get-media-tenant-assets-assetid-download) because the file travels from storage to the client and does not pass through the Media API. This operation is not controlled by the direct-upload tenant setting and has no file-size limit.
+
+        A private `BLOB` returns a Google Cloud Storage signed `GET`. The URL works without an Emporix access token and expires after 15 minutes by default. A public `BLOB` returns its permanent Cloudinary URL, with no expiry. A `LINK` asset returns its stored URL.
+
+        The optional `disposition` parameter affects private Google Cloud Storage URLs only. Omit it to use `attachment`, or set it to `inline`. Public Cloudinary and `LINK` URLs remain unchanged. An empty or unsupported value returns `400` with `disposition must be inline or attachment`.
+
+        When the asset is still `PENDING` and the file is already in storage, this call completes the asset and then returns the URL. When the file is not in storage yet, the call returns `409` with `Upload is not complete`.
+      operationId: GET-media-retrieve-download-url
+      security:
+        - OAuth2:
+            - media.asset_read
+        - OAuth2:
+            - media.asset_read_by_vendor
+        - OAuth2:
+            - media.asset_manage_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/query_disposition'
+      responses:
+        '200':
+          description: The request was successful. The download URL is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadUrl'
+              examples:
+                Private download URL:
+                  value:
+                    provider: GCS
+                    url: 'https://storage.googleapis.com/{{GCS_BUCKET}}/{{tenant}}/assets/68d67e9a3f7c2b1e4a8d6501?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=%5Bredacted%5D&X-Goog-Date=20260925T133000Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22installation-guide.pdf%22&response-content-type=application%2Fpdf&X-Goog-Signature=%5Bredacted%5D'
+                    expiresAt: '2026-09-25T13:45:00Z'
+                Public download URL:
+                  value:
+                    provider: CLOUDINARY
+                    url: 'https://res.cloudinary.com/{{CLOUDINARY_CLOUD}}/image/upload/v1790342400/{{tenant}}/media/68d67ef03f7c2b1e4a8d6503.png'
+                Link asset download URL:
+                  value:
+                    provider: LINK
+                    url: 'https://example.com/assets/installation-guide.pdf'
+        '400':
+          description: The disposition value is empty or unsupported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Unsupported disposition:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: disposition must be inline or attachment
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          description: The upload is not complete. The file is not in storage yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Upload is not complete:
+                  $ref: '#/components/examples/UploadNotComplete409_Example'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
       tags:
         - Assets
 components:
@@ -486,8 +721,8 @@ components:
             - PRIVATE
           description: |
             Access type of the asset. This property is immutable. 
-            - PUBLIC: Assets will be stored by a public storage provider and will be accessible at an external link.
-            - PRIVATE: Assets will be stored by a private storage provider and will not be accessible at an external url. Assets of the `PRIVATE` type can only be accessed by calling the `media/{tenant}/assets/{assetId}/download` endpoint in the Media Service.
+            - `PUBLIC`: Blob assets are stored in Cloudinary and are accessible through a permanent external URL.
+            - `PRIVATE`: Blob assets are stored in Google Cloud Storage. Retrieve their content through `/media/{tenant}/assets/{assetId}/download` or request a temporary signed URL through `/media/{tenant}/assets/{assetId}/download-url`.
         refIds:
           type: array
           description: List of references.
@@ -542,7 +777,7 @@ components:
         file:
           type: object
           format: binary
-          description: Content of the file. The max file size is 10MB.
+          description: Content of the file. The max file size is 30 MB.
         body:
           description: Asset JSON creation payload.
           allOf:
@@ -590,6 +825,24 @@ components:
       required:
         - type
         - access
+    UploadSessionRequest:
+      title: Upload Session Request
+      description: Payload for creating a direct-storage upload session.
+      allOf:
+        - $ref: '#/components/schemas/AssetCreateBlob'
+        - type: object
+          properties:
+            uploadType:
+              type: string
+              enum:
+                - put
+                - form
+              default: put
+              description: |
+                Upload flow requested for a private Google Cloud Storage asset.
+                * `put`: Returns a signed `PUT` request. This is the default when the property is omitted.
+                * `form`: Returns a multipart `POST` policy.
+                Public Cloudinary assets always use a multipart `POST` form, regardless of this value.
     GetAsset:
       title: Get Asset
       allOf:
@@ -641,10 +894,110 @@ components:
         vendorId:
           type: string
           description: Id of a vendor to which the asset belongs.
+        status:
+          type: string
+          enum:
+            - PENDING
+            - READY
+          description: |
+            Upload state of a `BLOB` created through an upload session.
+            * `PENDING` — the session exists and the file is not confirmed yet.
+            * `READY` — the file is stored.
+            When this field is absent, the asset is ready. Assets created by the existing upload endpoints do not return this field.
         details:
           $ref: '#/components/schemas/AssetDetailsGet'
         metadata:
           $ref: '#/components/schemas/MetadataGet'
+    UploadSession:
+      title: Upload Session
+      type: object
+      description: Instruction for sending a file directly to storage.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the asset, generated when the upload session is created.
+        provider:
+          type: string
+          enum:
+            - GCS
+            - CLOUDINARY
+          description: |
+            Storage that receives the file.
+            * `GCS` — private asset. Upload with the returned `PUT` headers or multipart `POST` fields.
+            * `CLOUDINARY` — public asset. Upload with `POST` and the returned multipart form fields.
+        status:
+          type: string
+          enum:
+            - PENDING
+          description: The asset stays `PENDING` until the file is stored.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Date and time when the unused upload session expires. Returned as an ISO-8601 string.
+        upload:
+          type: object
+          description: The request the caller sends to storage.
+          properties:
+            method:
+              type: string
+              enum:
+                - PUT
+                - POST
+              description: HTTP method of the storage request.
+            url:
+              type: string
+              description: Storage URL that receives the file.
+            headers:
+              type: object
+              additionalProperties:
+                type: string
+              description: |
+                Headers required by a private Google Cloud Storage `PUT` upload. Send every returned header unchanged with the file.
+                Returned only for the Google Cloud Storage `PUT` flow.
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+              description: |
+                Fields required by a Google Cloud Storage or Cloudinary multipart `POST`. Send every returned field unchanged, then append the file part last.
+                Google Cloud Storage fields do not include `x-goog-if-generation-match`. Cloudinary fields include `api_key` and `signature` but never include the API secret.
+          required:
+            - method
+            - url
+      required:
+        - id
+        - provider
+        - status
+        - expiresAt
+        - upload
+    DownloadUrl:
+      title: Download URL
+      type: object
+      description: URL that returns the stored file.
+      properties:
+        provider:
+          type: string
+          enum:
+            - GCS
+            - CLOUDINARY
+            - LINK
+          description: |
+            Storage that holds the file.
+            * `GCS` — private blob. The URL is a signed download and includes `expiresAt`.
+            * `CLOUDINARY` — public blob. The URL is permanent.
+            * `LINK` — the URL stored on the asset.
+        url:
+          type: string
+          description: URL of the stored file.
+        expiresAt:
+          type: string
+          format: date-time
+          description: |
+            Date and time when a private signed URL stops working. Returned as an ISO-8601 string.
+            Present for `GCS` only.
+      required:
+        - provider
+        - url
     AssetUpdateLink:
       title: Asset Update Link Payload
       type: object
@@ -753,6 +1106,38 @@ components:
                   version: 1
                   mixins:
                     mediaCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/mediaCustomAttributesMixIn-v1.json'
+            Private blob after a direct upload:
+              value:
+                id: 68d67e9a3f7c2b1e4a8d6501
+                access: PRIVATE
+                type: BLOB
+                status: READY
+                url: 'https://api.emporix.io/media/{{tenant}}/assets/68d67e9a3f7c2b1e4a8d6501/download'
+                details:
+                  filename: installation-guide.pdf
+                  mimeType: application/pdf
+                  bytes: 245760
+                  etag: BwWWja0B9nNSG5aQxQ2u2w==
+                metadata:
+                  version: 2
+                  createdAt: '2026-09-25T13:15:00Z'
+                  modifiedAt: '2026-09-25T13:16:08Z'
+            Public blob after a direct upload:
+              value:
+                id: 68d67ef03f7c2b1e4a8d6503
+                access: PUBLIC
+                type: BLOB
+                status: READY
+                url: 'https://res.cloudinary.com/{{CLOUDINARY_CLOUD}}/image/upload/v1790342400/{{tenant}}/media/68d67ef03f7c2b1e4a8d6503.png'
+                details:
+                  filename: product-image.png
+                  mimeType: image/png
+                  bytes: 184320
+                  etag: 6dfc70a3d4bc4f36a1bcf6f7308f7fc1
+                metadata:
+                  version: 2
+                  createdAt: '2026-09-25T13:25:00Z'
+                  modifiedAt: '2026-09-25T13:26:14Z'
     GetPrivateAsset:
       description: This is a successful response when requesting a PRIVATE BLOB asset.
       content:
@@ -925,6 +1310,19 @@ components:
       schema:
         type: string
       description: Unique identifier of an asset.
+    query_disposition:
+      name: disposition
+      in: query
+      required: false
+      description: |
+        Content disposition for a private Google Cloud Storage signed URL. The default is `attachment`.
+        The value does not change public Cloudinary or `LINK` URLs.
+      schema:
+        type: string
+        enum:
+          - inline
+          - attachment
+        default: attachment
     query_q_product:
       name: q
       in: query
@@ -956,8 +1354,10 @@ components:
         clientCredentials:
           tokenUrl: 'https://api.emporix.io/oauth/token'
           scopes:
-            media.asset_read: Needed to read assets
-            media.asset_manage: Needed to manage assets
+            media.asset_read: Needed to read assets.
+            media.asset_manage: Needed to manage assets.
+            media.asset_read_by_vendor: Needed to read assets that belong to the vendor.
+            media.asset_manage_by_vendor: Needed to manage assets that belong to the vendor.
   examples:
     BadRequest400_AmbiguousTenant:
       value:
@@ -990,6 +1390,12 @@ components:
         code: 409
         status: Conflict
         message: Conflict
+    UploadNotComplete409_Example:
+      value:
+        code: 409
+        status: Conflict
+        message: Upload is not complete
+        resourceId: 68d67e9a3f7c2b1e4a8d6501
     RequestTooLarge_Example:
       value:
         code: 413

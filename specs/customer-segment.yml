@@ -13,6 +13,8 @@ tags:
     description: Manage segments
   - name: Customers Assignments
     description: Manage customer assignments to segments
+  - name: Groups Assignments
+    description: Manage IAM group assignments to segments
   - name: Items Assignments
     description: Manage item assignments to segments
 paths:
@@ -57,7 +59,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/contentLanguage'
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
     get:
       summary: 'Retrieving all customer segments'
@@ -94,7 +96,8 @@ paths:
         - $ref: '#/components/parameters/legalEntityId'
         - $ref: '#/components/parameters/customerId'
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
             - customersegment.segment_read_own
   '/customer-segment/{tenant}/segments/search':
@@ -144,8 +147,50 @@ paths:
         - $ref: '#/components/parameters/legalEntityId'
         - $ref: '#/components/parameters/customerId'
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
+            - customersegment.segment_read_own
+  '/customer-segment/{tenant}/segments/me':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+    get:
+      summary: Retrieving own customer segments
+      tags:
+        - Segments
+      operationId: GET-customer-segment-retrieve-own-segments
+      description: |
+        Retrieves active customer segments assigned to the authenticated customer.
+
+        The response includes segments assigned directly to the customer and segments assigned through the customer's IAM groups.
+        Groups that are not bound to a legal entity, and groups bound to the customer's current legal entity, are taken into account.
+      parameters:
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+        - $ref: '#/components/parameters/acceptLanguage'
+      responses:
+        '200':
+          description: Own customer segments were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SegmentResponse'
+              examples:
+                Segments Response:
+                  $ref: '#/components/examples/SegmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+      security:
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read_own
   '/customer-segment/{tenant}/segments/{segmentId}':
     parameters:
@@ -180,7 +225,8 @@ paths:
         - $ref: '#/components/parameters/acceptLanguage'
         - $ref: '#/components/parameters/legalEntityId'
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
             - customersegment.segment_read_own
     put:
@@ -223,7 +269,7 @@ paths:
 
         Performs the `UPSERT` operation. If a segment with specified ID exists in the system, then it is updated. If it doesn't exist, a new customer segment is created.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
     patch:
       summary: Patching a customer segment
@@ -278,7 +324,7 @@ paths:
         The patch request consists of set of operation, that should be defined according to [RFC-6902](https://datatracker.ietf.org/doc/html/rfc6902) standard.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
     delete:
       summary: 'Deleting a customer segment'
@@ -301,7 +347,7 @@ paths:
         **Important**: If you want to delete a segment that has items or customers assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all items and customers assignments will be deleted as well.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
   '/customer-segment/{tenant}/segments/bulk':
     parameters:
@@ -316,7 +362,7 @@ paths:
         Creates multiple customer segments. The maximum batch size is 200.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -360,7 +406,7 @@ paths:
         The maximum batch size is 200.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -410,7 +456,7 @@ paths:
         **Important**: If you want to delete a segment that has items or customers assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all items and customers assignments will be deleted as well.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       responses:
         '207':
@@ -443,7 +489,7 @@ paths:
 
         Checks if the provided items match specified criteria - if ids of the products are assigned directly to one of the provided segments or indirectly through the category assignment. Only items assigned to the active segments will be returned.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -489,7 +535,8 @@ paths:
 
         Retrieves all customer assignments for a given customer segment.
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
             - customersegment.segment_read_own
       responses:
@@ -528,7 +575,7 @@ paths:
 
         Returns all customer assignments that match provided criteria.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_read
       requestBody:
         content:
@@ -582,7 +629,7 @@ paths:
 
         Retrieves a customer with specified customerId assigned to a customer segment.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_read
       responses:
         '200':
@@ -612,7 +659,7 @@ paths:
 
         Performs `UPSERT` operation. Updates a customer assigned to a customer segment. A new customer assignment is created if it's not present in the system.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -644,7 +691,7 @@ paths:
 
         Removes customer assignment.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       responses:
         '204':
@@ -677,7 +724,7 @@ paths:
 
         Retrieves a customer with specified customerId and companyId assigned to a customer segment.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_read
       responses:
         '200':
@@ -707,7 +754,7 @@ paths:
 
         Performs `UPSERT` operation. Updates a customer assigned to a customer segment. A new customer assignment is created if it's not present in the system.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -739,7 +786,7 @@ paths:
 
         Removes customer assignment.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       responses:
         '204':
@@ -762,7 +809,7 @@ paths:
         Performs `UPSERT` operation. Updates multiple customer assignments to a customer segment. The maximum batch size is 200.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -804,7 +851,7 @@ paths:
         ### The request body for this endpoint is array of objects with `customerId` and `legalEntityId` fields.
         #### Example: `[{"customerId": "firstCustomerId", "legalEntityId": "firstLegalEntityId"}, {"customerId": "secondCustomerId", "legalEntityId": "secondLegalEntityId"}, {"customerId": "thirdCustomerId", "legalEntityId": "thirdLegalEntityId"}]`
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       responses:
         '207':
@@ -824,6 +871,173 @@ paths:
           $ref: '#/components/responses/Common_response_Unauthorized_401'
         '403':
           $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/groups':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    get:
+      summary: Retrieving all group assignments for a customer segment
+      tags:
+        - Groups Assignments
+      operationId: GET-customer-segment-retrieve-groups
+      description: |
+        Retrieves all IAM group assignments for a given customer segment.
+      security:
+        - OAuth2:
+            - customersegment.segment_read
+      parameters:
+        - $ref: '#/components/parameters/qParam'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+      responses:
+        '200':
+          description: Group assignments for a customer segment were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupAssignmentResponse'
+              examples:
+                Group Assignments:
+                  $ref: '#/components/examples/GroupAssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/groups/search':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+    post:
+      summary: Searching with parameters for group assignments
+      tags:
+        - Groups Assignments
+      operationId: POST-customer-segment-search-groups
+      description: |
+        Returns all IAM group assignments that match the provided criteria.
+      security:
+        - OAuth2:
+            - customersegment.segment_read
+      parameters:
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/pageNumber'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/xTotalCount'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentsSearch'
+            examples:
+              Search Group Assignments:
+                value:
+                  q: "group.id:1gr5e52e-6e27-4ac5-9471-2467d3fb7500"
+      responses:
+        '200':
+          description: Group assignments for a customer segment were successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupAssignmentResponse'
+              examples:
+                Group Assignments:
+                  $ref: '#/components/examples/GroupAssignmentsResponse'
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+  '/customer-segment/{tenant}/segments/{segmentId}/groups/{groupId}':
+    parameters:
+      - $ref: '#/components/parameters/tenant'
+      - $ref: '#/components/parameters/segmentId'
+      - $ref: '#/components/parameters/groupId'
+    get:
+      summary: Retrieving a group assignment for a customer segment
+      tags:
+        - Groups Assignments
+      operationId: GET-customer-segment-retrieve-group
+      description: |
+        Retrieves an IAM group assignment for a specified group and customer segment.
+      security:
+        - OAuth2:
+            - customersegment.segment_read
+      parameters:
+        - $ref: '#/components/parameters/fields'
+      responses:
+        '200':
+          description: Group assignment for a customer segment was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupAssignmentResponse'
+              examples:
+                Group Assignment Response:
+                  $ref: '#/components/examples/GroupAssignmentResponse'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/Common_response_NotFound_404'
+    put:
+      summary: Upserting a group assignment for a customer segment
+      tags:
+        - Groups Assignments
+      operationId: PUT-customer-segment-update-group
+      description: |
+        Performs an `UPSERT` operation. Updates an IAM group assignment for a customer segment. Creates the assignment if it is not present in the system.
+
+        Only IAM groups with `userType` `CUSTOMER` can be assigned to a segment.
+      security:
+        - OAuth2:
+            - customersegment.segment_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupAssignmentUpsert'
+            examples:
+              Group Assignment Update:
+                $ref: '#/components/examples/GroupAssignmentUpsert'
+      responses:
+        '201':
+          description: A new group assignment was successfully created.
+        '204':
+          description: Group assignment was successfully updated.
+        '400':
+          $ref: '#/components/responses/Common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
+        '409':
+          $ref: '#/components/responses/Common_response_Conflict_409'
+    delete:
+      summary: Removing a group from a customer segment
+      tags:
+        - Groups Assignments
+      operationId: DELETE-customer-segment-remove-group
+      description: |
+        Removes an IAM group assignment from a customer segment.
+      security:
+        - OAuth2:
+            - customersegment.segment_manage
+      responses:
+        '204':
+          description: Group assignment was successfully removed.
+        '401':
+          $ref: '#/components/responses/Common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Common_response_Forbidden_403'
   '/customer-segment/{tenant}/segments/items/category-trees':
     parameters:
       - $ref: '#/components/parameters/tenant'
@@ -835,7 +1049,8 @@ paths:
 
         Retrieves category trees for the customer segments. Category trees are built based on only `active` segments.
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read_own
       responses:
         '200':
@@ -867,7 +1082,8 @@ paths:
 
         Retrieves all items assignments for all customer segments.
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read_own
             - customersegment.segment_read
       responses:
@@ -910,7 +1126,8 @@ paths:
 
         Retrieves all item assignments for a given customer segment.
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
             - customersegment.segment_read_own
       responses:
@@ -951,7 +1168,8 @@ paths:
 
         Retrieves all item assignments for a given customer segment.
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
             - customersegment.segment_read_own
       requestBody:
@@ -1005,7 +1223,8 @@ paths:
 
         Retrieves an item assignment by specified ID for a given customer segment.
       security:
-        - CustomerAccessToken: 
+        - CustomerAccessToken: []
+        - OAuth2:
             - customersegment.segment_read
             - customersegment.segment_read_own
       responses:
@@ -1038,7 +1257,7 @@ paths:
 
         Performs `UPSERT` operation. Updates an item assignment to a customer segment. A new item assignment is created if it's not present in the system.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -1070,7 +1289,7 @@ paths:
 
         Removes an item assignment.
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       responses:
         '204':
@@ -1094,7 +1313,7 @@ paths:
         Performs `UPSERT` operation. Updates multiple item assignments to a customer segments. The maximum batch size is 200.
 
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       requestBody:
         content:
@@ -1136,7 +1355,7 @@ paths:
         * The IDs of items should be defined in the request body as an array of strings.
         Example: `["firstItemId", "secondItemId", "thirdItemId"]`
       security:
-        - CustomerAccessToken: 
+        - OAuth2:
             - customersegment.segment_manage
       responses:
         '207':
@@ -1315,6 +1534,43 @@ components:
             legalEntity:
               $ref: '#/components/schemas/LegalEntity'
         - $ref: '#/components/schemas/CustomerAssignmentB2CResponse'
+    GroupAssignmentUpsert:
+      type: object
+      description: |
+        Request body for creating or updating an IAM group assignment.
+      properties:
+        mixins:
+          type: object
+          description: A key-value map of additional attributes.
+          additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/MetadataUpdate'
+    Group:
+      type: object
+      description: IAM group assigned to the customer segment.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of an existing IAM group, generated when the group is created through the IAM Service.
+        name:
+          type: object
+          description: Localized name of the group.
+          additionalProperties:
+            type: string
+    GroupAssignmentResponse:
+      type: object
+      properties:
+        segmentId:
+          type: string
+          description: Unique identifier of the customer segment.
+        group:
+          $ref: '#/components/schemas/Group'
+        mixins:
+          type: object
+          description: A key-value map of additional attributes.
+          additionalProperties: true
+        metadata:
+          $ref: '#/components/schemas/MetadataResponse'
     ItemAssignmentUpsert:
       type: object
       description: |
@@ -1745,6 +2001,13 @@ components:
         The parameter is utilized for retrieving customer segments for a provided customer.
 
         **NOTE**: This parameter can only be used with `customersegment.segment_read` scope.
+    groupId:
+      schema:
+        type: string
+      name: groupId
+      in: path
+      required: true
+      description: Unique identifier of an existing IAM group.
   examples:
     Response_BadRequest_400:
       value:
@@ -2060,6 +2323,32 @@ components:
           legalEntityId: 628cd20c6e8b2432b6346ca6
           metadata:
             version: 1
+    GroupAssignmentResponse:
+      value: &groupAssignmentResponse
+        segmentId: 628cd20c6e8b2432b6346ca6
+        group:
+          id: 1gr5e52e-6e27-4ac5-9471-2467d3fb7500
+          name:
+            en: Buyers
+        metadata:
+          createdAt: 2024-10-12T12:00:00.000Z
+          modifiedAt: 2024-10-12T12:00:00.000Z
+          version: 1
+    GroupAssignmentsResponse:
+      value:
+        - *groupAssignmentResponse
+        - segmentId: 628cd20c6e8b2432b6346ca6
+          group:
+            id: 2ac869fc-d548-4ec8-8e06-c01491314124
+            name:
+              en: Requesters
+          metadata:
+            createdAt: 2024-10-16T12:00:00.000Z
+            modifiedAt: 2024-10-16T12:00:00.000Z
+            version: 1
+    GroupAssignmentUpsert:
+      value:
+        *mixins
   securitySchemes:
     OAuth2:
       type: oauth2
@@ -2070,6 +2359,10 @@ components:
             customersegment.segment_manage: Needed to create or update customer segments.
             customersegment.segment_read: Needed to read customer segments.
             customersegment.segment_read_own: Needed to read own customer segments.
+    CustomerAccessToken:
+      type: http
+      scheme: bearer
+      description: 'To generate a customer access token, go to the [Logging in a customer](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login) endpoint.'
   links: {}
   callbacks: {}
 security:

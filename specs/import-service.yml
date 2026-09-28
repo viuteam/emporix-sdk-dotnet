@@ -316,6 +316,81 @@ paths:
           $ref: '#/components/responses/Forbidden_403'
         '500':
           $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/configs/{configId}/stream-order':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_configId'
+    get:
+      summary: Retrieving the stream run order
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the order in which the configuration's streams run, and the dependencies behind that order.
+
+        Dependencies between streams decide the order. Sequence breaks ties.
+
+        Dependencies come from four sources:
+
+        * an explicit dependency on another stream
+        * a mapping that references a type another stream produces
+        * a `COMPOSITE_CHILD` stream with `childStrategy` set to `EMBED` – runs before the parent that embeds it
+        * a `COMPOSITE_CHILD` stream with `childStrategy` set to `PATCH`, or a `COMPOSITE_MERGE` stream – run after the parent they update
+
+        Use this endpoint rather than calculating the order yourself. Mapping transformations add
+        dependencies that a single stream definition does not show. An order calculated without those
+        dependencies can differ from the order used at run time.
+      operationId: GET-importtool-stream-order
+      tags:
+        - Streams
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The stream order is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: streamOrder
+                properties:
+                  order:
+                    type: array
+                    items:
+                      type: string
+                    description: Stream names in the order they run.
+                  prereqs:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    description: >-
+                      For each stream name, the streams that must run before it. A stream with no
+                      dependencies has an empty list.
+              examples:
+                Stream order:
+                  value:
+                    order:
+                      - vendor
+                      - purchaseOrder
+                      - purchaseOrderLine
+                    prereqs:
+                      vendor: []
+                      purchaseOrder:
+                        - vendor
+                      purchaseOrderLine:
+                        - purchaseOrder
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
   '/importtool/{tenant}/configs/{configId}/runs':
     parameters:
       - $ref: '#/components/parameters/trait_tenant'
@@ -331,6 +406,23 @@ paths:
 
         Starts an import run for the configuration and returns immediately with the run in a running state;
         progress is streamed over Server-Sent Events. At most one run is active per configuration.
+
+        A run executes each stream's published mappings. Saved mapping changes that are not published yet are
+        the draft mappings, and they take effect only after they are published. Publishing mappings is an
+        administrative operation that requires the `importtool.import_manage` scope and is not covered in this
+        reference. A real run, or a dry run that uses the published mappings, fixes the published mapping version of
+        each stream when it starts, so a version published during the run applies from the next run. The run
+        reports these versions in `mappingVersions`. A dry run of the draft mappings does not use published
+        versions and does not report `mappingVersions`.
+
+        A stream whose mappings have never been published is not run. Its entry in the run details (`streams` in
+        the response of retrieving a run) has the `ABORTED` status and a `message` that gives the reason, and the
+        run finishes with the `PARTIAL` status. The service refuses the whole run when `streamIds` names a stream
+        whose mappings have never been published, or when every enabled stream is in that state.
+
+        The refusal does not change the response to this request: the service still returns `200` with the run,
+        and the run then finishes with the `ABORTED` status and a `message` that names the streams. Retrieve the
+        run to check its final status.
       operationId: POST-importtool-trigger-run
       tags:
         - Runs
@@ -354,6 +446,19 @@ paths:
                   type: boolean
                   description: When `true`, the run maps and validates but performs no remote writes.
                   example: false
+                mappings:
+                  type: string
+                  enum:
+                    - published
+                    - draft
+                  default: published
+                  description: >-
+                    Dry-run only. Which mappings the dry run uses. `published` uses each stream's published
+                    mappings, which is what a real run executes. `draft` uses the draft mappings, so you can check
+                    them before publishing. When omitted, defaults to `published`. A dry run with `published`
+                    handles streams whose mappings have never been published in the same way as a real run. The field
+                    has no effect when `dryRun` is `false`, because a real run always uses the published mappings.
+                  example: published
                 force:
                   type: boolean
                   description: >-
@@ -377,6 +482,26 @@ paths:
                     value. The service rejects values longer than 40 characters and values that contain control
                     characters. It does not shorten them.
                   example: Make scenario 42
+                streamIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: >-
+                    The stream identifiers to run. Omit the field to run every stream in the configuration.
+                    Send a list of stream IDs to run only those streams. Do not send stream names; use the
+                    `id` values from the stream resource.
+
+                    The service rejects an empty list. It also rejects a list that includes no stream from
+                    this configuration. Listed streams still run in the computed stream order, not in list
+                    order.
+
+                    The service also rejects a stream that cannot produce data on its own. A `COMPOSITE_CHILD`
+                    stream with `childStrategy` set to `EMBED` is written by its parent. A child that reads
+                    values captured during the parent run also cannot run alone. Either stream without its
+                    parent would complete successfully without importing records.
+                  example:
+                    - 8f1b6a5c-2d7e-4a91-9c33-0b5e4d2a7f10
             examples:
               Full run:
                 value:
@@ -386,6 +511,17 @@ paths:
                 value:
                   mode: DELTA
                   dryRun: true
+              Dry run of unpublished mapping changes:
+                value:
+                  mode: FULL
+                  dryRun: true
+                  mappings: draft
+              Run only two streams:
+                value:
+                  mode: DELTA
+                  streamIds:
+                    - 8f1b6a5c-2d7e-4a91-9c33-0b5e4d2a7f10
+                    - 1c9d3e77-45ab-4f02-8e6d-77a1b0c9e254
       responses:
         '200':
           description: The request was successful. The run has been started.
@@ -396,6 +532,35 @@ paths:
               examples:
                 Run response:
                   $ref: '#/components/examples/ImportRun_Example'
+        '400':
+          description: >-
+            The request is invalid. For example, `dryRun` is `true` and `mappings` has a value other than
+            `published` or `draft`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: When the error occurred.
+                  status:
+                    type: integer
+                    description: HTTP status code.
+                  error:
+                    type: string
+                    description: HTTP status reason phrase.
+                  path:
+                    type: string
+                    description: The request path.
+              examples:
+                Invalid mappings value:
+                  value:
+                    timestamp: '2026-09-28T09:15:02.118+00:00'
+                    status: 400
+                    error: Bad Request
+                    path: /importtool/mytenant/configs/7c9e6679-7425-40de-944b-e07fc1f90ae7/runs
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -604,6 +769,126 @@ paths:
               examples:
                 Errors response:
                   $ref: '#/components/examples/ErrorRecordPage_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}/diagnostics':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    get:
+      summary: Retrieving run diagnostics
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Retrieves the source rows represented by a run's feed-quality counters.
+
+        A run reports how many source rows repeated a natural key (`duplicateKeys`) and how many child
+        lines had no parent to attach to (`unresolvedParents`). This endpoint identifies the affected rows
+        and returns each record's key, its parent-linking field and value, and the number of lines waiting
+        for each missing parent.
+
+        Neither counter is a failure, so these rows are kept separately from run errors.
+
+        The rows are a capped SAMPLE, not necessarily the whole set — `recorded` gives how many were
+        stored and `sampleTruncated` says whether a stream hit the cap. The run's own counters show the
+        total number of affected rows; do not use the returned row count to measure the size of the problem.
+
+      operationId: GET-importtool-list-run-diagnostics
+      tags:
+        - Runs
+      parameters:
+        - $ref: '#/components/parameters/trait_diagnosticsStreamId'
+        - $ref: '#/components/parameters/trait_diagnosticsKind'
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of rows to return. Defaults differ between the JSON and CSV operations.
+          schema:
+            type: integer
+            default: 500
+            minimum: 1
+            maximum: 50000
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The diagnostic rows are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosticPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/runs/{runId}/diagnostics/csv':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_runId'
+    get:
+      summary: Downloading run diagnostics as CSV
+      description: |-
+        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Returns the same rows as a CSV attachment, for opening in a spreadsheet or attaching to a ticket.
+
+        Comment lines above the header indicate whether the `limit` parameter restricted the response or
+        a stream reached the recording cap. These comments preserve that context when the file is shared
+        independently of the request.
+
+        Values are quoted. Any value beginning with `=`, `+`, `-`, or `@` is prefixed with an apostrophe
+        so that spreadsheet software does not interpret source-provided data as a formula.
+
+      operationId: GET-importtool-download-run-diagnostics-csv
+      tags:
+        - Runs
+      parameters:
+        - $ref: '#/components/parameters/trait_diagnosticsStreamId'
+        - $ref: '#/components/parameters/trait_diagnosticsKind'
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of rows to include. Defaults differ between the JSON and CSV operations.
+          schema:
+            type: integer
+            default: 50000
+            minimum: 1
+            maximum: 50000
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The CSV file is returned.
+          headers:
+            Content-Disposition:
+              description: Attachment disposition and the suggested file name.
+              schema:
+                type: string
+                example: attachment; filename="diagnostics-tenant-2026-09-23.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |-
+                # capped sample: 2000 rows recorded (cap 2000 per stream) - the run's counters show the total number of affected rows
+                stream,kind,key,linkingField,linkingValue,targetType,waitingLines,occurrence
+                poLine,UNRESOLVED_PARENT,ID:PO-4711,HEADER_ID,PO-4711,PURCHASE_ORDER,7,
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -1239,17 +1524,39 @@ components:
           example:
             PO Invoice: PO_INVOICE
             Non PO Invoice: NON_PO_INVOICE
-        targetDeleteSubscriptionEnabled:
-          type: boolean
-          description: Whether the stream reacts to its target objects being deleted outside the import.
-          example: false
-        onTargetReappear:
-          type: string
-          enum:
-            - IGNORE
-            - READD
-          description: What happens when a record deleted in the target is seen in the source again.
-          example: IGNORE
+        deleteConfig:
+          type: object
+          description: |-
+            How deletes are detected in the source and propagated to the target. Omit for an upsert-only
+            stream. `MARKER`: a field on the record flags it as deleted. `TOMBSTONE`: a separate source
+            record lists the deleted IDs.
+          properties:
+            mode:
+              type: string
+              enum:
+                - MARKER
+                - TOMBSTONE
+              description: How a deleted record is recognised.
+            markerField:
+              type: string
+              description: '`MARKER` only. The source field that flags a record as deleted.'
+            markerValues:
+              type: array
+              items:
+                type: string
+              description: '`MARKER` only. The values of `markerField` that mean deleted.'
+            record:
+              type: string
+              description: |-
+                `TOMBSTONE` only. The explicit name of the source record that lists deleted IDs. Omit this
+                property when the name can be derived from the imported record by adding a prefix or suffix —
+                for example, `invoice_deleted` for an `invoice` stream. Specify it when the deletion record
+                does not follow that naming convention.
+          example:
+            mode: MARKER
+            markerField: DELETIONINDICATOR
+            markerValues:
+              - X
         healthThresholds:
           $ref: '#/components/schemas/HealthThresholds'
         createdAt:
@@ -1358,7 +1665,11 @@ components:
             - PARTIAL
             - FAILED
             - CANCELLED
-          description: The run status.
+            - ABORTED
+          description: >-
+            The run status. `ABORTED` means the service refused to start the run because of the import
+            configuration, for example mappings that have never been published or a changed target schema.
+            Nothing was read or written.
           example: SUCCEEDED
         mode:
           type: string
@@ -1442,6 +1753,30 @@ components:
           type: integer
           description: For a dry run, how many mapped records were kept as a sample.
           example: 10
+        dryRunPublished:
+          type: boolean
+          description: >-
+            Dry-run only. Whether the dry run used the published mappings (`true`) or the draft mappings
+            (`false`).
+          example: true
+        mappingVersions:
+          type: array
+          description: >-
+            The published mapping version each stream uses in this run, fixed when the run starts. Version
+            `0` means that the stream has no published mappings. The field is absent on a dry run of the draft
+            mappings and on runs recorded before it existed.
+          items:
+            type: object
+            properties:
+              streamId:
+                type: string
+                format: uuid
+                description: The stream identifier.
+                example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+              version:
+                type: integer
+                description: The published mapping version the stream uses.
+                example: 3
     ImportRunStream:
       title: Run stream progress
       type: object
@@ -1475,7 +1810,11 @@ components:
             - PARTIAL
             - FAILED
             - SKIPPED
-          description: The stream's status within the run.
+            - ABORTED
+          description: >-
+            The stream's status within the run. `ABORTED` means the service refused to run the stream because
+            of its configuration, for example because its mappings have never been published. It indicates a
+            configuration problem to fix. The `message` field gives the reason.
           example: PARTIAL
         recordsRead:
           type: integer
@@ -1684,6 +2023,99 @@ components:
               description: The runs on this page.
               items:
                 $ref: '#/components/schemas/ImportRun'
+    DiagnosticPage:
+      type: object
+      description: >-
+        A page of diagnostic rows with metadata that indicates whether the response contains all recorded
+        rows or only part of a capped sample. Use `recorded`, `cap`, and `sampleTruncated` to interpret the
+        page. The run's counters show the total number of affected rows.
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiagnosticRecord'
+        returned:
+          type: integer
+          description: How many rows this response contains.
+          example: 500
+        recorded:
+          type: integer
+          description: How many rows were recorded in total for this scope.
+          example: 2000
+        cap:
+          type: integer
+          description: The per-stream, per-kind recording cap.
+          example: 2000
+        sampleTruncated:
+          type: boolean
+          description: |-
+            Whether at least one stream reached the cap. When true, these rows are a sample, and the run's
+            own counters show the total number of affected rows.
+          example: true
+        note:
+          type: string
+          description: A human-readable statement of what this response is.
+      example:
+        returned: 2
+        recorded: 2000
+        cap: 2000
+        sampleTruncated: true
+        note: At least one stream hit the recording cap, so these rows are a capped SAMPLE.
+        rows:
+          - streamName: poLine
+            kind: UNRESOLVED_PARENT
+            naturalKey: 'ID:PO-4711'
+            linkingField: HEADER_ID
+            linkingValue: PO-4711
+            targetType: PURCHASE_ORDER
+            waitingLines: 7
+    DiagnosticRecord:
+      type: object
+      description: One row behind a feed-quality counter.
+      properties:
+        id:
+          type: string
+          format: uuid
+        runId:
+          type: string
+          format: uuid
+        streamId:
+          type: string
+          format: uuid
+        streamName:
+          type: string
+          description: The stream that recorded the row.
+        kind:
+          type: string
+          enum:
+            - UNRESOLVED_PARENT
+            - REPEATED_KEY
+          description: |-
+            `UNRESOLVED_PARENT`: a child line whose parent instance did not exist when it was written.
+            `REPEATED_KEY`: a source row whose natural key this run had already imported.
+        naturalKey:
+          type: string
+          description: The record's own natural key in the source.
+        linkingField:
+          type: string
+          description: '`UNRESOLVED_PARENT` only. The field that points at the parent.'
+        linkingValue:
+          type: string
+          description: |-
+            `UNRESOLVED_PARENT` only. The parent key the line pointed at — the value to look up in the
+            source system.
+        targetType:
+          type: string
+          description: The target type the row was headed for.
+        waitingLines:
+          type: integer
+          description: '`UNRESOLVED_PARENT` only. The number of child lines waiting for this parent.'
+        occurrence:
+          type: integer
+          description: '`REPEATED_KEY` only. How many times this key had already been seen in this run.'
+        createdAt:
+          type: string
+          format: date-time
     ErrorRecordPage:
       title: Error record page
       allOf:
@@ -2198,6 +2630,24 @@ components:
             Internal service error:
               $ref: '#/components/examples/InternalServiceError500_Example'
   parameters:
+    trait_diagnosticsStreamId:
+      name: streamId
+      in: query
+      required: false
+      description: Restrict the rows to those recorded for this stream.
+      schema:
+        type: string
+        format: uuid
+    trait_diagnosticsKind:
+      name: kind
+      in: query
+      required: false
+      description: Restrict the rows to this kind.
+      schema:
+        type: string
+        enum:
+          - UNRESOLVED_PARENT
+          - REPEATED_KEY
     trait_tenant:
       name: tenant
       in: path
@@ -2353,6 +2803,9 @@ components:
         failed: 2
         deleted: 0
         message: null
+        mappingVersions:
+          - streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+            version: 3
     ImportRunPage_Example:
       value:
         totalElements: 3

@@ -1537,7 +1537,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     /// <summary>
-    /// Type of the communication between the agent and the MCP server. The `streamable_http` protocol is recommended, since the `sse` protocol is deprecated.
+    /// Type of the communication between the agent and the MCP server. The `streamable_http` protocol is recommended, since the `sse` protocol is deprecated as transport for custom MCP servers.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<CustomMcpServerTransportType>))]
@@ -2147,7 +2147,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     /// <summary>
-    /// List of agent collaborations which allows an agent to hand off its task to other agents.
+    /// List of agent collaborations which allows an agent to hand off its task to other agents. Collaborations remain in the caller's session and do not enable memory by themselves.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class AgentCollaborations : System.Collections.ObjectModel.Collection<AgentCollaboration>
@@ -2425,7 +2425,7 @@ namespace Viu.Emporix.AiServiceModels
         public int? MaxRecursionLimit { get; set; } = 20;
 
         /// <summary>
-        /// Defines whether the session memory should be stored between different agent calls.
+        /// Defines whether session memory is stored between different agent calls. Memory is stored only for that agent and only within one `session-id`. The default is `false`. To keep conversational memory for targets in `agentCollaborations`, it is recommended to set the flag to `true` on each target as well.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("enabledMemory")]
         public bool? EnabledMemory { get; set; } = false;
@@ -2497,6 +2497,7 @@ namespace Viu.Emporix.AiServiceModels
         public AgentMcpServersResponse? McpServers { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("handOff")]
+        [System.Obsolete]
         public bool? HandOff { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("type")]
@@ -2630,7 +2631,7 @@ namespace Viu.Emporix.AiServiceModels
         public ImportResult? ImportResult { get; set; } = default!;
 
         /// <summary>
-        /// Unique identifier of the session.
+        /// Unique identifier of the session. Send this value back as the `session-id` header on later chat and attachment calls.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("sessionId")]
         public string? SessionId { get; set; } = default!;
@@ -2837,7 +2838,7 @@ namespace Viu.Emporix.AiServiceModels
         public AgentType? AgentType { get; set; } = default!;
 
         /// <summary>
-        /// Unique identifier of the session.
+        /// Unique identifier of the session. Send this value back as the `session-id` header on later chat and attachment calls.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("sessionId")]
         public string? SessionId { get; set; } = default!;
@@ -2847,6 +2848,208 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// JSON object in one SSE `data` field. This is not the HTTP response body. The response body is `text/event-stream` text; each named event carries one of these objects in `data`.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamEventData
+    {
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// JSON object in the SSE `data` field when `event` is `token`. Concatenate successive `content` values to build the assistant reply.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamTokenData
+    {
+
+        /// <summary>
+        /// Incremental text delta of the assistant reply.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("content")]
+        public string Content { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// **The `thinking` event is in preview mode** - some of the features may not be fully operational yet.
+    /// <br/>
+    /// <br/>JSON object in the SSE `data` field when `event` is `thinking`. Optional reasoning text. Do not treat this as part of the user-facing reply unless the client displays reasoning.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamThinkingData
+    {
+
+        /// <summary>
+        /// Incremental reasoning text.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("content")]
+        public string Content { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// JSON object in the SSE `data` field when `event` is `tool_start` or `tool_end`.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamToolMetaData
+    {
+
+        /// <summary>
+        /// Name of the tool the agent invoked.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("tool_name")]
+        public string Tool_name { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier that correlates `tool_start`, `tool_result`, and `tool_end` for the same invocation.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("tool_call_id")]
+        public string? Tool_call_id { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// JSON object in the SSE `data` field when `event` is `tool_result`. Credential-like keys in `output` are omitted.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamToolResultData
+    {
+
+        /// <summary>
+        /// Name of the tool that produced the output.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("tool_name")]
+        public string Tool_name { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier that correlates `tool_start`, `tool_result`, and `tool_end` for the same invocation.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("tool_call_id")]
+        public string? Tool_call_id { get; set; } = default!;
+
+        /// <summary>
+        /// Tool output as a JSON object or array.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("output")]
+        public object Output { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// JSON object in the SSE `data` field when `event` is `done`. At least one of `agent_id`, `agent_type`, or `session_id` is present. Send `session_id` as the `session-id` header on later chat and attachment calls. This event does not repeat the full assistant message.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamDoneData
+    {
+
+        /// <summary>
+        /// Unique identifier of the agent. Snake_case equivalent of `ChatResponse.agentId`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("agent_id")]
+        public string? Agent_id { get; set; } = default!;
+
+        /// <summary>
+        /// Type of the agent handling the request. Snake_case equivalent of `ChatResponse.agentType`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("agent_type")]
+        public string? Agent_type { get; set; } = default!;
+
+        /// <summary>
+        /// Unique identifier of the session. Send this value as the `session-id` header on later chat and attachment calls. Snake_case equivalent of `ChatResponse.sessionId`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("session_id")]
+        public string? Session_id { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// **The `error` event is in preview mode** - some of the features may not be fully operational yet.
+    /// <br/>
+    /// <br/>JSON object in the SSE `data` field when `event` is `error`. At least one of `message` or `code` is present. This is an in-stream failure. HTTP `400`, `401`, `403`, and `500` remain JSON problem bodies when the request is rejected before the stream starts.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatStreamErrorData
+    {
+
+        /// <summary>
+        /// Human-readable description of the failure.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        /// <summary>
+        /// Machine-readable error code. Example values are `AGENT_SETUP` and `RECURSION_LIMIT`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        public string? Code { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2870,7 +3073,7 @@ namespace Viu.Emporix.AiServiceModels
         public string? Id { get; set; } = default!;
 
         /// <summary>
-        /// Unique identifier of the session. The same sessionId must be used when calling chat endpoints to ensure the correct attachment is found.
+        /// Unique identifier of the session the attachment is on. Send this value as the `session-id` header on later chat requests. If the assign request omits `session-id`, this value is the generated session.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("sessionId")]
         public string? SessionId { get; set; } = default!;
@@ -3004,6 +3207,18 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("duration")]
         public long? Duration { get; set; } = default!;
 
+        /// <summary>
+        /// Cumulative LLM prompt token count for this request.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("promptTokens")]
+        public long? PromptTokens { get; set; } = default!;
+
+        /// <summary>
+        /// Cumulative LLM completion token count for this request.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("completionTokens")]
+        public long? CompletionTokens { get; set; } = default!;
+
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public MetadataResponse? Metadata { get; set; } = default!;
 
@@ -3055,6 +3270,18 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("duration")]
         public long? Duration { get; set; } = default!;
+
+        /// <summary>
+        /// Cumulative LLM prompt token count for this session.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("promptTokens")]
+        public long? PromptTokens { get; set; } = default!;
+
+        /// <summary>
+        /// Cumulative LLM completion token count for this session.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("completionTokens")]
+        public long? CompletionTokens { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public MetadataResponse? Metadata { get; set; } = default!;
@@ -3573,6 +3800,18 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Body
+    {
+
+        /// <summary>
+        /// Content of the file. Use this field to upload a new file.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("attachment")]
+        public byte[] Attachment { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand>))]
     public enum Expand
     {
@@ -3721,7 +3960,7 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         /// <summary>
-        /// Id of the attachment.
+        /// Identifier returned by the upload. Required for each attached file. The attachment must belong to the current session and be attached to this request's `agentId`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("attachmentId")]
         public string AttachmentId { get; set; } = default!;

@@ -200,8 +200,8 @@ namespace Viu.Emporix.MediaModels
 
         /// <summary>
         /// Access type of the asset. This property is immutable. 
-        /// <br/>- PUBLIC: Assets will be stored by a public storage provider and will be accessible at an external link.
-        /// <br/>- PRIVATE: Assets will be stored by a private storage provider and will not be accessible at an external url. Assets of the `PRIVATE` type can only be accessed by calling the `media/{tenant}/assets/{assetId}/download` endpoint in the Media Service.
+        /// <br/>- `PUBLIC`: Blob assets are stored in Cloudinary and are accessible through a permanent external URL.
+        /// <br/>- `PRIVATE`: Blob assets are stored in Google Cloud Storage. Retrieve their content through `/media/{tenant}/assets/{assetId}/download` or request a temporary signed URL through `/media/{tenant}/assets/{assetId}/download-url`.
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("access")]
@@ -311,7 +311,7 @@ namespace Viu.Emporix.MediaModels
     {
 
         /// <summary>
-        /// Content of the file. The max file size is 10MB.
+        /// Content of the file. The max file size is 30 MB.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("file")]
         public object File { get; set; } = new object();
@@ -377,6 +377,26 @@ namespace Viu.Emporix.MediaModels
 
         [System.Text.Json.Serialization.JsonPropertyName("details")]
         public AssetDetailsCreate? Details { get; set; } = default!;
+
+    }
+
+    /// <summary>
+    /// Payload for creating a direct-storage upload session.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UploadSessionRequest : AssetCreateBlob
+    {
+
+        /// <summary>
+        /// Upload flow requested for a private Google Cloud Storage asset.
+        /// <br/>* `put`: Returns a signed `PUT` request. This is the default when the property is omitted.
+        /// <br/>* `form`: Returns a multipart `POST` policy.
+        /// <br/>Public Cloudinary assets always use a multipart `POST` form, regardless of this value.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("uploadType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<UploadSessionRequestUploadType>))]
+        public UploadSessionRequestUploadType? UploadType { get; set; } = Viu.Emporix.MediaModels.UploadSessionRequestUploadType.Put;
 
     }
 
@@ -454,11 +474,118 @@ namespace Viu.Emporix.MediaModels
         [System.Text.Json.Serialization.JsonPropertyName("vendorId")]
         public string? VendorId { get; set; } = default!;
 
+        /// <summary>
+        /// Upload state of a `BLOB` created through an upload session.
+        /// <br/>* `PENDING` — the session exists and the file is not confirmed yet.
+        /// <br/>* `READY` — the file is stored.
+        /// <br/>When this field is absent, the asset is ready. Assets created by the existing upload endpoints do not return this field.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<GetAssetBlobStatus>))]
+        public GetAssetBlobStatus? Status { get; set; } = default!;
+
         [System.Text.Json.Serialization.JsonPropertyName("details")]
         public AssetDetailsGet? Details { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public MetadataGet? Metadata { get; set; } = default!;
+
+    }
+
+    /// <summary>
+    /// Instruction for sending a file directly to storage.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UploadSession
+    {
+
+        /// <summary>
+        /// Unique identifier of the asset, generated when the upload session is created.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string Id { get; set; } = default!;
+
+        /// <summary>
+        /// Storage that receives the file.
+        /// <br/>* `GCS` — private asset. Upload with the returned `PUT` headers or multipart `POST` fields.
+        /// <br/>* `CLOUDINARY` — public asset. Upload with `POST` and the returned multipart form fields.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("provider")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadSessionProvider>))]
+        public UploadSessionProvider Provider { get; set; } = default!;
+
+        /// <summary>
+        /// The asset stays `PENDING` until the file is stored.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadSessionStatus>))]
+        public UploadSessionStatus Status { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the unused upload session expires. Returned as an ISO-8601 string.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
+        public System.DateTimeOffset ExpiresAt { get; set; } = default!;
+
+        /// <summary>
+        /// The request the caller sends to storage.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("upload")]
+        public Upload Upload { get; set; } = new Upload();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// URL that returns the stored file.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class DownloadUrl
+    {
+
+        /// <summary>
+        /// Storage that holds the file.
+        /// <br/>* `GCS` — private blob. The URL is a signed download and includes `expiresAt`.
+        /// <br/>* `CLOUDINARY` — public blob. The URL is permanent.
+        /// <br/>* `LINK` — the URL stored on the asset.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("provider")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DownloadUrlProvider>))]
+        public DownloadUrlProvider Provider { get; set; } = default!;
+
+        /// <summary>
+        /// URL of the stored file.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("url")]
+        public string Url { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when a private signed URL stops working. Returned as an ISO-8601 string.
+        /// <br/>Present for `GCS` only.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("expiresAt")]
+        public System.DateTimeOffset? ExpiresAt { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -500,6 +627,21 @@ namespace Viu.Emporix.MediaModels
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public MetadataUpdate? Metadata { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Disposition>))]
+    public enum Disposition
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"inline")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("inline")]
+        Inline = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"attachment")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("attachment")]
+        Attachment = 1,
 
     }
 
@@ -592,6 +734,21 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadSessionRequestUploadType>))]
+    public enum UploadSessionRequestUploadType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"put")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("put")]
+        Put = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"form")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("form")]
+        Form = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GetAssetType>))]
     public enum GetAssetType
     {
@@ -601,6 +758,102 @@ namespace Viu.Emporix.MediaModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"LINK")]
         LINK = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<GetAssetBlobStatus>))]
+    public enum GetAssetBlobStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"PENDING")]
+        PENDING = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"READY")]
+        READY = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadSessionProvider>))]
+    public enum UploadSessionProvider
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"GCS")]
+        GCS = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CLOUDINARY")]
+        CLOUDINARY = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadSessionStatus>))]
+    public enum UploadSessionStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"PENDING")]
+        PENDING = 0,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Upload
+    {
+
+        /// <summary>
+        /// HTTP method of the storage request.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("method")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadMethod>))]
+        public UploadMethod Method { get; set; } = default!;
+
+        /// <summary>
+        /// Storage URL that receives the file.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("url")]
+        public string Url { get; set; } = default!;
+
+        /// <summary>
+        /// Headers required by a private Google Cloud Storage `PUT` upload. Send every returned header unchanged with the file.
+        /// <br/>Returned only for the Google Cloud Storage `PUT` flow.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("headers")]
+        public System.Collections.Generic.IDictionary<string, string>? Headers { get; set; } = default!;
+
+        /// <summary>
+        /// Fields required by a Google Cloud Storage or Cloudinary multipart `POST`. Send every returned field unchanged, then append the file part last.
+        /// <br/>Google Cloud Storage fields do not include `x-goog-if-generation-match`. Cloudinary fields include `api_key` and `signature` but never include the API secret.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fields")]
+        public System.Collections.Generic.IDictionary<string, string>? Fields { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DownloadUrlProvider>))]
+    public enum DownloadUrlProvider
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"GCS")]
+        GCS = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CLOUDINARY")]
+        CLOUDINARY = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"LINK")]
+        LINK = 2,
 
     }
 
@@ -642,6 +895,19 @@ namespace Viu.Emporix.MediaModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadMethod>))]
+    public enum UploadMethod
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"PUT")]
+        PUT = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"POST")]
+        POST = 1,
 
     }
 
