@@ -2473,7 +2473,7 @@ namespace Viu.Emporix.AiServiceModels
         public AgentMcpServersRequest McpServers { get; set; } = new AgentMcpServersRequest();
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetadataRequest? Metadata { get; set; } = default!;
+        public Metadata? Metadata { get; set; } = default!;
 
     }
 
@@ -2511,7 +2511,117 @@ namespace Viu.Emporix.AiServiceModels
         public string? TemplatePrompt { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetadataResponse? Metadata { get; set; } = default!;
+        public AgentMetadataResponse? Metadata { get; set; } = default!;
+
+        /// <summary>
+        /// Stored history of previous agent configurations. Present only when the request sets `allVersions=true`. Omitted otherwise.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("versions")]
+        public System.Collections.Generic.ICollection<AgentVersion>? Versions { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AgentVersion : BaseForAgentRequestAndResponse
+    {
+
+        /// <summary>
+        /// Prompt inherited from the template at the time of this version.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("templatePrompt")]
+        public string? TemplatePrompt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("nativeTools")]
+        public NativeToolsResponse? NativeTools { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("llmConfig")]
+        public System.Text.Json.JsonElement? LlmConfig { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mcpServers")]
+        public AgentMcpServersResponse? McpServers { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public AgentVersionMetadata Metadata { get; set; } = new AgentVersionMetadata();
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AgentVersionMetadata
+    {
+
+        /// <summary>
+        /// Version number of this archived snapshot.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("version")]
+        public int Version { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when this version was stored. The value is an ISO-8601 instant. For example: `2022-04-30T13:18:02.379Z`
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
+        public string? ModifiedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("modifiedBy")]
+        public ModifiedBy? ModifiedBy { get; set; } = default!;
+
+        /// <summary>
+        /// Note stored with this snapshot.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("changeNote")]
+        public string? ChangeNote { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Who last changed the agent.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ModifiedBy
+    {
+
+        /// <summary>
+        /// Identity recorded for the change. `EXTERNAL` is assigned when the request authenticates with an API token. `SYSTEM` is used for automatic updates.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ModifiedByType>))]
+        public ModifiedByType Type { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the customer or employee. Omitted for `EXTERNAL` and `SYSTEM`. `id` is the `Hybris-User-Id` header value when `CUSTOMER` or `EMPLOYEE`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// First name of the customer or employee.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("firstName")]
+        public string? FirstName { get; set; } = default!;
+
+        /// <summary>
+        /// Last name of the customer or employee.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("lastName")]
+        public string? LastName { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -2541,16 +2651,31 @@ namespace Viu.Emporix.AiServiceModels
     {
 
         /// <summary>
-        /// Date and time when the object was created. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`
+        /// Date and time when the object was created. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-30T13:18:02.379Z`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
         public string CreatedAt { get; set; } = default!;
 
         /// <summary>
-        /// Date and time when the object was last modified. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`
+        /// Date and time when the object was last modified. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-30T13:18:02.379Z`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
         public string ModifiedAt { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AgentMetadataResponse : MetadataResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("modifiedBy")]
+        public ModifiedBy? ModifiedBy { get; set; } = default!;
+
+        /// <summary>
+        /// Note stored for this live version.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("changeNote")]
+        public string? ChangeNote { get; set; } = default!;
 
     }
 
@@ -3135,6 +3260,12 @@ namespace Viu.Emporix.AiServiceModels
         public string? AgentId { get; set; } = default!;
 
         /// <summary>
+        /// Version of the agent that wrote this log message.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("agentVersion")]
+        public int? AgentVersion { get; set; } = default!;
+
+        /// <summary>
         /// Unique identifier of the request associated with the log.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("requestId")]
@@ -3218,6 +3349,12 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("completionTokens")]
         public long? CompletionTokens { get; set; } = default!;
+
+        /// <summary>
+        /// Version of the agent which triggered the request.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("agentVersion")]
+        public int? AgentVersion { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public MetadataResponse? Metadata { get; set; } = default!;
@@ -4310,6 +4447,37 @@ namespace Viu.Emporix.AiServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"integration")]
         [System.Text.Json.Serialization.JsonStringEnumMemberName("integration")]
         Integration = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Metadata : MetadataRequest
+    {
+
+        /// <summary>
+        /// Optional note stored on this version. A blank value clears the live note. The next successful update archives the note with this version.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("changeNote")]
+        public string? ChangeNote { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ModifiedByType>))]
+    public enum ModifiedByType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CUSTOMER")]
+        CUSTOMER = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"EMPLOYEE")]
+        EMPLOYEE = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"EXTERNAL")]
+        EXTERNAL = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SYSTEM")]
+        SYSTEM = 3,
 
     }
 

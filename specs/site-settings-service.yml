@@ -301,7 +301,10 @@ paths:
             examples:
               Patch Site:
                 value:
-                  defaultLanguage: en
+                  defaultLanguage: fr-ca
+                  languages:
+                    - en
+                    - fr-ca
               Adding and modifying mixin:
                 value:
                   metadata:
@@ -933,21 +936,19 @@ components:
           description: 'Indicates whether prices for the site should be returned in gross (when includesTax=true) or net (when includesTax=false). '
         defaultLanguage:
           type: string
-          description: 'Site''s default language, compliant with the ISO 639-1 standard.'
+          description: 'Site''s default language, compliant with the IETF BCP-47 standard. Regional variants such as `fr-ca` are supported.'
           minLength: 2
-          maxLength: 2
-          pattern: '^[a-z]{2}'
+          pattern: '^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$'
         languages:
           type: array
           description: |-
             Languages supported by the site.
 
-            **Note**: The languages must be compliant with the ISO 639-1 standard.
+            **Note**: The languages must be compliant with the IETF BCP-47 standard. Regional variants such as `fr-ca` are supported.
           items:
             type: string
             minLength: 2
-            maxLength: 2
-            pattern: '^[a-z]{2}'
+            pattern: '^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$'
         currency:
           $ref: '#/components/schemas/CurrencyDto'
         availableCurrencies:

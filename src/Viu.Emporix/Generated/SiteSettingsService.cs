@@ -207,7 +207,7 @@ namespace Viu.Emporix.SiteSettingsServiceModels
         public bool? IncludesTax { get; set; } = default!;
 
         /// <summary>
-        /// Site's default language, compliant with the ISO 639-1 standard.
+        /// Site's default language, compliant with the IETF BCP-47 standard. Regional variants such as `fr-ca` are supported.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("defaultLanguage")]
         public string DefaultLanguage { get; set; } = default!;
@@ -215,7 +215,7 @@ namespace Viu.Emporix.SiteSettingsServiceModels
         /// <summary>
         /// Languages supported by the site.
         /// <br/>
-        /// <br/>**Note**: The languages must be compliant with the ISO 639-1 standard.
+        /// <br/>**Note**: The languages must be compliant with the IETF BCP-47 standard. Regional variants such as `fr-ca` are supported.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("languages")]
         public System.Collections.Generic.ICollection<string> Languages { get; set; } = new System.Collections.ObjectModel.Collection<string>();

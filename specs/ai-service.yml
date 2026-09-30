@@ -783,6 +783,8 @@ paths:
         - $ref: '#/components/parameters/header_Accept-Language'
         - $ref: '#/components/parameters/fields'
         - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/agentVersion'
+        - $ref: '#/components/parameters/allVersions'
       summary: Retrieving agent by ID
       operationId: GET-ai-retrieve-agent
       responses:
@@ -795,10 +797,14 @@ paths:
               examples:
                 Agent Response:
                   $ref: '#/components/examples/AgentResponse'
+                Agent with version history:
+                  $ref: '#/components/examples/AgentWithVersionHistory'
         '401':
           $ref: '#/components/responses/401_resp_common'
         '403':
           $ref: '#/components/responses/403_resp_common'
+        '400':
+          $ref: '#/components/responses/400_resp_common'
         '404':
           $ref: '#/components/responses/404_resp_common'
       description: |-
@@ -838,6 +844,7 @@ paths:
       description: |-
         Updates or creates a specified product by replacing all of its existing data with data from the request body.
         If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
+        A successful update increments `metadata.version` and stores the previous configuration. A request that sends a stale `metadata.version` returns `409`.
       security:
         - OAuth2:
             - ai.agent_manage
@@ -859,12 +866,15 @@ paths:
           $ref: '#/components/responses/403_resp_common'
         '404':
           $ref: '#/components/responses/404_resp_common'
+        '409':
+          $ref: '#/components/responses/409_resp_common'
       description: |-
         Partially updates a single agent document with given information.
         Single update may contain multiple partial updates in the form of an array. It contains the allowed operations list:
           - `add` (adding an item to the items list)
           - `remove` (removing an item from the items list)
           - `replace` (replacing an item with given ID with new definition)
+        A successful update increments `metadata.version` and stores the previous configuration. A request that sends a stale `metadata.version` returns `409`.
       security:
         - OAuth2:
             - ai.agent_manage
@@ -3904,7 +3914,13 @@ components:
             mcpServers:
               $ref: '#/components/schemas/AgentMcpServersRequest'
             metadata:
-              $ref: '#/components/schemas/MetadataRequest'
+              allOf:
+                - $ref: '#/components/schemas/MetadataRequest'
+                - type: object
+                  properties:
+                    changeNote:
+                      type: string
+                      description: Optional note stored on this version. A blank value clears the live note. The next successful update archives the note with this version.
           required:
             - llmConfig
             - mcpServers
@@ -3936,7 +3952,74 @@ components:
               type: string
               description: Prompt which is inherited from the template (if agent is created based on the template). The prompt provided by the user is then concatenated with this prompt.
             metadata:
-              $ref: '#/components/schemas/MetadataResponse'
+              $ref: '#/components/schemas/AgentMetadataResponse'
+            versions:
+              type: array
+              description: Stored history of previous agent configurations. Present only when the request sets `allVersions=true`. Omitted otherwise.
+              items:
+                $ref: '#/components/schemas/AgentVersion'
+    AgentVersion:
+      allOf:
+        - $ref: '#/components/schemas/BaseForAgentRequestAndResponse'
+        - type: object
+          properties:
+            templatePrompt:
+              type: string
+              description: Prompt inherited from the template at the time of this version.
+            nativeTools:
+              $ref: '#/components/schemas/NativeToolsResponse'
+            llmConfig:
+              oneOf:
+                - $ref: '#/components/schemas/EmporixLlm'
+                - $ref: '#/components/schemas/ApiKeyLlmResponse'
+                - $ref: '#/components/schemas/SelfHostedLlmResponse'
+            mcpServers:
+              $ref: '#/components/schemas/AgentMcpServersResponse'
+            metadata:
+              $ref: '#/components/schemas/AgentVersionMetadata'
+          required:
+            - metadata
+    AgentVersionMetadata:
+      type: object
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          description: Version number of this archived snapshot.
+        modifiedAt:
+          type: string
+          description: 'Date and time when this version was stored. The value is an ISO-8601 instant. For example: `2022-04-30T13:18:02.379Z`'
+        modifiedBy:
+          $ref: '#/components/schemas/ModifiedBy'
+        changeNote:
+          type: string
+          description: Note stored with this snapshot.
+    ModifiedBy:
+      type: object
+      description: Who last changed the agent.
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - CUSTOMER
+            - EMPLOYEE
+            - EXTERNAL
+            - SYSTEM
+          description: |
+            Identity recorded for the change. `EXTERNAL` is assigned when the request authenticates with an API token. `SYSTEM` is used for automatic updates.
+        id:
+          type: string
+          description: Identifier of the customer or employee. Omitted for `EXTERNAL` and `SYSTEM`. `id` is the `Hybris-User-Id` header value when `CUSTOMER` or `EMPLOYEE`.
+        firstName:
+          type: string
+          description: First name of the customer or employee.
+        lastName:
+          type: string
+          description: Last name of the customer or employee.
     MetadataRequest:
       type: object
       properties:
@@ -3952,15 +4035,25 @@ components:
         - type: object
           properties:
             createdAt:
-              description: 'Date and time when the object was created. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              description: 'Date and time when the object was created. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-30T13:18:02.379Z`'
               type: string
             modifiedAt:
-              description: 'Date and time when the object was last modified. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
+              description: 'Date and time when the object was last modified. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-30T13:18:02.379Z`'
               type: string
           required:
             - version
             - createdAt
             - modifiedAt
+    AgentMetadataResponse:
+      allOf:
+        - $ref: '#/components/schemas/MetadataResponse'
+        - type: object
+          properties:
+            modifiedBy:
+              $ref: '#/components/schemas/ModifiedBy'
+            changeNote:
+              type: string
+              description: Note stored for this live version.
 
     # Jobs:
     JobStatus:
@@ -4239,6 +4332,10 @@ components:
         agentId:
           type: string
           description: Unique identifier of the agent that generated the log.
+        agentVersion:
+          type: integer
+          minimum: 1
+          description: Version of the agent that wrote this log message.
         requestId:
           type: string
           description: Unique identifier of the request associated with the log.
@@ -4284,6 +4381,10 @@ components:
           type: integer
           format: int64
           description: Cumulative LLM completion token count for this request.
+        agentVersion:
+          type: integer
+          minimum: 1
+          description: Version of the agent which triggered the request.
         metadata:
           $ref: '#/components/schemas/MetadataResponse'
     AgentSessionResponse:
@@ -4726,6 +4827,27 @@ components:
       in: query
       name: fields
       description: Fields to be returned in the response.
+    agentVersion:
+      name: version
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+      description: |
+        Returns the configuration stored for this agent version. Omit the parameter to return the live agent.
+        The response is `404` when the agent or this version does not exist.
+        Cannot be combined with `allVersions` query parameter.
+    allVersions:
+      name: allVersions
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: |
+        When `true`, the response includes `versions` field containing the stored history of previous configurations.
+        Cannot be combined with `version` query parameter.
     expand:
       schema:
         type: string
@@ -4954,17 +5076,20 @@ components:
                       severity: INFO
                       message: Agent started processing request
                       agentId: complaint-agent
+                      agentVersion: 3
                       requestId: req-123e4567-e89b-12d3-a456-426614174000
                       isBusinessLog: false
                     - timestamp: '2025-01-15T10:30:28.234Z'
                       severity: INFO
                       message: Retrieved order details successfully
                       agentId: complaint-agent
+                      agentVersion: 3
                       requestId: req-123e4567-e89b-12d3-a456-426614174000
                       isBusinessLog: true
                   duration: 45
                   promptTokens: 1234
                   completionTokens: 567
+                  agentVersion: 3
                   metadata:
                     version: 1
                     createdAt: '2025-01-15T10:30:27.167Z'
@@ -4990,17 +5115,20 @@ components:
                     severity: INFO
                     message: Retrieved order details successfully
                     agentId: complaint-agent
+                    agentVersion: 3
                     requestId: req-123e4567-e89b-12d3-a456-426614174000
                     isBusinessLog: true
                   - timestamp: '2025-01-15T10:30:29.456Z'
                     severity: WARNING
                     message: Order status check returned unexpected value
                     agentId: complaint-agent
+                    agentVersion: 3
                     requestId: req-123e4567-e89b-12d3-a456-426614174000
                     isBusinessLog: false
                 duration: 45
                 promptTokens: 1234
                 completionTokens: 567
+                agentVersion: 3
                 metadata:
                   version: 1
                   createdAt: '2025-01-15T10:30:27.167Z'
@@ -5041,12 +5169,14 @@ components:
                       severity: INFO
                       message: Session started
                       agentId: complaint-agent
+                      agentVersion: 3
                       requestId: req-123e4567-e89b-12d3-a456-426614174000
                       isBusinessLog: false
                     - timestamp: '2025-01-15T10:30:28.234Z'
                       severity: INFO
                       message: Handed off to categorization agent
                       agentId: complaint-agent
+                      agentVersion: 3
                       requestId: req-123e4567-e89b-12d3-a456-426614174000
                       isBusinessLog: true
                   duration: 120
@@ -5076,12 +5206,14 @@ components:
                     severity: INFO
                     message: Retrieved order details successfully
                     agentId: complaint-agent
+                    agentVersion: 3
                     requestId: req-123e4567-e89b-12d3-a456-426614174000
                     isBusinessLog: true
                   - timestamp: '2025-01-15T10:30:30.789Z'
                     severity: INFO
                     message: Categorization agent processing request
                     agentId: complaint-agent-categorization
+                    agentVersion: 2
                     requestId: req-123e4567-e89b-12d3-a456-426614174000
                     isBusinessLog: false
                 duration: 120
@@ -5488,6 +5620,45 @@ components:
           - name: slack
             config:
               teamId: T0445953
+        metadata:
+          version: 2
+          createdAt: '2025-07-25T10:31:14.509Z'
+          modifiedAt: '2025-07-26T10:31:14.509Z'
+          modifiedBy:
+            type: EMPLOYEE
+            id: jane.doe
+    AgentWithVersionHistory:
+      value:
+        id: "123"
+        name:
+          en: Complaint Agent
+        description:
+          en: Complaint agent
+        type: complaint
+        enabled: false
+        userPrompt: "Use get-order tool to fetch order."
+        triggers:
+          - type: endpoint
+        metadata:
+          version: 3
+          createdAt: '2025-07-25T10:31:14.509Z'
+          modifiedAt: '2025-07-27T10:31:14.509Z'
+          modifiedBy:
+            type: EMPLOYEE
+            id: jane.doe
+        versions:
+          - name:
+              en: Complaint Agent
+            userPrompt: "Use get-order tool to fetch order."
+            enabled: false
+            triggers:
+              - type: endpoint
+            metadata:
+              version: 2
+              modifiedAt: '2025-07-26T10:31:14.509Z'
+              modifiedBy:
+                type: SYSTEM
+              changeNote: deleted native tool
     AgentsResponse:
       value:
         - id: "123"
@@ -5522,6 +5693,12 @@ components:
             - name: slack
               config:
                 teamId: T0445953
+          metadata:
+            version: 2
+            createdAt: '2025-07-25T10:31:14.509Z'
+            modifiedAt: '2025-07-26T10:31:14.509Z'
+            modifiedBy:
+              type: EXTERNAL
     CustomMcpServerRequest:
       value:
         name: Custom MCP Server
