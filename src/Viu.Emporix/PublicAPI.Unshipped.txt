@@ -21,3 +21,4 @@ static Viu.Emporix.CartCommand.UpdateCart(Viu.Emporix.CartModels.UpdateCart! car
 static Viu.Emporix.CartCommand.UpdateCartItem(string! itemId, Viu.Emporix.CartModels.UpdateCartItem! changes, bool? partial = null, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
 static Viu.Emporix.CartCommand.UpdateCartItemsBatch(System.Collections.Generic.IEnumerable<Viu.Emporix.CartModels.CartItemRequest!>! items, bool? partial = null) -> Viu.Emporix.CartCommand!
 static Viu.Emporix.CartCommand.ValidateCart() -> Viu.Emporix.CartCommand!
+Viu.Emporix.CartService.ExecuteAsync(string! cartId, System.Collections.Generic.IEnumerable<Viu.Emporix.CartCommand!>! commands, Viu.Emporix.AuthContext auth, Viu.Emporix.CartModels.OnError? onError = null, Viu.Emporix.CartModels.Versioning? versioning = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.ExecuteResponse!>!

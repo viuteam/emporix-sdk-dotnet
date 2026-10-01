@@ -542,6 +542,165 @@ public class CartServiceTests
         Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.AddCartItemsBatch([]));
         Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.UpdateCartItemsBatch([]));
     }
+
+    // ---------- Command chains: the request ----------
+
+    private const string NoResults = """{"results":[]}""";
+
+    private const string FailedSecond = """
+        {"results":[
+          {"index":0,"type":"GetCart","code":200,"status":"OK","data":{"id":"c1"}},
+          {"index":1,"type":"DeleteCartItem","code":404,"status":"Not Found",
+           "data":{"code":404,"status":"Not Found","message":"Cart item not found"}}
+        ]}
+        """;
+
+    [Fact]
+    public async Task A_command_chain_posts_to_the_execute_path_of_the_escaped_cart()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c 1", [CartCommand.GetCart()], Shopper);
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/cart/acme/carts/c%201/execute", Uri(handler));
+    }
+
+    [Fact]
+    public async Task A_command_chain_sends_its_commands_and_nothing_else_in_the_body()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync(
+            "c1",
+            [CartCommand.DeleteCartItem("i1"), CartCommand.GetCart()],
+            Shopper,
+            OnError.Resume,
+            Versioning.Follow);
+
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[0]);
+        Assert.Equal(["commands"], Names(body.RootElement));
+        Assert.Equal(2, body.RootElement.GetProperty("commands").GetArrayLength());
+    }
+
+    [Theory]
+    [InlineData(OnError.Fail, Versioning.Skip, "?onError=fail&versioning=skip")]
+    [InlineData(OnError.Resume, Versioning.Explicit, "?onError=resume&versioning=explicit")]
+    [InlineData(OnError.Resume, Versioning.Follow, "?onError=resume&versioning=follow")]
+    public async Task Error_mode_and_versioning_reach_the_query_as_the_specification_spells_them(
+        OnError onError,
+        Versioning versioning,
+        string query)
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c1", [CartCommand.GetCart()], Shopper, onError, versioning);
+
+        Assert.Equal("/cart/acme/carts/c1/execute" + query, Uri(handler));
+    }
+
+    [Fact]
+    public async Task Without_an_error_mode_or_versioning_the_query_stays_empty()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c1", [CartCommand.GetCart()], Shopper);
+
+        Assert.Equal("/cart/acme/carts/c1/execute", Uri(handler));
+    }
+
+    [Fact]
+    public async Task A_command_chain_is_never_retried()
+    {
+        // A replay would apply every write in the chain a second time.
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c1", [CartCommand.RefreshCart()], Shopper);
+
+        Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
+    }
+
+    [Fact]
+    public async Task A_command_chain_refuses_a_service_token_before_any_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await Assert.ThrowsAsync<EmporixConfigurationException>(async () =>
+            await carts.ExecuteAsync("c1", [CartCommand.GetCart()], AuthContext.Service()));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task An_empty_or_broken_chain_is_refused_before_any_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await carts.ExecuteAsync("c1", [], Shopper));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await carts.ExecuteAsync("c1", null!, Shopper));
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await carts.ExecuteAsync("c1", [null!], Shopper));
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await carts.ExecuteAsync(" ", [CartCommand.GetCart()], Shopper));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    // ---------- Command chains: failures ----------
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(OnError.Fail)]
+    public async Task Unless_resumed_the_first_failed_command_is_thrown_as_its_rest_error(OnError? onError)
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, FailedSecond);
+        CartService carts = Create(handler);
+
+        EmporixNotFoundException exception = await Assert.ThrowsAsync<EmporixNotFoundException>(async () =>
+            await carts.ExecuteAsync(
+                "c1",
+                [CartCommand.GetCart(), CartCommand.DeleteCartItem("gone")],
+                Shopper,
+                onError));
+
+        Assert.Contains("command 1 (DeleteCartItem)", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Cart item not found", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Resumed_every_result_comes_back_and_nothing_is_thrown()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, FailedSecond);
+        CartService carts = Create(handler);
+
+        ExecuteResponse response = await carts.ExecuteAsync(
+            "c1",
+            [CartCommand.GetCart(), CartCommand.DeleteCartItem("gone")],
+            Shopper,
+            OnError.Resume);
+
+        Assert.Equal([200, 404], response.Results.Select(result => result.Code));
+    }
+
+    [Fact]
+    public async Task A_chain_answered_without_a_body_reads_as_no_results()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, string.Empty);
+        CartService carts = Create(handler);
+
+        ExecuteResponse response = await carts.ExecuteAsync("c1", [CartCommand.GetCart()], Shopper);
+
+        Assert.Empty(response.Results);
+    }
 }
 
 public class ProductYrnTests

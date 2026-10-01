@@ -133,6 +133,7 @@ public sealed class CartCreated
 [JsonSerializable(typeof(List<Viu.Emporix.CartModels.DiscountResponse>))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.CartDTRestrictions))]
 [JsonSerializable(typeof(Viu.Emporix.CartCommandChain))]
+[JsonSerializable(typeof(Viu.Emporix.CartModels.ExecuteResponse))]
 internal sealed partial class CartJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the category service. See <see cref="ProductJsonContext"/>.</summary>
