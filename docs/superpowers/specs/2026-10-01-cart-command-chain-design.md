@@ -1,7 +1,7 @@
 # Cart command chains — Design
 
 - **Date:** 2026-10-01
-- **Status:** Draft, awaiting review → implementation plan after approval
+- **Status:** Approved 2026-10-01 → [implementation plan](../plans/2026-10-01-cart-command-chain.md)
 - **Affects:** `Viu.Emporix` — `CartService`, `JsonContexts.cs`, two new files;
   `specs/cart.yml` and `Generated/Cart.cs` through the sync; the smoke test
 - **Related:** [ADR-0001](../../adr/0001-type-generation.md) type generation,
@@ -274,7 +274,7 @@ as `EmporixProduct.cs` does for the product types:
 | `ReadCart()` | `GetCart` | `Cart?` |
 | `ReadCreatedItem()` | `AddCartItem` | `CreatedCartItem?` |
 | `ReadAddedItems()` | `AddCartItemsBatch` | `IReadOnlyList<SingleBatchResponse>` |
-| `ReadUpdatedItems()` | `UpdateCartItemsBatch` | `CartItemsBatchUpdateResponse?` |
+| `ReadUpdatedItems()` | `UpdateCartItemsBatch` | `IReadOnlyList<UpdateCartItemsBatchEntryResponse>` |
 | `ReadAppliedDiscount()` | `ApplyCartDiscount` | `AppliedDiscount?` |
 | `ReadDiscounts()` | `GetCartDiscounts` | `IReadOnlyList<DiscountResponse>` |
 | `ReadValidation()` | `ValidateCart` | `CartValidationResult?` |
@@ -301,7 +301,7 @@ The generated `ExecuteRequest` and `ExecuteCommand` stay unused, as
 
 `tests/Viu.Emporix.Tests/CartServiceTests.cs`, `StubHttpMessageHandler`:
 
-- verb and path, with an id that needs escaping: `c/1` → `/cart/acme/carts/c%2F1/execute`;
+- verb and path, with an id that needs escaping: `c 1` → `/cart/acme/carts/c%201/execute`;
 - the body holds `commands` and nothing else; `onError` and `versioning` in the
   query with their wire values, and absent when unset;
 - not idempotent;
@@ -366,9 +366,9 @@ check is `dotnet publish samples/Viu.Emporix.Sample -c Release`.
    deserialises it into `CartItemResponse`, so the new item's id lands in
    `AdditionalProperties` and `Id` stays empty. The smoke test only checks for
    non-null. Fixing it changes a public return type.
-2. **REST gaps the chain fills:** `RemoveAllDiscountsAsync` cannot pass `codes`,
-   and `ApplyCouponAsync` cannot apply an external discount;
-   `DeleteCartDiscounts` and `ApplyCartDiscount` can.
+2. **A REST gap the chain fills:** `ApplyCouponAsync` sends a code and nothing
+   else, so an external discount is out of reach over REST; `ApplyCartDiscount`
+   takes the whole `Discount`.
 3. **A generator rule for inline object-or-array unions**, together with
    ai-service's `ChatStreamToolResultData.output` and configuration's
    `BaseConfiguration.value` — the latter possibly unwritable today with an
