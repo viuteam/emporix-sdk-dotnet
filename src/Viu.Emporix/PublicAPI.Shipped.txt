@@ -155,12 +155,29 @@ Viu.Emporix.BrandService.GetAsync(string! brandId, Viu.Emporix.AuthContext auth 
 Viu.Emporix.BrandService.ListAsync(Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.BrandServiceModels.BrandResponse!>!>!
 Viu.Emporix.BrandService.ReplaceAsync(string! brandId, Viu.Emporix.BrandServiceModels.UpdateBrand! brand, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.BrandService.UpdateAsync(string! brandId, Viu.Emporix.BrandServiceModels.UpdateBrand! changes, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartCommand
+Viu.Emporix.CartCommand.CartCommand() -> void
+Viu.Emporix.CartCommand.Data.get -> System.Text.Json.JsonElement?
+Viu.Emporix.CartCommand.Data.init -> void
+Viu.Emporix.CartCommand.Options.get -> Viu.Emporix.CartModels.ExecuteCommandOptions?
+Viu.Emporix.CartCommand.Options.init -> void
+Viu.Emporix.CartCommand.Type.get -> Viu.Emporix.CartModels.ExecuteCommandType
+Viu.Emporix.CartCommand.Type.init -> void
 Viu.Emporix.CartCreated
 Viu.Emporix.CartCreated.CartCreated() -> void
 Viu.Emporix.CartCreated.CartId.get -> string?
 Viu.Emporix.CartCreated.CartId.set -> void
+Viu.Emporix.CartModels.ExecuteCommandResult
+Viu.Emporix.CartModels.ExecuteCommandResult.ExecuteCommandResult() -> void
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadAddedItems() -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.SingleBatchResponse!>!
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadAppliedDiscount() -> Viu.Emporix.CartModels.AppliedDiscount?
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadCart() -> Viu.Emporix.CartModels.Cart?
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadCreatedItem() -> Viu.Emporix.CartModels.CreatedCartItem?
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadDiscounts() -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.DiscountResponse!>!
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadUpdatedItems() -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.UpdateCartItemsBatchEntryResponse!>!
+Viu.Emporix.CartModels.ExecuteCommandResult.ReadValidation() -> Viu.Emporix.CartModels.CartValidationResult?
 Viu.Emporix.CartService
-Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CartItemResponse?>!
+Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CreatedCartItem?>!
 Viu.Emporix.CartService.AddItemsAsync(string! cartId, System.Collections.Generic.IEnumerable<Viu.Emporix.CartModels.CartItemRequest!>! items, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.SingleBatchResponse!>!>!
 Viu.Emporix.CartService.ApplyCouponAsync(string! cartId, string! couponCode, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.CartService.ChangeCurrencyAsync(string! cartId, string! currency, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.Cart?>!
@@ -168,6 +185,7 @@ Viu.Emporix.CartService.ChangeSiteAsync(string! cartId, string! siteCode, Viu.Em
 Viu.Emporix.CartService.ClearAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Viu.Emporix.CartService.CreateAsync(Viu.Emporix.CartModels.CreateCart? cart, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartCreated?>!
 Viu.Emporix.CartService.DeleteAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.CartService.ExecuteAsync(string! cartId, System.Collections.Generic.IEnumerable<Viu.Emporix.CartCommand!>! commands, Viu.Emporix.AuthContext auth, Viu.Emporix.CartModels.OnError? onError = null, Viu.Emporix.CartModels.Versioning? versioning = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.ExecuteResponse!>!
 Viu.Emporix.CartService.GetAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.Cart?>!
 Viu.Emporix.CartService.GetCurrentAsync(Viu.Emporix.CurrentCartQuery! query, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.Cart?>!
 Viu.Emporix.CartService.GetDeliveryRestrictionsAsync(string! cartId, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CartDTRestrictions?>!
@@ -1218,6 +1236,20 @@ static Viu.Emporix.AuthContext.Raw(string! token) -> Viu.Emporix.AuthContext
 static Viu.Emporix.AuthContext.Service(string? credentialSet = null) -> Viu.Emporix.AuthContext
 static Viu.Emporix.AuthContext.operator !=(Viu.Emporix.AuthContext left, Viu.Emporix.AuthContext right) -> bool
 static Viu.Emporix.AuthContext.operator ==(Viu.Emporix.AuthContext left, Viu.Emporix.AuthContext right) -> bool
+static Viu.Emporix.CartCommand.AddCartItem(Viu.Emporix.CartModels.CartItemRequest! item, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.AddCartItemsBatch(System.Collections.Generic.IEnumerable<Viu.Emporix.CartModels.CartItemRequest!>! items) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.ApplyCartDiscount(Viu.Emporix.CartModels.Discount! discount, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartDiscount(int discountIndex) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartDiscounts(System.Collections.Generic.IEnumerable<string!>? codes = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartItem(string! itemId) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartItems() -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.GetCart(bool? expandCalculation = null, string? zipCode = null, string? countryCode = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.GetCartDiscounts() -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.RefreshCart() -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.UpdateCart(Viu.Emporix.CartModels.UpdateCart! cart, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.UpdateCartItem(string! itemId, Viu.Emporix.CartModels.UpdateCartItem! changes, bool? partial = null, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.UpdateCartItemsBatch(System.Collections.Generic.IEnumerable<Viu.Emporix.CartModels.CartItemRequest!>! items, bool? partial = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.ValidateCart() -> Viu.Emporix.CartCommand!
 static Viu.Emporix.EmporixPolling.WaitForAsync<T>(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<T>!>! poll, System.Func<T, bool>! isComplete, Viu.Emporix.EmporixPollingOptions? options = null, System.TimeProvider? timeProvider = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
 static Viu.Emporix.LocalizedString.implicit operator Viu.Emporix.LocalizedString?(string? text) -> Viu.Emporix.LocalizedString?
 static Viu.Emporix.Mixins.Condition.AtLeast(double value) -> Viu.Emporix.Mixins.NumberCondition
