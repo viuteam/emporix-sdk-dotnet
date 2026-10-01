@@ -9,6 +9,25 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.9.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.8.0...v0.9.0) (2026-10-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* thirteen methods return different types. QuoteService.GetHistoryAsync returns IReadOnlyList<QuoteHistoryEntry>. CategoryAssignmentOperations.CreateManyAsync and BulkUpsertByReferenceAsync return IReadOnlyList<BulkAssignmentResult>. CustomInstanceOperations CreateManyAsync, ReplaceManyAsync, UpdateManyAsync and DeleteManyAsync return IReadOnlyList<BulkResponseEntry>. ConfigurationService.ListClientsAsync and SiteService.ListShortAsync return IReadOnlyList<string>. ShippingService.GenerateDeliveryCyclesAsync returns string?. CartService.SearchAsync returns PaginatedItems<CartGetAll>. WebhookService.ListAsync returns IReadOnlyList<WebhookConfigListItem> and WebhookService.GetAsync returns WebhookConfig?. The old types threw on a non-empty answer, kept nothing of a searched cart but its id, or kept nothing of a webhook configuration at all.
+
+### Fixed
+
+* read thirteen answers into the types their specifications declare ([#60](https://github.com/viuteam/emporix-sdk-dotnet/issues/60)) ([969f260](https://github.com/viuteam/emporix-sdk-dotnet/commit/969f2605946610196e90cc0d1812c39c6f609650))
+* repair five response declarations and a duplicate key in the vendored specifications ([#61](https://github.com/viuteam/emporix-sdk-dotnet/issues/61)) ([9bba915](https://github.com/viuteam/emporix-sdk-dotnet/commit/9bba915b114e9a660aff1b032f975fd1a79c2677))
+
+
+### Dependencies
+
+* Bump coverlet.collector and 4 others ([#57](https://github.com/viuteam/emporix-sdk-dotnet/issues/57)) ([0343dca](https://github.com/viuteam/emporix-sdk-dotnet/commit/0343dca39358f0eac68ccda07ecacec5e04f34af))
+* Bump Microsoft.Extensions.Logging.Abstractions from 10.0.11 to 10.0.12 ([#58](https://github.com/viuteam/emporix-sdk-dotnet/issues/58)) ([9cdf48a](https://github.com/viuteam/emporix-sdk-dotnet/commit/9cdf48adfee2a0dbd23f90d2e5e5b355064c484d))
+* Bump Microsoft.Extensions.Options from 10.0.11 to 10.0.12 ([#59](https://github.com/viuteam/emporix-sdk-dotnet/issues/59)) ([590c4ac](https://github.com/viuteam/emporix-sdk-dotnet/commit/590c4acf62586dcc04ce9112ab1e9d1d76a3b69d))
+
 ## [0.8.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.7.0...v0.8.0) (2026-10-01)
 
 
