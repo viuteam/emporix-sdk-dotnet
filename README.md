@@ -749,9 +749,11 @@ Unit tests use a stubbed `HttpMessageHandler`, which cannot tell a right address
 from a wrong one — that is how six calls in this SDK once pointed at endpoints
 Emporix does not have, each with a passing test.
 [`SpecPathTests`](tests/Viu.Emporix.Tests/SpecPathTests.cs) now catches that
-against the vendored specifications, but only a real call catches a body the API
-rejects, a response that deserialises to nothing, or a scope a token turns out
-not to carry.
+against the vendored specifications, and
+[`SpecResponseTests`](tests/Viu.Emporix.Tests/SpecResponseTests.cs) a response
+read into a type the specification does not declare. Only a real call catches a
+body the API rejects, a response the specification itself gets wrong, or a scope
+a token turns out not to carry.
 
 `samples/Viu.Emporix.SmokeTest` walks the anonymous storefront flow against a
 real tenant — session, products, categories, prices, availability, cart, item,

@@ -47,6 +47,12 @@
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <!-- Compiles the mixin generator's output inside a test. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <!--
+      Test-only. SpecResponseTests reads response schemas six levels deep, through
+      references to shared responses and schemas, past examples that carry
+      anchors. The line scan SpecPathTests gets away with stops at two levels.
+    -->
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
 
 </Project>

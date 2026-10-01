@@ -77,6 +77,13 @@ specifications do not declare it. It has caught real defects since. Write paths
 as a single interpolated string — a path assembled by concatenating outside the
 string is invisible to the scanner.
 
+`SpecResponseTests.cs` is its sibling for what a call reads: it pairs every
+typed `SendAsync`/`SendPageAsync` with that call and compares the type with the
+schema of the operation's 2xx responses. A mismatch the SDK means goes on
+`Deliberate` with its reason, a facade waiting for a fix on `KnownMismatches`, a
+wrong specification on `SpecDefects`. All three are pinned in both directions,
+so a fix has to remove its entry.
+
 ## Architecture
 
 **`src/Viu.Emporix/Generated/`** — DTOs produced by NSwag from `specs/`. **Never
