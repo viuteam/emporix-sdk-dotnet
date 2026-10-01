@@ -43,7 +43,7 @@ namespace Viu.Emporix.ConfigurationModels
         /// Configuration value. It can be any valid JSON object.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("value")]
-        public object Value { get; set; } = default!;
+        public System.Text.Json.JsonElement? Value { get; set; } = default!;
 
         /// <summary>
         /// Configuration version.

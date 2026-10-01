@@ -383,6 +383,32 @@ public class SpecSyncTests
     }
 
     [Fact]
+    public void A_union_with_an_array_branch_is_read_as_a_union()
+    {
+        // The configuration service's value. Generated as «object», it threw on
+        // the first object or array a caller tried to write.
+        const string yaml = """
+            components:
+              schemas:
+                BaseConfiguration:
+                  type: object
+                  properties:
+                    value:
+                      description: Configuration value.
+                      oneOf:
+                        - type: object
+                        - type: string
+                        - type: array
+                          items:
+                            type: object
+                        - type: boolean
+            """;
+
+        Assert.Contains("BaseConfiguration.Value", LocalizedProperties.ReadUnions(yaml));
+        Assert.Empty(LocalizedProperties.Read(yaml));
+    }
+
+    [Fact]
     public void A_localized_property_is_retyped_from_either_branch()
     {
         // NSwag picks whichever branch the specification listed first, and both
