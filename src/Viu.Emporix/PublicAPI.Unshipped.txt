@@ -1,1 +1,3 @@
 #nullable enable
+Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CreatedCartItem?>!
+*REMOVED*Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CartItemResponse?>!

@@ -556,7 +556,10 @@ var stock = await client.Availability.GetAsync("p1", "main");
 var cart = await client.Carts.GetCurrentAsync(
     new CurrentCartQuery { SiteCode = "main", Create = true },
     shopper);
-await client.Carts.AddItemAsync(cart!.Id, item, shopper);
+
+// Adding answers with the new item's id and YRN, not with its price — that
+// takes GetItemAsync.
+var added = await client.Carts.AddItemAsync(cart!.Id, item, shopper);
 
 // Order. Deliberately never retried — a repeated checkout is a second order.
 var order = await client.Checkout.PlaceOrderAsync(checkout, shopper);
