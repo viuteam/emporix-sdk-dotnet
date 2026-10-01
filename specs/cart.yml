@@ -13,6 +13,8 @@ tags:
     description: Manage Cart items
   - name: Discounts
     description: Manage Discounts
+  - name: Execute
+    description: Run a chain of existing cart operations in one request.
 servers:
   - url: 'https://api.emporix.io'
 paths:
@@ -2430,6 +2432,279 @@ paths:
       summary: Deleting a cart
       tags:
         - Carts
+    parameters:
+      - $ref: '#/components/parameters/cartId'
+      - $ref: '#/components/parameters/trait_tenant'
+  '/cart/{tenant}/carts/{cartId}/execute':
+    post:
+      tags:
+        - Execute
+      summary: Executing a chain of cart commands
+      operationId: POST-cart-execute
+      description: |-
+        Runs a sequence of existing cart operations in one HTTP request. Cart, item, and discount REST endpoints stay unchanged.
+        `POST /cart/{tenant}/carts/{cartId}/execute` is an additional, opt-in way to call the same operations. The cart id is the path
+        parameter. The service copies it onto every command. One request is one cart.
+
+        A typical storefront flow is `AddCartItem` followed by `GetCart` with `expandCalculation` set to `true`. The 207 `results`
+        array already contains the created item and the calculated cart, so the client does not send a second `GET` unless it wants a
+        later refresh. The two-call sequence (`POST .../items` then `GET .../carts/{cartId}`) continues to work.
+
+        Request duration is approximately the sum of the chained commands. The client saves a network round trip, not the calculation
+        work. Clients and API gateways must set timeouts for the full chain, especially when a command runs cart calculation.
+
+        The service does not send HTTP requests to the existing REST URLs. Downstream calls inside those operations (price, product,
+        cart calculation) still happen, the same as in the equivalent REST calls.
+
+        For command types, error handling, session and legal entity, versioning, and whole-request validation errors, see
+        [How to add an item and retrieve the calculated cart in one request](https://developer.emporix.io/api-references/api-guides/checkout/cart/cart#how-to-add-an-item-and-retrieve-the-calculated-cart-in-one-request).
+
+        ### Additional scopes information
+
+        * `cart.cart_manage` – Use when a service token manages carts that do not belong to the request customer.
+        * `cart.cart_manage_external_prices` – Use when a command payload includes an external price, product, fee, or discount.
+      security:
+        - CustomerAccessToken: []
+        - OAuth2:
+            - cart.cart_manage
+      parameters:
+        - $ref: '#/components/parameters/trait_tenant'
+        - name: onError
+          in: query
+          required: false
+          description: |
+            Controls whether the chain stops after the first non-2xx command.
+
+            Possible values:
+            * `fail` – Stop after the first non-2xx command. `results` contains only the commands that ran, including the failed one.
+            * `resume` – Run every command. Later commands still see earlier successful mutations.
+
+            An invalid value returns **400** for the whole request before any command runs.
+          schema:
+            type: string
+            enum:
+              - fail
+              - resume
+            default: fail
+        - name: versioning
+          in: query
+          required: false
+          description: |
+            If-Match strategy for participating writes (`AddCartItem`, `UpdateCartItem`, `UpdateCart`, `ApplyCartDiscount`).
+
+            Possible values:
+            * `skip` – Never pass a version. Ignore `options.resourceVersion` if present.
+            * `explicit` – Every participating command must send `options.resourceVersion`. Missing version on any participating write returns **400** for the whole request (preflight). This is not `skip`.
+            * `follow` – Seed from the first participating write, then use that cursor for later writes. After the cursor exists, a successful `RefreshCart`, delete, or itemsBatch also bumps it.
+
+            An invalid value returns **400** for the whole request before any command runs.
+          schema:
+            type: string
+            enum:
+              - skip
+              - explicit
+              - follow
+            default: skip
+        - name: session-id
+          in: header
+          required: false
+          schema:
+            type: string
+          description: |
+            Anonymous customer unique session identifier. Shared by every command in the chain. Commands cannot override this header.
+        - name: legal-entity-id
+          in: header
+          required: false
+          schema:
+            type: string
+          description: |
+            Legal entity of the shopper context. Shared by every command in the chain. Commands cannot override this header. To act as a different legal entity, send another request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/executeRequest'
+            examples:
+              Add item then calculated cart:
+                summary: Storefront add then GET with expandCalculation
+                value:
+                  commands:
+                    - type: AddCartItem
+                      data:
+                        itemYrn: 'urn:yaas:saasag:caasproduct:product:yourTenant;mobile-phone-s24-gross'
+                        quantity: 2
+                        price:
+                          priceId: 679ca63dbcdefe5b380c98bc
+                          originalAmount: 350
+                          effectiveAmount: 350
+                          currency: EUR
+                    - type: GetCart
+                      options:
+                        expandCalculation: true
+              Follow resource versions:
+                summary: Seed version 5 then omit resourceVersion on later writes
+                value:
+                  commands:
+                    - type: UpdateCartItem
+                      data:
+                        quantity: 2
+                      options:
+                        itemId: '1'
+                        resourceVersion: 5
+                    - type: UpdateCartItem
+                      data:
+                        quantity: 1
+                      options:
+                        itemId: '2'
+                    - type: GetCart
+                      options:
+                        expandCalculation: true
+                    - type: UpdateCartItem
+                      data:
+                        quantity: 3
+                      options:
+                        itemId: '3'
+      responses:
+        '207':
+          description: The command chain was accepted and executed. `results` lists each command that ran. This status is used for all-2xx chains and for partial failures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/executeResponse'
+              examples:
+                Add item then calculated cart:
+                  summary: All commands succeeded
+                  description: |-
+                    `GetCart` `data` is the cart from `GET /cart/{tenant}/carts/{cartId}` with `expandCalculation=true`.
+                    This sample is that cart for the added line. Discount and fee fields are omitted because this cart has none.
+                  value:
+                    results:
+                      - index: 0
+                        type: AddCartItem
+                        code: 201
+                        status: Created
+                        data:
+                          itemId: '3'
+                          yrn: 'urn:yaas:saasag:caascart:item:yourTenant;6a86b20c2f5961330a8b3eb6;3'
+                      - index: 1
+                        type: GetCart
+                        code: 200
+                        status: OK
+                        data:
+                          id: 6a86b20c2f5961330a8b3eb6
+                          currency: EUR
+                          siteCode: main
+                          type: shopping
+                          items:
+                            - id: '3'
+                              quantity: 2
+                              effectiveQuantity: 2
+                              itemYrn: urn:yaas:saasag:caasproduct:product:yourTenant;mobile-phone-s24-gross
+                              unitPrice:
+                                netValue: 294.118
+                                grossValue: 350
+                                taxValue: 55.882
+                                taxCode: STANDARD
+                                taxRate: 19
+                              calculatedPrice:
+                                price:
+                                  netValue: 588.235
+                                  grossValue: 700
+                                  taxValue: 111.765
+                                  taxCode: STANDARD
+                                  taxRate: 19
+                                  calculated: INTERNAL
+                                finalPrice:
+                                  netValue: 588.235
+                                  grossValue: 700
+                                  taxValue: 111.765
+                                  taxCode: STANDARD
+                                  taxRate: 19
+                                  calculated: INTERNAL
+                          calculatedPrice:
+                            price:
+                              netValue: 588.235
+                              grossValue: 700
+                              taxValue: 111.765
+                            finalPrice:
+                              netValue: 588.235
+                              grossValue: 700
+                              taxValue: 111.765
+                Stop after first failure:
+                  summary: onError=fail omits later commands from results
+                  value:
+                    results:
+                      - index: 0
+                        type: AddCartItem
+                        code: 201
+                        status: Created
+                        data:
+                          itemId: '3'
+                          yrn: 'urn:yaas:saasag:caascart:item:yourTenant;6a86b20c2f5961330a8b3eb6;3'
+                      - index: 1
+                        type: UpdateCartItem
+                        code: 404
+                        status: Not Found
+                        data:
+                          code: 404
+                          status: Not Found
+                          message: Cart item not found in cart 6a86b20c2f5961330a8b3eb6 with code 9
+                No-content write:
+                  summary: 204 commands omit data
+                  value:
+                    results:
+                      - index: 0
+                        type: UpdateCartItem
+                        code: 204
+                        status: No Content
+                      - index: 1
+                        type: GetCart
+                        code: 200
+                        status: OK
+                        data:
+                          id: 612cc4783cff1d66f699b6a1
+                          items:
+                            - id: '1'
+                              quantity: 2
+        '400':
+          description: The execute request is invalid. No command ran. `results` is not returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Too many commands:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: commands must contain at most 10 entries
+                Empty commands:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: commands must contain between 1 and 10 entries
+                Unknown type:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: 'Unknown command type: CreateCart'
+                Invalid versioning:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: 'Invalid versioning value: lock. Expected skip, explicit, or follow'
+                Explicit preflight:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: versioning=explicit requires options.resourceVersion on participating command type AddCartItem
+        '401':
+          $ref: '#/components/responses/trait_401'
+        '403':
+          $ref: '#/components/responses/trait_403'
+        '500':
+          $ref: '#/components/responses/trait_500'
     parameters:
       - $ref: '#/components/parameters/cartId'
       - $ref: '#/components/parameters/trait_tenant'
@@ -5526,6 +5801,213 @@ components:
       items:
         $ref: '#/components/schemas/cartItemRequest'
       description: List of items added to cart.
+    executeRequest:
+      type: object
+      description: Body of `POST /cart/{tenant}/carts/{cartId}/execute`. Between 1 and 10 commands.
+      required:
+        - commands
+      properties:
+        commands:
+          type: array
+          minItems: 1
+          maxItems: 10
+          description: |
+            Commands to run sequentially. Maximum 10. Request duration is approximately the sum of the chained commands.
+
+            Each item needs `type`. `data` is the REST request body and is omitted for commands that have no body. The cart id is the path parameter. `options` holds remaining path and query equivalents (`itemId`, `partial`, `expandCalculation`, `zipCode`, `countryCode`, `resourceVersion`, `codes`, `discountIndex`).
+          items:
+            $ref: '#/components/schemas/executeCommand'
+    executeCommand:
+      type: object
+      description: |
+        One operation in the execute chain. `type` selects the REST equivalent. `data` is that endpoint’s request body. The cart id is the execute path parameter. `options` fields are remaining path and query equivalents (`itemId`, `partial`, `expandCalculation`, `zipCode`, `countryCode`, `resourceVersion`, `codes`, `discountIndex`).
+
+        Session and legal-entity identity are request headers, not command fields.
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: |
+            Operation to run.
+
+            Possible values:
+            * `AddCartItem`
+            * `UpdateCartItem`
+            * `DeleteCartItem`
+            * `DeleteCartItems`
+            * `GetCart`
+            * `AddCartItemsBatch`
+            * `UpdateCartItemsBatch`
+            * `UpdateCart`
+            * `ApplyCartDiscount`
+            * `GetCartDiscounts`
+            * `DeleteCartDiscounts`
+            * `DeleteCartDiscount`
+            * `RefreshCart`
+            * `ValidateCart`
+          enum:
+            - AddCartItem
+            - UpdateCartItem
+            - DeleteCartItem
+            - DeleteCartItems
+            - GetCart
+            - AddCartItemsBatch
+            - UpdateCartItemsBatch
+            - UpdateCart
+            - ApplyCartDiscount
+            - GetCartDiscounts
+            - DeleteCartDiscounts
+            - DeleteCartDiscount
+            - RefreshCart
+            - ValidateCart
+        data:
+          description: |
+            Request body of the equivalent REST operation.
+
+            * `AddCartItem` – cart item body
+            * `UpdateCartItem` – cart item update body
+            * `AddCartItemsBatch` – list of cart item bodies
+            * `UpdateCartItemsBatch` – list of cart item updates (maximum 50)
+            * `UpdateCart` – cart update body
+            * `ApplyCartDiscount` – discount body
+
+            Omit `data` for `GetCart`, `RefreshCart`, `ValidateCart`, deletes, `GetCartDiscounts`, `DeleteCartDiscounts`, and `DeleteCartDiscount`.
+
+            The service selects the body type from `type`. A single item body is an object. Batch commands send an array.
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+        options:
+          $ref: '#/components/schemas/executeCommandOptions'
+    executeCommandOptions:
+      type: object
+      description: Remaining path and query equivalents for the command. Required fields depend on `type`. The cart id is the execute path parameter, not an option.
+      properties:
+        itemId:
+          type: string
+          description: |
+            Cart item unique identifier generated when the product is added to the cart.
+
+            Required for `UpdateCartItem` and `DeleteCartItem`.
+        partial:
+          type: boolean
+          default: false
+          description: |
+            When `true`, only the provided item or batch fields are updated. Same default as the REST `partial` query parameter (`false`).
+
+            Used by `UpdateCartItem` and `UpdateCartItemsBatch`.
+        expandCalculation:
+          type: boolean
+          default: true
+          description: |
+            When `true`, `GetCart` returns a fully calculated cart. Same default as the REST `expandCalculation` query parameter (`true`).
+
+            Used by `GetCart`.
+        zipCode:
+          type: string
+          minLength: 1
+          maxLength: 9
+          description: |
+            Zip code of the shipping address, used for tax calculations, shipping cost estimations, and pricing. Provide together with `countryCode` if either is specified.
+
+            Used by `GetCart`.
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: |
+            Two-letter country code of the shipping address. Provide together with `zipCode` if either is specified.
+
+            Used by `GetCart`.
+        resourceVersion:
+          type: integer
+          description: |
+            Cart resource version used as If-Match for participating writes (`AddCartItem`, `UpdateCartItem`, `UpdateCart`, `ApplyCartDiscount`).
+
+            * `versioning=skip` – ignored
+            * `versioning=explicit` – required on every participating command (whole-request preflight)
+            * `versioning=follow` – required to seed the first participating write; omit on later writes
+
+            Extra `resourceVersion` on `GetCart`, `ValidateCart`, `RefreshCart`, deletes, and itemsBatch is ignored.
+        codes:
+          type: array
+          items:
+            type: string
+          example:
+            - code1
+            - code2
+          description: |
+            Discount codes to remove. If omitted, `DeleteCartDiscounts` removes all discounts. Same meaning as the REST `codes` query parameter.
+
+            Used by `DeleteCartDiscounts`.
+        discountIndex:
+          type: string
+          description: |
+            Index of the discount in the cart discounts array.
+
+            Required for `DeleteCartDiscount`.
+    executeResponse:
+      type: object
+      description: Body of a 207 execute response. Present only when the chain was accepted and executed.
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          description: |
+            Ordered results for commands that ran. With `onError=fail`, the array stops after the first non-2xx command.
+          items:
+            $ref: '#/components/schemas/executeCommandResult'
+    executeCommandResult:
+      type: object
+      description: Result of one command in the execute chain. `data` matches the REST response body for that command.
+      required:
+        - index
+        - type
+        - code
+        - status
+      properties:
+        index:
+          type: integer
+          minimum: 0
+          description: Zero-based index of the command in the request `commands` array.
+        type:
+          type: string
+          description: Command type that produced this result.
+        code:
+          type: integer
+          description: HTTP status code of the equivalent REST operation.
+        status:
+          type: string
+          description: HTTP reason phrase that matches `code`.
+        data:
+          description: |
+            Response body of the equivalent REST operation. Omitted when that endpoint returns 204.
+
+            A single-object body (`AddCartItem`, `GetCart`, `ApplyCartDiscount`, `ValidateCart`, or an error) is an object. `GetCartDiscounts`, `AddCartItemsBatch`, and `UpdateCartItemsBatch` return an array. Failures use the same error shape as REST (`code`, `status`, `message`).
+          nullable: true
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          description: |
+            Response headers for this command.
+
+            When a participating write applied If-Match, this object contains `hybris-resource-version` set to the version after the write. `versioning=skip` does not send If-Match, so the header is absent.
+
+            `AddCartItemsBatch` does not use this object for item locations. Each created item's `data[].headers.location` uses the same location as REST `POST .../itemsBatch`.
     ErrorMessage:
       title: error
       description: Schema for API-specific errors.
