@@ -129,7 +129,7 @@ gh run view <id> --json jobs \
 | Failed step | What happened |
 |---|---|
 | `Download the specifications` | `fetch` got a non-success status for one specification and threw. Nothing was vendored, for any service: the run stops before it writes the manifest. Read `references/upstream-removal.md` |
-| `Build and test` | the sync worked and a test refused it — usually `SpecPathTests` meeting an operation no facade wraps. Read on |
+| `Build and test` | the sync worked and a test refused it — usually `SpecPathTests` meeting an operation no facade wraps, or `SpecResponseTests` meeting a response whose declared type moved. Read on |
 
 A download failure repeats every day until someone acts, and each red run looks
 like the last, so the useful number is the date of the first one. List a month
@@ -327,9 +327,10 @@ passes both ways tests nothing. Restore, re-run, quote the result.
 And understand the limit of all of it: **of the two dozen defects found in this
 SDK, none came from a unit test.** A stubbed `HttpMessageHandler` answers with
 whatever the test author already believed. `SpecPathTests` closes the address
-half. What is left — a body the API rejects, a response that deserialises to
-nothing, a write the server accepts and discards — only a real call finds, which
-is `references/live-verification.md`.
+half, `SpecResponseTests` the type a response is read into — against the
+specification, which can be wrong. What is left — a body the API rejects, a
+response the specification misdescribes, a write the server accepts and
+discards — only a real call finds, which is `references/live-verification.md`.
 
 ## 7. Ship it
 

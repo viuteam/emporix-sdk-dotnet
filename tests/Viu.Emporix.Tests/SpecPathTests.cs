@@ -30,7 +30,7 @@ public class SpecPathTests
     {
         DirectoryInfo root = FindRepositoryRoot();
         HashSet<string> declared = ReadSpecificationPaths(root);
-        List<(string Call, string File)> used = ReadServicePaths(root, out _);
+        List<(string Call, string File, int Offset)> used = ReadServicePaths(root, out _);
 
         // A guard on the guard: if the scan finds nothing, it is broken rather
         // than the code being clean.
@@ -60,7 +60,7 @@ public class SpecPathTests
     private static bool Exempt(string call)
         => call.EndsWith("/cloud-functions/{}/functions/{}{}", StringComparison.Ordinal);
 
-    private static DirectoryInfo FindRepositoryRoot()
+    internal static DirectoryInfo FindRepositoryRoot()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
 
@@ -156,12 +156,15 @@ public class SpecPathTests
     /// <item>a private helper returning a path, which may return more than one
     /// shape depending on its arguments.</item>
     /// </list>
+    /// Each call carries the offset of its <c>Method</c> assignment in the
+    /// comment-stripped source, which is how <see cref="SpecResponseTests"/>
+    /// finds the call a read belongs to.
     /// </remarks>
-    private static List<(string Call, string File)> ReadServicePaths(
+    internal static List<(string Call, string File, int Offset)> ReadServicePaths(
         DirectoryInfo root,
         out List<string> unresolved)
     {
-        List<(string, string)> used = [];
+        List<(string, string, int)> used = [];
         unresolved = [];
 
         foreach (string file in Directory.EnumerateFiles(
@@ -261,7 +264,7 @@ public class SpecPathTests
 
                 if (resolved.All(r => r.StartsWith('/')))
                 {
-                    used.AddRange(resolved.Select(r => ($"{verb} {Normalise(r)}", name)));
+                    used.AddRange(resolved.Select(r => ($"{verb} {Normalise(r)}", name, match.Index)));
                 }
                 else
                 {
@@ -282,7 +285,7 @@ public class SpecPathTests
     /// quotation as a real call — reporting the very defect the comment says was
     /// fixed. Anything that scans source has to ignore what is not source.
     /// </remarks>
-    private static string WithoutComments(string source)
+    internal static string WithoutComments(string source)
         => Regex.Replace(source, @"^[ \t]*//.*$", string.Empty, RegexOptions.Multiline);
 
     /// <summary>The path shapes one assignment can produce, before substitution.</summary>
@@ -364,7 +367,7 @@ public class SpecPathTests
             : declared.Contains(call);
 
     /// <summary>Reduces a path to its shape: parameter names do not matter.</summary>
-    private static string Normalise(string path)
+    internal static string Normalise(string path)
         => Regex.Replace(Regex.Replace(path, @"\{[^}]*\}", "{}"), "/+", "/");
 
     /// <summary>
@@ -390,7 +393,7 @@ public class SpecPathTests
     {
         DirectoryInfo root = FindRepositoryRoot();
         HashSet<string> declared = ReadSpecificationPaths(root);
-        List<(string Call, string File)> used = ReadServicePaths(root, out _);
+        List<(string Call, string File, int Offset)> used = ReadServicePaths(root, out _);
 
         HashSet<string> covered = [.. used.Select(u => u.Call)];
         string[] wildcards = [.. used.Where(u => u.Call.StartsWith("* ", StringComparison.Ordinal))
