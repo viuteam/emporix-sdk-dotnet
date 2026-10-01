@@ -609,7 +609,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/matchResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/matchResponse'
               examples:
                 Response example:
                   value:
@@ -745,7 +747,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/matchResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/matchResponse'
               examples:
                 Response example:
                   value:

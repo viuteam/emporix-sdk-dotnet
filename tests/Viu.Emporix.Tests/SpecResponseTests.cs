@@ -36,11 +36,11 @@ namespace Viu.Emporix.Tests;
 /// <para>
 /// T comes out of the serialization contexts by reflection, and the
 /// specifications are read with YamlDotNet's deserializer, which keeps the last of
-/// a duplicate key — as the generator does: <c>specs/shipping.yml</c> gives one
-/// schema two titles, and NSwag named the type after the second. Both trip the
-/// trimming and AOT analysers, which run on this project as well, so they are
-/// suppressed for this class alone. The package stays reflection-free
-/// (ADR-0004); a test is never trimmed.
+/// a duplicate key — as the generator does: a <c>SpecPatch</c> once gave a schema
+/// in <c>specs/shipping.yml</c> two titles, and NSwag named the type after the
+/// second. Both trip the trimming and AOT analysers, which run on this project as
+/// well, so they are suppressed for this class alone. The package stays
+/// reflection-free (ADR-0004); a test is never trimmed.
 /// </para>
 /// </remarks>
 [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = NeverTrimmed)]
@@ -279,22 +279,7 @@ public class SpecResponseTests
     /// </remarks>
     private static readonly Dictionary<string, string> SpecDefects = new(StringComparer.Ordinal)
     {
-        ["GET /category/{}/categories reads List<CategoryModels.Category>, declared List<List<CategoryModels.Category>>"] = NestedCategoryList,
-        ["POST /category/{}/categories/search reads List<CategoryModels.Category>, declared List<List<CategoryModels.Category>>"] = NestedCategoryList,
-        ["POST /price/{}/match-prices reads List<PriceModels.MatchResponse>, declared PriceModels.MatchResponse"] = SingleMatch,
-        ["POST /price/{}/match-prices-by-context reads List<PriceModels.MatchResponse>, declared PriceModels.MatchResponse"] = SingleMatch,
-        ["GET /payment-gateway/{}/paymentmodes/frontend/{} reads PaymentModels.PaymentModeFrontendResponse, declared List<PaymentModels.PaymentModeFrontendResponse>"] =
-            "The read of one payment mode reuses the list's response, an array, while its description says it "
-            + "retrieves a single mode and the Node SDK reads one object. Unverified against a live tenant.",
     };
-
-    private const string NestedCategoryList =
-        "The response wraps CategoryList, itself an array of categories, in a second array; CategoryList's own "
-        + "example is flat, and so is the Node SDK's read.";
-
-    private const string SingleMatch =
-        "One matchResponse is declared for a request that matches a list of items. The smoke test reads the "
-        + "by-context variant as a list against a live tenant, and the Node SDK reads both as arrays.";
 
     /// <summary>
     /// Guards the scanner itself: a read whose type or address it cannot see is

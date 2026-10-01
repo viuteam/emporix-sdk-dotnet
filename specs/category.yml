@@ -542,9 +542,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CategoryList'
+                $ref: '#/components/schemas/CategoryList'
         '400':
           description: Request was syntactically incorrect. Details will be provided in the response payload
           content:
@@ -918,9 +916,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CategoryList'
+                $ref: '#/components/schemas/CategoryList'
         '400':
           description: Request was syntactically incorrect. Details will be provided in the response payload
           content:

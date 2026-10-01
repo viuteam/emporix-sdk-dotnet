@@ -1589,7 +1589,7 @@ paths:
               schema:
                 type: array
                 items:
-                  title: bulk response
+                  title: bulkResponseEntry
                   description: Schema for API bulk response.
                   example:
                     id: '123456789'
@@ -1603,7 +1603,6 @@ paths:
                     details:
                       - siteCode cannot be null
                   type: object
-                  title: bulkResponseEntry
                   properties:
                     id:
                       type: string

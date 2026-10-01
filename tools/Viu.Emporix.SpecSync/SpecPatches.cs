@@ -115,6 +115,16 @@ internal static partial class SpecPatches
                         "itemPrices",
                         "                items:\n                  type: object\n                  properties:",
                         "                items:\n                  type: object\n                  title: itemPrices\n                  properties:")),
+
+                new SpecPatch(
+                    "upstream: both price-match operations declare one matchResponse for a "
+                    + "request that matches a list of items, and the API answers an array: "
+                    + "the smoke test reads match-prices-by-context as one against tenant viu, "
+                    + "and the Node SDK reads both as arrays. Their examples still show a "
+                    + "single object.",
+                    ReplaceAll(
+                        "              schema:\n                $ref: '#/components/schemas/matchResponse'",
+                        "              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/matchResponse'")),
             ],
 
             ["cart"] =
@@ -269,6 +279,16 @@ internal static partial class SpecPatches
                         "bulkAssignmentResult",
                         "      type: array\n      items:\n        type: object\n        properties:",
                         "      type: array\n      items:\n        type: object\n        title: bulkAssignmentResult\n        properties:")),
+
+                new SpecPatch(
+                    "upstream: listing and searching categories answer an array of "
+                    + "CategoryList, which is itself an array of categories, so the response "
+                    + "reads as an array of arrays. CategoryList's own example is flat, the "
+                    + "smoke test reads a flat list against tenant viu, and so does the Node "
+                    + "SDK. The response is pointed at CategoryList itself.",
+                    ReplaceAll(
+                        "              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/CategoryList'",
+                        "              schema:\n                $ref: '#/components/schemas/CategoryList'")),
             ],
             ["customer-segment"] =
             [
@@ -320,6 +340,24 @@ internal static partial class SpecPatches
                         "errorDetail",
                         "            items:\n              type: object\n              properties:",
                         "            items:\n              type: object\n              title: errorDetail\n              properties:")),
+            ],
+            ["payment"] =
+            [
+                new SpecPatch(
+                    "upstream: reading one frontend payment mode reuses the response of the "
+                    + "list, an array, while the operation's own description retrieves a "
+                    + "single payment mode and the Node SDK reads one object. Not verified "
+                    + "against a live tenant. The response is pointed at "
+                    + "paymentModeFrontendResponse, the element of that list.",
+                    ReplaceAll(
+                        "        '200':\n          $ref: '#/components/responses/paymentModesStorefrontResponse'\n"
+                        + "        '401':\n          $ref: '#/components/responses/common_response_Unauthorized_401'\n"
+                        + "        '404':",
+                        "        '200':\n          description: The payment mode, with its publicly available properties.\n"
+                        + "          content:\n            application/json:\n              schema:\n"
+                        + "                $ref: '#/components/schemas/paymentModeFrontendResponse'\n"
+                        + "        '401':\n          $ref: '#/components/responses/common_response_Unauthorized_401'\n"
+                        + "        '404':")),
             ],
             ["product"] =
             [
@@ -451,13 +489,15 @@ internal static partial class SpecPatches
                         "      items:\n        type: object\n        title: patchOperation\n        properties:")),
 
                 new SpecPatch(
-                    "upstream: the element schema of a bulk response is written inline "
-                    + "with no title, so the generator has no name for it and emits "
-                    + "Anonymous. A title names it BulkResponseEntry.",
+                    "upstream: the element schema of a bulk response is titled «bulk "
+                    + "response», which is no valid type name, so the generator ignores it "
+                    + "and emits Anonymous. Replacing the title names it BulkResponseEntry. "
+                    + "This repair used to add a second title instead, which made the file "
+                    + "invalid YAML that only a reader keeping the last duplicate key accepts.",
                     Title(
                         "bulkResponseEntry",
-                        "                      - siteCode cannot be null\n                  type: object\n                  properties:",
-                        "                      - siteCode cannot be null\n                  type: object\n                  title: bulkResponseEntry\n                  properties:")),
+                        "                items:\n                  title: bulk response\n                  description: Schema for API bulk response.",
+                        "                items:\n                  title: bulkResponseEntry\n                  description: Schema for API bulk response.")),
             ],
             ["webhook"] =
             [
