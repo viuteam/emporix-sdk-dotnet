@@ -701,6 +701,91 @@ public class CartServiceTests
 
         Assert.Empty(response.Results);
     }
+
+    // ---------- Command chains: reading results ----------
+
+    private static ExecuteCommandResult Result(string type, int code, string data)
+    {
+        using JsonDocument document = JsonDocument.Parse(data);
+
+        return new ExecuteCommandResult
+        {
+            Index = 0,
+            Type = type,
+            Code = code,
+            Status = "OK",
+            Data = document.RootElement.Clone(),
+        };
+    }
+
+    [Fact]
+    public async Task A_chain_ending_in_GetCart_reads_back_the_created_item_and_the_cart()
+    {
+        // Through the wire on purpose: Data is declared as object, and this is
+        // what shows it arrives as a JsonElement the readers can use.
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, """
+            {"results":[
+              {"index":0,"type":"AddCartItem","code":201,"status":"Created",
+               "data":{"itemId":"i9","yrn":"urn:yaas:saasag:caascart:cartItem:acme;i9"}},
+              {"index":1,"type":"GetCart","code":200,"status":"OK",
+               "data":{"id":"c1","items":[{"id":"i9"}]}}
+            ]}
+            """);
+        CartService carts = Create(handler);
+
+        ExecuteResponse response = await carts.ExecuteAsync(
+            "c1",
+            [CartCommand.AddCartItem(new CartItemRequest()), CartCommand.GetCart()],
+            Shopper);
+
+        List<ExecuteCommandResult> results = [.. response.Results];
+        Assert.Equal("i9", results[0].ReadCreatedItem()?.ItemId);
+
+        Cart? cart = results[1].ReadCart();
+        Assert.Equal("c1", cart?.Id);
+        Assert.Equal("i9", Assert.Single(cart!.Items!).Id);
+    }
+
+    [Fact]
+    public void Each_reader_reads_the_body_of_its_command()
+    {
+        Assert.Equal(
+            201,
+            Assert.Single(Result("AddCartItemsBatch", 200, """[{"index":0,"status":201}]""").ReadAddedItems()).Status);
+        Assert.Equal(
+            200,
+            Assert.Single(Result("UpdateCartItemsBatch", 207, """[{"index":0,"code":200}]""").ReadUpdatedItems()).Code);
+        Assert.Equal(
+            "d1",
+            Result("ApplyCartDiscount", 201, """{"yrn":"y","discountId":"d1","discountIndex":0}""")
+                .ReadAppliedDiscount()?.DiscountId);
+        Assert.Equal(
+            "SUMMER",
+            Assert.Single(Result("GetCartDiscounts", 200, """[{"code":"SUMMER"}]""").ReadDiscounts()).Code);
+        Assert.True(Result("ValidateCart", 200, """{"isValid":true}""").ReadValidation()?.IsValid);
+    }
+
+    [Fact]
+    public void A_failed_command_reads_as_nothing()
+    {
+        // Its data is the REST error body, not the command's type.
+        const string Error = """{"code":404,"status":"Not Found","message":"gone"}""";
+
+        Assert.Null(Result("GetCart", 404, Error).ReadCart());
+        Assert.Empty(Result("GetCartDiscounts", 404, Error).ReadDiscounts());
+    }
+
+    [Fact]
+    public void A_reader_refuses_the_result_of_another_command()
+    {
+        // Read as a cart, a validation result would come back as a mostly empty
+        // Cart, and nothing would say so.
+        ExecuteCommandResult validation = Result("ValidateCart", 200, """{"isValid":true}""");
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => validation.ReadCart());
+
+        Assert.Contains("ValidateCart", exception.Message, StringComparison.Ordinal);
+    }
 }
 
 public class ProductYrnTests
