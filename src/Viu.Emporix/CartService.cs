@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Net;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Viu.Emporix.CartModels;
 
@@ -866,6 +868,125 @@ public sealed class CartService
             },
             CartJsonContext.Default.CartDTRestrictions,
             cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Runs several cart operations, in order, in one request.</summary>
+    /// <param name="cartId">The cart id; Emporix copies it onto every command.</param>
+    /// <param name="commands">
+    /// One to ten commands, built with the <see cref="CartCommand"/> factories.
+    /// Emporix refuses a longer chain as a whole.
+    /// </param>
+    /// <param name="auth">A customer or anonymous context. Required.</param>
+    /// <param name="onError">
+    /// <see cref="OnError.Resume"/> to run every command whatever happened to the
+    /// ones before. Emporix's default, <see cref="OnError.Fail"/>, stops after the
+    /// first command that fails.
+    /// </param>
+    /// <param name="versioning">
+    /// How writes are checked against the cart version. Emporix's default,
+    /// <see cref="Versioning.Skip"/>, checks nothing. <see cref="Versioning.Explicit"/>
+    /// needs a <c>resourceVersion</c> on every participating write and refuses the
+    /// whole chain without one; <see cref="Versioning.Follow"/> needs it on the first.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>
+    /// One result per command that ran, in order. Read a body with the reader that
+    /// matches its command, such as <c>ReadCart</c>.
+    /// </returns>
+    /// <exception cref="EmporixApiException">
+    /// Unless <paramref name="onError"/> is <see cref="OnError.Resume"/>: the first
+    /// command that failed, as the exception its REST call would have raised, with
+    /// the command's index and type in the message.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// A failed command does not undo the ones before it: they have been applied.
+    /// The exception names the failed command and nothing else; a caller who needs
+    /// every result passes <see cref="OnError.Resume"/> and reads <c>Code</c> on each.
+    /// </para>
+    /// <para>
+    /// It saves round trips, not work. The request takes about as long as its
+    /// commands together, so the client's timeout has to cover the whole chain,
+    /// and a timeout does not mean nothing was written. For the same reason it is
+    /// never retried: a replay would apply the writes twice.
+    /// </para>
+    /// <para>
+    /// Emporix also accepts a service token with <c>cart.cart_manage</c>; this
+    /// method refuses one, like every shopper operation here. A command carrying an
+    /// external price, product, fee or discount needs
+    /// <c>cart.cart_manage_external_prices</c>.
+    /// </para>
+    /// </remarks>
+    public async Task<ExecuteResponse> ExecuteAsync(
+        string cartId,
+        IEnumerable<CartCommand> commands,
+        AuthContext auth,
+        OnError? onError = null,
+        Versioning? versioning = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(cartId);
+        ArgumentNullException.ThrowIfNull(commands);
+
+        List<CartCommand> chain = [.. commands];
+        ArgumentOutOfRangeException.ThrowIfZero(chain.Count, nameof(commands));
+
+        if (chain.Exists(command => command is null))
+        {
+            throw new ArgumentException("A command chain cannot hold null.", nameof(commands));
+        }
+
+        // Neither enum converter reaches a query string: ToString would send
+        // «Resume» where the specification wants «resume».
+        List<KeyValuePair<string, string?>> query = [];
+
+        if (onError is { } mode)
+        {
+            query.Add(new("onError", mode switch
+            {
+                OnError.Fail => "fail",
+                OnError.Resume => "resume",
+                _ => throw new ArgumentOutOfRangeException(nameof(onError), mode, null),
+            }));
+        }
+
+        if (versioning is { } check)
+        {
+            query.Add(new("versioning", check switch
+            {
+                Versioning.Skip => "skip",
+                Versioning.Explicit => "explicit",
+                Versioning.Follow => "follow",
+                _ => throw new ArgumentOutOfRangeException(nameof(versioning), check, null),
+            }));
+        }
+
+        ExecuteResponse response = await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(cartId)}/execute",
+                Auth = RequireCartAuth(auth),
+                Query = query,
+                Content = EmporixJsonContent.Create(
+                    new CartCommandChain { Commands = chain },
+                    CartJsonContext.Default.CartCommandChain),
+            },
+            CartJsonContext.Default.ExecuteResponse,
+            cancellationToken).ConfigureAwait(false) ?? new ExecuteResponse();
+
+        if (onError is not OnError.Resume
+            && response.Results.FirstOrDefault(result => result.Code is < 200 or > 299) is { } failed)
+        {
+            // The same exception, and the same message parsing, as the REST call:
+            // the failed command's data is that call's error body.
+            throw EmporixErrorParser.CreateException(
+                (HttpStatusCode)failed.Code,
+                $"POST {BasePath}/{Uri.EscapeDataString(cartId)}/execute, command {failed.Index} ({failed.Type})",
+                failed.Data is JsonElement body ? body.GetRawText() : null);
+        }
+
+        return response;
     }
 
     /// <summary>

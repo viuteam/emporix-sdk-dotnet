@@ -498,7 +498,7 @@ chose. Each service hangs off the client under a name that says what it owns:
 | `client.Brands` | brands |
 | `client.Labels` | labels |
 | `client.Catalogs` | catalogs and their categories |
-| `client.Carts` | carts, items, coupons, validation |
+| `client.Carts` | carts, items, coupons, validation, command chains |
 | `client.Customers` | sign-up, sign-in, profile, addresses |
 | `client.Prices` | prices, price matching, price models and price lists |
 | `client.Availability` | stock per site |
@@ -560,6 +560,13 @@ var cart = await client.Carts.GetCurrentAsync(
 // Adding answers with the new item's id and YRN, not with its price — that
 // takes GetItemAsync.
 var added = await client.Carts.AddItemAsync(cart!.Id, item, shopper);
+
+// Several cart operations in one request: the write and the calculated cart.
+var chain = await client.Carts.ExecuteAsync(
+    cart.Id,
+    [CartCommand.AddCartItem(item), CartCommand.GetCart()],
+    shopper);
+var calculated = chain.Results.Last().ReadCart();
 
 // Order. Deliberately never retried — a repeated checkout is a second order.
 var order = await client.Checkout.PlaceOrderAsync(checkout, shopper);

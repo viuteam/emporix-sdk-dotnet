@@ -248,6 +248,119 @@ await runner.RunAsync("add an item to the cart", async () =>
             + string.Join(", ", item?.AdditionalProperties.Keys ?? []));
 });
 
+// A command chain on the same throwaway cart. The last step of this pass
+// deletes the cart, so nothing written here outlives the run.
+string? chainedItemId = await runner.RunAsync("add an item and read the cart in one chain", async () =>
+{
+    if (cartId is null)
+    {
+        return Step.Skipped("no cart");
+    }
+
+    if (pricedProduct is not { } match)
+    {
+        return Step.Skipped("no price was matched, and a cart item needs one");
+    }
+
+    Viu.Emporix.CartModels.ExecuteResponse chain = await client.Carts.ExecuteAsync(
+        cartId,
+        [
+            CartCommand.AddCartItem(new Viu.Emporix.CartModels.CartItemRequest
+            {
+                ItemYrn = ProductYrn.Create(configuration.Tenant, match.Product),
+                Quantity = 1,
+                Price = new Viu.Emporix.CartModels.PriceRowItem
+                {
+                    PriceId = match.PriceId,
+                    Currency = match.Currency ?? configuration.Currency ?? "CHF",
+                    OriginalAmount = match.Original ?? 0,
+                    EffectiveAmount = match.Effective ?? match.Original ?? 0,
+                },
+            }),
+            CartCommand.GetCart(),
+        ],
+        shopper);
+
+    List<Viu.Emporix.CartModels.ExecuteCommandResult> results = [.. chain.Results];
+    string codes = string.Join(", ", results.Select(result => result.Code));
+    string? itemId = results.Count > 0 ? results[0].ReadCreatedItem()?.ItemId : null;
+    Viu.Emporix.CartModels.Cart? cart = results.Count > 1 ? results[1].ReadCart() : null;
+
+    if (itemId is not { Length: > 0 })
+    {
+        return Step.Failed($"no item id came back; codes {codes}");
+    }
+
+    return cart?.Items?.Any(item => item.Id == itemId) == true
+        ? Step.Ok($"codes {codes}; the cart read back in the same request holds the item", itemId)
+        : Step.Failed($"codes {codes}; the cart read back does not hold item {itemId}");
+});
+
+await runner.RunAsync("change that item and read the cart in one chain", async () =>
+{
+    if (cartId is null || chainedItemId is null)
+    {
+        return Step.Skipped("no item from the chain");
+    }
+
+    Viu.Emporix.CartModels.ExecuteResponse chain = await client.Carts.ExecuteAsync(
+        cartId,
+        [
+            CartCommand.UpdateCartItem(
+                chainedItemId,
+                new Viu.Emporix.CartModels.UpdateCartItem { Quantity = 3 },
+                partial: true),
+            CartCommand.GetCart(),
+        ],
+        shopper);
+
+    List<Viu.Emporix.CartModels.ExecuteCommandResult> results = [.. chain.Results];
+    string codes = string.Join(", ", results.Select(result => result.Code));
+    double? quantity = (results.Count > 1 ? results[1].ReadCart() : null)?.Items?
+        .FirstOrDefault(item => item.Id == chainedItemId)?.Quantity;
+
+    // A 2xx proves nothing on its own: Emporix has accepted and discarded
+    // writes before, so the quantity is read back.
+    return quantity == 3
+        ? Step.Ok($"codes {codes}; the quantity read back is 3")
+        : Step.Failed(
+            $"codes {codes}; the quantity read back is "
+            + (quantity?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "missing"));
+});
+
+await runner.RunAsync("a failed command under fail and under resume", async () =>
+{
+    if (cartId is null)
+    {
+        return Step.Skipped("no cart");
+    }
+
+    const string Missing = "smoke-test-no-such-item";
+
+    try
+    {
+        await client.Carts.ExecuteAsync(cartId, [CartCommand.DeleteCartItem(Missing)], shopper);
+        return Step.Failed("deleting an unknown item did not fail");
+    }
+    catch (EmporixNotFoundException exception)
+        when (exception.Message.Contains("command 0 (DeleteCartItem)", StringComparison.Ordinal))
+    {
+        // Expected: the failed command, thrown as its REST call would have been.
+    }
+
+    Viu.Emporix.CartModels.ExecuteResponse resumed = await client.Carts.ExecuteAsync(
+        cartId,
+        [CartCommand.DeleteCartItem(Missing), CartCommand.ValidateCart()],
+        shopper,
+        onError: Viu.Emporix.CartModels.OnError.Resume);
+
+    string codes = string.Join(", ", resumed.Results.Select(result => result.Code));
+
+    return codes == "404, 200"
+        ? Step.Ok("fail threw not-found naming the command; resume answered 404, 200")
+        : Step.Failed($"resume answered {codes}");
+});
+
 await runner.RunAsync("read the current cart", async () =>
 {
     if (cartId is null)

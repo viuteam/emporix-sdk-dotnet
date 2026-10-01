@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Viu.Emporix.CartModels;
 
@@ -426,6 +427,384 @@ public class CartServiceTests
 
         Assert.Equal(2, restrictions?.LeadTime);
         Assert.Equal("/cart/acme/carts/c1/dtRestrictions", Uri(handler));
+    }
+
+    // ---------- Command chains: the commands ----------
+
+    /// <summary>One command as it goes over the wire, through the cart context.</summary>
+    private static JsonElement Wire(CartCommand command)
+    {
+        string json = JsonSerializer.Serialize(
+            new CartCommandChain { Commands = [command] },
+            CartJsonContext.Default.CartCommandChain);
+
+        using JsonDocument document = JsonDocument.Parse(json);
+        return document.RootElement.GetProperty("commands")[0].Clone();
+    }
+
+    private static List<string> Names(JsonElement element)
+        => [.. element.EnumerateObject().Select(property => property.Name)];
+
+    [Fact]
+    public void Each_command_factory_names_its_command_type()
+    {
+        (CartCommand Command, string Type)[] cases =
+        [
+            (CartCommand.AddCartItem(new CartItemRequest()), "AddCartItem"),
+            (CartCommand.UpdateCartItem("i1", new UpdateCartItem()), "UpdateCartItem"),
+            (CartCommand.DeleteCartItem("i1"), "DeleteCartItem"),
+            (CartCommand.DeleteCartItems(), "DeleteCartItems"),
+            (CartCommand.GetCart(), "GetCart"),
+            (CartCommand.AddCartItemsBatch([new CartItemRequest()]), "AddCartItemsBatch"),
+            (CartCommand.UpdateCartItemsBatch([new CartItemRequest()]), "UpdateCartItemsBatch"),
+            (CartCommand.UpdateCart(new UpdateCart()), "UpdateCart"),
+            (CartCommand.ApplyCartDiscount(new Discount { Code = "SUMMER" }), "ApplyCartDiscount"),
+            (CartCommand.GetCartDiscounts(), "GetCartDiscounts"),
+            (CartCommand.DeleteCartDiscounts(), "DeleteCartDiscounts"),
+            (CartCommand.DeleteCartDiscount(0), "DeleteCartDiscount"),
+            (CartCommand.RefreshCart(), "RefreshCart"),
+            (CartCommand.ValidateCart(), "ValidateCart"),
+        ];
+
+        foreach ((CartCommand command, string type) in cases)
+        {
+            Assert.Equal(type, Wire(command).GetProperty("type").GetString());
+        }
+    }
+
+    [Fact]
+    public void A_command_body_is_sent_as_the_rest_call_sends_it()
+    {
+        JsonElement add = Wire(CartCommand.AddCartItem(new CartItemRequest
+        {
+            ItemYrn = "urn:yaas:saasag:caasproduct:product:acme;p1",
+            Quantity = 2,
+        }));
+
+        Assert.Equal(
+            "urn:yaas:saasag:caasproduct:product:acme;p1",
+            add.GetProperty("data").GetProperty("itemYrn").GetString());
+        Assert.Equal(2, add.GetProperty("data").GetProperty("quantity").GetDouble());
+
+        // A batch command sends an array, a single-item command an object.
+        JsonElement batch = Wire(CartCommand.AddCartItemsBatch([new CartItemRequest(), new CartItemRequest()]));
+        Assert.Equal(2, batch.GetProperty("data").GetArrayLength());
+
+        JsonElement discount = Wire(CartCommand.ApplyCartDiscount(new Discount { Code = "SUMMER" }));
+        Assert.Equal("SUMMER", discount.GetProperty("data").GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public void A_command_sends_only_the_options_it_was_given()
+    {
+        // The generated options start with partial = false and
+        // expandCalculation = true. Neither may travel unless asked for.
+        Assert.Equal(["itemId"], Names(Wire(CartCommand.DeleteCartItem("i1")).GetProperty("options")));
+
+        JsonElement update = Wire(CartCommand.UpdateCartItem(
+            "i1",
+            new UpdateCartItem { Quantity = 3 },
+            partial: true,
+            resourceVersion: 7)).GetProperty("options");
+
+        Assert.Equal(["itemId", "partial", "resourceVersion"], Names(update));
+        Assert.True(update.GetProperty("partial").GetBoolean());
+        Assert.Equal(7, update.GetProperty("resourceVersion").GetInt32());
+    }
+
+    [Fact]
+    public void A_command_without_options_or_body_sends_neither()
+    {
+        Assert.Equal(["type"], Names(Wire(CartCommand.GetCart())));
+    }
+
+    [Fact]
+    public void Reading_the_cart_takes_zip_and_country_together()
+    {
+        JsonElement options = Wire(CartCommand.GetCart(
+            expandCalculation: false,
+            zipCode: "8001",
+            countryCode: "CH")).GetProperty("options");
+
+        Assert.Equal(["expandCalculation", "zipCode", "countryCode"], Names(options));
+        Assert.False(options.GetProperty("expandCalculation").GetBoolean());
+
+        Assert.Throws<ArgumentException>(() => CartCommand.GetCart(zipCode: "8001"));
+        Assert.Throws<ArgumentException>(() => CartCommand.GetCart(countryCode: "CH"));
+    }
+
+    [Fact]
+    public void Discounts_are_removed_by_code_by_index_or_all_at_once()
+    {
+        Assert.Equal(["type"], Names(Wire(CartCommand.DeleteCartDiscounts())));
+
+        JsonElement codes = Wire(CartCommand.DeleteCartDiscounts(["A", "B"]))
+            .GetProperty("options")
+            .GetProperty("codes");
+        Assert.Equal(["A", "B"], codes.EnumerateArray().Select(code => code.GetString()));
+
+        // An empty filter would read as «remove every discount».
+        Assert.Throws<ArgumentException>(() => CartCommand.DeleteCartDiscounts([]));
+        Assert.Throws<ArgumentException>(() => CartCommand.DeleteCartDiscounts(["A", " "]));
+
+        Assert.Equal(
+            "2",
+            Wire(CartCommand.DeleteCartDiscount(2)).GetProperty("options").GetProperty("discountIndex").GetString());
+        Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.DeleteCartDiscount(-1));
+    }
+
+    [Fact]
+    public void Command_arguments_are_checked_when_the_command_is_built()
+    {
+        Assert.Throws<ArgumentNullException>(() => CartCommand.AddCartItem(null!));
+        Assert.Throws<ArgumentException>(() => CartCommand.DeleteCartItem(" "));
+        Assert.Throws<ArgumentNullException>(() => CartCommand.UpdateCartItem("i1", null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.AddCartItemsBatch([]));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.UpdateCartItemsBatch([]));
+    }
+
+    // ---------- Command chains: the request ----------
+
+    private const string NoResults = """{"results":[]}""";
+
+    private const string FailedSecond = """
+        {"results":[
+          {"index":0,"type":"GetCart","code":200,"status":"OK","data":{"id":"c1"}},
+          {"index":1,"type":"DeleteCartItem","code":404,"status":"Not Found",
+           "data":{"code":404,"status":"Not Found","message":"Cart item not found"}}
+        ]}
+        """;
+
+    [Fact]
+    public async Task A_command_chain_posts_to_the_execute_path_of_the_escaped_cart()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c 1", [CartCommand.GetCart()], Shopper);
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/cart/acme/carts/c%201/execute", Uri(handler));
+    }
+
+    [Fact]
+    public async Task A_command_chain_sends_its_commands_and_nothing_else_in_the_body()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync(
+            "c1",
+            [CartCommand.DeleteCartItem("i1"), CartCommand.GetCart()],
+            Shopper,
+            OnError.Resume,
+            Versioning.Follow);
+
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[0]);
+        Assert.Equal(["commands"], Names(body.RootElement));
+        Assert.Equal(2, body.RootElement.GetProperty("commands").GetArrayLength());
+    }
+
+    [Theory]
+    [InlineData(OnError.Fail, Versioning.Skip, "?onError=fail&versioning=skip")]
+    [InlineData(OnError.Resume, Versioning.Explicit, "?onError=resume&versioning=explicit")]
+    [InlineData(OnError.Resume, Versioning.Follow, "?onError=resume&versioning=follow")]
+    public async Task Error_mode_and_versioning_reach_the_query_as_the_specification_spells_them(
+        OnError onError,
+        Versioning versioning,
+        string query)
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c1", [CartCommand.GetCart()], Shopper, onError, versioning);
+
+        Assert.Equal("/cart/acme/carts/c1/execute" + query, Uri(handler));
+    }
+
+    [Fact]
+    public async Task Without_an_error_mode_or_versioning_the_query_stays_empty()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c1", [CartCommand.GetCart()], Shopper);
+
+        Assert.Equal("/cart/acme/carts/c1/execute", Uri(handler));
+    }
+
+    [Fact]
+    public async Task A_command_chain_is_never_retried()
+    {
+        // A replay would apply every write in the chain a second time.
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await carts.ExecuteAsync("c1", [CartCommand.RefreshCart()], Shopper);
+
+        Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
+    }
+
+    [Fact]
+    public async Task A_command_chain_refuses_a_service_token_before_any_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await Assert.ThrowsAsync<EmporixConfigurationException>(async () =>
+            await carts.ExecuteAsync("c1", [CartCommand.GetCart()], AuthContext.Service()));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task An_empty_or_broken_chain_is_refused_before_any_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, NoResults);
+        CartService carts = Create(handler);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+            await carts.ExecuteAsync("c1", [], Shopper));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await carts.ExecuteAsync("c1", null!, Shopper));
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await carts.ExecuteAsync("c1", [null!], Shopper));
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await carts.ExecuteAsync(" ", [CartCommand.GetCart()], Shopper));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    // ---------- Command chains: failures ----------
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(OnError.Fail)]
+    public async Task Unless_resumed_the_first_failed_command_is_thrown_as_its_rest_error(OnError? onError)
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, FailedSecond);
+        CartService carts = Create(handler);
+
+        EmporixNotFoundException exception = await Assert.ThrowsAsync<EmporixNotFoundException>(async () =>
+            await carts.ExecuteAsync(
+                "c1",
+                [CartCommand.GetCart(), CartCommand.DeleteCartItem("gone")],
+                Shopper,
+                onError));
+
+        Assert.Contains("command 1 (DeleteCartItem)", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Cart item not found", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Resumed_every_result_comes_back_and_nothing_is_thrown()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, FailedSecond);
+        CartService carts = Create(handler);
+
+        ExecuteResponse response = await carts.ExecuteAsync(
+            "c1",
+            [CartCommand.GetCart(), CartCommand.DeleteCartItem("gone")],
+            Shopper,
+            OnError.Resume);
+
+        Assert.Equal([200, 404], response.Results.Select(result => result.Code));
+    }
+
+    [Fact]
+    public async Task A_chain_answered_without_a_body_reads_as_no_results()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, string.Empty);
+        CartService carts = Create(handler);
+
+        ExecuteResponse response = await carts.ExecuteAsync("c1", [CartCommand.GetCart()], Shopper);
+
+        Assert.Empty(response.Results);
+    }
+
+    // ---------- Command chains: reading results ----------
+
+    private static ExecuteCommandResult Result(string type, int code, string data)
+    {
+        using JsonDocument document = JsonDocument.Parse(data);
+
+        return new ExecuteCommandResult
+        {
+            Index = 0,
+            Type = type,
+            Code = code,
+            Status = "OK",
+            Data = document.RootElement.Clone(),
+        };
+    }
+
+    [Fact]
+    public async Task A_chain_ending_in_GetCart_reads_back_the_created_item_and_the_cart()
+    {
+        // Through the wire on purpose: Data is declared as object, and this is
+        // what shows it arrives as a JsonElement the readers can use.
+        StubHttpMessageHandler handler = new(HttpStatusCode.MultiStatus, """
+            {"results":[
+              {"index":0,"type":"AddCartItem","code":201,"status":"Created",
+               "data":{"itemId":"i9","yrn":"urn:yaas:saasag:caascart:cartItem:acme;i9"}},
+              {"index":1,"type":"GetCart","code":200,"status":"OK",
+               "data":{"id":"c1","items":[{"id":"i9"}]}}
+            ]}
+            """);
+        CartService carts = Create(handler);
+
+        ExecuteResponse response = await carts.ExecuteAsync(
+            "c1",
+            [CartCommand.AddCartItem(new CartItemRequest()), CartCommand.GetCart()],
+            Shopper);
+
+        List<ExecuteCommandResult> results = [.. response.Results];
+        Assert.Equal("i9", results[0].ReadCreatedItem()?.ItemId);
+
+        Cart? cart = results[1].ReadCart();
+        Assert.Equal("c1", cart?.Id);
+        Assert.Equal("i9", Assert.Single(cart!.Items!).Id);
+    }
+
+    [Fact]
+    public void Each_reader_reads_the_body_of_its_command()
+    {
+        Assert.Equal(
+            201,
+            Assert.Single(Result("AddCartItemsBatch", 200, """[{"index":0,"status":201}]""").ReadAddedItems()).Status);
+        Assert.Equal(
+            200,
+            Assert.Single(Result("UpdateCartItemsBatch", 207, """[{"index":0,"code":200}]""").ReadUpdatedItems()).Code);
+        Assert.Equal(
+            "d1",
+            Result("ApplyCartDiscount", 201, """{"yrn":"y","discountId":"d1","discountIndex":0}""")
+                .ReadAppliedDiscount()?.DiscountId);
+        Assert.Equal(
+            "SUMMER",
+            Assert.Single(Result("GetCartDiscounts", 200, """[{"code":"SUMMER"}]""").ReadDiscounts()).Code);
+        Assert.True(Result("ValidateCart", 200, """{"isValid":true}""").ReadValidation()?.IsValid);
+    }
+
+    [Fact]
+    public void A_failed_command_reads_as_nothing()
+    {
+        // Its data is the REST error body, not the command's type.
+        const string Error = """{"code":404,"status":"Not Found","message":"gone"}""";
+
+        Assert.Null(Result("GetCart", 404, Error).ReadCart());
+        Assert.Empty(Result("GetCartDiscounts", 404, Error).ReadDiscounts());
+    }
+
+    [Fact]
+    public void A_reader_refuses_the_result_of_another_command()
+    {
+        // Read as a cart, a validation result would come back as a mostly empty
+        // Cart, and nothing would say so.
+        ExecuteCommandResult validation = Result("ValidateCart", 200, """{"isValid":true}""");
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => validation.ReadCart());
+
+        Assert.Contains("ValidateCart", exception.Message, StringComparison.Ordinal);
     }
 }
 
