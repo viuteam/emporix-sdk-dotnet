@@ -9,6 +9,25 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.8.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.7.0...v0.8.0) (2026-10-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* BaseConfiguration.Value and ChatStreamToolResultData.Output are JsonElement? instead of object, so a plain string no longer assigns directly. Pass a JsonElement instead.
+* CartService.AddItemAsync returns CreatedCartItem instead of CartItemResponse. Read the new item's id from ItemId. Id, Price, Product and the other fields of the priced item were never filled by this call; GetItemAsync returns them. Yrn and AdditionalProperties remain.
+
+### Added
+
+* run a chain of cart commands in one request ([#53](https://github.com/viuteam/emporix-sdk-dotnet/issues/53)) ([141ca71](https://github.com/viuteam/emporix-sdk-dotnet/commit/141ca715cdf854f9c9d793b50584bef1e1df9f5f))
+
+
+### Fixed
+
+* return the id of an item added to a cart ([#54](https://github.com/viuteam/emporix-sdk-dotnet/issues/54)) ([bc6f465](https://github.com/viuteam/emporix-sdk-dotnet/commit/bc6f465402b6b7fbda07170cc6e6b24528ffad1c))
+* sync generated types with upstream Emporix specifications ([#51](https://github.com/viuteam/emporix-sdk-dotnet/issues/51)) ([bca5e4f](https://github.com/viuteam/emporix-sdk-dotnet/commit/bca5e4f093acce318576c13e292325993221b514))
+* write a configuration value that is an object or an array ([#55](https://github.com/viuteam/emporix-sdk-dotnet/issues/55)) ([294edc1](https://github.com/viuteam/emporix-sdk-dotnet/commit/294edc187fdb3fd0ffde9e8869cc8fb8d4c7f132))
+
 ## [0.7.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.6.0...v0.7.0) (2026-09-28)
 
 
