@@ -220,7 +220,7 @@ await runner.RunAsync("add an item to the cart", async () =>
     // CartService rejects a bare id before the request leaves. The price id
     // comes from the match: without it the item is rejected as «Internal type
     // must have priceId set».
-    Viu.Emporix.CartModels.CartItemResponse? item = await client.Carts.AddItemAsync(
+    Viu.Emporix.CartModels.CreatedCartItem? item = await client.Carts.AddItemAsync(
         cartId,
         new Viu.Emporix.CartModels.CartItemRequest
         {
@@ -238,9 +238,14 @@ await runner.RunAsync("add an item to the cart", async () =>
         },
         shopper);
 
-    return item is null
-        ? Step.Failed("the item did not come back")
-        : Step.Ok("added");
+    // Emporix answers 201 with nothing but the new item's id and YRN. A check
+    // for any body at all passed while that id landed among the unknown
+    // properties of the wrong type, so a failure says what did come back.
+    return item?.ItemId is { Length: > 0 } itemId
+        ? Step.Ok($"added as {itemId}")
+        : Step.Failed(
+            "no item id came back; the answer held "
+            + string.Join(", ", item?.AdditionalProperties.Keys ?? []));
 });
 
 // A command chain on the same throwaway cart. The last step of this pass

@@ -31,3 +31,5 @@ Viu.Emporix.CartModels.ExecuteCommandResult.ReadCreatedItem() -> Viu.Emporix.Car
 Viu.Emporix.CartModels.ExecuteCommandResult.ReadDiscounts() -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.DiscountResponse!>!
 Viu.Emporix.CartModels.ExecuteCommandResult.ReadUpdatedItems() -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.CartModels.UpdateCartItemsBatchEntryResponse!>!
 Viu.Emporix.CartModels.ExecuteCommandResult.ReadValidation() -> Viu.Emporix.CartModels.CartValidationResult?
+Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CreatedCartItem?>!
+*REMOVED*Viu.Emporix.CartService.AddItemAsync(string! cartId, Viu.Emporix.CartModels.CartItemRequest! item, Viu.Emporix.AuthContext auth, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.CartModels.CartItemResponse?>!

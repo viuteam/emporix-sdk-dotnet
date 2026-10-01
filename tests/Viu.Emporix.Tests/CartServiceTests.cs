@@ -131,7 +131,7 @@ public class CartServiceTests
     [Fact]
     public async Task Adding_an_item_posts_to_the_cart_items_path()
     {
-        StubHttpMessageHandler handler = new(HttpStatusCode.Created, """{"id":"i1"}""");
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, """{"itemId":"i1"}""");
         CartService carts = Create(handler);
 
         await carts.AddItemAsync(
@@ -144,6 +144,26 @@ public class CartServiceTests
             "urn:yaas:hybris:product:product:acme;p1",
             handler.RequestBodies[0],
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Adding_an_item_returns_the_id_of_the_new_item()
+    {
+        // The 201 as tenant viu answered it for a cart's first item: "0", not the
+        // object id the specification's example shows. Read as the priced item,
+        // that id fell among the unknown properties and Id stayed null; a stub
+        // answering {"id":…} agreed, and only the live smoke test noticed.
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.Created,
+            """{"itemId":"0","yrn":"urn:yaas:hybris:cart:cart-item:acme;c1;0"}""");
+        CartService carts = Create(handler);
+
+        CreatedCartItem? added = await carts.AddItemAsync(
+            "c1",
+            new CartItemRequest { ItemYrn = ProductYrn.Create("acme", "p1"), Quantity = 1 },
+            Shopper);
+
+        Assert.Equal("0", added?.ItemId);
     }
 
     [Fact]

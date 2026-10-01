@@ -158,11 +158,16 @@ public sealed class CartService
     /// <param name="item">The item. Its product reference must be a YRN — see <see cref="ProductYrn"/>.</param>
     /// <param name="auth">A customer or anonymous context. Required.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The new item's id and YRN.</returns>
+    /// <remarks>
+    /// Emporix answers with nothing more: the priced item, as
+    /// <see cref="GetItemAsync"/> returns it, takes a second call.
+    /// </remarks>
     /// <exception cref="EmporixValidationException">
     /// Emporix rejected the item — most often because the product reference is a
     /// bare id rather than a YRN.
     /// </exception>
-    public async Task<CartItemResponse?> AddItemAsync(
+    public async Task<CreatedCartItem?> AddItemAsync(
         string cartId,
         CartItemRequest item,
         AuthContext auth,
@@ -179,7 +184,7 @@ public sealed class CartService
                 Auth = RequireCartAuth(auth),
                 Content = EmporixJsonContent.Create(item, CartJsonContext.Default.CartItemRequest),
             },
-            CartJsonContext.Default.CartItemResponse,
+            CartJsonContext.Default.CreatedCartItem,
             cancellationToken).ConfigureAwait(false);
     }
 
