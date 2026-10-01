@@ -2486,6 +2486,280 @@ namespace Viu.Emporix.CartModels
     }
 
     /// <summary>
+    /// Body of `POST /cart/{tenant}/carts/{cartId}/execute`. Between 1 and 10 commands.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ExecuteRequest
+    {
+
+        /// <summary>
+        /// Commands to run sequentially. Maximum 10. Request duration is approximately the sum of the chained commands.
+        /// <br/>
+        /// <br/>Each item needs `type`. `data` is the REST request body and is omitted for commands that have no body. The cart id is the path parameter. `options` holds remaining path and query equivalents (`itemId`, `partial`, `expandCalculation`, `zipCode`, `countryCode`, `resourceVersion`, `codes`, `discountIndex`).
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("commands")]
+        public System.Collections.Generic.ICollection<ExecuteCommand> Commands { get; set; } = new System.Collections.ObjectModel.Collection<ExecuteCommand>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// One operation in the execute chain. `type` selects the REST equivalent. `data` is that endpoint’s request body. The cart id is the execute path parameter. `options` fields are remaining path and query equivalents (`itemId`, `partial`, `expandCalculation`, `zipCode`, `countryCode`, `resourceVersion`, `codes`, `discountIndex`).
+    /// <br/>
+    /// <br/>Session and legal-entity identity are request headers, not command fields.
+    /// <br/>
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ExecuteCommand
+    {
+
+        /// <summary>
+        /// Operation to run.
+        /// <br/>
+        /// <br/>Possible values:
+        /// <br/>* `AddCartItem`
+        /// <br/>* `UpdateCartItem`
+        /// <br/>* `DeleteCartItem`
+        /// <br/>* `DeleteCartItems`
+        /// <br/>* `GetCart`
+        /// <br/>* `AddCartItemsBatch`
+        /// <br/>* `UpdateCartItemsBatch`
+        /// <br/>* `UpdateCart`
+        /// <br/>* `ApplyCartDiscount`
+        /// <br/>* `GetCartDiscounts`
+        /// <br/>* `DeleteCartDiscounts`
+        /// <br/>* `DeleteCartDiscount`
+        /// <br/>* `RefreshCart`
+        /// <br/>* `ValidateCart`
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ExecuteCommandType>))]
+        public ExecuteCommandType Type { get; set; } = default!;
+
+        /// <summary>
+        /// Request body of the equivalent REST operation.
+        /// <br/>
+        /// <br/>* `AddCartItem` – cart item body
+        /// <br/>* `UpdateCartItem` – cart item update body
+        /// <br/>* `AddCartItemsBatch` – list of cart item bodies
+        /// <br/>* `UpdateCartItemsBatch` – list of cart item updates (maximum 50)
+        /// <br/>* `UpdateCart` – cart update body
+        /// <br/>* `ApplyCartDiscount` – discount body
+        /// <br/>
+        /// <br/>Omit `data` for `GetCart`, `RefreshCart`, `ValidateCart`, deletes, `GetCartDiscounts`, `DeleteCartDiscounts`, and `DeleteCartDiscount`.
+        /// <br/>
+        /// <br/>The service selects the body type from `type`. A single item body is an object. Batch commands send an array.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public object? Data { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("options")]
+        public ExecuteCommandOptions? Options { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Remaining path and query equivalents for the command. Required fields depend on `type`. The cart id is the execute path parameter, not an option.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ExecuteCommandOptions
+    {
+
+        /// <summary>
+        /// Cart item unique identifier generated when the product is added to the cart.
+        /// <br/>
+        /// <br/>Required for `UpdateCartItem` and `DeleteCartItem`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("itemId")]
+        public string? ItemId { get; set; } = default!;
+
+        /// <summary>
+        /// When `true`, only the provided item or batch fields are updated. Same default as the REST `partial` query parameter (`false`).
+        /// <br/>
+        /// <br/>Used by `UpdateCartItem` and `UpdateCartItemsBatch`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("partial")]
+        public bool? Partial { get; set; } = false;
+
+        /// <summary>
+        /// When `true`, `GetCart` returns a fully calculated cart. Same default as the REST `expandCalculation` query parameter (`true`).
+        /// <br/>
+        /// <br/>Used by `GetCart`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("expandCalculation")]
+        public bool? ExpandCalculation { get; set; } = true;
+
+        /// <summary>
+        /// Zip code of the shipping address, used for tax calculations, shipping cost estimations, and pricing. Provide together with `countryCode` if either is specified.
+        /// <br/>
+        /// <br/>Used by `GetCart`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("zipCode")]
+        public string? ZipCode { get; set; } = default!;
+
+        /// <summary>
+        /// Two-letter country code of the shipping address. Provide together with `zipCode` if either is specified.
+        /// <br/>
+        /// <br/>Used by `GetCart`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("countryCode")]
+        public string? CountryCode { get; set; } = default!;
+
+        /// <summary>
+        /// Cart resource version used as If-Match for participating writes (`AddCartItem`, `UpdateCartItem`, `UpdateCart`, `ApplyCartDiscount`).
+        /// <br/>
+        /// <br/>* `versioning=skip` – ignored
+        /// <br/>* `versioning=explicit` – required on every participating command (whole-request preflight)
+        /// <br/>* `versioning=follow` – required to seed the first participating write; omit on later writes
+        /// <br/>
+        /// <br/>Extra `resourceVersion` on `GetCart`, `ValidateCart`, `RefreshCart`, deletes, and itemsBatch is ignored.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("resourceVersion")]
+        public int? ResourceVersion { get; set; } = default!;
+
+        /// <summary>
+        /// Discount codes to remove. If omitted, `DeleteCartDiscounts` removes all discounts. Same meaning as the REST `codes` query parameter.
+        /// <br/>
+        /// <br/>Used by `DeleteCartDiscounts`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("codes")]
+        public System.Collections.Generic.ICollection<string>? Codes { get; set; } = default!;
+
+        /// <summary>
+        /// Index of the discount in the cart discounts array.
+        /// <br/>
+        /// <br/>Required for `DeleteCartDiscount`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("discountIndex")]
+        public string? DiscountIndex { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Body of a 207 execute response. Present only when the chain was accepted and executed.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ExecuteResponse
+    {
+
+        /// <summary>
+        /// Ordered results for commands that ran. With `onError=fail`, the array stops after the first non-2xx command.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("results")]
+        public System.Collections.Generic.ICollection<ExecuteCommandResult> Results { get; set; } = new System.Collections.ObjectModel.Collection<ExecuteCommandResult>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Result of one command in the execute chain. `data` matches the REST response body for that command.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ExecuteCommandResult
+    {
+
+        /// <summary>
+        /// Zero-based index of the command in the request `commands` array.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("index")]
+        public int Index { get; set; } = default!;
+
+        /// <summary>
+        /// Command type that produced this result.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        public string Type { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status code of the equivalent REST operation.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        public int Code { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP reason phrase that matches `code`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public string Status { get; set; } = default!;
+
+        /// <summary>
+        /// Response body of the equivalent REST operation. Omitted when that endpoint returns 204.
+        /// <br/>
+        /// <br/>A single-object body (`AddCartItem`, `GetCart`, `ApplyCartDiscount`, `ValidateCart`, or an error) is an object. `GetCartDiscounts`, `AddCartItemsBatch`, and `UpdateCartItemsBatch` return an array. Failures use the same error shape as REST (`code`, `status`, `message`).
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public object? Data { get; set; } = default!;
+
+        /// <summary>
+        /// Response headers for this command.
+        /// <br/>
+        /// <br/>When a participating write applied If-Match, this object contains `hybris-resource-version` set to the version after the write. `versioning=skip` does not send If-Match, so the header is absent.
+        /// <br/>
+        /// <br/>`AddCartItemsBatch` does not use this object for item locations. Each created item's `data[].headers.location` uses the same location as REST `POST .../itemsBatch`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("headers")]
+        public System.Collections.Generic.IDictionary<string, string>? Headers { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
     /// Schema for API-specific errors.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -3024,6 +3298,40 @@ namespace Viu.Emporix.CartModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<OnError>))]
+    public enum OnError
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"fail")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("fail")]
+        Fail = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"resume")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("resume")]
+        Resume = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Versioning>))]
+    public enum Versioning
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"skip")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("skip")]
+        Skip = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"explicit")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("explicit")]
+        Explicit = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"follow")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("follow")]
+        Follow = 2,
 
     }
 
@@ -3628,6 +3936,55 @@ namespace Viu.Emporix.CartModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ExecuteCommandType>))]
+    public enum ExecuteCommandType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"AddCartItem")]
+        AddCartItem = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"UpdateCartItem")]
+        UpdateCartItem = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"DeleteCartItem")]
+        DeleteCartItem = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"DeleteCartItems")]
+        DeleteCartItems = 3,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"GetCart")]
+        GetCart = 4,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"AddCartItemsBatch")]
+        AddCartItemsBatch = 5,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"UpdateCartItemsBatch")]
+        UpdateCartItemsBatch = 6,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"UpdateCart")]
+        UpdateCart = 7,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ApplyCartDiscount")]
+        ApplyCartDiscount = 8,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"GetCartDiscounts")]
+        GetCartDiscounts = 9,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"DeleteCartDiscounts")]
+        DeleteCartDiscounts = 10,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"DeleteCartDiscount")]
+        DeleteCartDiscount = 11,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"RefreshCart")]
+        RefreshCart = 12,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ValidateCart")]
+        ValidateCart = 13,
 
     }
 
