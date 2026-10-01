@@ -123,6 +123,28 @@ public class PlatformWaveTests
         Assert.Equal("/configuration/acme/clients/storefront/configurations", Uri(client));
     }
 
+    [Theory]
+    [InlineData("""{"enabled":true,"limit":5}""")]
+    [InlineData("""[{"code":"a"},{"code":"b"}]""")]
+    public async Task A_configuration_value_can_be_an_object_or_an_array(string json)
+    {
+        // The specification allows an object, a string, an array of objects or a
+        // boolean. Generated as «object», the value could only be written when
+        // its runtime type happened to be registered with the serializer
+        // context, and neither of these ever was.
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, string.Empty);
+
+        await new ConfigurationService(Http(handler), Options()).CreateAsync(
+            new ConfigurationModels.BaseConfiguration
+            {
+                Key = "storefront.banner",
+                Value = JsonDocument.Parse(json).RootElement.Clone(),
+            });
+
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[0]);
+        Assert.Equal(json, body.RootElement.GetProperty("value").GetRawText());
+    }
+
     // ---------- Session context ----------
 
     [Fact]

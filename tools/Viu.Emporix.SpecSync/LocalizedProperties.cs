@@ -36,7 +36,8 @@ internal static partial class LocalizedProperties
         => Scan(yaml, unions: false);
 
     /// <summary>
-    /// Returns the properties whose schema is a union of several object types.
+    /// Returns the properties whose schema is a union of several object types,
+    /// or a union with an array among its branches.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -48,11 +49,12 @@ internal static partial class LocalizedProperties
     /// use the value its generated type rejects.
     /// </para>
     /// <para>
-    /// Four properties across all 44 specifications are like this, and all four
-    /// are provider configurations with no discriminator a generator could use.
-    /// They are retyped to <c>JsonElement</c>: reading the branch the caller
-    /// actually has is their decision, and losing the other branches' fields
-    /// silently is not an option.
+    /// The object unions are provider configurations with no discriminator a
+    /// generator could use; the array unions hold free-form JSON, such as a
+    /// configuration value or a tool's output. All are retyped to
+    /// <c>JsonElement</c>: reading the branch the caller actually has is their
+    /// decision, and losing the other branches' fields silently is not an
+    /// option.
     /// </para>
     /// </remarks>
     public static IReadOnlyCollection<string> ReadUnions(string yaml)
@@ -128,7 +130,7 @@ internal static partial class LocalizedProperties
                 {
                     properties.Add(Join(path));
                 }
-                else if (unions && IsObjectUnion(lines, i))
+                else if (unions && (IsObjectUnion(lines, i) || IsArrayUnion(lines, i)))
                 {
                     properties.Add(Join(path));
                 }
@@ -303,6 +305,68 @@ internal static partial class LocalizedProperties
         }
 
         return refs >= 2;
+    }
+
+    /// <summary>
+    /// Decides whether the property at <paramref name="start"/> is a union with
+    /// an array among its branches.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// NSwag types such a union as its first branch, which for the
+    /// configuration service's <c>value</c> was <c>object</c>. A
+    /// source-generated context writes an <c>object</c> only when the runtime
+    /// type inside it is registered, and an object or an array never is:
+    /// creating a configuration with either threw <c>NotSupportedException</c>
+    /// before a request was sent.
+    /// </para>
+    /// <para>
+    /// An array branch also rules out a localized value, which is a string or a
+    /// map and never a list. A union of a string and a bare object stays out of
+    /// this rule for that reason: price and category declare localized fields
+    /// that way, without saying what the map holds.
+    /// </para>
+    /// </remarks>
+    private static bool IsArrayUnion(string[] lines, int start)
+    {
+        int indent = Indent(lines[start]);
+        bool union = false;
+
+        for (int i = start + 1; i < lines.Length; i++)
+        {
+            string line = lines[i].TrimEnd('\r');
+
+            if (line.Length == 0)
+            {
+                continue;
+            }
+
+            int depth = Indent(line);
+
+            if (depth <= indent)
+            {
+                break;
+            }
+
+            string trimmed = line.TrimStart();
+
+            // Only the property's own oneOf, which may follow its description.
+            if (depth == indent + 2)
+            {
+                union = trimmed.StartsWith("oneOf:", StringComparison.Ordinal);
+                continue;
+            }
+
+            // A branch's own type, not an array somewhere inside a branch.
+            if (union
+                && ((depth == indent + 4 && trimmed == "- type: array")
+                    || (depth == indent + 6 && trimmed == "type: array")))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int Indent(string line)

@@ -3106,7 +3106,7 @@ namespace Viu.Emporix.AiServiceModels
         /// Tool output as a JSON object or array.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("output")]
-        public object Output { get; set; } = default!;
+        public System.Text.Json.JsonElement? Output { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

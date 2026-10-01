@@ -12,9 +12,9 @@ namespace Viu.Emporix;
 /// storefront and a back office can disagree about the same property.
 /// </para>
 /// <para>
-/// A value is arbitrary JSON, so it is read and written as
-/// <see cref="System.Text.Json.JsonElement"/> — there is no schema here to
-/// generate a type from.
+/// A value may be an object, a string, an array of objects or a boolean, so it
+/// is read and written as <see cref="System.Text.Json.JsonElement"/> — no
+/// generated type can hold all four.
 /// </para>
 /// </remarks>
 public sealed class ConfigurationService
