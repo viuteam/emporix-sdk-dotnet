@@ -84,14 +84,14 @@ public sealed class SiteService
             SiteJsonContext.Default.ListSiteDto,
             cancellationToken).ConfigureAwait(false) ?? [];
 
-    /// <summary>Lists the sites in short form.</summary>
+    /// <summary>Lists the site codes.</summary>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
-    /// Codes and names only. What a site switcher needs, without pulling every
-    /// site's whole configuration.
+    /// The codes alone, without pulling every site's whole configuration;
+    /// <see cref="GetAsync"/> reads one site in full.
     /// </remarks>
-    public async Task<IReadOnlyList<SiteSettingsServiceModels.SiteDto>> ListShortAsync(
+    public async Task<IReadOnlyList<string>> ListShortAsync(
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
         => await _http.SendAsync(
@@ -101,7 +101,7 @@ public sealed class SiteService
                 Path = $"/site/{_tenant}/siteslist",
                 Auth = Defaults.Anonymous(auth),
             },
-            SiteJsonContext.Default.ListSiteDto,
+            SiteJsonContext.Default.ListString,
             cancellationToken).ConfigureAwait(false) ?? [];
 
     /// <summary>Creates a site.</summary>

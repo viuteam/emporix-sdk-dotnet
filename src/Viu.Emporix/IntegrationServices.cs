@@ -29,7 +29,7 @@ public sealed class WebhookService
     /// <summary>Lists the webhook configurations.</summary>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<WebhookModels.ConfigurationGet>> ListAsync(
+    public async Task<IReadOnlyList<WebhookModels.WebhookConfigListItem>> ListAsync(
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
         => await _http.SendAsync(
@@ -39,14 +39,14 @@ public sealed class WebhookService
                 Path = BasePath,
                 Auth = Defaults.Service(auth),
             },
-            WebhookJsonContext.Default.ListConfigurationGet,
+            WebhookJsonContext.Default.ListWebhookConfigListItem,
             cancellationToken).ConfigureAwait(false) ?? [];
 
     /// <summary>Fetches a webhook configuration.</summary>
     /// <param name="code">The configuration code.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<WebhookModels.ConfigurationGet?> GetAsync(
+    public async Task<WebhookModels.WebhookConfig?> GetAsync(
         string code,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -60,7 +60,7 @@ public sealed class WebhookService
                 Path = $"{BasePath}/{Uri.EscapeDataString(code)}",
                 Auth = Defaults.Service(auth),
             },
-            WebhookJsonContext.Default.ConfigurationGet,
+            WebhookJsonContext.Default.WebhookConfig,
             cancellationToken).ConfigureAwait(false);
     }
 

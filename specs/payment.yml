@@ -203,7 +203,11 @@ paths:
         - Payment mode - frontend
       responses:
         '200':
-          $ref: '#/components/responses/paymentModesStorefrontResponse'
+          description: The payment mode, with its publicly available properties.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paymentModeFrontendResponse'
         '401':
           $ref: '#/components/responses/common_response_Unauthorized_401'
         '404':
