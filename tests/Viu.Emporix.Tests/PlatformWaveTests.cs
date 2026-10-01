@@ -225,8 +225,8 @@ public class PlatformWaveTests
     [Fact]
     public async Task The_short_site_list_is_its_own_endpoint()
     {
-        // Codes and names only. Fetching the full list to render a switcher
-        // pulls every site's whole configuration.
+        // The codes alone. Fetching the full list to render a switcher pulls
+        // every site's whole configuration.
         StubHttpMessageHandler full = new(HttpStatusCode.OK, "[]");
         StubHttpMessageHandler brief = new(HttpStatusCode.OK, "[]");
 

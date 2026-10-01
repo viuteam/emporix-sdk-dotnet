@@ -777,7 +777,7 @@ public sealed class CustomInstanceOperations
     /// <param name="instances">The records.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public Task<IReadOnlyList<BulkResponse>> CreateManyAsync(
+    public Task<IReadOnlyList<BulkResponseEntry>> CreateManyAsync(
         System.Text.Json.JsonElement instances,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -787,7 +787,7 @@ public sealed class CustomInstanceOperations
     /// <param name="instances">The records in their new state.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public Task<IReadOnlyList<BulkResponse>> ReplaceManyAsync(
+    public Task<IReadOnlyList<BulkResponseEntry>> ReplaceManyAsync(
         System.Text.Json.JsonElement instances,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -797,7 +797,7 @@ public sealed class CustomInstanceOperations
     /// <param name="request">Which instances, and what to change.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<BulkResponse>> UpdateManyAsync(
+    public async Task<IReadOnlyList<BulkResponseEntry>> UpdateManyAsync(
         BulkPatchCustomInstanceRequest request,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -814,7 +814,7 @@ public sealed class CustomInstanceOperations
                     request,
                     SchemaJsonContext.Default.BulkPatchCustomInstanceRequest),
             },
-            SchemaJsonContext.Default.ListBulkResponse,
+            SchemaJsonContext.Default.BulkResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 
@@ -822,13 +822,13 @@ public sealed class CustomInstanceOperations
     /// <param name="instances">Which instances to delete.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public Task<IReadOnlyList<BulkResponse>> DeleteManyAsync(
+    public Task<IReadOnlyList<BulkResponseEntry>> DeleteManyAsync(
         System.Text.Json.JsonElement instances,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
         => BulkAsync(HttpMethod.Delete, instances, auth, cancellationToken);
 
-    private async Task<IReadOnlyList<BulkResponse>> BulkAsync(
+    private async Task<IReadOnlyList<BulkResponseEntry>> BulkAsync(
         HttpMethod method,
         System.Text.Json.JsonElement instances,
         AuthContext auth,
@@ -841,6 +841,6 @@ public sealed class CustomInstanceOperations
                 Auth = Defaults.Service(auth),
                 Content = EmporixJsonContent.Create(instances, SchemaJsonContext.Default.JsonElement),
             },
-            SchemaJsonContext.Default.ListBulkResponse,
+            SchemaJsonContext.Default.BulkResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
 }

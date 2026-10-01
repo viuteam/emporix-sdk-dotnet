@@ -591,7 +591,7 @@ public sealed class CategoryAssignmentOperations
     /// <param name="assignments">What to assign.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<BulkAssignmentResponse>> CreateManyAsync(
+    public async Task<IReadOnlyList<BulkAssignmentResult>> CreateManyAsync(
         string categoryId,
         BulkAssignmentRequest assignments,
         AuthContext auth = default,
@@ -610,7 +610,7 @@ public sealed class CategoryAssignmentOperations
                     assignments,
                     CategoryJsonContext.Default.BulkAssignmentRequest),
             },
-            CategoryJsonContext.Default.ListBulkAssignmentResponse,
+            CategoryJsonContext.Default.BulkAssignmentResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 
@@ -700,7 +700,7 @@ public sealed class CategoryAssignmentOperations
     /// <param name="assignments">What to assign.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<BulkAssignmentResponse>> BulkUpsertByReferenceAsync(
+    public async Task<IReadOnlyList<BulkAssignmentResult>> BulkUpsertByReferenceAsync(
         string categoryId,
         BulkAssignmentUpsertRequest assignments,
         AuthContext auth = default,
@@ -719,7 +719,7 @@ public sealed class CategoryAssignmentOperations
                     assignments,
                     CategoryJsonContext.Default.BulkAssignmentUpsertRequest),
             },
-            CategoryJsonContext.Default.ListBulkAssignmentResponse,
+            CategoryJsonContext.Default.BulkAssignmentResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 

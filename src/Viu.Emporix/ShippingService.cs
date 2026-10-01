@@ -188,15 +188,18 @@ public sealed class ShippingService
             cancellationToken);
     }
 
-    /// <summary>Generates the concrete delivery windows from a cycle.</summary>
-    /// <param name="cycle">The recurring pattern to expand.</param>
+    /// <summary>Generates a delivery cycle for one slot of a delivery time on one date.</summary>
+    /// <param name="cycle">The delivery time, the slot within it, and the delivery date.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>
+    /// The string Emporix answers with. The specification says no more than
+    /// that; the Node SDK reads it as the new cycle's id.
+    /// </returns>
     /// <remarks>
-    /// Administrative: turns «every Tuesday» into dated windows a shopper can
-    /// pick. Not repeatable — running it twice generates the windows twice.
+    /// Not repeatable: a retried call could generate a second cycle.
     /// </remarks>
-    public async Task<IReadOnlyList<ActualDeliveryWindow>> GenerateDeliveryCyclesAsync(
+    public async Task<string?> GenerateDeliveryCyclesAsync(
         DeliveryCycle cycle,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -213,8 +216,8 @@ public sealed class ShippingService
                     cycle,
                     ShippingJsonContext.Default.DeliveryCycle),
             },
-            ShippingJsonContext.Default.ListActualDeliveryWindow,
-            cancellationToken).ConfigureAwait(false) ?? [];
+            ShippingJsonContext.Default.String,
+            cancellationToken).ConfigureAwait(false);
     }
 
     internal static List<KeyValuePair<string, string?>> Paging(int pageNumber, int pageSize) =>
@@ -998,10 +1001,6 @@ public sealed class ShippingDeliveryTimeOperations
     /// <param name="deliveryTime">The new state.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <remarks>
-    /// Windows already generated from this pattern are not regenerated — run
-    /// <see cref="ShippingService.GenerateDeliveryCyclesAsync"/> for that.
-    /// </remarks>
     public Task ReplaceAsync(
         string deliveryTimeId,
         UpdateDeliveryTime deliveryTime,

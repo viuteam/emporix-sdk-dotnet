@@ -76,10 +76,10 @@ public sealed class ConfigurationService
             ConfigurationJsonContext.Default.ListBaseConfiguration,
             cancellationToken).ConfigureAwait(false) ?? [];
 
-    /// <summary>Lists the clients that have their own configuration.</summary>
+    /// <summary>Lists the names of the clients that have their own configuration.</summary>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<ConfigurationModels.ClientConfiguration>> ListClientsAsync(
+    public async Task<IReadOnlyList<string>> ListClientsAsync(
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
         => await _http.SendAsync(
@@ -89,7 +89,7 @@ public sealed class ConfigurationService
                 Path = $"/configuration/{_tenant}/clients",
                 Auth = Defaults.Service(auth),
             },
-            ConfigurationJsonContext.Default.ListClientConfiguration,
+            ConfigurationJsonContext.Default.ListString,
             cancellationToken).ConfigureAwait(false) ?? [];
 
     /// <summary>Reads one tenant property.</summary>
