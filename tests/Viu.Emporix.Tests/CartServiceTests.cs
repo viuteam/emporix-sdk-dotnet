@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Viu.Emporix.CartModels;
 
@@ -406,6 +407,140 @@ public class CartServiceTests
 
         Assert.Equal(2, restrictions?.LeadTime);
         Assert.Equal("/cart/acme/carts/c1/dtRestrictions", Uri(handler));
+    }
+
+    // ---------- Command chains: the commands ----------
+
+    /// <summary>One command as it goes over the wire, through the cart context.</summary>
+    private static JsonElement Wire(CartCommand command)
+    {
+        string json = JsonSerializer.Serialize(
+            new CartCommandChain { Commands = [command] },
+            CartJsonContext.Default.CartCommandChain);
+
+        using JsonDocument document = JsonDocument.Parse(json);
+        return document.RootElement.GetProperty("commands")[0].Clone();
+    }
+
+    private static List<string> Names(JsonElement element)
+        => [.. element.EnumerateObject().Select(property => property.Name)];
+
+    [Fact]
+    public void Each_command_factory_names_its_command_type()
+    {
+        (CartCommand Command, string Type)[] cases =
+        [
+            (CartCommand.AddCartItem(new CartItemRequest()), "AddCartItem"),
+            (CartCommand.UpdateCartItem("i1", new UpdateCartItem()), "UpdateCartItem"),
+            (CartCommand.DeleteCartItem("i1"), "DeleteCartItem"),
+            (CartCommand.DeleteCartItems(), "DeleteCartItems"),
+            (CartCommand.GetCart(), "GetCart"),
+            (CartCommand.AddCartItemsBatch([new CartItemRequest()]), "AddCartItemsBatch"),
+            (CartCommand.UpdateCartItemsBatch([new CartItemRequest()]), "UpdateCartItemsBatch"),
+            (CartCommand.UpdateCart(new UpdateCart()), "UpdateCart"),
+            (CartCommand.ApplyCartDiscount(new Discount { Code = "SUMMER" }), "ApplyCartDiscount"),
+            (CartCommand.GetCartDiscounts(), "GetCartDiscounts"),
+            (CartCommand.DeleteCartDiscounts(), "DeleteCartDiscounts"),
+            (CartCommand.DeleteCartDiscount(0), "DeleteCartDiscount"),
+            (CartCommand.RefreshCart(), "RefreshCart"),
+            (CartCommand.ValidateCart(), "ValidateCart"),
+        ];
+
+        foreach ((CartCommand command, string type) in cases)
+        {
+            Assert.Equal(type, Wire(command).GetProperty("type").GetString());
+        }
+    }
+
+    [Fact]
+    public void A_command_body_is_sent_as_the_rest_call_sends_it()
+    {
+        JsonElement add = Wire(CartCommand.AddCartItem(new CartItemRequest
+        {
+            ItemYrn = "urn:yaas:saasag:caasproduct:product:acme;p1",
+            Quantity = 2,
+        }));
+
+        Assert.Equal(
+            "urn:yaas:saasag:caasproduct:product:acme;p1",
+            add.GetProperty("data").GetProperty("itemYrn").GetString());
+        Assert.Equal(2, add.GetProperty("data").GetProperty("quantity").GetDouble());
+
+        // A batch command sends an array, a single-item command an object.
+        JsonElement batch = Wire(CartCommand.AddCartItemsBatch([new CartItemRequest(), new CartItemRequest()]));
+        Assert.Equal(2, batch.GetProperty("data").GetArrayLength());
+
+        JsonElement discount = Wire(CartCommand.ApplyCartDiscount(new Discount { Code = "SUMMER" }));
+        Assert.Equal("SUMMER", discount.GetProperty("data").GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public void A_command_sends_only_the_options_it_was_given()
+    {
+        // The generated options start with partial = false and
+        // expandCalculation = true. Neither may travel unless asked for.
+        Assert.Equal(["itemId"], Names(Wire(CartCommand.DeleteCartItem("i1")).GetProperty("options")));
+
+        JsonElement update = Wire(CartCommand.UpdateCartItem(
+            "i1",
+            new UpdateCartItem { Quantity = 3 },
+            partial: true,
+            resourceVersion: 7)).GetProperty("options");
+
+        Assert.Equal(["itemId", "partial", "resourceVersion"], Names(update));
+        Assert.True(update.GetProperty("partial").GetBoolean());
+        Assert.Equal(7, update.GetProperty("resourceVersion").GetInt32());
+    }
+
+    [Fact]
+    public void A_command_without_options_or_body_sends_neither()
+    {
+        Assert.Equal(["type"], Names(Wire(CartCommand.GetCart())));
+    }
+
+    [Fact]
+    public void Reading_the_cart_takes_zip_and_country_together()
+    {
+        JsonElement options = Wire(CartCommand.GetCart(
+            expandCalculation: false,
+            zipCode: "8001",
+            countryCode: "CH")).GetProperty("options");
+
+        Assert.Equal(["expandCalculation", "zipCode", "countryCode"], Names(options));
+        Assert.False(options.GetProperty("expandCalculation").GetBoolean());
+
+        Assert.Throws<ArgumentException>(() => CartCommand.GetCart(zipCode: "8001"));
+        Assert.Throws<ArgumentException>(() => CartCommand.GetCart(countryCode: "CH"));
+    }
+
+    [Fact]
+    public void Discounts_are_removed_by_code_by_index_or_all_at_once()
+    {
+        Assert.Equal(["type"], Names(Wire(CartCommand.DeleteCartDiscounts())));
+
+        JsonElement codes = Wire(CartCommand.DeleteCartDiscounts(["A", "B"]))
+            .GetProperty("options")
+            .GetProperty("codes");
+        Assert.Equal(["A", "B"], codes.EnumerateArray().Select(code => code.GetString()));
+
+        // An empty filter would read as «remove every discount».
+        Assert.Throws<ArgumentException>(() => CartCommand.DeleteCartDiscounts([]));
+        Assert.Throws<ArgumentException>(() => CartCommand.DeleteCartDiscounts(["A", " "]));
+
+        Assert.Equal(
+            "2",
+            Wire(CartCommand.DeleteCartDiscount(2)).GetProperty("options").GetProperty("discountIndex").GetString());
+        Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.DeleteCartDiscount(-1));
+    }
+
+    [Fact]
+    public void Command_arguments_are_checked_when_the_command_is_built()
+    {
+        Assert.Throws<ArgumentNullException>(() => CartCommand.AddCartItem(null!));
+        Assert.Throws<ArgumentException>(() => CartCommand.DeleteCartItem(" "));
+        Assert.Throws<ArgumentNullException>(() => CartCommand.UpdateCartItem("i1", null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.AddCartItemsBatch([]));
+        Assert.Throws<ArgumentOutOfRangeException>(() => CartCommand.UpdateCartItemsBatch([]));
     }
 }
 

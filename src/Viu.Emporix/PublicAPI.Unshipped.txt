@@ -1,1 +1,23 @@
 #nullable enable
+Viu.Emporix.CartCommand
+Viu.Emporix.CartCommand.CartCommand() -> void
+Viu.Emporix.CartCommand.Data.get -> System.Text.Json.JsonElement?
+Viu.Emporix.CartCommand.Data.init -> void
+Viu.Emporix.CartCommand.Options.get -> Viu.Emporix.CartModels.ExecuteCommandOptions?
+Viu.Emporix.CartCommand.Options.init -> void
+Viu.Emporix.CartCommand.Type.get -> Viu.Emporix.CartModels.ExecuteCommandType
+Viu.Emporix.CartCommand.Type.init -> void
+static Viu.Emporix.CartCommand.AddCartItem(Viu.Emporix.CartModels.CartItemRequest! item, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.AddCartItemsBatch(System.Collections.Generic.IEnumerable<Viu.Emporix.CartModels.CartItemRequest!>! items) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.ApplyCartDiscount(Viu.Emporix.CartModels.Discount! discount, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartDiscount(int discountIndex) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartDiscounts(System.Collections.Generic.IEnumerable<string!>? codes = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartItem(string! itemId) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.DeleteCartItems() -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.GetCart(bool? expandCalculation = null, string? zipCode = null, string? countryCode = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.GetCartDiscounts() -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.RefreshCart() -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.UpdateCart(Viu.Emporix.CartModels.UpdateCart! cart, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.UpdateCartItem(string! itemId, Viu.Emporix.CartModels.UpdateCartItem! changes, bool? partial = null, int? resourceVersion = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.UpdateCartItemsBatch(System.Collections.Generic.IEnumerable<Viu.Emporix.CartModels.CartItemRequest!>! items, bool? partial = null) -> Viu.Emporix.CartCommand!
+static Viu.Emporix.CartCommand.ValidateCart() -> Viu.Emporix.CartCommand!
