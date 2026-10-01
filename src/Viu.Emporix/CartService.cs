@@ -458,7 +458,7 @@ public sealed class CartService
     /// Sent as a <c>POST</c> because the query does not fit in an address, but
     /// declared repeatable — it only reads.
     /// </remarks>
-    public async Task<PaginatedItems<BaseCartItemResponse>> SearchAsync(
+    public async Task<PaginatedItems<CartGetAll>> SearchAsync(
         string query,
         AuthContext auth,
         int pageNumber = 1,
@@ -489,7 +489,7 @@ public sealed class CartService
                     CartJsonContext.Default.Search),
                 Idempotent = true,
             },
-            CartJsonContext.Default.ListBaseCartItemResponse,
+            CartJsonContext.Default.ListCartGetAll,
             pageNumber,
             pageSize,
             cancellationToken).ConfigureAwait(false);

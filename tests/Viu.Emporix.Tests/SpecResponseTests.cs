@@ -170,23 +170,6 @@ public class SpecResponseTests
     /// </remarks>
     private static readonly Dictionary<string, string> KnownMismatches = new(StringComparer.Ordinal)
     {
-        ["GET /quote/{}/quotes/{}/history reads List<List<QuoteModels.QuoteHistoryEntry>>, declared List<QuoteModels.QuoteHistoryEntry>"] = ListOfLists,
-        ["POST /category/{}/categories/{}/assignments/bulk reads List<List<CategoryModels.BulkAssignmentResult>>, declared List<CategoryModels.BulkAssignmentResult>"] = ListOfLists,
-        ["PUT /category/{}/categories/{}/assignments/references/bulk reads List<List<CategoryModels.BulkAssignmentResult>>, declared List<CategoryModels.BulkAssignmentResult>"] = ListOfLists,
-        ["* /schema/{}/custom-entities/{}/instances/bulk reads List<List<SchemaModels.BulkResponseEntry>>, declared List<SchemaModels.BulkResponseEntry>"] = ListOfLists,
-        ["PATCH /schema/{}/custom-entities/{}/instances/bulk reads List<List<SchemaModels.BulkResponseEntry>>, declared List<SchemaModels.BulkResponseEntry>"] = ListOfLists,
-        ["GET /configuration/{}/clients reads List<ConfigurationModels.ClientConfiguration>, declared List<string>"] =
-            "The answer is a list of client names, by schema and example, so any non-empty answer throws.",
-        ["GET /site/{}/siteslist reads List<SiteSettingsServiceModels.SiteDto>, declared List<string>"] =
-            "The answer is a list of site codes, by schema and example, so any non-empty answer throws.",
-        ["POST /shipping/{}/delivery-cycles/generate reads List<ShippingModels.ActualDeliveryWindow>, declared string"] =
-            "The answer is the new cycle's id as a string, by the specification and the Node SDK, so every answer throws.",
-        ["POST /cart/{}/carts/search reads List<CartModels.BaseCartItemResponse>, declared List<CartModels.CartGetAll>"] =
-            "The search answers carts and the facade reads cart items: a field both have, such as id, survives, "
-            + "everything else lands in AdditionalProperties. The Node SDK reads CartGetAll.",
-        ["GET /webhook/{}/config reads List<WebhookModels.ConfigurationGet>, declared List<WebhookModels.WebhookConfigListItem>"] = InnerConfiguration,
-        ["GET /webhook/{}/config/{} reads WebhookModels.ConfigurationGet, declared WebhookModels.WebhookConfig"] = InnerConfiguration,
-
         ["POST /price/{}/prices/search reads List<PriceModels.GetPrice>, declared List<PriceModels.ItemPrices>"] =
             "The answer groups prices per item, [{ itemId, prices }], by schema and example; itemId arrives as a "
             + "string where GetPrice expects an object, so a non-empty answer throws. The Node SDK assumes what "
@@ -236,14 +219,6 @@ public class SpecResponseTests
             + "with none against tenant viu on 2026-09-10. Replacing a file and changing a link return null too, "
             + "unless the API answers more than its specification says.",
     };
-
-    private const string ListOfLists =
-        "Reads a list of the generated collection — an array of arrays — where the API answers one flat array, "
-        + "so any non-empty answer throws.";
-
-    private const string InnerConfiguration =
-        "ConfigurationGet is the inner configuration field, and an empty class because it is a oneOf: everything "
-        + "the API answers lands in AdditionalProperties. The Node SDK reads the wrapper.";
 
     private const string FeeIdsByDefault =
         "Full fees come only with expand=true; by default the answer is their ids, and the facade sends no "

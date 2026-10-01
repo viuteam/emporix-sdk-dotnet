@@ -229,7 +229,7 @@ public sealed class QuoteService
     /// <remarks>
     /// Who changed what, and when — the record a negotiation leaves behind.
     /// </remarks>
-    public async Task<IReadOnlyList<QuoteHistory>> GetHistoryAsync(
+    public async Task<IReadOnlyList<QuoteHistoryEntry>> GetHistoryAsync(
         string quoteId,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
@@ -243,7 +243,10 @@ public sealed class QuoteService
                 Path = $"{BasePath}/{Uri.EscapeDataString(quoteId)}/history",
                 Auth = Defaults.Service(auth),
             },
-            QuoteJsonContext.Default.ListQuoteHistory,
+            // QuoteHistory is the list itself: the generator turns the array
+            // schema into a collection class. A list of them read an array of
+            // arrays and threw on the first entry of any history.
+            QuoteJsonContext.Default.QuoteHistory,
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 

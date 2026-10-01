@@ -122,7 +122,7 @@ public sealed class CartCreated
 [JsonSerializable(typeof(Viu.Emporix.CartModels.Discount))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.UpdateCart))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.Search))]
-[JsonSerializable(typeof(List<Viu.Emporix.CartModels.BaseCartItemResponse>))]
+[JsonSerializable(typeof(List<Viu.Emporix.CartModels.CartGetAll>))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.CartItemsBatchRequest))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.CartItemsBatchUpdateRequest))]
 [JsonSerializable(typeof(Viu.Emporix.CartModels.BatchResponse))]
@@ -157,7 +157,7 @@ internal sealed partial class CartJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.CategoryUpdateRequest))]
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentRequest))]
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentUpsertRequest))]
-[JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.BulkAssignmentResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentResponse))]
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.AssignmentRequest))]
 internal sealed partial class CategoryJsonContext : JsonSerializerContext;
 
@@ -407,6 +407,7 @@ internal sealed partial class PaymentJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.ShippingModels.FindSiteRequest))]
 [JsonSerializable(typeof(Viu.Emporix.ShippingModels.ActualDeliveryWindow))]
 [JsonSerializable(typeof(List<Viu.Emporix.ShippingModels.ActualDeliveryWindow>))]
+[JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(Viu.Emporix.ShippingModels.DeliveryWindowValidationDto))]
 [JsonSerializable(typeof(Viu.Emporix.ShippingModels.DeliveryCycle))]
 [JsonSerializable(typeof(Viu.Emporix.ShippingModels.Zone))]
@@ -468,7 +469,6 @@ internal sealed partial class LegalEntityJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteUpdateStatus))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteIdResponse))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteHistory))]
-[JsonSerializable(typeof(List<Viu.Emporix.QuoteModels.QuoteHistory>))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteReasonResponse))]
 [JsonSerializable(typeof(List<Viu.Emporix.QuoteModels.QuoteReasonResponse>))]
 [JsonSerializable(typeof(Viu.Emporix.QuoteModels.QuoteReasonCreateRequest))]
@@ -547,6 +547,7 @@ internal sealed partial class CustomerAdminJsonContext : JsonSerializerContext;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Viu.Emporix.SiteSettingsServiceModels.SiteDto))]
 [JsonSerializable(typeof(List<Viu.Emporix.SiteSettingsServiceModels.SiteDto>))]
+[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(Viu.Emporix.SiteSettingsServiceModels.ResourceLocation))]
 [JsonSerializable(typeof(System.Text.Json.JsonElement))]
 internal sealed partial class SiteJsonContext : JsonSerializerContext;
@@ -638,7 +639,7 @@ internal sealed partial class IamJsonContext : JsonSerializerContext;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Viu.Emporix.ConfigurationModels.BaseConfiguration))]
 [JsonSerializable(typeof(List<Viu.Emporix.ConfigurationModels.BaseConfiguration>))]
-[JsonSerializable(typeof(List<Viu.Emporix.ConfigurationModels.ClientConfiguration>))]
+[JsonSerializable(typeof(List<string>))]
 internal sealed partial class ConfigurationJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the session context. See <see cref="ProductJsonContext"/>.</summary>
@@ -655,8 +656,8 @@ internal sealed partial class SessionContextJsonContext : JsonSerializerContext;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-[JsonSerializable(typeof(Viu.Emporix.WebhookModels.ConfigurationGet))]
-[JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.ConfigurationGet>))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookConfig))]
+[JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.WebhookConfigListItem>))]
 [JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookConfigCreation))]
 [JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookConfigUpdate))]
 [JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.WebhookConfigPartialUpdate>))]
@@ -709,7 +710,7 @@ internal sealed partial class SequentialIdJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.SchemaModels.CustomSchemaTypeCreation))]
 [JsonSerializable(typeof(Viu.Emporix.SchemaModels.CustomSchemaTypeUpdate))]
 [JsonSerializable(typeof(Viu.Emporix.SchemaModels.BulkPatchCustomInstanceRequest))]
-[JsonSerializable(typeof(List<Viu.Emporix.SchemaModels.BulkResponse>))]
+[JsonSerializable(typeof(Viu.Emporix.SchemaModels.BulkResponse))]
 [JsonSerializable(typeof(List<Viu.Emporix.SchemaModels.PatchOperation>))]
 [JsonSerializable(typeof(Viu.Emporix.SchemaModels.ExportImportRequest))]
 [JsonSerializable(typeof(Viu.Emporix.SchemaModels.ExportImportResponse))]
