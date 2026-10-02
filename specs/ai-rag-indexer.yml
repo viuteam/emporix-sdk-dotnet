@@ -35,7 +35,7 @@ paths:
       description: |-
         Triggers a full reindexing process for the selected entity type. The process retrieves all entities of the given type, generates embeddings for each of them, and updates the corresponding records in the Vector Database.
 
-        This endpoint is marked as deprecated. Use the [Creating reindex job](https://developer.emporix.io/api-references/api-guides/configuration/indexing-service/api-reference/reindex#post-indexing-tenant-reindex-jobs) endpoint instead.
+        This endpoint is marked as deprecated. Use the [Creating reindex job](https://developer.emporix.io/api-documentation/api-guides/configuration/indexing-service/api-reference/reindex#post-indexing-tenant-reindex-jobs) endpoint instead.
       security:
         - OAuth2:
             - ai.agent_manage

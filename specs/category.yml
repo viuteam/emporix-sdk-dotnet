@@ -503,7 +503,7 @@ paths:
           description:  |
             A standard query parameter is used to search for specific values. 
 
-            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+            See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
           schema:
             type: string
         - name: Accept-Language
@@ -1099,7 +1099,7 @@ paths:
       description: |
         Retrieves a specified category and its details using the category ID.
 
-        **Note**: If you want to retrieve the category details using the `code`, you can do this by using the [GET endpoint for retrieving a list of categories](/openapi/category/#operation/categories) with the `code` query parameter.
+        **Note**: If you want to retrieve the category details using the `code`, you can do this by using the [Retrieving a list of categories](https://developer.emporix.io/api-documentation/api-guides/catalogs-and-categories/category-tree/api-reference/category-resources#get-category-tenant-categories) endpoint with the `code` query parameter.
         ***
 
         ### Additional scope info
@@ -4075,7 +4075,7 @@ components:
           description:  |
             A standard query parameter is used to search for specific values. 
 
-            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+            See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
     CategoryTreeSearchRequest:
       required:
         - categoryIds

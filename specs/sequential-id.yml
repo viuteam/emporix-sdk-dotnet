@@ -91,8 +91,8 @@ paths:
         * `__country__` — based on `homeBase.address.country`. Default country is `DE`.
 
         Custom placeholders must declare `sitePath`.
-        Paths that start with `mixins.` are resolved from [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) and are format-validated only at creation.
-        Other paths are resolved from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode) and must match the Site schema, for example `homeBase.address.country`. Paths that target `metadata` or the bare `mixins` root are rejected.
+        Paths that start with `mixins.` are resolved from [Retrieving site mixins](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) and are format-validated only at creation.
+        Other paths are resolved from [Retrieving a site](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode) and must match the Site schema, for example `homeBase.address.country`. Paths that target `metadata` or the bare `mixins` root are rejected.
 
         For array values, `arrayLimit` (default `3`) and `delimiter` (default `-`) control how elements are joined. Both are ignored for scalar values. Resolved values longer than 100 characters are truncated.
         To access array elements, use the `sitePath` with the index, for example `mixins.customConfig.regions.2` or `mixins.customConfig.regions.2.name`. Array index starts at `0`.
@@ -343,7 +343,7 @@ paths:
         When `siteCode` is provided and a placeholder value is missing from the request body, Sequential ID resolves it from site data:
         * Built-in placeholders `__year__`, `__month__`, `__day__`, `__hour__`, `__minute__`, `__second__` use `homeBase.timezone`. Default timezone is `UTC`.
         * Built-in `__country__` uses `homeBase.address.country` from site data.
-        * Custom placeholders with `sitePath` are resolved from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode), or from [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) when the path starts with `mixins.`.
+        * Custom placeholders with `sitePath` are resolved from [Retrieving a site](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode), or from [Retrieving site mixins](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) when the path starts with `mixins.`.
 
         Values supplied in the request body take precedence over site resolution.
         Arrays of scalars are joined using `delimiter` (default `-`), limited to `arrayLimit` elements (default `3`).
@@ -410,7 +410,7 @@ paths:
         When `siteCode` is provided and a placeholder value is missing from the request body, Sequential ID resolves it from site data:
         * Built-in placeholders `__year__`, `__month__`, `__day__`, `__hour__`, `__minute__`, `__second__` use `homeBase.timezone`. Default timezone is `UTC`.
         * Built-in `__country__` uses `homeBase.address.country` from site data.
-        * Custom placeholders with `sitePath` are resolved from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode), or from [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) when the path starts with `mixins.`.
+        * Custom placeholders with `sitePath` are resolved from [Retrieving a site](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode), or from [Retrieving site mixins](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins) when the path starts with `mixins.`.
 
         Values supplied in the request body take precedence over site resolution.
         Arrays of scalars are joined using `delimiter` (default `-`), limited to `arrayLimit` elements (default `3`).
@@ -719,7 +719,7 @@ components:
       in: query
       required: false
       description: |
-        Site code used to resolve placeholders from [Retrieving a site](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode) and [Retrieving site mixins](https://developer.emporix.io/api-references/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins).
+        Site code used to resolve placeholders from [Retrieving a site](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/site-settings#get-site-tenant-sites-sitecode) and [Retrieving site mixins](https://developer.emporix.io/api-documentation/api-guides/configuration/site-settings-service/api-reference/mixins#get-site-tenant-sites-sitecode-mixins).
 
         Placeholders such as **  year__**, **  month__**, **  day__**, **  hour__**, **  minute__**, **  second__**, and **  country__**, 
         which are defined in the schema, can have default values computed when their counterparts are missing in the request body.

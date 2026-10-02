@@ -7,10 +7,6 @@ info:
     streams; each stream extracts from a source connection, maps fields to an Emporix target type, and
     upserts idempotently. Imports run asynchronously and stream per-stream progress over Server-Sent Events.
 
-    {% hint style="danger" %}
-    This functionality is in preview mode - some of the features may not be fully operational yet.
-    {% endhint %}
-
     This reference covers the operational surface available with the `importtool.import_trigger` scope:
     triggering, scheduling, monitoring, and cancelling import runs, reading configurations, streams,
     schedules, runs, and imported data, and reading the import analytics that summarise them.
@@ -44,12 +40,6 @@ paths:
     get:
       summary: Retrieving all import configurations
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves all import configurations defined for the tenant.
 
       operationId: GET-importtool-list-configs
@@ -83,12 +73,6 @@ paths:
     get:
       summary: Retrieving an import configuration
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves a single import configuration by its identifier.
 
       operationId: GET-importtool-get-config
@@ -122,12 +106,6 @@ paths:
     get:
       summary: Retrieving all streams of a configuration
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the streams belonging to a configuration, ordered by sequence.
 
       operationId: GET-importtool-list-streams
@@ -161,12 +139,6 @@ paths:
     get:
       summary: Retrieving a stream
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves a single stream by its identifier, including its resolved target types.
 
       operationId: GET-importtool-get-stream
@@ -200,12 +172,6 @@ paths:
     get:
       summary: Retrieving a schedule
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the cron schedule for a configuration.
 
       operationId: GET-importtool-get-schedule
@@ -235,12 +201,6 @@ paths:
     put:
       summary: Scheduling an import job
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Creates or updates the cron schedule (cron expression, time zone, and enabled flag) that runs a configuration automatically.
 
       operationId: PUT-importtool-schedule-job
@@ -290,12 +250,6 @@ paths:
     delete:
       summary: Removing a schedule
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Removes the schedule. The configuration then runs only when it is triggered.
 
         The request is idempotent. Removing a schedule that does not exist also returns `204`.
@@ -323,12 +277,6 @@ paths:
     get:
       summary: Retrieving the stream run order
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the order in which the configuration's streams run, and the dependencies behind that order.
 
         Dependencies between streams decide the order. Sequence breaks ties.
@@ -398,12 +346,6 @@ paths:
     post:
       summary: Triggering an import run
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Starts an import run for the configuration and returns immediately with the run in a running state;
         progress is streamed over Server-Sent Events. At most one run is active per configuration.
 
@@ -572,12 +514,6 @@ paths:
     get:
       summary: Retrieving run history
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the run history for a configuration, most recent first.
 
       operationId: GET-importtool-list-runs
@@ -612,12 +548,6 @@ paths:
     get:
       summary: Retrieving a run
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves a run's status together with its per-stream progress.
 
       operationId: GET-importtool-get-run
@@ -651,12 +581,6 @@ paths:
     get:
       summary: Streaming run progress
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Streams a run's progress as Server-Sent Events: an initial `snapshot` (run and streams), then a
         `stream` event per processed batch, and a final `run` event when the run finishes.
       operationId: GET-importtool-stream-run-events
@@ -694,12 +618,6 @@ paths:
     post:
       summary: Cancelling a run
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Requests cancellation of an active run. By default the cancellation is cooperative; with
         `force=true` the run is stopped immediately and its configuration is unblocked.
       operationId: POST-importtool-cancel-run
@@ -742,12 +660,6 @@ paths:
     get:
       summary: Retrieving run errors
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the errors recorded during a run, paginated.
 
       operationId: GET-importtool-list-run-errors
@@ -782,12 +694,6 @@ paths:
     get:
       summary: Retrieving run diagnostics
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the source rows represented by a run's feed-quality counters.
 
         A run reports how many source rows repeated a natural key (`duplicateKeys`) and how many child
@@ -839,12 +745,6 @@ paths:
     get:
       summary: Downloading run diagnostics as CSV
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Returns the same rows as a CSV attachment, for opening in a spreadsheet or attaching to a ticket.
 
         Comment lines above the header indicate whether the `limit` parameter restricted the response or
@@ -901,12 +801,6 @@ paths:
     get:
       summary: Retrieving imported data types
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the distinct target types that currently hold imported records.
 
       operationId: GET-importtool-list-data-types
@@ -940,12 +834,6 @@ paths:
     get:
       summary: Searching imported records
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Searches imported records of a given type with an optional `search` filter on the natural key, paginated.
 
       operationId: GET-importtool-search-data-records
@@ -1008,12 +896,6 @@ paths:
     get:
       summary: Searching a stream's imported records
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Searches the imported records produced by a specific stream with an optional `search` filter on the natural key, paginated.
 
       operationId: GET-importtool-search-stream-records
@@ -1068,12 +950,6 @@ paths:
     get:
       summary: Retrieving import statistics
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves aggregated import metrics for a time window: headline counters and rates, a time series
         bucketed by day, week, or month, per-stream health, the top failing streams, an error breakdown,
         and how many streams were added or removed.
@@ -1183,12 +1059,6 @@ paths:
     get:
       summary: Retrieving job groups
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the tenant's job groups. A job group is a named set of import configurations, used to
         scope the analytics to the imports that matter to you. Groups are stored per tenant and shared by
         everyone working on it.
@@ -1224,12 +1094,6 @@ paths:
     get:
       summary: Retrieving the tenant's health thresholds
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the tenant-wide thresholds that decide whether a stream is reported as `GREEN`, `AMBER`,
         or `RED` in the import statistics, together with the built-in defaults they fall back to.
 
@@ -1266,12 +1130,6 @@ paths:
     get:
       summary: Retrieving import limits
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves the tenant's import limits. If an import exceeds `maxRecordsPerEntity`, excess records
         are skipped and the run finishes with the `PARTIAL` status. If `maxConcurrentImports` runs are
         already active, additional run requests are rejected with a `429 Too Many Requests` response.
@@ -1306,12 +1164,6 @@ paths:
     post:
       summary: Retrying the failed records of a run
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/e_upscale/v1752824268/emporix/icons/preview_api1.png" alt="" width="60" height="20"></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Starts a new run that reprocesses only the records that failed in the given run, instead of the
         whole source. The new run is returned immediately and reports its own progress; the original run is
         left untouched and keeps its counters.

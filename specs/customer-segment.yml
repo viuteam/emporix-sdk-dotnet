@@ -1441,7 +1441,7 @@ components:
           description: |
             A standard query parameter is used to search for specific values. 
 
-            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param/)
+            See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
     SegmentUpdate:
       allOf:
         - $ref: '#/components/schemas/CommonSegment'
@@ -1910,7 +1910,7 @@ components:
       description:  |
         A standard query parameter is used to search for specific values. 
 
-        See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+        See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
       schema:
         type: string
     pageSize:
@@ -2362,7 +2362,7 @@ components:
     CustomerAccessToken:
       type: http
       scheme: bearer
-      description: 'To generate a customer access token, go to the [Logging in a customer](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login) endpoint.'
+      description: 'To generate a customer access token, go to the [Logging in a customer](https://developer.emporix.io/api-documentation/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login) endpoint.'
   links: {}
   callbacks: {}
 security:
