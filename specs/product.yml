@@ -1012,7 +1012,7 @@ paths:
 
         This endpoint does not accept JSON Patch operations (`op`, `path`, `value`).
 
-        To remove a mixin, retrieve the product and send a full replacement using [Upserting a product](https://developer.emporix.io/api-references/api-guides/products-labels-and-brands/product-service/api-reference/products#put-product-tenant-products-productid) with `partial=false`. Omit the mixin from `mixins` and `metadata.mixins`.
+        To remove a mixin, retrieve the product and send a full replacement using [Upserting a product](https://developer.emporix.io/api-documentation/api-guides/products-labels-and-brands/product-service/api-reference/products#put-product-tenant-products-productid) with `partial=false`. Omit the mixin from `mixins` and `metadata.mixins`.
         ***
 
         **Additional scope information**
@@ -3561,7 +3561,7 @@ components:
           description:  |
             A standard query parameter is used to search for specific values. 
 
-            See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+            See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
     searchQuery:
       type: object
       additionalProperties: false
@@ -3713,7 +3713,7 @@ components:
       description:  |
         A standard query parameter is used to search for specific values. 
 
-        See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param)
+        See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
       schema:
         type: string
         example: 'name:{productName}'

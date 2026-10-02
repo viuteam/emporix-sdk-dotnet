@@ -322,7 +322,7 @@ namespace Viu.Emporix.CheckoutModels
 
         /// <summary>
         /// Payment provider, possible values: 
-        /// <br/>  * `payment-gateway` - When the Emporix Payment-Gateway service should be used to handle a payment. For details about custom attributes that are required for a particular payment mode, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments. 
+        /// <br/>  * `payment-gateway` - When the Emporix Payment-Gateway service is used to handle a payment. For details about custom attributes that are required for a particular payment mode, check https://developer.emporix.io/api-documentation/api-guides/checkout/payment-gateway. 
         /// <br/>  * `custom` - When a custom provider is used. In this case the created order has the `IN_CHECKOUT` status.
         /// <br/>  * `none` - For payment by cash or invoice.
         /// <br/>
@@ -596,13 +596,13 @@ namespace Viu.Emporix.CheckoutModels
     {
 
         /// <summary>
-        /// Payment token used for the tokenized credit card flows. The field is used when provider type is `payment-gateway`. For more details, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments
+        /// Payment token used for the tokenized credit card flows. The field is used when provider type is `payment-gateway`. For more details, check https://developer.emporix.io/api-documentation/api-guides/checkout/payment-gateway
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("token")]
         public string? Token { get; set; } = default!;
 
         /// <summary>
-        /// Identifier of a payment mode. The payment mode has to be configured in the Emporix Payment Gateway service beforehand. For more details, check https://developer.emporix.io/user-guides/system-management/payment-gateway/payments
+        /// Identifier of a payment mode. The payment mode has to be configured in the Emporix Payment Gateway service beforehand. For more details, check https://developer.emporix.io/api-documentation/api-guides/checkout/payment-gateway
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("modeId")]
         public string? ModeId { get; set; } = default!;

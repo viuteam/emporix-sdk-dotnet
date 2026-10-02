@@ -57,7 +57,7 @@ namespace Viu.Emporix.CustomerSegmentModels
         /// <summary>
         /// A standard query parameter is used to search for specific values. 
         /// <br/>
-        /// <br/>See: [Standard practises - Query parameter](https://developer.emporix.io/api-references/standard-practices/q-param/)
+        /// <br/>See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("q")]

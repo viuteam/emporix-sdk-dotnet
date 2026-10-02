@@ -332,7 +332,7 @@ paths:
       description: |-
         Triggers indexing process of products for the tenant. The reindex works with a `FULL` mode - all products are reindexed.
 
-        This endpoint is marked as deprecated. Use the [Creating reindex job](https://developer.emporix.io/api-references/api-guides/configuration/indexing-service/api-reference/reindex#post-indexing-tenant-reindex-jobs) endpoint instead.
+        This endpoint is marked as deprecated. Use the [Creating reindex job](https://developer.emporix.io/api-documentation/api-guides/configuration/indexing-service/api-reference/reindex#post-indexing-tenant-reindex-jobs) endpoint instead.
 
         For tenants on `BATTERY_INCLUDED`, the same credential validation runs before the reindex job is started.
       security:
@@ -783,7 +783,7 @@ components:
       description: |
         A standard query parameter is used to search for specific values.
 
-        See: [Standard Practices - Query parameter](https://developer.emporix.io/docs/content/q-param)
+        See: [Standard Practices - Query parameter](https://developer.emporix.io/api-documentation/standard-practices/q-param)
       schema:
         type: string
     pageSize:

@@ -265,7 +265,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        Customer or anonymous access token. Use the token obtained from the storefront session (e.g. [Requesting an anonymous token](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#get-customerlogin-auth-anonymous-login) or [Logging in a customer](https://developer.emporix.io/api-references/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login)).
+        Customer or anonymous access token. Use the token obtained from the storefront session (e.g. [Requesting an anonymous token](https://developer.emporix.io/api-documentation/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#get-customerlogin-auth-anonymous-login) or [Logging in a customer](https://developer.emporix.io/api-documentation/api-guides/companies-and-customers/customer-management/api-reference/authentication-and-authorization#post-customer-tenant-login)).
 
   schemas:
     ContextAttribute:
