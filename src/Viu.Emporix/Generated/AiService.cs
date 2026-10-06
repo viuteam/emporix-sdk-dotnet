@@ -204,9 +204,6 @@ namespace Viu.Emporix.AiServiceModels
     /// <br/>* `rag_custom`
     /// <br/>* `rag_emporix`
     /// <br/>* `teams`
-    /// <br/>
-    /// <br/>  **The `teams` value is in preview mode** - some of the features may not be fully operational yet.
-    /// <br/>  Slack fields `defaultInboundAgentId` and `allowedOperations` are in preview.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<NativeToolType>))]
@@ -642,13 +639,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     /// <summary>
-    /// ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
-    /// <br/>
-    /// <br/>{% hint style="danger" %}
-    /// <br/>This functionality is in preview mode - some of the features may not be fully operational yet.
-    /// <br/>{% endhint %}
-    /// <br/>
-    /// <br/>Slack native tool operation identifier.
+    /// Slack native tool operation identifier.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SlackAllowedOperations>))]
@@ -674,13 +665,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     /// <summary>
-    /// ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
-    /// <br/>
-    /// <br/>{% hint style="danger" %}
-    /// <br/>This functionality is in preview mode - some of the features may not be fully operational yet.
-    /// <br/>{% endhint %}
-    /// <br/>
-    /// <br/>Configuration of a Slack native tool instance. Fields `defaultInboundAgentId` and `allowedOperations` are in preview.
+    /// Configuration of a Slack native tool instance.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class SlackNativeToolConfigResponse
@@ -693,13 +678,13 @@ namespace Viu.Emporix.AiServiceModels
         public string TeamId { get; set; } = default!;
 
         /// <summary>
-        /// Agent ID that handles inbound Slack replies when no conversation-specific routing context exists yet. This field is in preview.
+        /// Agent ID that handles inbound Slack replies when no conversation-specific routing context exists yet.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("defaultInboundAgentId")]
         public string? DefaultInboundAgentId { get; set; } = default!;
 
         /// <summary>
-        /// Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled. This field is in preview.
+        /// Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("allowedOperations")]
         public System.Collections.Generic.ICollection<SlackAllowedOperations>? AllowedOperations { get; set; } = default!;
@@ -805,8 +790,6 @@ namespace Viu.Emporix.AiServiceModels
 
     /// <summary>
     /// Configuration of an MS Teams native tool instance.
-    /// <br/>
-    /// <br/>**The MS Teams native tool configuration is in preview mode** - some of the features may not be fully operational yet.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class TeamsNativeToolConfigResponse
@@ -2128,9 +2111,7 @@ namespace Viu.Emporix.AiServiceModels
         public string Id { get; set; } = default!;
 
         /// <summary>
-        /// Optional per-agent override of allowed native tool operations. When omitted, the tool instance defaults apply. Supported for MS Teams and Slack (preview).
-        /// <br/>
-        /// <br/>**The `allowedOperations` field is in preview mode** - some of the features may not be fully operational yet.
+        /// Optional per-agent override of allowed native tool operations. When omitted, the tool instance defaults apply. Supported for MS Teams and Slack.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("allowedOperations")]
         public System.Collections.Generic.ICollection<TeamsAllowedOperations>? AllowedOperations { get; set; } = default!;

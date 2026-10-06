@@ -39,7 +39,7 @@ tags:
   - name: Tool
     description: Manage Tools
   - name: Conversation
-    description: Manage Agent Conversations (Preview)
+    description: Manage Agent Conversations
 servers:
   - url: https://api.emporix.io
 paths:
@@ -938,12 +938,6 @@ paths:
         '403':
           $ref: '#/components/responses/403_resp_common'
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Retrieves agent conversations based on the provided query.
       security:
         - OAuth2:
@@ -983,12 +977,6 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/QParamSearchBody'
       description: |-
-        <p align="left"><img src="https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png" alt=""></p>
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
         Searches for agent conversations based on the provided query.
       security:
         - OAuth2:
@@ -1144,14 +1132,6 @@ paths:
       description: |-
         Updates or creates a specified tool by replacing all of its existing data with data from the request body.
         If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
-
-        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
-        The `teams` native tool type and its configuration fields are in preview. Slack `config.defaultInboundAgentId` and `config.allowedOperations` are in preview.
       security:
         - OAuth2:
             - ai.agent_manage
@@ -2421,9 +2401,6 @@ components:
         * `rag_custom`
         * `rag_emporix`
         * `teams`
-
-          **The `teams` value is in preview mode** - some of the features may not be fully operational yet.
-          Slack fields `defaultInboundAgentId` and `allowedOperations` are in preview.
     BaseNativeTool:
       type: object
       properties:
@@ -2698,36 +2675,22 @@ components:
         - createChannel
         - inviteParticipants
         - collaborateOnChannel
-      description: |-
-        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
-        Slack native tool operation identifier.
+      description: Slack native tool operation identifier.
     SlackNativeToolConfigResponse:
       type: object
-      description: |-
-        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
-
-        {% hint style="danger" %}
-        This functionality is in preview mode - some of the features may not be fully operational yet.
-        {% endhint %}
-
-        Configuration of a Slack native tool instance. Fields `defaultInboundAgentId` and `allowedOperations` are in preview.
+      description: Configuration of a Slack native tool instance.
       properties:
         teamId:
           type: string
           description: Unique identifier of the Slack workspace (team) associated with the request. Used to distinguish the source Slack environment when handling events or API calls.
         defaultInboundAgentId:
           type: string
-          description: Agent ID that handles inbound Slack replies when no conversation-specific routing context exists yet. This field is in preview.
+          description: Agent ID that handles inbound Slack replies when no conversation-specific routing context exists yet.
         allowedOperations:
           type: array
           items:
             $ref: '#/components/schemas/SlackAllowedOperations'
-          description: Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled. This field is in preview.
+          description: Operations the tool instance exposes to assigned agents. At least one value is required when the tool is enabled.
       required:
         - teamId
     SlackNativeToolConfigRequest:
@@ -2781,10 +2744,7 @@ components:
       description: MS Teams native tool operation identifier.
     TeamsNativeToolConfigResponse:
       type: object
-      description: |-
-        Configuration of an MS Teams native tool instance.
-
-        **The MS Teams native tool configuration is in preview mode** - some of the features may not be fully operational yet.
+      description: Configuration of an MS Teams native tool instance.
       properties:
         teamId:
           type: string
@@ -3582,10 +3542,7 @@ components:
             oneOf:
               - $ref: '#/components/schemas/TeamsAllowedOperations'
               - $ref: '#/components/schemas/SlackAllowedOperations'
-          description: |-
-            Optional per-agent override of allowed native tool operations. When omitted, the tool instance defaults apply. Supported for MS Teams and Slack (preview).
-
-            **The `allowedOperations` field is in preview mode** - some of the features may not be fully operational yet.
+          description: Optional per-agent override of allowed native tool operations. When omitted, the tool instance defaults apply. Supported for MS Teams and Slack.
       required:
         - id
 
