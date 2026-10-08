@@ -330,6 +330,25 @@ internal static partial class SpecPatches
                         "              schema:\n                type: object\n                properties:\n                  order:\n                    type: array\n                    items:\n                      type: string\n                    description: Stream names in the order they run.",
                         "              schema:\n                type: object\n                title: streamOrder\n                properties:\n                  order:\n                    type: array\n                    items:\n                      type: string\n                    description: Stream names in the order they run.")),
             ],
+            ["search-service"] =
+            [
+                new SpecPatch(
+                    "upstream: queries is a oneOf of a list of query nodes and one node. NSwag "
+                    + "keeps the list, and the union rule would turn it into raw JSON. One node "
+                    + "covers both — the specification stores a list as one or group, and a saved "
+                    + "search returns a single node — so queries is narrowed to it on both bodies.",
+                    ReplaceAll(
+                        "          oneOf:\n            - type: array\n              items:\n                $ref: '#/components/schemas/QueryNode'\n            - $ref: '#/components/schemas/QueryNode'",
+                        "          allOf:\n            - $ref: '#/components/schemas/QueryNode'")),
+                new SpecPatch(
+                    "upstream: boost declares default 1, which the generator turns into an "
+                    + "initializer, so every query node would send boost — an and or an or group "
+                    + "too, which the specification forbids combining with a query. Without the "
+                    + "default the property stays null, and the server's own default applies.",
+                    ReplaceAll(
+                        "          exclusiveMinimum: true\n          default: 1\n",
+                        "          exclusiveMinimum: true\n")),
+            ],
             ["label-service"] =
             [
                 new SpecPatch(
