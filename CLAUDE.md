@@ -5,9 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 An unofficial .NET SDK for the Emporix Commerce API, published as `Viu.Emporix`.
-Every one of the 43 vendored Emporix specifications has a hand-written facade,
-plus cloud functions, which has no specification: 46 properties on the client
-over 677 public calls.
+Every one of the 44 vendored Emporix specifications has a hand-written facade,
+plus cloud functions, which has no specification: 47 properties on the client
+over 691 public calls.
 
 ## Commands
 
