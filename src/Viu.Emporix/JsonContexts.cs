@@ -760,6 +760,45 @@ internal sealed partial class ImportJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.IndexingServiceModels.ReindexJob>))]
 internal sealed partial class IndexingJsonContext : JsonSerializerContext;
 
+/// <summary>Serialization for the search service. See <see cref="ProductJsonContext"/>.</summary>
+/// <remarks>
+/// A filter's value is generated as <c>object</c>, and a source-generated context
+/// writes an object only as a runtime type it has registered — hence the
+/// primitives and arrays at the end. Any other type throws before a request
+/// leaves.
+/// </remarks>
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.SearchRequest))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.SavedSearchCall))]
+[JsonSerializable(typeof(List<Viu.Emporix.SearchServiceModels.SearchHit>))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.SavedQueryRequest))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.SavedQuery))]
+[JsonSerializable(typeof(List<Viu.Emporix.SearchServiceModels.SavedQuery>))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.SavedQueryId))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.IndexRequest))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.SearchIndex))]
+[JsonSerializable(typeof(List<Viu.Emporix.SearchServiceModels.SearchIndex>))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.JobId))]
+[JsonSerializable(typeof(Viu.Emporix.SearchServiceModels.IndexJob))]
+[JsonSerializable(typeof(List<Viu.Emporix.SearchServiceModels.IndexJob>))]
+[JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(long))]
+[JsonSerializable(typeof(double))]
+[JsonSerializable(typeof(decimal))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(DateTimeOffset))]
+[JsonSerializable(typeof(string[]))]
+[JsonSerializable(typeof(int[]))]
+[JsonSerializable(typeof(long[]))]
+[JsonSerializable(typeof(double[]))]
+[JsonSerializable(typeof(decimal[]))]
+[JsonSerializable(typeof(DateTimeOffset[]))]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+internal sealed partial class SearchJsonContext : JsonSerializerContext;
+
 /// <summary>Serialization for the shopping-list service. See <see cref="ProductJsonContext"/>.</summary>
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
