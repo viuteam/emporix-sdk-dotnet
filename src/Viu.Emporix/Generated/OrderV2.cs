@@ -2745,7 +2745,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Fee name.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public System.Text.Json.JsonElement? Name { get; set; } = default!;
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
         /// <summary>
         /// Type of the fee.
@@ -4347,7 +4347,7 @@ namespace Viu.Emporix.OrderV2Models
         /// Name of the tax.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
+        public string? Name { get; set; } = default!;
 
         /// <summary>
         /// Value of the tax.

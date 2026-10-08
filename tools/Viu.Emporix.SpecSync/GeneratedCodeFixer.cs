@@ -399,7 +399,10 @@ internal static partial class GeneratedCodeFixer
         RetypeLocalizedProperties(
             string source,
             IReadOnlyCollection<string> localized)
-        => RetypeProperties(source, localized, "Viu.Emporix.LocalizedString?", @"(?:string\??|System\.Collections\.Generic\.IDictionary<string,\s*string>\??)");
+        // JsonElement is the third starting point: a localizedValue reached
+        // through allOf leaves a dangling type, which an earlier step turns into
+        // raw JSON — order-v2's ExternalFee.Name.
+        => RetypeProperties(source, localized, "Viu.Emporix.LocalizedString?", @"(?:string\??|System\.Collections\.Generic\.IDictionary<string,\s*string>\??|System\.Text\.Json\.JsonElement\??)");
 
     /// <summary>
     /// Retypes the properties whose schema is a union of several object types.
@@ -414,7 +417,9 @@ internal static partial class GeneratedCodeFixer
         RetypeUnionProperties(
             string source,
             IReadOnlyCollection<string> unions)
-        => RetypeProperties(source, unions, "System.Text.Json.JsonElement?", @"[\w\.]+\??");
+        // One generic argument list is allowed: a union whose first branch is a
+        // list comes out as ICollection<T>, and the plain pattern missed it.
+        => RetypeProperties(source, unions, "System.Text.Json.JsonElement?", @"[\w\.]+(?:<[\w\.,\s]+>)?\??");
 
     private static (string Source, IReadOnlyList<string> Retyped, IReadOnlyList<string> Missed)
         RetypeProperties(
@@ -460,9 +465,12 @@ internal static partial class GeneratedCodeFixer
             string propertyName = parts[^1];
 
             // Anchored on the class so a property name shared by several classes
-            // is only touched where the specification says it is localized.
+            // is only touched where the specification says it is localized. The
+            // body may not cross into another class: an unbounded lazy match
+            // retyped SavedQuery.Queries for SearchRequest.Queries and reported
+            // it as done.
             Regex declaration = new(
-                $@"(?<class>public partial class {Regex.Escape(className)}\b(?:[^{{]*)\{{)(?<body>.*?)(?<property>public\s+){currentType}(?<tail>\s+{Regex.Escape(propertyName)}\s*\{{)",
+                $@"(?<class>public partial class {Regex.Escape(className)}\b(?:[^{{]*)\{{)(?<body>(?:(?!partial class ).)*?)(?<property>public\s+){currentType}(?<tail>\s+{Regex.Escape(propertyName)}\s*\{{)",
                 RegexOptions.Singleline);
 
             Match match = declaration.Match(result);

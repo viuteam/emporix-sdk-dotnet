@@ -436,6 +436,33 @@ public class SpecSyncTests
     }
 
     [Fact]
+    public void A_localized_property_left_as_raw_json_is_retyped_in_its_own_class()
+    {
+        // order-v2's ExternalFee.Name reaches localizedValue through allOf and
+        // arrives as JsonElement. The rule did not match that, ran on, and
+        // retyped TaxValues.Name — a plain string — instead.
+        const string source = """
+                public partial class ExternalFee
+                {
+                    public System.Text.Json.JsonElement? Name { get; set; }
+                }
+
+                public partial class TaxValues
+                {
+                    public string? Name { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.RetypeLocalizedProperties(source, ["ExternalFee.Name"]);
+
+        Assert.Single(retyped);
+        Assert.Empty(missed);
+        Assert.Contains("public Viu.Emporix.LocalizedString? Name", result, StringComparison.Ordinal);
+        Assert.Contains("public string? Name", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_localized_property_that_cannot_be_found_is_reported()
     {
         // Previously a silent no-op, which is how taxClass.name shipped broken:
@@ -515,6 +542,56 @@ public class SpecSyncTests
 
         Assert.Single(retyped);
         Assert.Contains("System.Text.Json.JsonElement? LlmConfig", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_union_retype_stays_inside_its_class()
+    {
+        // The search service's queries: the first branch of the union is a
+        // list, which the pattern did not match, so the search ran on into
+        // the next class and retyped SavedQuery.Queries instead.
+        const string source = """
+                public partial class SearchRequest
+                {
+                    public System.Collections.Generic.ICollection<QueryNode>? Queries { get; set; }
+                }
+
+                public partial class SavedQuery
+                {
+                    public QueryNode? Queries { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.RetypeUnionProperties(source, ["SearchRequest.Queries"]);
+
+        Assert.Single(retyped);
+        Assert.Empty(missed);
+        Assert.Contains("public System.Text.Json.JsonElement? Queries", result, StringComparison.Ordinal);
+        Assert.Contains("public QueryNode? Queries", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_union_property_missing_from_its_class_is_reported_not_retyped_elsewhere()
+    {
+        const string source = """
+                public partial class First
+                {
+                    public string? Other { get; set; }
+                }
+
+                public partial class Second
+                {
+                    public Thing? Value { get; set; }
+                }
+            """;
+
+        (string result, IReadOnlyList<string> retyped, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.RetypeUnionProperties(source, ["First.Value"]);
+
+        Assert.Empty(retyped);
+        Assert.Equal(["First.Value"], missed);
+        Assert.Equal(source, result);
     }
 
     // ---------- Enum serialization ----------
