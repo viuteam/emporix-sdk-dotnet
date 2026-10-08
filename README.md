@@ -109,7 +109,7 @@ unless an `ICustomerTokenRefresher` is registered.
 
 ## Environments
 
-**Emporix separates environments by tenant, not by host.** Every one of the 43
+**Emporix separates environments by tenant, not by host.** Every one of the 44
 vendored specifications points at `https://api.emporix.io`; there is no staging
 host. Dev, staging and production are three tenants with three sets of
 credentials, and `Host` stays at its default unless you are pointing at a proxy or
@@ -533,6 +533,7 @@ chose. Each service hangs off the client under a name that says what it owns:
 | `client.SessionContext` | what a session carries beyond its token |
 | `client.Imports` | bringing data in from somewhere else |
 | `client.Indexing` | which provider indexes the catalogue, and rebuilding it |
+| `client.Search` | search over custom entities, saved searches and their indexes (preview) |
 | `client.ShoppingLists` | what a customer means to buy later |
 | `client.RewardPoints` | loyalty points, and what they buy |
 | `client.Ai` | text generation, and agents that do things |
@@ -593,6 +594,7 @@ Some services group operations that belong together:
 | `client.CustomerAdmin.AddressesOf(number)` | one customer's addresses, seller-side |
 | `client.Iam.Users` · `client.Iam.Groups` · `client.Iam.AccessControls` | identity, membership and grants |
 | `client.Schemas.CustomEntities` · `client.Schemas.InstancesOf(type)` | a tenant's own shapes, and their records |
+| `client.Search.ForType(type)` | one custom type's search, saved searches and indexes |
 | `client.Sites.MixinsOf(code)` | a tenant's own settings on one site |
 | `client.Configuration.ForClient(id)` | configuration narrowed to one client |
 | `client.Ai.Agents` · `client.Ai.Templates` | agents, and the templates they are built from |

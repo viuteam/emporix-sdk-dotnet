@@ -72,6 +72,7 @@ public class ServiceCollectionExtensionsTests
 
         Assert.NotNull(provider.GetRequiredService<ImportService>());
         Assert.NotNull(provider.GetRequiredService<IndexingService>());
+        Assert.NotNull(provider.GetRequiredService<SearchService>());
         Assert.NotNull(provider.GetRequiredService<ShoppingListService>());
         Assert.NotNull(provider.GetRequiredService<RewardPointsService>());
         Assert.NotNull(provider.GetRequiredService<AiService>());
@@ -83,6 +84,7 @@ public class ServiceCollectionExtensionsTests
 
         Assert.NotNull(client.Imports);
         Assert.NotNull(client.Indexing);
+        Assert.NotNull(client.Search);
         Assert.NotNull(client.ShoppingLists);
         Assert.NotNull(client.RewardPoints);
         Assert.NotNull(client.Ai);

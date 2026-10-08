@@ -61,6 +61,7 @@ internal static class SpecCatalog
         new("quote", $"{Base}/quotes/quote/api-reference/api.yaml"),
         new("returns", $"{Base}/orders/returns/api-reference/api.yml"),
         new("reward-points", $"{Base}/rewards-and-promotions/reward-points/api-reference/api.yml"),
+        new("search-service", $"{Base}/utilities/search-service/api-reference/api.yml"),
         new("schema", $"{Base}/utilities/schema/api-reference/api.yml"),
         new("sequential-id", $"{Base}/utilities/sequential-id/api-reference/api.yml"),
         new("session-context", $"{Base}/users-and-permissions/session-context/api-reference/api.yaml"),

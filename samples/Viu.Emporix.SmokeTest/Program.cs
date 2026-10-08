@@ -988,5 +988,228 @@ await runner.RunAsync("delete the segment", async () =>
     }
 });
 
+// Search, a preview service Emporix introduced on 2026-09-28. It indexes custom
+// entities, so this pass builds a throwaway index over PET, searches it, and
+// drops it again; the delete runs even when a step in between fails. The index
+// jobs stay in the job list: the service has no delete for them. The PET
+// values searched for are read from the tenant and never printed.
+Console.WriteLine();
+Console.WriteLine("Service token — search, the pass that builds an index and drops it");
+Console.WriteLine();
+
+const string SmokeIndex = "emporix-sdk-smoke";
+SearchTypeOperations pets = client.Search.ForType("PET");
+(string Id, string Name)? pet = null;
+
+string? indexJob = await runner.RunAsync("build a throwaway search index", async () =>
+{
+    JsonElement instances = await client.Schemas.InstancesOf("PET").ListAsync(pageSize: 1, auth: service);
+    JsonElement first = instances.ValueKind == JsonValueKind.Array && instances.GetArrayLength() > 0
+        ? instances[0]
+        : default;
+
+    if (first.ValueKind != JsonValueKind.Object
+        || !first.TryGetProperty("mixins", out JsonElement mixins)
+        || !mixins.TryGetProperty("attributes", out JsonElement attributes)
+        || !attributes.TryGetProperty("id", out JsonElement id)
+        || !attributes.TryGetProperty("name", out JsonElement name)
+        || id.ValueKind != JsonValueKind.String
+        || name.ValueKind != JsonValueKind.String
+        || id.GetString() is not { Length: > 0 } petId
+        || name.GetString() is not { Length: > 0 } petName)
+    {
+        return Step.Empty("no PET instance carries mixins.attributes.id and .name to search for");
+    }
+
+    pet = (petId, petName);
+
+    // A crashed earlier run may have left the index behind; replacing it needs
+    // its stored version.
+    Viu.Emporix.SearchServiceModels.SearchIndex? leftover = null;
+    try
+    {
+        leftover = await pets.GetIndexAsync(SmokeIndex, service);
+    }
+    catch (EmporixNotFoundException)
+    {
+    }
+
+    Viu.Emporix.SearchServiceModels.JobId? job = await pets.UpsertIndexAsync(
+        SmokeIndex,
+        new Viu.Emporix.SearchServiceModels.IndexRequest
+        {
+            Fields =
+            [
+                new Viu.Emporix.SearchServiceModels.IndexField { Path = "mixins.attributes.name", Text = true },
+                new Viu.Emporix.SearchServiceModels.IndexField { Path = "mixins.attributes.id", Exact = true },
+            ],
+            Metadata = leftover?.Metadata?.Version is int version
+                ? new Viu.Emporix.SearchServiceModels.IndexMetadataRequest { Version = version }
+                : null,
+        },
+        service);
+
+    return job?.Id is { Length: > 0 } jobId
+        ? Step.Ok(leftover is null ? "accepted, building" : "a leftover replaced, building", jobId)
+        : Step.Failed("no job id came back");
+});
+
+await runner.RunAsync("wait for the index job", async () =>
+{
+    if (indexJob is null)
+    {
+        return Step.Skipped("no index job");
+    }
+
+    Viu.Emporix.SearchServiceModels.IndexJob? done = await EmporixPolling.WaitForAsync(
+        token => client.Search.GetJobAsync(indexJob, service, token),
+        job => job?.Status is not Viu.Emporix.SearchServiceModels.IndexJobStatus.In_progress,
+        new EmporixPollingOptions { Timeout = TimeSpan.FromMinutes(2) });
+
+    return done?.Status == Viu.Emporix.SearchServiceModels.IndexJobStatus.Success
+        ? Step.Ok("built")
+        : Step.Failed($"the job ended with status {done?.Status}");
+});
+
+await runner.RunAsync("search by text, by filter and by an or group", async () =>
+{
+    if (indexJob is null || pet is not { } target)
+    {
+        return Step.Skipped("no index, or nothing to search for");
+    }
+
+    Viu.Emporix.SearchServiceModels.QueryNode byName = new()
+    {
+        Type = Viu.Emporix.SearchServiceModels.SearchType.TEXT,
+        Field = "mixins.attributes.name",
+        Query = target.Name,
+    };
+
+    PaginatedItems<Viu.Emporix.SearchServiceModels.SearchHit> byText = await pets.SearchAsync(
+        new Viu.Emporix.SearchServiceModels.SearchRequest { Index = SmokeIndex, Queries = byName },
+        auth: service);
+
+    // The filter's value goes out through the generated object property.
+    PaginatedItems<Viu.Emporix.SearchServiceModels.SearchHit> byFilter = await pets.SearchAsync(
+        new Viu.Emporix.SearchServiceModels.SearchRequest
+        {
+            Index = SmokeIndex,
+            Filters = new Viu.Emporix.SearchServiceModels.FilterNode
+            {
+                Field = "mixins.attributes.id",
+                Operator = Viu.Emporix.SearchServiceModels.FilterOperator.EQ,
+                Value = target.Id,
+            },
+        },
+        auth: service);
+
+    // A group node with nothing but its children: boost must not come along.
+    PaginatedItems<Viu.Emporix.SearchServiceModels.SearchHit> byGroup = await pets.SearchAsync(
+        new Viu.Emporix.SearchServiceModels.SearchRequest
+        {
+            Index = SmokeIndex,
+            Queries = new Viu.Emporix.SearchServiceModels.QueryNode
+            {
+                Or =
+                [
+                    byName,
+                    new Viu.Emporix.SearchServiceModels.QueryNode
+                    {
+                        Type = Viu.Emporix.SearchServiceModels.SearchType.WILDCARD,
+                        Field = "mixins.attributes.name",
+                        Query = "*",
+                    },
+                ],
+            },
+        },
+        auth: service);
+
+    string counts =
+        $"{byText.Items.Count} by text, {byFilter.Items.Count} by filter, {byGroup.Items.Count} by an or group";
+
+    return byText.Items.Count > 0 && byFilter.Items.Count > 0 && byGroup.Items.Count > 0
+        ? Step.Ok(counts)
+        : Step.Failed(counts);
+});
+
+await runner.RunAsync("save a search, run it, read it back and delete it", async () =>
+{
+    if (indexJob is null || pet is not { } target)
+    {
+        return Step.Skipped("no index, or nothing to search for");
+    }
+
+    const string SavedSearch = "emporix-sdk-smoke";
+
+    Viu.Emporix.SearchServiceModels.SavedQuery? leftover = null;
+    try
+    {
+        leftover = await pets.GetQueryAsync(SavedSearch, service);
+    }
+    catch (EmporixNotFoundException)
+    {
+    }
+
+    Viu.Emporix.SearchServiceModels.SavedQueryId? created = await pets.UpsertQueryAsync(
+        SavedSearch,
+        new Viu.Emporix.SearchServiceModels.SavedQueryRequest
+        {
+            Index = SmokeIndex,
+            Queries = new Viu.Emporix.SearchServiceModels.QueryNode
+            {
+                Type = Viu.Emporix.SearchServiceModels.SearchType.TEXT,
+                Field = "mixins.attributes.name",
+                Query = target.Name,
+            },
+            Metadata = leftover?.Metadata?.Version is int version
+                ? new Viu.Emporix.SearchServiceModels.QueryMetadataRequest { Version = version }
+                : null,
+        },
+        service);
+
+    try
+    {
+        PaginatedItems<Viu.Emporix.SearchServiceModels.SearchHit> hits =
+            await pets.RunSavedSearchAsync(SavedSearch, target.Name, auth: service);
+        Viu.Emporix.SearchServiceModels.SavedQuery? read = await pets.GetQueryAsync(SavedSearch, service);
+
+        return read?.IndexId == SmokeIndex && read.Queries?.Field == "mixins.attributes.name"
+            ? Step.Ok($"{(created is null ? "replaced" : "created")}, {hits.Items.Count} hit(s), read back")
+            : Step.Failed($"read back index {read?.IndexId ?? "nothing"}, field {read?.Queries?.Field ?? "nothing"}");
+    }
+    finally
+    {
+        await pets.DeleteQueryAsync(SavedSearch, service);
+    }
+});
+
+await runner.RunAsync("delete the search index", async () =>
+{
+    try
+    {
+        await pets.GetIndexAsync(SmokeIndex, service);
+    }
+    catch (EmporixNotFoundException)
+    {
+        return Step.Skipped("no index to clean up");
+    }
+
+    Viu.Emporix.SearchServiceModels.JobId? deleting = await pets.DeleteIndexAsync(SmokeIndex, service);
+    if (deleting?.Id is not { Length: > 0 } jobId)
+    {
+        return Step.Failed("no delete job came back");
+    }
+
+    Viu.Emporix.SearchServiceModels.IndexJob? done = await EmporixPolling.WaitForAsync(
+        token => client.Search.GetJobAsync(jobId, service, token),
+        job => job?.Status is not Viu.Emporix.SearchServiceModels.IndexJobStatus.In_progress,
+        new EmporixPollingOptions { Timeout = TimeSpan.FromMinutes(2) });
+
+    return done?.Status == Viu.Emporix.SearchServiceModels.IndexJobStatus.Success
+        ? Step.Ok("deleted; its jobs stay in the job list")
+        : Step.Failed($"the delete job ended with status {done?.Status}");
+});
+
+
 Console.WriteLine();
 return runner.Report();

@@ -84,6 +84,7 @@ public sealed class EmporixClient : IDisposable
     private SessionContextService? _sessionContext;
     private ImportService? _import;
     private IndexingService? _indexing;
+    private SearchService? _search;
     private ShoppingListService? _shoppingList;
     private RewardPointsService? _rewardPoints;
     private AiService? _ai;
@@ -644,6 +645,17 @@ public sealed class EmporixClient : IDisposable
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             return _indexing ??= new IndexingService(_http, _options);
+        }
+    }
+
+    /// <summary>Search over custom entities, saved searches and the indexes they run on.</summary>
+    /// <exception cref="ObjectDisposedException">The client has already been disposed.</exception>
+    public SearchService Search
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            return _search ??= new SearchService(_http, _options);
         }
     }
 
