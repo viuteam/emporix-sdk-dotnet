@@ -9,6 +9,17 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.10.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.9.2...v0.10.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* OrderV2Models.TaxValues.Name is now string instead of LocalizedString, and OrderV2Models.ExternalFee.Name is LocalizedString instead of JsonElement.
+
+### Added
+
+* add the search service ([#68](https://github.com/viuteam/emporix-sdk-dotnet/issues/68)) ([d0d5931](https://github.com/viuteam/emporix-sdk-dotnet/commit/d0d59311bc821b8a04baf044c90dbe50bf91a32d))
+
 ## [0.9.2](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.9.1...v0.9.2) (2026-10-07)
 
 
