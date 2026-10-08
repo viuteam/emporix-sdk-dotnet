@@ -131,4 +131,165 @@ public class SearchServiceTests
 
         Assert.Equal(0, handler.CallCount);
     }
+
+    // ---------- One type ----------
+
+    /// <summary>The answer the specification shows for a search.</summary>
+    private const string SearchHits = """
+        [{"id":"64f1c2a8e4b0a1d2c3e4f5a6","name":{"en":"Diesel engine"},"status":"ACTIVE","horsepower":180,"_score":4.2},
+         {"id":"64f1c2a8e4b0a1d2c3e4f5b7","name":{"en":"Diesel generator"},"status":"ACTIVE","horsepower":220,"_score":3.1}]
+        """;
+
+    [Fact]
+    public async Task A_search_posts_its_criteria_and_reads_the_hits()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, SearchHits);
+
+        PaginatedItems<SearchHit> hits = await Create(handler).ForType("vehicle").SearchAsync(
+            new SearchRequest
+            {
+                Index = "vehicles",
+                Queries = new QueryNode { Type = SearchType.TEXT, Field = "name.en", Query = "diesel" },
+            },
+            sort: "name:ASC");
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/search/acme/search/vehicle?pageNumber=1&pageSize=60&sort=name%3AASC", Uri(handler));
+        Assert.True(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out bool idempotent));
+        Assert.True(idempotent);
+
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[0]);
+        Assert.Equal("vehicles", body.RootElement.GetProperty("index").GetString());
+        Assert.Equal("TEXT", body.RootElement.GetProperty("queries").GetProperty("type").GetString());
+
+        Assert.Equal(2, hits.Items.Count);
+        Assert.Equal(4.2, hits.Items[0]._score);
+        Assert.Equal("Diesel engine", hits.Items[0].Name?["en"]);
+
+        // Stored fields arrive beside the declared ones.
+        Assert.Equal(180, ((JsonElement)hits.Items[0].AdditionalProperties["horsepower"]).GetInt32());
+    }
+
+    [Fact]
+    public async Task A_saved_search_runs_with_its_text()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        SearchTypeOperations vehicles = Create(handler).ForType("vehicle");
+
+        await vehicles.RunSavedSearchAsync("red-cars", "red");
+
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[0]);
+        Assert.Equal("red-cars", body.RootElement.GetProperty("searchQueryId").GetString());
+        Assert.Equal("red", body.RootElement.GetProperty("query").GetString());
+        Assert.Equal("/search/acme/search/vehicle?pageNumber=1&pageSize=60", Uri(handler));
+
+        await Assert.ThrowsAsync<ArgumentException>(async () => await vehicles.RunSavedSearchAsync("red-cars", " "));
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Saved_searches_are_listed_read_upserted_and_deleted()
+    {
+        StubHttpMessageHandler handler = new((_, call) => call switch
+        {
+            1 => StubHttpMessageHandler.Json(HttpStatusCode.OK, """[{"id":"red-cars"}]"""),
+            2 => StubHttpMessageHandler.Json(
+                HttpStatusCode.OK,
+                """{"id":"red-cars","indexId":"vehicles","queries":{"type":"TEXT","field":"name.en","query":"red"}}"""),
+            3 => StubHttpMessageHandler.Json(HttpStatusCode.Created, """{"id":"red-cars"}"""),
+            _ => new HttpResponseMessage(HttpStatusCode.NoContent),
+        });
+        SearchTypeOperations vehicles = Create(handler).ForType("vehicle");
+        QueryNode red = new() { Type = SearchType.TEXT, Field = "name.en", Query = "red" };
+
+        PaginatedItems<SavedQuery> listed = await vehicles.ListQueriesAsync();
+        SavedQuery? read = await vehicles.GetQueryAsync("red-cars");
+        SavedQueryId? created = await vehicles.UpsertQueryAsync(
+            "red-cars", new SavedQueryRequest { Index = "vehicles", Queries = red });
+        SavedQueryId? replaced = await vehicles.UpsertQueryAsync(
+            "red-cars",
+            new SavedQueryRequest
+            {
+                Index = "vehicles",
+                Queries = red,
+                Metadata = new QueryMetadataRequest { Version = 1 },
+            });
+        await vehicles.DeleteQueryAsync("red-cars");
+
+        Assert.Equal(
+            [HttpMethod.Get, HttpMethod.Get, HttpMethod.Put, HttpMethod.Put, HttpMethod.Delete],
+            handler.RequestMethods);
+        Assert.Equal("/search/acme/search/vehicle/queries?pageNumber=1&pageSize=60", Uri(handler, 0));
+        Assert.Equal("/search/acme/search/vehicle/queries/red-cars", Uri(handler, 1));
+        Assert.Equal("/search/acme/search/vehicle/queries/red-cars", Uri(handler, 4));
+        Assert.Single(listed.Items);
+        Assert.Equal(SearchType.TEXT, read?.Queries?.Type);
+        Assert.Equal("red-cars", created?.Id);
+        Assert.Null(replaced);
+        Assert.Contains("\"version\":1", handler.RequestBodies[3], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Indexes_are_listed_read_upserted_and_deleted()
+    {
+        StubHttpMessageHandler handler = new((_, call) => call switch
+        {
+            1 => StubHttpMessageHandler.Json(HttpStatusCode.OK, """[{"id":"vehicles","status":"building"}]"""),
+            2 => StubHttpMessageHandler.Json(
+                HttpStatusCode.OK,
+                """{"id":"vehicles","type":"vehicle","fields":[{"path":"name.en","text":true}],"status":"ready","metadata":{"version":2}}"""),
+            3 => StubHttpMessageHandler.Json(HttpStatusCode.Accepted, """{"id":"job-1"}"""),
+            _ => StubHttpMessageHandler.Json(HttpStatusCode.Accepted, """{"id":"job-2"}"""),
+        });
+        SearchTypeOperations vehicles = Create(handler).ForType("vehicle");
+
+        PaginatedItems<SearchIndex> listed = await vehicles.ListIndexesAsync(query: "status:ready");
+        SearchIndex? read = await vehicles.GetIndexAsync("vehicles");
+        JobId? building = await vehicles.UpsertIndexAsync(
+            "vehicles",
+            new IndexRequest { Fields = [new IndexField { Path = "name.en", Text = true }] });
+        JobId? deleting = await vehicles.DeleteIndexAsync("vehicles");
+
+        Assert.Equal([HttpMethod.Get, HttpMethod.Get, HttpMethod.Put, HttpMethod.Delete], handler.RequestMethods);
+        Assert.Equal("/search/acme/search/vehicle/indexes?pageNumber=1&pageSize=60&q=status%3Aready", Uri(handler, 0));
+        Assert.Equal("/search/acme/search/vehicle/indexes/vehicles", Uri(handler, 2));
+        Assert.Equal(SearchIndexStatus.Building, Assert.Single(listed.Items).Status);
+        Assert.Equal(2, read?.Metadata?.Version);
+        Assert.Equal("job-1", building?.Id);
+        Assert.Equal("job-2", deleting?.Id);
+
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[2]);
+        JsonElement field = body.RootElement.GetProperty("fields")[0];
+        Assert.Equal("name.en", field.GetProperty("path").GetString());
+        Assert.False(field.TryGetProperty("exact", out _));
+    }
+
+    [Fact]
+    public async Task A_type_is_escaped_into_the_path_and_checked()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        SearchService search = Create(handler);
+
+        await search.ForType("my type").ListIndexesAsync();
+
+        Assert.Equal("/search/acme/search/my%20type/indexes?pageNumber=1&pageSize=60", Uri(handler));
+        Assert.Throws<ArgumentException>(() => search.ForType(" "));
+    }
+
+    [Fact]
+    public async Task Type_operations_check_their_arguments_before_any_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        SearchTypeOperations vehicles = Create(handler).ForType("vehicle");
+
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await vehicles.SearchAsync(null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await vehicles.UpsertQueryAsync("red-cars", null!));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await vehicles.UpsertIndexAsync("vehicles", null!));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await vehicles.GetQueryAsync(" "));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await vehicles.DeleteIndexAsync(" "));
+
+        Assert.Equal(0, handler.CallCount);
+    }
 }
