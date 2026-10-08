@@ -7,6 +7,16 @@ namespace Viu.Emporix.Tests;
 
 public class SearchServiceTests
 {
+    private static SearchService Create(StubHttpMessageHandler handler)
+    {
+        IOptions<EmporixOptions> options = Options.Create(new EmporixOptions { Tenant = "acme" });
+
+        return new SearchService(new EmporixHttpClient(new HttpClient(handler), options), options);
+    }
+
+    private static string Uri(StubHttpMessageHandler handler, int index = 0)
+        => handler.RequestUris[index].PathAndQuery;
+
     // ---------- What a body can carry ----------
 
     [Fact]
@@ -68,5 +78,57 @@ public class SearchServiceTests
             SearchJsonContext.Default.QueryNode);
 
         Assert.Equal(1, written.Split("boost").Length - 1);
+    }
+
+    // ---------- Across every type ----------
+
+    [Fact]
+    public async Task The_lists_across_types_read_pages_of_their_type()
+    {
+        StubHttpMessageHandler queries = new(
+            HttpStatusCode.OK, """[{"id":"red-cars","type":"vehicle","indexId":"vehicles"}]""");
+        PaginatedItems<SavedQuery> saved = await Create(queries).ListQueriesAsync(query: "type:vehicle");
+
+        Assert.Equal("/search/acme/search/queries?pageNumber=1&pageSize=60&q=type%3Avehicle", Uri(queries));
+        Assert.Equal("vehicles", Assert.Single(saved.Items).IndexId);
+
+        StubHttpMessageHandler indexes = new(HttpStatusCode.OK, """[{"id":"vehicles","status":"ready"}]""");
+        PaginatedItems<SearchIndex> found = await Create(indexes).ListIndexesAsync();
+
+        Assert.Equal("/search/acme/search/indexes?pageNumber=1&pageSize=60", Uri(indexes));
+        Assert.Equal(SearchIndexStatus.Ready, Assert.Single(found.Items).Status);
+
+        StubHttpMessageHandler jobs = new(
+            HttpStatusCode.OK, """[{"id":"j1","status":"in_progress","type":"create_index"}]""");
+        PaginatedItems<IndexJob> running = await Create(jobs).ListJobsAsync(pageNumber: 2, pageSize: 10);
+
+        Assert.Equal("/search/acme/jobs?pageNumber=2&pageSize=10", Uri(jobs));
+        Assert.Equal(IndexJobStatus.In_progress, Assert.Single(running.Items).Status);
+    }
+
+    [Fact]
+    public async Task A_job_is_read_by_its_escaped_id()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK, """{"id":"j 1","status":"failure","type":"delete_index","response":"gone"}""");
+
+        IndexJob? job = await Create(handler).GetJobAsync("j 1");
+
+        Assert.Equal("/search/acme/jobs/j%201", Uri(handler));
+        Assert.Equal(IndexJobStatus.Failure, job?.Status);
+        Assert.Equal(IndexJobType.Delete_index, job?.Type);
+    }
+
+    [Fact]
+    public async Task Paging_and_ids_are_checked_before_any_request()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        SearchService search = Create(handler);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await search.ListJobsAsync(pageNumber: 0));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await search.ListIndexesAsync(pageSize: 0));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await search.GetJobAsync(" "));
+
+        Assert.Equal(0, handler.CallCount);
     }
 }

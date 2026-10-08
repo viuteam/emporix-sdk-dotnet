@@ -1,1 +1,7 @@
 #nullable enable
+Viu.Emporix.EmporixClient.Search.get -> Viu.Emporix.SearchService!
+Viu.Emporix.SearchService
+Viu.Emporix.SearchService.GetJobAsync(string! jobId, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.SearchServiceModels.IndexJob?>!
+Viu.Emporix.SearchService.ListIndexesAsync(string? query = null, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.SearchServiceModels.SearchIndex!>!>!
+Viu.Emporix.SearchService.ListJobsAsync(string? query = null, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.SearchServiceModels.IndexJob!>!>!
+Viu.Emporix.SearchService.ListQueriesAsync(string? query = null, int pageNumber = 1, int pageSize = 60, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Viu.Emporix.PaginatedItems<Viu.Emporix.SearchServiceModels.SavedQuery!>!>!
