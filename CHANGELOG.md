@@ -9,6 +9,13 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.11.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.10.0...v0.11.0) (2026-10-09)
+
+
+### Added
+
+* export and import search index configuration ([#70](https://github.com/viuteam/emporix-sdk-dotnet/issues/70)) ([3f18935](https://github.com/viuteam/emporix-sdk-dotnet/commit/3f189356d6abe6ee904e32f96935edd075a7a4d0))
+
 ## [0.10.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.9.2...v0.10.0) (2026-10-08)
 
 
