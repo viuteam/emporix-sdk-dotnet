@@ -533,7 +533,7 @@ chose. Each service hangs off the client under a name that says what it owns:
 | `client.SessionContext` | what a session carries beyond its token |
 | `client.Imports` | bringing data in from somewhere else |
 | `client.Indexing` | which provider indexes the catalogue, and rebuilding it |
-| `client.Search` | search over custom entities, saved searches and their indexes (preview) |
+| `client.Search` | search over custom entities, saved searches, their indexes, and copying index configuration between tenants (preview) |
 | `client.ShoppingLists` | what a customer means to buy later |
 | `client.RewardPoints` | loyalty points, and what they buy |
 | `client.Ai` | text generation, and agents that do things |

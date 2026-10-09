@@ -128,8 +128,59 @@ public class SearchServiceTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await search.ListJobsAsync(pageNumber: 0));
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await search.ListIndexesAsync(pageSize: 0));
         await Assert.ThrowsAsync<ArgumentException>(async () => await search.GetJobAsync(" "));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () => await search.ExportIndexesAsync([]));
 
         Assert.Equal(0, handler.CallCount);
+    }
+
+    // ---------- Export and import ----------
+
+    /// <summary>The package the specification shows: two fields of one index, as base64 JSON.</summary>
+    private const string Package = """
+        {"exportedAt":"2026-03-12T10:00:00.000Z","data":"W3siaWQiOiJ2ZWhpY2xlcyJ9XQ=="}
+        """;
+
+    [Fact]
+    public async Task An_export_posts_the_selection_as_an_array_and_is_repeatable()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, Package);
+
+        IndexExportPackage? package = await Create(handler).ExportIndexesAsync(
+            [new IndexSelection { Type = "vehicle", Id = "vehicles" }, new IndexSelection { Type = "bike", Id = "bikes" }]);
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/search/acme/search/indexes/export", Uri(handler));
+        Assert.Equal("""[{"type":"vehicle","id":"vehicles"},{"type":"bike","id":"bikes"}]""", handler.RequestBodies[0]);
+        Assert.True(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out bool idempotent));
+        Assert.True(idempotent);
+
+        Assert.Equal("W3siaWQiOiJ2ZWhpY2xlcyJ9XQ==", package?.Data);
+        Assert.Equal(new DateTimeOffset(2026, 3, 12, 10, 0, 0, TimeSpan.Zero), package?.ExportedAt);
+    }
+
+    [Fact]
+    public async Task An_import_posts_the_package_unchanged_and_is_not_repeated()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """
+            [{"id":"vehicles","type":"vehicle","jobId":"66f1a2b3c4d5e6f708192a3b","jobType":"create_index"},
+             {"id":"bikes","type":"bike"}]
+            """);
+        IndexExportPackage package = JsonSerializer.Deserialize(Package, SearchJsonContext.Default.IndexExportPackage)!;
+
+        IReadOnlyList<IndexImportResult> results = await Create(handler).ImportIndexesAsync(package);
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/search/acme/search/indexes/import", Uri(handler));
+        using JsonDocument body = JsonDocument.Parse(handler.RequestBodies[0]);
+        Assert.Equal("W3siaWQiOiJ2ZWhpY2xlcyJ9XQ==", body.RootElement.GetProperty("data").GetString());
+        Assert.True(body.RootElement.TryGetProperty("exportedAt", out _));
+        Assert.False(handler.LastRequest!.Options.TryGetValue(EmporixRequestOptions.Idempotent, out _));
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal("66f1a2b3c4d5e6f708192a3b", results[0].JobId);
+        Assert.Equal(IndexImportResultJobType.Create_index, results[0].JobType);
+        Assert.Null(results[1].JobId);
+        Assert.Null(results[1].JobType);
     }
 
     // ---------- One type ----------

@@ -120,7 +120,9 @@ namespace Viu.Emporix.SearchServiceModels
     }
 
     /// <summary>
-    /// Optimistic lock for an index update. Required when the index already exists.
+    /// Optimistic lock for an index update. The object can be omitted on create and on update. A missing object still updates an existing index.
+    /// <br/>
+    /// <br/>When the object is sent, `version` is required. A value that does not match the stored index returns `409 Conflict`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class IndexMetadataRequest
@@ -131,6 +133,113 @@ namespace Viu.Emporix.SearchServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("version")]
         public int Version { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// One index to export. Unknown properties are ignored.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class IndexSelection
+    {
+
+        /// <summary>
+        /// Custom schema type this index belongs to.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        public string Type { get; set; } = default!;
+
+        /// <summary>
+        /// Index id. Use 1 to 66 characters. Allowed characters are letters, digits, underscore, and hyphen.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string Id { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Package of search index configuration. `data` is the base64 encoding of a JSON array.
+    /// <br/>
+    /// <br/>Each decoded item has `id`, `type`, and `fields`. `name` and `description` are optional localized maps. Export omits `status` and `metadata`. Import accepts `metadata.version` when the caller sends it.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class IndexExportPackage
+    {
+
+        /// <summary>
+        /// Date and time when the package was exported.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("exportedAt")]
+        public System.DateTimeOffset ExportedAt { get; set; } = default!;
+
+        /// <summary>
+        /// Base64-encoded JSON array of index configurations.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public string Data { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Result of importing one index. `jobId` and `jobType` are omitted when the ready index is unchanged.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class IndexImportResult
+    {
+
+        /// <summary>
+        /// Index id.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string Id { get; set; } = default!;
+
+        /// <summary>
+        /// Custom schema type this index belongs to.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        public string Type { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the job that builds the index. Present when a job starts.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("jobId")]
+        public string? JobId { get; set; } = default!;
+
+        /// <summary>
+        /// Kind of index change. Present when a job starts.
+        /// <br/>* `create_index` – the index was created.
+        /// <br/>* `update_index` – an existing index's field definition changed.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("jobType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<IndexImportResultJobType>))]
+        public IndexImportResultJobType? JobType { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -880,6 +989,21 @@ namespace Viu.Emporix.SearchServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"NGRAM")]
         NGRAM = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<IndexImportResultJobType>))]
+    public enum IndexImportResultJobType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"create_index")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("create_index")]
+        Create_index = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"update_index")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("update_index")]
+        Update_index = 1,
 
     }
 

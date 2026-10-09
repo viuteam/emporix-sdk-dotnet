@@ -1183,6 +1183,87 @@ await runner.RunAsync("save a search, run it, read it back and delete it", async
     }
 });
 
+// Importing the export unchanged would answer without a job and prove nothing,
+// so the package is imported under a second id, read back and dropped.
+await runner.RunAsync("export the index and import it as a copy", async () =>
+{
+    if (indexJob is null)
+    {
+        return Step.Skipped("no index");
+    }
+
+    const string CopyIndex = "emporix-sdk-smoke-copy";
+
+    Viu.Emporix.SearchServiceModels.IndexExportPackage? exported = await client.Search.ExportIndexesAsync(
+        [new Viu.Emporix.SearchServiceModels.IndexSelection { Type = "PET", Id = SmokeIndex }],
+        service);
+    if (exported?.Data is not { Length: > 0 } data)
+    {
+        return Step.Failed("the export came back without data");
+    }
+
+    System.Text.Json.Nodes.JsonArray items = System.Text.Json.Nodes.JsonNode.Parse(Convert.FromBase64String(data))!.AsArray();
+    if (items.Count != 1 || (string?)items[0]?["id"] != SmokeIndex)
+    {
+        return Step.Failed($"the export decoded to {items.Count} index(es), not the one asked for");
+    }
+
+    items[0]!["id"] = CopyIndex;
+    using MemoryStream copy = new();
+    using (Utf8JsonWriter writer = new(copy))
+    {
+        items.WriteTo(writer);
+    }
+
+    try
+    {
+        IReadOnlyList<Viu.Emporix.SearchServiceModels.IndexImportResult> imported = await client.Search.ImportIndexesAsync(
+            new Viu.Emporix.SearchServiceModels.IndexExportPackage
+            {
+                ExportedAt = exported.ExportedAt,
+                Data = Convert.ToBase64String(copy.ToArray()),
+            },
+            service);
+
+        if (imported is not [{ Id: CopyIndex } result])
+        {
+            return Step.Failed($"the import answered {imported.Count} result(s), not one for the copy");
+        }
+
+        if (result.JobId is { Length: > 0 } jobId)
+        {
+            await EmporixPolling.WaitForAsync(
+                token => client.Search.GetJobAsync(jobId, service, token),
+                job => job?.Status is not Viu.Emporix.SearchServiceModels.IndexJobStatus.In_progress,
+                new EmporixPollingOptions { Timeout = TimeSpan.FromMinutes(3) });
+        }
+
+        Viu.Emporix.SearchServiceModels.SearchIndex? read = await pets.GetIndexAsync(CopyIndex, service);
+        string[] fields = [.. (read?.Fields ?? []).Select(field => field.Path)];
+
+        return fields is ["mixins.attributes.name", "mixins.attributes.id"]
+            ? Step.Ok($"{result.JobType?.ToString() ?? "no job"}, the copy read back with both fields")
+            : Step.Failed($"the copy read back with fields [{string.Join(", ", fields)}]");
+    }
+    finally
+    {
+        try
+        {
+            // Waited for, so the next step's delete does not meet a job in progress.
+            if ((await pets.DeleteIndexAsync(CopyIndex, service))?.Id is { Length: > 0 } deleting)
+            {
+                await EmporixPolling.WaitForAsync(
+                    token => client.Search.GetJobAsync(deleting, service, token),
+                    job => job?.Status is not Viu.Emporix.SearchServiceModels.IndexJobStatus.In_progress,
+                    new EmporixPollingOptions { Timeout = TimeSpan.FromMinutes(2) });
+            }
+        }
+        catch (EmporixNotFoundException)
+        {
+        }
+    }
+});
+
 await runner.RunAsync("delete the search index", async () =>
 {
     try
