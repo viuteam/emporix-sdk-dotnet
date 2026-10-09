@@ -9,6 +9,13 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.11.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.11.0...v0.11.1) (2026-10-09)
+
+
+### Fixed
+
+* sync generated types with upstream Emporix specifications ([#72](https://github.com/viuteam/emporix-sdk-dotnet/issues/72)) ([6dfac9b](https://github.com/viuteam/emporix-sdk-dotnet/commit/6dfac9be6a1d70b33e8495c89708638860c3b351))
+
 ## [0.11.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.10.0...v0.11.0) (2026-10-09)
 
 
