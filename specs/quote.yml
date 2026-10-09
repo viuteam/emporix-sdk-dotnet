@@ -21,13 +21,15 @@ paths:
       summary: Retrieving quotes
       description: |-
         Retrieves quotes. The response includes either all quotes or a subset of quotes based on the assigned access token scopes.
+
+        When the request uses a B2B customer token, the response includes only quotes that are linked to the legal entity from the token.
         ***
 
         ### **Additional scope information**
         One of the scopes is required.
 
           * The `quote.quote_read` scope is required to employees to retrieve all tenant quotes.
-          * The `quote.quote_read_own` is assigned to customers to enable them to retrieve only the quotes that they created themselves or that were created on their behalf.
+          * The `quote.quote_read_own` is assigned to customers to enable them to retrieve only the quotes that they created themselves or that were created on their behalf. Quotes in the `CREATING` status are not returned to these customers.
         ***
       operationId: GET-quote-list-quotes
       parameters:
@@ -72,6 +74,7 @@ paths:
                         firstName: John
                         lastName: Smith
                       cartId: 63ee5168e55c231c327220d3
+                      legalEntityId: le-1
                       company:
                         name: ABC
                       siteCode: main
@@ -243,6 +246,8 @@ paths:
       description: |
         Generates a new quote, which can be created either manually using a complete quote definition that includes items, or by copying the details from cart.
 
+        When you provide `legalEntityId` in a manual quote definition, `billingAddressId` is required and the legal entity must be assigned to that billing address; otherwise, the request fails with the `400` status code. The company name is filled in from the legal entity. A quote created from a cart copies the `legalEntityId` of the cart.
+
         ***
 
         ### **Additional scope information**
@@ -278,7 +283,7 @@ paths:
                   employeeId: 9tt954309b06d46d3cf19fa
                   billingAddressId: 64672a8f9939d331699cbe6e
                   shippingAddressId: 64672a8f9939d331699cbe6e
-                  companyName: ABC
+                  legalEntityId: le-1
                   siteCode: main
                   currency: USD
                   validTo: '2022-04-01T04:37:04.301Z'
@@ -382,7 +387,9 @@ paths:
         - Quote pdf
       summary: Creating a quote PDF
       description: |
-        Generates a pdf for a given quote and returns its contents. 
+        Generates a pdf for a given quote and returns its contents.
+
+        When the request uses a B2B customer token, the quote must be linked to the legal entity from the token; otherwise, the request fails with the `404` status code.
       operationId: POST-quote-generate-quote-pdf
       parameters:
         - name: tenant
@@ -442,7 +449,9 @@ paths:
         - Quote history
       summary: Retrieving quote history
       description: |
-        Retrieves changes related to a quote with a given ID. 
+        Retrieves changes related to a quote with a given ID.
+
+        When the request uses a B2B customer token, the quote must be linked to the legal entity from the token; otherwise, the request fails with the `404` status code.
       operationId: GET-quote-retrieve-quote-history
       parameters:
         - name: tenant
@@ -593,6 +602,8 @@ paths:
                     message: You need a scope for this action.
                     details:
                       - 'Required scope(s): quote.quote_read'
+        '404':
+          $ref: '#/components/responses/Not_Found_404'
       security:
         - OAuth2:
             - quote.quote_read
@@ -603,6 +614,8 @@ paths:
       summary: Retrieving a single quote
       description: |
         Retrieves a quote by a given id.
+
+        When the request uses a B2B customer token, the quote must be linked to the legal entity from the token; otherwise, the request fails with the `404` status code. When the approval process is enabled, a customer who is not the quote owner can retrieve the quote only if the approval service permits it for the legal entity from the token; otherwise, the request fails with the `403` status code.
 
         ***
 
@@ -655,6 +668,7 @@ paths:
                       firstName: John
                       lastName: Smith
                     cartId: 63ee5168e55c231c327220d3
+                    legalEntityId: le-1
                     company:
                       name: The best company
                     siteCode: main
@@ -852,6 +866,10 @@ paths:
           - `replace` - replacing an item with given ID with new definition which may contain custom price proposal or defined price
 
         After events are saved, some of the information is retrieved in the async way from other services: full price definition is based on the provided price ID, and the full product name is based on the provided product ID.
+
+        The `/legalEntityId` path links the quote to a legal entity and fills the company name from it. The legal entity must be assigned to the quote billing address; otherwise, the request fails with the `400` status code. Removing `/legalEntityId` or `/companyName` clears both the company and `legalEntityId`, and changes the quote to B2C.
+
+        When the request uses a B2B customer token, the quote must be linked to the legal entity from the token; otherwise, the request fails with the `404` status code. When the approval process is enabled, a customer who is not the quote owner can update the quote only if the approval service permits it for the legal entity from the token, and a quote can be accepted only after the approval check passes. Otherwise, the request fails with the `403` status code.
 
         ***
 
@@ -1065,7 +1083,11 @@ paths:
                     value:
                       - itemId: 124dfa8241sd0fas824kfa
                       - itemId: 124dfa8241sd0fas824k7b
-              Delete company name in a quote:
+              Delete legal entity from a quote:
+                value:
+                  - op: REMOVE
+                    path: /legalEntityId
+              Delete company name in a quote (deprecated):
                 value:
                   - op: REMOVE
                     path: /companyName
@@ -1139,7 +1161,12 @@ paths:
                   - op: REPLACE
                     path: /billingAddressId
                     value: 74698542309b06dc46d3cf19fa
-              Change company name of a quote:
+              Change legal entity of a quote:
+                value:
+                  - op: REPLACE
+                    path: /legalEntityId
+                    value: le-1
+              Change company name of a quote (deprecated):
                 value:
                   - op: REPLACE
                     path: /companyName
@@ -1171,6 +1198,8 @@ paths:
       operationId: DELETE-quote-remove-quote
       description: |-
         Deletes a quote with a given quote ID.
+
+        When the request uses a B2B customer token, only a quote that is linked to the legal entity from the token can be deleted. A quote linked to another legal entity is not deleted.
       responses:
         '204':
           description: Quote has been deleted successfully.
@@ -1760,9 +1789,14 @@ components:
         cartId:
           type: string
           description: The ID of the cart from which the quote was created (not available when the quote was created manually)
+        legalEntityId:
+          type: string
+          description: Identifier of the legal entity linked to the quote.
         company:
           type: object
-          description: The company for which the quote was created.
+          deprecated: true
+          description: |-
+            **This field is deprecated**. Use `legalEntityId` to identify the company. The object remains populated for compatibility and contains the company name stored on the quote.
           properties:
             name:
               type: string
@@ -2091,7 +2125,12 @@ components:
           description: 'The employee ID for which the new quote is created. By default, the employeeId is taken from session token, but in case the session token is not provided, employeeId is taken from the payload. Default employee from the configuration will be assigned to the quote in case session token nor ''employeeId'' is not provided.'
         companyName:
           type: string
-          description: The name of the merchant company.
+          deprecated: true
+          description: |-
+            **This field is deprecated**. Use `legalEntityId` instead. When `legalEntityId` is omitted and exactly one legal entity assigned to the billing address has this name, the quote is linked to that legal entity. When several legal entities share the name, the quote stores the name only.
+        legalEntityId:
+          type: string
+          description: Identifier of the legal entity assigned to `billingAddressId`. When present, this value is used instead of `companyName`.
         siteCode:
           type: string
           description: The site code for which the quote is created.
@@ -2295,6 +2334,8 @@ components:
               - REPLACE
           path:
             type: string
+            description: |-
+              JSON Pointer path of the quote field to update. The `/companyName` value is deprecated; use `/legalEntityId` instead.
             enum:
               - /status
               - /validTo
@@ -2302,6 +2343,7 @@ components:
               - /billingAddressId
               - /shippingAddressId
               - /companyName
+              - /legalEntityId
               - /customerId
               - /shipping
               - /restriction
@@ -2359,6 +2401,7 @@ components:
               - /billingAddressId
               - /shippingAddressId
               - /companyName
+              - /legalEntityId
               - /customerId
               - /shipping
               - /restriction
