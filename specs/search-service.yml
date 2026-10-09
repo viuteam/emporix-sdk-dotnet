@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Search Service
   version: ''
-  description: The Emporix API Search Service allows you to search documents for a tenant, to store saved searches, and to manage the indexes and jobs used by that search.
+  description: The Emporix API Search Service allows you to search documents for a tenant, to store saved searches, to manage the indexes and jobs used by that search, and to copy index configuration from one tenant to another.
   contact:
     name: Emporix
     url: 'https://www.emporix.com/contact-us'
@@ -590,6 +590,186 @@ paths:
           $ref: '#/components/responses/403_search_read'
         '500':
           $ref: '#/components/responses/500_resp_common'
+  '/search/{tenant}/search/indexes/export':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Exporting search indexes
+      operationId: POST-search-tenant-indexes-export
+      tags:
+        - Export / Import
+      description: |-
+        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Exports the configuration of the selected search indexes as one package. The package can be imported on another tenant.
+
+        `data` is a base64-encoded JSON array. Each decoded item has `id`, `type`, and `fields`. `name` and `description` are optional localized maps. The array does not include `status` or `metadata`. Unknown properties in the request are ignored.
+
+        A selection that names an index that does not exist returns `404 Not Found`. An empty selection, a null item, or an item without `type` or `id` returns `400 Bad Request`.
+      security:
+        - OAuth2:
+            - search.search_manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/IndexSelection'
+            examples:
+              Two indexes:
+                value:
+                  - type: vehicle
+                    id: vehicles
+                  - type: bike
+                    id: bikes
+      responses:
+        '200':
+          description: The request succeeded. The body is the export package.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexExportPackage'
+              examples:
+                Exported indexes:
+                  value:
+                    exportedAt: '2026-03-12T10:00:00.000Z'
+                    data: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJ2ZWhpY2xlIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX1d
+        '400':
+          description: The selection is empty, an item is null, or an item is missing `type` or `id`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Empty selection:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: There is a validation error. Please check the details.
+                    details:
+                      - field: exportIndexes.selections
+                        message: 'selections: must not be empty'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_search_manage'
+        '404':
+          description: No index exists for one of the selected type and id pairs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Index not found:
+                  value:
+                    code: 404
+                    status: '404'
+                    message: The index with id='vehicles' has not been found on tenant='acme'.
+        '500':
+          $ref: '#/components/responses/500_resp_common'
+  '/search/{tenant}/search/indexes/import':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Importing search indexes
+      operationId: POST-search-tenant-indexes-import
+      tags:
+        - Export / Import
+      description: |-
+        ![Preview](https://res.cloudinary.com/saas-ag/image/upload/v1752824268/emporix/icons/preview_api1.png)
+
+        {% hint style="danger" %}
+        This functionality is in preview mode - some of the features may not be fully operational yet.
+        {% endhint %}
+
+        Creates or updates each index in the package. Each index uses the same checks as saving an index. The type must be a custom schema type, and each field must be allowed on that type.
+
+        `data` is a base64-encoded JSON array of index configurations. `metadata` can be omitted. When `metadata.version` is present, it is the optimistic lock. A missing version still updates an index that already exists. Unknown properties in a decoded item are ignored.
+
+        The response has one item per index, in the same order as the package. `jobId` and `jobType` are present when a build job starts. They are omitted when the index is already ready and its field definition is unchanged. `create_index` means the index was created. `update_index` means an existing index's field definition changed.
+
+        Indexes earlier in the package stay created or updated when a later index fails. The response is then the error for the index that failed.
+      security:
+        - OAuth2:
+            - search.search_manage
+      parameters:
+        - $ref: '#/components/parameters/header_Content-Language'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IndexExportPackage'
+            examples:
+              Import a package:
+                value:
+                  exportedAt: '2026-03-12T10:00:00.000Z'
+                  data: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJ2ZWhpY2xlIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX1d
+      responses:
+        '200':
+          description: The request succeeded. The body lists one result for each index in the package.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IndexImportResult'
+              examples:
+                Created and unchanged indexes:
+                  value:
+                    - id: vehicles
+                      type: vehicle
+                      jobId: 66f1a2b3c4d5e6f708192a3b
+                      jobType: create_index
+                    - id: bikes
+                      type: bike
+        '400':
+          description: The package cannot be read, or an index in the package fails validation or field checks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Invalid package:
+                  value:
+                    code: 400
+                    status: '400'
+                    message: Provided data to import is invalid
+                Field does not exist:
+                  value:
+                    code: 400
+                    status: '400'
+                    message: Field 'nope' does not exist.
+                Index fields are required:
+                  value:
+                    details:
+                      - field: fields
+                        message: 'fields: Index fields are required.'
+        '401':
+          $ref: '#/components/responses/401_resp_common'
+        '403':
+          $ref: '#/components/responses/403_search_manage'
+        '409':
+          description: An index job is already in progress, or `metadata.version` does not match the stored index.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Job already in progress:
+                  value:
+                    code: 409
+                    status: '409'
+                    message: An index job is already in progress.
+        '500':
+          $ref: '#/components/responses/500_resp_common'
   '/search/{tenant}/search/{type}/indexes':
     parameters:
       - $ref: '#/components/parameters/path_tenant'
@@ -675,7 +855,7 @@ paths:
 
         A new index returns `202 Accepted` and the id of a job that builds the index. Saving an index whose status is `building` or `failed`, or whose field definition changed, also returns `202 Accepted` and starts an update job. An index whose status is `ready` and whose field definition is unchanged returns `204 No Content` and does not start a job. `name` and `description` can still change in that case. A job that is already in progress for this index returns `409 Conflict`.
 
-        `metadata` can be omitted when the index is created. An update of an existing index requires `metadata.version`.
+        `metadata` can be omitted when the index is created and when it is updated. A missing `metadata.version` still updates an existing index. When `metadata.version` is sent, it is the optimistic lock: a value that does not match the stored index returns `409 Conflict`.
       security:
         - OAuth2:
             - search.search_manage
@@ -717,7 +897,7 @@ paths:
         '204':
           description: The index is already ready and the field definition is unchanged. No job was started.
         '400':
-          description: The index id, field list, or metadata version is invalid.
+          description: The index id or field list is invalid, or `metadata.version` is below 1.
           content:
             application/json:
               schema:
@@ -728,11 +908,6 @@ paths:
                     code: 400
                     status: '400'
                     message: Index fields are required.
-                Version is required:
-                  value:
-                    code: 400
-                    status: '400'
-                    message: metadata.version is required to update an index.
                 Field does not exist:
                   value:
                     code: 400
@@ -1334,7 +1509,10 @@ components:
         - path
     IndexMetadataRequest:
       type: object
-      description: Optimistic lock for an index update. Required when the index already exists.
+      description: |-
+        Optimistic lock for an index update. The object can be omitted on create and on update. A missing object still updates an existing index.
+
+        When the object is sent, `version` is required. A value that does not match the stored index returns `409 Conflict`.
       properties:
         version:
           type: integer
@@ -1343,6 +1521,69 @@ components:
           example: 1
       required:
         - version
+    IndexSelection:
+      type: object
+      description: One index to export. Unknown properties are ignored.
+      properties:
+        type:
+          type: string
+          description: Custom schema type this index belongs to.
+          example: vehicle
+        id:
+          type: string
+          description: Index id. Use 1 to 66 characters. Allowed characters are letters, digits, underscore, and hyphen.
+          example: vehicles
+      required:
+        - type
+        - id
+    IndexExportPackage:
+      type: object
+      description: |-
+        Package of search index configuration. `data` is the base64 encoding of a JSON array.
+
+        Each decoded item has `id`, `type`, and `fields`. `name` and `description` are optional localized maps. Export omits `status` and `metadata`. Import accepts `metadata.version` when the caller sends it.
+      properties:
+        exportedAt:
+          type: string
+          format: date-time
+          description: Date and time when the package was exported.
+          example: '2026-03-12T10:00:00.000Z'
+        data:
+          type: string
+          description: Base64-encoded JSON array of index configurations.
+          example: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJ2ZWhpY2xlIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX1d
+      required:
+        - exportedAt
+        - data
+    IndexImportResult:
+      type: object
+      description: Result of importing one index. `jobId` and `jobType` are omitted when the ready index is unchanged.
+      properties:
+        id:
+          type: string
+          description: Index id.
+          example: vehicles
+        type:
+          type: string
+          description: Custom schema type this index belongs to.
+          example: vehicle
+        jobId:
+          type: string
+          description: Identifier of the job that builds the index. Present when a job starts.
+          example: 66f1a2b3c4d5e6f708192a3b
+        jobType:
+          type: string
+          description: |-
+            Kind of index change. Present when a job starts.
+            * `create_index` – the index was created.
+            * `update_index` – an existing index's field definition changed.
+          enum:
+            - create_index
+            - update_index
+          example: create_index
+      required:
+        - id
+        - type
     SearchIndex:
       type: object
       description: A search index.
