@@ -12,7 +12,8 @@ namespace Viu.Emporix;
 /// <para>
 /// A preview service at Emporix, introduced on 2026-09-28 and still changing
 /// from week to week. Everything that belongs to one custom schema type is
-/// reached through <see cref="ForType"/>; the lists here span every type.
+/// reached through <see cref="ForType"/>; the lists, the export and the import
+/// here span every type.
 /// </para>
 /// <para>
 /// An index builds asynchronously. Creating, changing or deleting one answers
@@ -140,6 +141,75 @@ public sealed class SearchService
             },
             SearchJsonContext.Default.IndexJob,
             cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Exports the configuration of search indexes, to import on another tenant.</summary>
+    /// <param name="indexes">Which indexes, by type and id; at least one.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>
+    /// The package for <see cref="ImportIndexesAsync"/>: the fields, names and
+    /// descriptions of each index as base64 JSON, without status or version.
+    /// </returns>
+    /// <remarks>
+    /// An index that does not exist fails the whole export with <c>404</c>. A
+    /// <c>POST</c> that only reads, so it is marked repeatable.
+    /// </remarks>
+    public async Task<IndexExportPackage?> ExportIndexesAsync(
+        IEnumerable<IndexSelection> indexes,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(indexes);
+
+        List<IndexSelection> body = [.. indexes];
+        ArgumentOutOfRangeException.ThrowIfZero(body.Count, nameof(indexes));
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/search/indexes/export",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(body, SearchJsonContext.Default.ListIndexSelection),
+                Idempotent = true,
+            },
+            SearchJsonContext.Default.IndexExportPackage,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Creates or changes every index in an exported package.</summary>
+    /// <param name="package">What <see cref="ExportIndexesAsync"/> returned, possibly on another tenant.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>
+    /// One result per index, in the package's order. <c>JobId</c> is set when a
+    /// build started — read it with <see cref="GetJobAsync"/> — and missing when
+    /// the index was ready and unchanged.
+    /// </returns>
+    /// <remarks>
+    /// Each type must exist as a custom schema type here and allow every field.
+    /// Not atomic: when one index fails, those before it stay written and the
+    /// error names only the one that failed. Not repeatable either — a retry
+    /// meets the build the first attempt started and answers <c>409</c>.
+    /// </remarks>
+    public async Task<IReadOnlyList<IndexImportResult>> ImportIndexesAsync(
+        IndexExportPackage package,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/search/indexes/import",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(package, SearchJsonContext.Default.IndexExportPackage),
+            },
+            SearchJsonContext.Default.ListIndexImportResult,
+            cancellationToken).ConfigureAwait(false) ?? [];
     }
 
     /// <summary>The page parameters and an optional <c>q</c> filter every list here takes.</summary>
@@ -428,9 +498,10 @@ public sealed class SearchTypeOperations
     /// </returns>
     /// <remarks>
     /// A string field needs <c>Text</c>, <c>Autocomplete</c> or <c>Exact</c>; number,
-    /// boolean and date fields take only <c>Exact</c>. Changing an existing index
-    /// needs <c>Metadata.Version</c>. A retry after a timeout may meet the version
-    /// the first attempt already moved, and answer <c>409</c>.
+    /// boolean and date fields take only <c>Exact</c>. <c>Metadata.Version</c> is
+    /// optional: without it a change overwrites whatever is stored, with it a stale
+    /// version answers <c>409</c> — as can a retry after a timeout, which meets the
+    /// version the first attempt already moved.
     /// </remarks>
     public async Task<JobId?> UpsertIndexAsync(
         string indexId,
