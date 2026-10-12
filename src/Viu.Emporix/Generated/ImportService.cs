@@ -386,7 +386,7 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportRunTrigger? Trigger { get; set; } = default!;
 
         /// <summary>
-        /// Dry-run only. A sample of the mapped records that would be written, so the mapping can be previewed without a real import. Absent on normal runs.
+        /// Dry-run only. A sample of the mapped records that would be written, so the mapping can be previewed without a real import. Absent on normal runs. Each stream is sampled separately, up to the `sampleSize` set in the run request. A parent stream's records include the records of its composite child streams that have `childStrategy` set to `EMBED` or `PATCH`. Those child records appear in the parent attribute named by the child stream's `embedAttribute`, as a real import writes them. Only child records inside the child stream's own sample are included, so a sampled parent record can show fewer child records than the source contains for that parent, or none. Child records are also sampled under their own stream.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("dryRunSample")]
         public System.Collections.Generic.ICollection<DryRunSample>? DryRunSample { get; set; } = default!;
