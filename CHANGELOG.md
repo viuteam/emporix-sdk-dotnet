@@ -9,6 +9,17 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.12.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.11.2...v0.12.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* CancelRunAsync gains an optional force parameter before auth, so code compiled against the old signature must be rebuilt.
+
+### Fixed
+
+* queued import runs, and cancelling a resumable one ([#77](https://github.com/viuteam/emporix-sdk-dotnet/issues/77)) ([7a87a54](https://github.com/viuteam/emporix-sdk-dotnet/commit/7a87a5495ed9df33bcaf943fa25d0a0e93efa98a))
+
 ## [0.11.2](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.11.1...v0.11.2) (2026-10-12)
 
 
