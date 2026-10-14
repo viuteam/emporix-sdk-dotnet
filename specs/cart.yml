@@ -599,6 +599,7 @@ paths:
                         discountType: ABSOLUTE
                         discountCalculationType: TOTAL
                         categoryRestricted: false
+                        vendorRestricted: false
                     feeYrnAggregate:
                       elements:
                         - yrn: urn:yaas:saasag:fee:fee:b2b2cstage;677d49ca3a421b451eab23f2
@@ -1407,6 +1408,7 @@ paths:
                           discountType: ABSOLUTE
                           discountCalculationType: TOTAL
                           categoryRestricted: false
+                          vendorRestricted: false
                       feeYrnAggregate:
                         elements:
                           - yrn: urn:yaas:saasag:fee:fee:b2b2cstage;677d49ca3a421b451eab23f2
@@ -2112,6 +2114,7 @@ paths:
                         discountType: ABSOLUTE
                         discountCalculationType: TOTAL
                         categoryRestricted: false
+                        vendorRestricted: false
                     feeYrnAggregate:
                       elements:
                         - yrn: urn:yaas:saasag:fee:fee:b2b2cstage;677d49ca3a421b451eab23f2
@@ -5137,11 +5140,51 @@ components:
             $ref: '#/components/schemas/link'
         discountValidationDetails:
           $ref: '#/components/schemas/discountValidationDetails'
+        vendorRestricted:
+          type: boolean
+          default: false
+          description: Indicates whether the discount is limited to the vendors in `restrictions.vendors`.
+        restrictions:
+          $ref: '#/components/schemas/discountRestrictions'
         discountIndex:
           type: integer
           description: The index of the discount. It represents the discount position in the cart discounts array.
       required:
         - code
+    discountRestrictions:
+      description: Restrictions copied from the coupon.
+      type: object
+      properties:
+        validFrom:
+          type: string
+          description: Start of the discount validity period.
+        validUntil:
+          type: string
+          description: End of the discount validity period.
+        minOrderValue:
+          allOf:
+            - $ref: '#/components/schemas/price'
+            - description: Minimum order value copied from the coupon. When `vendorRestricted` is `true`, this value is checked against the total of the matching vendor items.
+        includedCategories:
+          type: array
+          description: Categories to which the discount applies.
+          items:
+            type: string
+        excludedCategories:
+          type: array
+          description: Categories to which the discount does not apply.
+          items:
+            type: string
+        segments:
+          type: array
+          description: Customer segments to which the discount applies.
+          items:
+            type: string
+        vendors:
+          type: array
+          description: Vendor identifiers to which the discount applies.
+          items:
+            type: string
     discountValidationDetails:
       description: ''
       type: object

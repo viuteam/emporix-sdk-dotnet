@@ -104,6 +104,9 @@ namespace Viu.Emporix.CouponModels
         [System.Text.Json.Serialization.JsonPropertyName("segmentRestricted")]
         public bool? SegmentRestricted { get; set; } = default!;
 
+        [System.Text.Json.Serialization.JsonPropertyName("vendorRestricted")]
+        public bool? VendorRestricted { get; set; } = default!;
+
         [System.Text.Json.Serialization.JsonPropertyName("restrictions")]
         public Restrictions? Restrictions { get; set; } = default!;
 
@@ -228,6 +231,9 @@ namespace Viu.Emporix.CouponModels
 
         [System.Text.Json.Serialization.JsonPropertyName("segmentRestricted")]
         public bool? SegmentRestricted { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("vendorRestricted")]
+        public bool? VendorRestricted { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("restrictions")]
         public Restrictions? Restrictions { get; set; } = default!;
@@ -402,6 +408,12 @@ namespace Viu.Emporix.CouponModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("segments")]
         public System.Collections.Generic.ICollection<string>? Segments { get; set; } = default!;
+
+        /// <summary>
+        /// The list of vendor identifiers to which this coupon applies. Must be provided when `vendorRestricted` is `true`, and must be empty when `vendorRestricted` is `false`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("vendors")]
+        public System.Collections.Generic.ICollection<string>? Vendors { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -932,6 +944,7 @@ namespace Viu.Emporix.CouponModels
         public System.Collections.Generic.IDictionary<string, string>? Mixins { get; set; } = default!;
 
     }
+
 
 
 

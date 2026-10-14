@@ -88,6 +88,8 @@ paths:
                 $ref: '#/components/examples/createCouponBody'
               CreateSegmentRestrictedCoupon:
                 $ref: '#/components/examples/createSegmentRestrictedCouponBody'
+              CreateVendorRestrictedCoupon:
+                $ref: '#/components/examples/createVendorRestrictedCouponBody'
             schema:
               $ref: '#/components/schemas/coupon-creation'
         required: true
@@ -558,6 +560,8 @@ components:
           $ref: '#/components/schemas/categoryRestricted'
         segmentRestricted:
           $ref: '#/components/schemas/segmentRestricted'
+        vendorRestricted:
+          $ref: '#/components/schemas/vendorRestricted'
         restrictions:
           $ref: '#/components/schemas/restrictions'
         issuedTo:
@@ -663,6 +667,8 @@ components:
           $ref: '#/components/schemas/categoryRestricted'
         segmentRestricted:
           $ref: '#/components/schemas/segmentRestricted'
+        vendorRestricted:
+          $ref: '#/components/schemas/vendorRestricted'
         restrictions:
           $ref: '#/components/schemas/restrictions'
         issuedTo:
@@ -702,6 +708,12 @@ components:
         Defines if the coupon has category restrictions.
         ***
         Info: Cannot be combined together with the segment restrictions.
+      default: false
+    vendorRestricted:
+      type: boolean
+      description: |
+        Defines if the coupon applies only to products from specific vendors. If the value is `true`, `restrictions.vendors` must be provided.
+        A vendor restriction can be combined with other restriction types.
       default: false
     currency-amount:
       type: object
@@ -779,7 +791,9 @@ components:
           format: date-time
           description: 'Must be provided in ISO 8601 format (http://www.iso.org/iso/home/standards/iso8601.htm), e.g. ''2015-01-31T23:59:59.999Z''.'
         minOrderValue:
-          $ref: '#/components/schemas/currency-amount'
+          allOf:
+            - $ref: '#/components/schemas/currency-amount'
+            - description: The minimum order value required to use the coupon. When `vendorRestricted` is `true`, this value is checked against the total of the matching vendor items.
         includedCategories:
           type: array
           description: The list of product's categories to which this coupon applies to. Must be defined only if the `categoryRestricted` flag is set to true. Must be disjoint with excludedCategories list.
@@ -793,6 +807,11 @@ components:
         segments:
           type: array
           description: The list of segments to which this coupon applies to. Can be defined only if the `segmentRestricted` flag is set to true.
+          items:
+            type: string
+        vendors:
+          type: array
+          description: The list of vendor identifiers to which this coupon applies. Must be provided when `vendorRestricted` is `true`, and must be empty when `vendorRestricted` is `false`.
           items:
             type: string
     resource-location:
@@ -1291,6 +1310,7 @@ components:
         maxRedemptionsPerCustomer: -1
         categoryRestricted: false
         segmentRestricted: false
+        vendorRestricted: false
         mixins:
           couponCustomAttributes:
             provenance: Winter Sale
@@ -1321,6 +1341,7 @@ components:
           maxRedemptionsPerCustomer: -1
           categoryRestricted: false
           segmentRestricted: false
+          vendorRestricted: false
           mixins:
             couponCustomAttributes:
               provenance: Winter Sale
@@ -1349,6 +1370,7 @@ components:
           maxRedemptionsPerCustomer: -1
           categoryRestricted: false
           segmentRestricted: false
+          vendorRestricted: false
           mixins:
             couponCustomAttributes:
               provenance: Winter Sale
@@ -1376,6 +1398,7 @@ components:
           maxRedemptionsPerCustomer: 1
           categoryRestricted: false
           segmentRestricted: true
+          vendorRestricted: false
           mixins:
             couponCustomAttributes:
               provenance: Winter Sale
@@ -1422,6 +1445,7 @@ components:
         maxRedemptionsPerCustomer: -1
         categoryRestricted: false
         segmentRestricted: false
+        vendorRestricted: false
         restrictions:
           validFor:
             - C0123456789
@@ -1453,6 +1477,7 @@ components:
         maxRedemptionsPerCustomer: -1
         categoryRestricted: false
         segmentRestricted: true
+        vendorRestricted: false
         restrictions:
           validFor: []
           validFrom: '2014-12-01T00:00:00.000Z'
@@ -1471,6 +1496,25 @@ components:
         metadata:
           mixins:
             couponCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/couponAttributes_v1.json'
+    createVendorRestrictedCouponBody:
+      value:
+        code: VENDOR10
+        name: Vendor sale
+        description: 10 percent off products from the selected vendors
+        discountType: PERCENT
+        discountPercentage: 10
+        allowAnonymous: false
+        maxRedemptions: -1
+        maxRedemptionsPerCustomer: -1
+        categoryRestricted: false
+        segmentRestricted: false
+        vendorRestricted: true
+        restrictions:
+          vendors:
+            - 5f6a1c2b3d4e5f6789012345
+          minOrderValue:
+            amount: 50
+            currency: EUR
     createCouponResponse:
       value:
         id: ENG2OC0
@@ -1521,6 +1565,7 @@ components:
         maxRedemptionsPerCustomer: -1
         categoryRestricted: false
         segmentRestricted: false
+        vendorRestricted: false
         mixins:
           couponCustomAttributes:
             provenance: Winter Sale
