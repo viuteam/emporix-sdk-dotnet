@@ -1392,10 +1392,76 @@ namespace Viu.Emporix.CartModels
         public DiscountValidationDetails? DiscountValidationDetails { get; set; } = default!;
 
         /// <summary>
+        /// Indicates whether the discount is limited to the vendors in `restrictions.vendors`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("vendorRestricted")]
+        public bool? VendorRestricted { get; set; } = false;
+
+        [System.Text.Json.Serialization.JsonPropertyName("restrictions")]
+        public DiscountRestrictions? Restrictions { get; set; } = default!;
+
+        /// <summary>
         /// The index of the discount. It represents the discount position in the cart discounts array.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("discountIndex")]
         public int? DiscountIndex { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Restrictions copied from the coupon.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class DiscountRestrictions
+    {
+
+        /// <summary>
+        /// Start of the discount validity period.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("validFrom")]
+        public string? ValidFrom { get; set; } = default!;
+
+        /// <summary>
+        /// End of the discount validity period.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("validUntil")]
+        public string? ValidUntil { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("minOrderValue")]
+        public Price? MinOrderValue { get; set; } = default!;
+
+        /// <summary>
+        /// Categories to which the discount applies.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("includedCategories")]
+        public System.Collections.Generic.ICollection<string>? IncludedCategories { get; set; } = default!;
+
+        /// <summary>
+        /// Categories to which the discount does not apply.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("excludedCategories")]
+        public System.Collections.Generic.ICollection<string>? ExcludedCategories { get; set; } = default!;
+
+        /// <summary>
+        /// Customer segments to which the discount applies.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("segments")]
+        public System.Collections.Generic.ICollection<string>? Segments { get; set; } = default!;
+
+        /// <summary>
+        /// Vendor identifiers to which the discount applies.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("vendors")]
+        public System.Collections.Generic.ICollection<string>? Vendors { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -3779,6 +3845,7 @@ namespace Viu.Emporix.CartModels
         TOTAL = 1,
 
     }
+
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<LinkRel>))]

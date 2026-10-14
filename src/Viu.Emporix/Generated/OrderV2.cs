@@ -464,6 +464,12 @@ namespace Viu.Emporix.OrderV2Models
         [System.Text.Json.Serialization.JsonPropertyName("categoryRestricted")]
         public bool? CategoryRestricted { get; set; } = default!;
 
+        /// <summary>
+        /// Indicates whether the discount is limited to the vendors in `restrictions.vendors`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("vendorRestricted")]
+        public bool? VendorRestricted { get; set; } = default!;
+
         [System.Text.Json.Serialization.JsonPropertyName("restrictions")]
         public DiscountRestrictions? Restrictions { get; set; } = default!;
 
@@ -508,6 +514,12 @@ namespace Viu.Emporix.OrderV2Models
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("excludedCategories")]
         public System.Collections.Generic.ICollection<string>? ExcludedCategories { get; set; } = default!;
+
+        /// <summary>
+        /// Vendor identifiers to which the discount applies.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("vendors")]
+        public System.Collections.Generic.ICollection<string>? Vendors { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

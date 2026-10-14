@@ -1112,6 +1112,9 @@ components:
         categoryRestricted:
           description: This flag indicates if discount is category restricted.
           type: boolean
+        vendorRestricted:
+          description: Indicates whether the discount is limited to the vendors in `restrictions.vendors`.
+          type: boolean
         restrictions:
           allOf:
             - $ref: '#/components/schemas/discountRestrictions'
@@ -1133,7 +1136,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/discountRestrictionsPrice'
             - type: object
-              description: The minimum order price for which the discount is valid.
+              description: The minimum order price for which the discount is valid. When `vendorRestricted` is `true`, this value is checked against the total of the matching vendor items.
         includedCategories:
           description: List of included categories.
           type: array
@@ -1141,6 +1144,11 @@ components:
             type: string
         excludedCategories:
           description: List of excluded categories.
+          type: array
+          items:
+            type: string
+        vendors:
+          description: Vendor identifiers to which the discount applies.
           type: array
           items:
             type: string
@@ -5269,6 +5277,7 @@ components:
             currency: EUR
             sequenceId: 1
             categoryRestricted: false
+            vendorRestricted: false
           - code: LS100EUROTOTAL
             amount: 100
             currency: EUR
@@ -5277,6 +5286,7 @@ components:
             discountType: ABSOLUTE
             discountCalculationType: TOTAL
             categoryRestricted: false
+            vendorRestricted: false
         customer:
           id: "45620894"
           name: John Dutton
