@@ -398,7 +398,20 @@ namespace Viu.Emporix.ImportServiceModels
         public string? Origin { get; set; } = default!;
 
         /// <summary>
-        /// The run status. `ABORTED` means the service refused to start the run because of the import configuration, for example mappings that have never been published or a changed target schema. Nothing was read or written.
+        /// The run status. Possible values:
+        /// <br/>
+        /// <br/>* `QUEUED` – the run waits to start. Nothing has been read yet, and the run has no per-stream
+        /// <br/>  progress. `queueWaitingFor` says what the run waits for.
+        /// <br/>* `RUNNING` – the run is executing.
+        /// <br/>* `RESUMABLE` – the run was interrupted, for example by a service restart, and resumes automatically
+        /// <br/>  from its last checkpoint. It is not a final status.
+        /// <br/>* `SUCCEEDED` – the run finished, and every record was processed.
+        /// <br/>* `PARTIAL` – the run finished, but not completely: some records failed, a limit skipped records,
+        /// <br/>  or a stream was not run. The `message` field and the per-stream progress give the details.
+        /// <br/>* `FAILED` – the run stopped because of an error.
+        /// <br/>* `CANCELLED` – the run was cancelled.
+        /// <br/>* `ABORTED` – the service refused to start the run because of the import configuration, for example
+        /// <br/>  mappings that have never been published or a changed target schema. Nothing was read or written.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunStatus>))]
@@ -412,16 +425,54 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportRunMode? Mode { get; set; } = default!;
 
         /// <summary>
-        /// When the run started.
+        /// When the run was requested. If the run was queued first, it began executing later, at `executionStartedAt`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("startedAt")]
         public System.DateTimeOffset? StartedAt { get; set; } = default!;
+
+        /// <summary>
+        /// When the run began executing. Equal to `startedAt`, or later by the time the run spent in the queue. `null` while the run is `QUEUED`, and on runs recorded before the field existed.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("executionStartedAt")]
+        public System.DateTimeOffset? ExecutionStartedAt { get; set; } = default!;
 
         /// <summary>
         /// When the run finished.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("finishedAt")]
         public System.DateTimeOffset? FinishedAt { get; set; } = default!;
+
+        /// <summary>
+        /// `QUEUED` runs only. The run's position among the queued runs that can start, where `1` starts next. Runs of all tenants share the queue, and a tenant with fewer runs executing goes first. The value is approximate, because the queue changes while you read it. The field is absent when the run is not queued, when it waits for something other than a worker, or when the service has not yet calculated it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("queuePosition")]
+        public int? QueuePosition { get; set; } = default!;
+
+        /// <summary>
+        /// `QUEUED` runs only. What the run waits for. Possible values:
+        /// <br/>
+        /// <br/>* `WORKER` – the run waits for a free worker. `queuePosition` gives its place in the queue.
+        /// <br/>* `PREVIOUS_RUN` – the run waits for the configuration's current run to finish.
+        /// <br/>* `TENANT_LIMIT` – the run waits for one of the tenant's runs to finish, because
+        /// <br/>  `maxConcurrentImports` runs are already executing.
+        /// <br/>
+        /// <br/>The field is absent when the run is not queued, or when the service has not yet calculated it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("queueWaitingFor")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunQueueWaitingFor>))]
+        public ImportRunQueueWaitingFor? QueueWaitingFor { get; set; } = default!;
+
+        /// <summary>
+        /// The number of later scheduled run requests that were added to this run while it was queued. A configuration has at most one queued run, so a scheduled request that arrives while a real run of the whole configuration is queued does not queue a second run.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("supersededRequests")]
+        public int? SupersededRequests { get; set; } = default!;
+
+        /// <summary>
+        /// When the latest scheduled run request counted in `supersededRequests` was made. Absent when `supersededRequests` is `0`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("lastRequestedAt")]
+        public System.DateTimeOffset? LastRequestedAt { get; set; } = default!;
 
         /// <summary>
         /// Records read (created + updated + skipped + deleted + failed).
@@ -514,7 +565,7 @@ namespace Viu.Emporix.ImportServiceModels
         public bool? DryRunPublished { get; set; } = default!;
 
         /// <summary>
-        /// The published mapping version each stream uses in this run, fixed when the run starts. Version `0` means that the stream has no published mappings. The field is absent on a dry run of the draft mappings and on runs recorded before it existed.
+        /// The published mapping version each stream uses in this run, fixed when the run starts executing. Version `0` means that the stream has no published mappings. The field is absent while the run is `QUEUED`, on a dry run of the draft mappings, and on runs recorded before it existed.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mappingVersions")]
         public System.Collections.Generic.ICollection<MappingVersions>? MappingVersions { get; set; } = default!;
@@ -1197,7 +1248,7 @@ namespace Viu.Emporix.ImportServiceModels
         public int? MaxRecordsPerEntity { get; set; } = default!;
 
         /// <summary>
-        /// The maximum number of runs that may be active at once for the tenant. A run requested beyond this limit is rejected with `429`.
+        /// The maximum number of runs that can execute at once for the tenant. A run requested beyond this limit is not rejected. It waits in the `QUEUED` status until one of the tenant's runs finishes.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("maxConcurrentImports")]
         public int? MaxConcurrentImports { get; set; } = default!;
@@ -1323,7 +1374,7 @@ namespace Viu.Emporix.ImportServiceModels
         public double? SkipRate { get; set; } = default!;
 
         /// <summary>
-        /// The mean duration of a finished run, in seconds.
+        /// The mean duration of a finished run, in seconds, measured from when the run began executing (`executionStartedAt`). Time spent in the queue is not counted.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("avgRunDurationSec")]
         public double? AvgRunDurationSec { get; set; } = default!;
@@ -1347,7 +1398,7 @@ namespace Viu.Emporix.ImportServiceModels
         public int? DistinctEntities { get; set; } = default!;
 
         /// <summary>
-        /// The number of runs currently in progress.
+        /// The number of runs currently in the `QUEUED`, `RUNNING`, or `RESUMABLE` status. When you filter by `streamId`, queued runs are not counted, because they have not started any stream yet.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("activeRuns")]
         public int? ActiveRuns { get; set; } = default!;
@@ -2091,20 +2142,23 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"RUNNING")]
         RUNNING = 1,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"RESUMABLE")]
+        RESUMABLE = 2,
+
         [System.Runtime.Serialization.EnumMember(Value = @"SUCCEEDED")]
-        SUCCEEDED = 2,
+        SUCCEEDED = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"PARTIAL")]
-        PARTIAL = 3,
+        PARTIAL = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"FAILED")]
-        FAILED = 4,
+        FAILED = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"CANCELLED")]
-        CANCELLED = 5,
+        CANCELLED = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"ABORTED")]
-        ABORTED = 6,
+        ABORTED = 7,
 
     }
 
@@ -2118,6 +2172,22 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"DELTA")]
         DELTA = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportRunQueueWaitingFor>))]
+    public enum ImportRunQueueWaitingFor
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"WORKER")]
+        WORKER = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"PREVIOUS_RUN")]
+        PREVIOUS_RUN = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"TENANT_LIMIT")]
+        TENANT_LIMIT = 2,
 
     }
 
