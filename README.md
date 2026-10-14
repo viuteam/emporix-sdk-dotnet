@@ -638,7 +638,8 @@ growing interval and a timeout that is distinct from cancellation:
 ```csharp
 var job = await EmporixPolling.WaitForAsync(
     poll: ct => client.Imports.GetRunAsync(runId, cancellationToken: ct),
-    isComplete: r => r?.Status is not (ImportRunStatus.RUNNING or ImportRunStatus.PENDING),
+    isComplete: r => r?.Run?.Status is not
+        (ImportRunStatus.QUEUED or ImportRunStatus.RUNNING or ImportRunStatus.RESUMABLE),
     cancellationToken: cancellationToken);
 ```
 
