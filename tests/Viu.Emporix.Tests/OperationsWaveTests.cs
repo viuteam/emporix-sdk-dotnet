@@ -68,6 +68,47 @@ public class OperationsWaveTests
     }
 
     [Fact]
+    public async Task Cancelling_a_run_sends_force_only_when_the_caller_chose_it()
+    {
+        // A RESUMABLE run stops only with force=true; without it Emporix answers 409.
+        StubHttpMessageHandler handler = new(HttpStatusCode.Accepted, "{}");
+        ImportService imports = new(Http(handler), Options());
+
+        await imports.CancelRunAsync("run-1");
+        await imports.CancelRunAsync("run-1", force: true);
+
+        Assert.Equal("/importtool/acme/runs/run-1/cancel", Uri(handler, 0));
+        Assert.Equal("/importtool/acme/runs/run-1/cancel?force=true", Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task The_documented_wait_outlasts_a_queued_and_a_resumable_run()
+    {
+        // The predicate the README and GetRunAsync show. QUEUED and RESUMABLE are
+        // not final; an earlier version stopped at the first poll of a queued run.
+        string[] states = ["QUEUED", "RUNNING", "RESUMABLE", "SUCCEEDED"];
+        int calls = 0;
+        StubHttpMessageHandler handler = new((_, _) => StubHttpMessageHandler.Json(
+            HttpStatusCode.OK, $$$"""{"run":{"id":"3fa85f64-5717-4562-b3fc-2c963f66afa6","status":"{{{states[calls++]}}}"}}"""));
+        ImportService imports = new(Http(handler), Options());
+
+        ImportServiceModels.RunDetail? run = await EmporixPolling.WaitForAsync(
+            poll: ct => imports.GetRunAsync("run-1", cancellationToken: ct),
+            isComplete: r => r?.Run?.Status is not
+                (ImportServiceModels.ImportRunStatus.QUEUED
+                or ImportServiceModels.ImportRunStatus.RUNNING
+                or ImportServiceModels.ImportRunStatus.RESUMABLE),
+            new EmporixPollingOptions
+            {
+                InitialInterval = TimeSpan.FromMilliseconds(1),
+                MaximumInterval = TimeSpan.FromMilliseconds(1),
+            });
+
+        Assert.Equal(4, calls);
+        Assert.Equal(ImportServiceModels.ImportRunStatus.SUCCEEDED, run?.Run?.Status);
+    }
+
+    [Fact]
     public async Task Starting_an_import_sends_only_the_options_that_were_set()
     {
         StubHttpMessageHandler handler = new(HttpStatusCode.OK, "{}");

@@ -249,11 +249,18 @@ public sealed class ImportService
     /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <returns>The run, already running — this call does not wait for it.</returns>
+    /// <returns>
+    /// The run, <c>QUEUED</c> — this call does not wait for it to start, let alone
+    /// finish. <c>MappingVersions</c> is not set yet: the versions are fixed when
+    /// the run begins executing, so read them from <see cref="GetRunAsync"/>.
+    /// </returns>
     /// <remarks>
     /// <para>
-    /// At most one run is active per configuration; starting a second answers
-    /// <c>409</c>.
+    /// A configuration has at most one run executing and one queued: while it has
+    /// a run <c>QUEUED</c>, <c>RUNNING</c> or <c>RESUMABLE</c>, starting another
+    /// answers <c>409</c>. The tenant's <c>maxConcurrentImports</c> no longer
+    /// refuses a run; the run waits, with <c>QueueWaitingFor</c> set to
+    /// <c>TENANT_LIMIT</c>.
     /// </para>
     /// <para>
     /// A run executes published mappings only. A stream whose mappings were
@@ -348,8 +355,10 @@ public sealed class ImportService
     /// <code>
     /// RunDetail? run = await EmporixPolling.WaitForAsync(
     ///     poll: ct => client.Imports.GetRunAsync(runId, cancellationToken: ct),
-    ///     isComplete: r => r?.Status is not (ImportRunStatus.RUNNING or ImportRunStatus.PENDING));
+    ///     isComplete: r => r?.Run?.Status is not
+    ///         (ImportRunStatus.QUEUED or ImportRunStatus.RUNNING or ImportRunStatus.RESUMABLE));
     /// </code>
+    /// <c>RESUMABLE</c> is not final: an interrupted run picks itself up again.
     /// <see cref="StreamEventsAsync"/> follows the same run without polling.
     /// </remarks>
     public async Task<RunDetail?> GetRunAsync(
@@ -419,16 +428,29 @@ public sealed class ImportService
             cancellationToken: cancellationToken);
     }
 
-    /// <summary>Stops a running import.</summary>
+    /// <summary>Stops a queued or running import.</summary>
     /// <param name="runId">The run id.</param>
+    /// <param name="force">
+    /// Stop the run at once and unblock its configuration, rather than letting it
+    /// wind down. Emporix assumes <see langword="false"/>.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
+    /// <para>
+    /// A <c>QUEUED</c> run has not started and is cancelled at once, with or
+    /// without <paramref name="force"/>. A <c>RESUMABLE</c> run — interrupted,
+    /// and waiting to resume on its own — stops only with
+    /// <paramref name="force"/>; without it Emporix answers <c>409</c>.
+    /// </para>
+    /// <para>
     /// Whatever the run already wrote stays written: this stops the work, it does
     /// not undo it.
+    /// </para>
     /// </remarks>
     public async Task<CancelResult?> CancelRunAsync(
         string runId,
+        bool? force = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -440,6 +462,7 @@ public sealed class ImportService
                 Method = HttpMethod.Post,
                 Path = $"{BasePath}/runs/{Uri.EscapeDataString(runId)}/cancel",
                 Auth = Defaults.Service(auth),
+                Query = force is null ? null : [new("force", force.Value ? "true" : "false")],
             },
             ImportJsonContext.Default.CancelResult,
             cancellationToken).ConfigureAwait(false);
@@ -449,7 +472,12 @@ public sealed class ImportService
     /// <param name="runId">The run id.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <remarks>Not repeatable, for the same reason starting one is not.</remarks>
+    /// <returns>The new run, <c>QUEUED</c> — this call does not wait for it.</returns>
+    /// <remarks>
+    /// Refused with <c>409</c> like <see cref="StartRunAsync"/>, while the
+    /// configuration has a run <c>QUEUED</c>, <c>RUNNING</c> or <c>RESUMABLE</c>.
+    /// Not repeatable, for the same reason starting one is not.
+    /// </remarks>
     public async Task<ImportRun?> RetryRunAsync(
         string runId,
         AuthContext auth = default,
