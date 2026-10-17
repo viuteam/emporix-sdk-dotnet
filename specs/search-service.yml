@@ -139,7 +139,7 @@ paths:
                   value:
                     code: 502
                     status: '502'
-                    message: Error while fetching custom entity='vehicle' for tenant='acme'. Error=Connection refused
+                    message: Error while fetching custom entity='VEHICLE' for tenant='acme'. Error=Connection refused
         '404':
           description: No saved search with this id exists for the tenant and type. Returned when the body contains `searchQueryId`.
           content:
@@ -197,7 +197,7 @@ paths:
                 Saved searches for a tenant:
                   value:
                     - id: red-cars
-                      type: vehicle
+                      type: VEHICLE
                       name:
                         en: Red cars
                       description:
@@ -212,7 +212,7 @@ paths:
                         createdAt: '2026-03-12T10:00:00.000Z'
                         modifiedAt: '2026-03-12T10:00:00.000Z'
                     - id: city-bikes
-                      type: bike
+                      type: BIKE
                       name:
                         en: City bikes
                       description:
@@ -280,7 +280,7 @@ paths:
                 Saved searches for a type:
                   value:
                     - id: red-cars
-                      type: vehicle
+                      type: VEHICLE
                       name:
                         en: Red cars
                       description:
@@ -413,7 +413,7 @@ paths:
                   value:
                     code: 409
                     status: '409'
-                    message: 'Cannot find the entity with an id: red-cars--vehicle and version: 2. It is possible to update an entity with the latest version only. Fetch the entity to get the latest version.'
+                    message: 'Cannot find the entity with an id: red-cars--VEHICLE and version: 2. It is possible to update an entity with the latest version only. Fetch the entity to get the latest version.'
         '500':
           $ref: '#/components/responses/500_resp_common'
     get:
@@ -446,7 +446,7 @@ paths:
                 One saved search:
                   value:
                     id: red-cars
-                    type: vehicle
+                    type: VEHICLE
                     name:
                       en: Red cars
                     description:
@@ -563,7 +563,7 @@ paths:
                 Indexes for a tenant:
                   value:
                     - id: vehicles
-                      type: vehicle
+                      type: VEHICLE
                       name:
                         en: Vehicles
                       description:
@@ -574,7 +574,7 @@ paths:
                         createdAt: '2026-03-12T10:00:00.000Z'
                         modifiedAt: '2026-03-12T10:00:00.000Z'
                     - id: bikes
-                      type: bike
+                      type: BIKE
                       name:
                         en: Bikes
                       description:
@@ -625,9 +625,9 @@ paths:
             examples:
               Two indexes:
                 value:
-                  - type: vehicle
+                  - type: VEHICLE
                     id: vehicles
-                  - type: bike
+                  - type: BIKE
                     id: bikes
       responses:
         '200':
@@ -640,7 +640,7 @@ paths:
                 Exported indexes:
                   value:
                     exportedAt: '2026-03-12T10:00:00.000Z'
-                    data: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJ2ZWhpY2xlIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX1d
+                    data: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJWRUhJQ0xFIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX0seyJpZCI6ImJpa2VzIiwidHlwZSI6IkJJS0UiLCJuYW1lIjp7ImVuIjoiQmlrZXMifSwiZGVzY3JpcHRpb24iOnsiZW4iOiJTZWFyY2ggYmlrZXMgYnkgbmFtZSJ9LCJmaWVsZHMiOlt7InBhdGgiOiJuYW1lLmVuIiwidGV4dCI6dHJ1ZX1dfV0=
         '400':
           description: The selection is empty, an item is null, or an item is missing `type` or `id`.
           content:
@@ -711,7 +711,7 @@ paths:
               Import a package:
                 value:
                   exportedAt: '2026-03-12T10:00:00.000Z'
-                  data: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJ2ZWhpY2xlIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX1d
+                  data: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJWRUhJQ0xFIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX0seyJpZCI6ImJpa2VzIiwidHlwZSI6IkJJS0UiLCJuYW1lIjp7ImVuIjoiQmlrZXMifSwiZGVzY3JpcHRpb24iOnsiZW4iOiJTZWFyY2ggYmlrZXMgYnkgbmFtZSJ9LCJmaWVsZHMiOlt7InBhdGgiOiJuYW1lLmVuIiwidGV4dCI6dHJ1ZX1dfV0=
       responses:
         '200':
           description: The request succeeded. The body lists one result for each index in the package.
@@ -725,11 +725,11 @@ paths:
                 Created and unchanged indexes:
                   value:
                     - id: vehicles
-                      type: vehicle
+                      type: VEHICLE
                       jobId: 66f1a2b3c4d5e6f708192a3b
                       jobType: create_index
                     - id: bikes
-                      type: bike
+                      type: BIKE
         '400':
           description: The package cannot be read, or an index in the package fails validation or field checks.
           content:
@@ -818,7 +818,7 @@ paths:
                 Indexes for a type:
                   value:
                     - id: vehicles
-                      type: vehicle
+                      type: VEHICLE
                       name:
                         en: Vehicles
                       description:
@@ -966,7 +966,7 @@ paths:
                 One index:
                   value:
                     id: vehicles
-                    type: vehicle
+                    type: VEHICLE
                     name:
                       en: Vehicles
                     description:
@@ -1093,7 +1093,7 @@ paths:
                       status: in_progress
                       type: create_index
                       indexId: vehicles
-                      message: Creating index vehicles--vehicle for type vehicle
+                      message: Creating index vehicles--VEHICLE for type VEHICLE
                       metadata:
                         version: 1
                         createdAt: '2026-03-12T10:00:00.000Z'
@@ -1140,7 +1140,7 @@ paths:
                     status: success
                     type: create_index
                     indexId: vehicles
-                    message: Creating index vehicles--vehicle for type vehicle
+                    message: Creating index vehicles--VEHICLE for type VEHICLE
                     response: Index created.
                     metadata:
                       version: 1
@@ -1192,7 +1192,7 @@ components:
         For now, only custom schema types are supported.
       schema:
         type: string
-        example: vehicle
+        example: VEHICLE
     query_pageNumber:
       name: pageNumber
       in: query
@@ -1375,6 +1375,8 @@ components:
               $ref: '#/components/examples/andQueriesRequest'
             Filter only:
               $ref: '#/components/examples/filterSearchRequest'
+            Contains filter:
+              $ref: '#/components/examples/containsFilterRequest'
             Range filter:
               $ref: '#/components/examples/rangeFilterRequest'
             List filter:
@@ -1528,7 +1530,7 @@ components:
         type:
           type: string
           description: Custom schema type this index belongs to.
-          example: vehicle
+          example: VEHICLE
         id:
           type: string
           description: Index id. Use 1 to 66 characters. Allowed characters are letters, digits, underscore, and hyphen.
@@ -1551,7 +1553,7 @@ components:
         data:
           type: string
           description: Base64-encoded JSON array of index configurations.
-          example: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJ2ZWhpY2xlIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX1d
+          example: W3siaWQiOiJ2ZWhpY2xlcyIsInR5cGUiOiJWRUhJQ0xFIiwibmFtZSI6eyJlbiI6IlZlaGljbGVzIn0sImRlc2NyaXB0aW9uIjp7ImVuIjoiU2VhcmNoIHZlaGljbGVzIGJ5IG5hbWUgYW5kIHBvd2VyIn0sImZpZWxkcyI6W3sicGF0aCI6Im5hbWUuZW4iLCJ0ZXh0Ijp0cnVlLCJhdXRvY29tcGxldGUiOiJQUkVGSVgifSx7InBhdGgiOiJjb2RlIiwidGV4dCI6dHJ1ZSwiZXhhY3QiOnRydWV9XX0seyJpZCI6ImJpa2VzIiwidHlwZSI6IkJJS0UiLCJuYW1lIjp7ImVuIjoiQmlrZXMifSwiZGVzY3JpcHRpb24iOnsiZW4iOiJTZWFyY2ggYmlrZXMgYnkgbmFtZSJ9LCJmaWVsZHMiOlt7InBhdGgiOiJuYW1lLmVuIiwidGV4dCI6dHJ1ZX1dfV0=
       required:
         - exportedAt
         - data
@@ -1566,7 +1568,7 @@ components:
         type:
           type: string
           description: Custom schema type this index belongs to.
-          example: vehicle
+          example: VEHICLE
         jobId:
           type: string
           description: Identifier of the job that builds the index. Present when a job starts.
@@ -1595,7 +1597,7 @@ components:
         type:
           type: string
           description: Custom schema type this index belongs to.
-          example: vehicle
+          example: VEHICLE
         name:
           type: object
           additionalProperties:
@@ -1664,7 +1666,7 @@ components:
         message:
           type: string
           description: Text recorded when the job started.
-          example: Creating index vehicles--vehicle for type vehicle
+          example: Creating index vehicles--VEHICLE for type VEHICLE
         response:
           type: string
           description: Result text recorded when the job finishes.
@@ -1821,7 +1823,7 @@ components:
         type:
           type: string
           description: Custom schema type this saved search belongs to.
-          example: vehicle
+          example: VEHICLE
         indexId:
           type: string
           description: Id of the search index this saved search uses.
@@ -1925,9 +1927,13 @@ components:
             * `BETWEEN` requires an array of two values. The range is inclusive.
             * `IN` and `NOT_IN` require a non-empty array.
             * `EXISTS` requires a boolean. `true` matches documents where the field is present. `false` matches documents where the field is absent.
+            * `CONTAINS` requires a non-blank string. The field must have `text: true` in the index.
     FilterOperator:
       type: string
-      description: Comparison applied to `field` and `value`.
+      description: |-
+        Comparison applied to `field` and `value`.
+
+        `CONTAINS` performs a case- and diacritic-insensitive substring match. The service wraps the value in `*` and escapes `\`, `*`, and `?` within it. Spaces remain part of the value.
       enum:
         - EQ
         - NEQ
@@ -1939,6 +1945,7 @@ components:
         - IN
         - NOT_IN
         - EXISTS
+        - CONTAINS
     SearchHit:
       type: object
       description: |-
@@ -2117,6 +2124,14 @@ components:
             - field: status
               operator: EQ
               value: DRAFT
+    containsFilterRequest:
+      summary: Case- and diacritic-insensitive substring filter
+      value:
+        index: custom-entities
+        filters:
+          field: name.en
+          operator: CONTAINS
+          value: hybrid-9
     rangeFilterRequest:
       summary: Inclusive numeric range
       value:
