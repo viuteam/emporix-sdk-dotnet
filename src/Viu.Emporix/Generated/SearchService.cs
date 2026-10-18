@@ -805,6 +805,7 @@ namespace Viu.Emporix.SearchServiceModels
         /// <br/>* `BETWEEN` requires an array of two values. The range is inclusive.
         /// <br/>* `IN` and `NOT_IN` require a non-empty array.
         /// <br/>* `EXISTS` requires a boolean. `true` matches documents where the field is present. `false` matches documents where the field is absent.
+        /// <br/>* `CONTAINS` requires a non-blank string. The field must have `text: true` in the index.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("value")]
         public object? Value { get; set; } = default!;
@@ -822,6 +823,8 @@ namespace Viu.Emporix.SearchServiceModels
 
     /// <summary>
     /// Comparison applied to `field` and `value`.
+    /// <br/>
+    /// <br/>`CONTAINS` performs a case- and diacritic-insensitive substring match. The service wraps the value in `*` and escapes `\`, `*`, and `?` within it. Spaces remain part of the value.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<FilterOperator>))]
@@ -857,6 +860,9 @@ namespace Viu.Emporix.SearchServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"EXISTS")]
         EXISTS = 9,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CONTAINS")]
+        CONTAINS = 10,
 
     }
 
