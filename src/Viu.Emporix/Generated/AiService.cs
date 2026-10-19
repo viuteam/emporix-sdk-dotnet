@@ -1687,6 +1687,13 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("maxTokens")]
         public int? MaxTokens { get; set; } = default!;
 
+        /// <summary>
+        /// Optional JSON object of extra model parameters. Use it to pass provider-specific options, for example reasoning settings.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("additionalParams")]
+        public object? AdditionalParams { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
