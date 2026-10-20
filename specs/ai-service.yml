@@ -3275,6 +3275,13 @@ components:
           type: integer
           description: The limit of tokens which agent can burn during one request session.
           example: 1000
+        additionalParams:
+          type: object
+          additionalProperties: true
+          description: |
+            Optional JSON object of extra model parameters. Use it to pass provider-specific options, for example reasoning settings.
+          example:
+            reasoning_effort: medium
       required:
         - model
     EmporixLlm:
@@ -5555,11 +5562,14 @@ components:
         templatePrompt: "You are an complaint agent for checking emails and do some action."
         userPrompt: "Use get-order tool to fetch order."
         llmConfig:
-          model: GPT-4.1
+          model: gpt-6.1-sol
           apiKey: secureApiKey
           provider: openai
           maxTokens: 100000
           temperature: 0.2
+          additionalParams:
+            top_p: 0.9
+            reasoning_effort: medium
         triggers:
           - type: endpoint
         maxRecursionLimit: 20
