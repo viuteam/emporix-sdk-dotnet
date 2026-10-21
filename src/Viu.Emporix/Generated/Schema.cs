@@ -448,6 +448,15 @@ namespace Viu.Emporix.SchemaModels
     {
 
         /// <summary>
+        /// When `true`, custom instances or products that use this mixin may store per-site overlays under keys in the form `{mixinName}__{siteCode}`.
+        /// <br/>On custom-instance writes, overlay keys are rejected when this flag is not `true`. Product Service does not enforce this flag on product writes.
+        /// <br/>If omitted or set to `null`, the value behaves like `false`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("siteAware")]
+        public bool? SiteAware { get; set; } = default!;
+
+        /// <summary>
         /// List of attributes related to the schema.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("attributes")]
@@ -616,6 +625,14 @@ namespace Viu.Emporix.SchemaModels
     {
 
         /// <summary>
+        /// When `true`, custom instances or products that use this mixin may store per-site overlays under keys in the form `{mixinName}__{siteCode}`.
+        /// <br/>Historical schemas may omit the field (`null`), which behaves like `false`.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("siteAware")]
+        public bool? SiteAware { get; set; } = default!;
+
+        /// <summary>
         /// List of attributes related to the schema.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("attributes")]
@@ -754,10 +771,12 @@ namespace Viu.Emporix.SchemaModels
         public CustomInstanceOwnerRequest? Owner { get; set; } = default!;
 
         /// <summary>
-        /// A key-value map of additional attributes.
+        /// Key-value map of mixin payloads. For site-aware schemas, include per-site overlays as additional keys in the form `{mixinName}__{siteCode}`.
+        /// <br/>Overlay values are validated against the base mixin JSON Schema.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
-        public string? Mixins { get; set; } = default!;
+        public object? Mixins { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public Metadata3? Metadata { get; set; } = default!;
@@ -787,10 +806,12 @@ namespace Viu.Emporix.SchemaModels
         public CustomInstanceOwnerRequest? Owner { get; set; } = default!;
 
         /// <summary>
-        /// A key-value map of additional attributes.
+        /// Key-value map of mixin payloads. For site-aware schemas, include per-site overlays as additional keys in the form `{mixinName}__{siteCode}`.
+        /// <br/>Overlay values are validated against the base mixin JSON Schema.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
-        public string? Mixins { get; set; } = default!;
+        public object? Mixins { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public Metadata4? Metadata { get; set; } = default!;
@@ -912,10 +933,12 @@ namespace Viu.Emporix.SchemaModels
         public CustomInstanceOwner? Owner { get; set; } = default!;
 
         /// <summary>
-        /// A key-value map of additional attributes.
+        /// Key-value map of mixin payloads. Without `emporix-site`, base keys and `{mixinName}__{siteCode}` overlay keys are returned as stored.
+        /// <br/>With `emporix-site`, overlays for that site are deep-merged into the base keys and only the merged base keys are returned.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
-        public string? Mixins { get; set; } = default!;
+        public object? Mixins { get; set; } = default!;
 
         /// <summary>
         /// List of media IDs assigned to the custom instance.
@@ -1378,7 +1401,9 @@ namespace Viu.Emporix.SchemaModels
     {
 
         /// <summary>
-        /// A key-value map, where key is a mixin name and value is a link to the mixin schema.
+        /// Key-value map where each key is a base mixin name and each value is a link to the mixin schema.
+        /// <br/>Do not add `{mixinName}__{siteCode}` keys here. Site overlays reuse the base schema URL.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
         public object? Mixins { get; set; } = default!;
@@ -1405,7 +1430,9 @@ namespace Viu.Emporix.SchemaModels
         public int? Version { get; set; } = default!;
 
         /// <summary>
-        /// A key-value map, where key is a mixin name and value is a link to the mixin schema.
+        /// Key-value map where each key is a base mixin name and each value is a link to the mixin schema.
+        /// <br/>Do not add `{mixinName}__{siteCode}` keys here. Site overlays reuse the base schema URL.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
         public object? Mixins { get; set; } = default!;

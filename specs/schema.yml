@@ -2,7 +2,9 @@ openapi: 3.0.1
 info:
   title: Schema Service
   description: |
-    Manage the mixins schemas for miscellaneous types.
+    Manage the mixin schemas for miscellaneous types.
+
+    Schemas can be marked as site-aware with `siteAware: true`. Site-aware mixins currently work for custom instances and products. Those entities store per-site mixin overlays under keys in the form `{mixinName}__{siteCode}` and merge them when the `emporix-site` request header is set. Schema Service enforces `siteAware` on custom-instance writes. Product Service documents product overlay write and read behavior separately.
   contact:
     email: documentation@emporix.com
   version: ''
@@ -17,7 +19,9 @@ paths:
         - Schema
       summary: Creating a schema
       description: |
-        Creates a schema entity and generates json-schema representation which is then uploaded to cloudinary repository.
+        Creates a schema entity and generates a JSON Schema representation which is then uploaded to the Cloudinary repository.
+
+        Set `siteAware` to `true` when custom instances or products that use this mixin may store per-site overlays. Overlay keys use the form `{mixinName}__{siteCode}`. On custom instances, only schemas with `siteAware: true` accept those overlay keys.
 
       operationId: POST-schema-create-schema
       requestBody:
@@ -64,6 +68,26 @@ paths:
                       metadata:
                         localized: true
                         required: true
+              Site-aware schema:
+                value:
+                  name:
+                    en: Market Attributes
+                  types:
+                    - PRODUCT
+                  siteAware: true
+                  attributes:
+                    - key: taxCategory
+                      name:
+                        en: Tax category
+                      type: TEXT
+                      metadata:
+                        required: false
+                    - key: shippingRestricted
+                      name:
+                        en: Shipping restricted
+                      type: BOOLEAN
+                      metadata:
+                        required: false
               Schema Array:
                 value:
                   name:
@@ -280,7 +304,9 @@ paths:
     put:
       summary: Updating a schema
       description: |-
-        Updates a single schema. Each update releases a new version of json schema file.
+        Updates a single schema. Each update releases a new version of the JSON Schema file.
+
+        You can set or clear `siteAware` on update. The flag is versioned with the schema attributes snapshot.
 
       tags:
         - Schema
@@ -328,6 +354,22 @@ paths:
                       metadata:
                         localized: true
                         required: true
+                  metadata:
+                    version: 1
+              Enabling site-aware:
+                value:
+                  name:
+                    en: Market Attributes
+                  types:
+                    - PRODUCT
+                  siteAware: true
+                  attributes:
+                    - key: taxCategory
+                      name:
+                        en: Tax category
+                      type: TEXT
+                      metadata:
+                        required: false
                   metadata:
                     version: 1
         description: ''
@@ -930,7 +972,9 @@ paths:
         - $ref: '#/components/parameters/trait_contentLanguage_header'
         - $ref: '#/components/parameters/trait_validateReferences'
       description: |
-        Creates a custom instance entity associated with given custom schema type.
+        Creates a custom instance entity associated with a given custom schema type.
+
+        For site-aware mixin schemas (`siteAware: true`), you can store per-site overlays in `mixins` under keys in the form `{mixinName}__{siteCode}`. Declare only the base mixin name in `metadata.mixins`. Overlay values are validated against the same JSON Schema as the base mixin. Overlay keys are rejected when the mixin schema is not site-aware.
 
       operationId: POST-schema-create-custom-instance
       requestBody:
@@ -948,6 +992,23 @@ paths:
                     productCustomAttributes:
                       inStock: true
                       popularity: 1
+                  metadata:
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+              Custom instance with site-aware mixin overlays:
+                value:
+                  id: 'SiteAwareCar'
+                  name:
+                    en: Site-aware car
+                  mixins:
+                    productCustomAttributes:
+                      pricingMeasurePrice: 13
+                      taxClass: Vat_19
+                      orderUnit: H87
+                    productCustomAttributes__main:
+                      pricingMeasurePrice: 99
+                      taxClass: Vat_8
+                      orderUnit: H87
                   metadata:
                     mixins:
                       productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
@@ -1028,6 +1089,8 @@ paths:
 
         If no sort is provided, results are returned in `_id:ASC` order. If a sort is provided, `_id:ASC` is appended as a tie-breaker when `_id` is not already part of the sort.
 
+        When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
+
       tags:
         - Custom Instance
       responses:
@@ -1088,6 +1151,23 @@ paths:
                         createdAt: '2025-04-17T13:00:00.000Z'
                         modifiedAt: '2025-04-17T13:00:00.000Z'
                         version: 1
+                Merged site-aware mixins:
+                  value:
+                    - id: SiteAwareCar
+                      name:
+                        en: Site-aware car
+                      type: CAR
+                      mixins:
+                        productCustomAttributes:
+                          pricingMeasurePrice: 99
+                          taxClass: Vat_8
+                          orderUnit: H87
+                      metadata:
+                        mixins:
+                          productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                        createdAt: '2025-04-17T13:00:00.000Z'
+                        modifiedAt: '2025-05-14T13:00:00.000Z'
+                        version: 2
                 Response with expanded references:
                   value:
                     - id: '68fe97bb616cd70336cde7ee'
@@ -1167,6 +1247,7 @@ paths:
         - $ref: '#/components/parameters/trait_q_param'
         - $ref: '#/components/parameters/trait_fields'
         - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_emporix_site_header'
         - $ref: '#/components/parameters/trait_expand_references'
         - $ref: '#/components/parameters/trait_cursor_next'
         - $ref: '#/components/parameters/trait_cursor_prev'
@@ -1180,9 +1261,12 @@ paths:
       summary: Retrieving a custom instance
       parameters:
         - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_emporix_site_header'
         - $ref: '#/components/parameters/trait_expand_references'
       description: |-
         Retrieves a single custom instance by id.
+
+        When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged so integrations can inspect the stored data. `Accept-Language` is applied after the site merge when `emporix-site` is present.
 
       tags:
         - Custom Instance
@@ -1216,6 +1300,44 @@ paths:
                       createdAt: '2025-04-17T13:00:00.000Z'
                       modifiedAt: '2025-05-14T13:00:00.000Z'
                       version: 3
+                Unmerged site-aware mixins:
+                  value:
+                    id: SiteAwareCar
+                    name:
+                      en: Site-aware car
+                    type: CAR
+                    mixins:
+                      productCustomAttributes:
+                        pricingMeasurePrice: 13
+                        taxClass: Vat_19
+                        orderUnit: H87
+                      productCustomAttributes__main:
+                        pricingMeasurePrice: 99
+                        taxClass: Vat_8
+                        orderUnit: H87
+                    metadata:
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      createdAt: '2025-04-17T13:00:00.000Z'
+                      modifiedAt: '2025-05-14T13:00:00.000Z'
+                      version: 2
+                Merged site-aware mixins:
+                  value:
+                    id: SiteAwareCar
+                    name:
+                      en: Site-aware car
+                    type: CAR
+                    mixins:
+                      productCustomAttributes:
+                        pricingMeasurePrice: 99
+                        taxClass: Vat_8
+                        orderUnit: H87
+                    metadata:
+                      mixins:
+                        productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                      createdAt: '2025-04-17T13:00:00.000Z'
+                      modifiedAt: '2025-05-14T13:00:00.000Z'
+                      version: 2
                 Response with expanded references:
                   value:
                     id: '68fe97bb616cd70336cde7ee'
@@ -1314,7 +1436,9 @@ paths:
         - $ref: '#/components/parameters/trait_contentLanguage_header'
         - $ref: '#/components/parameters/trait_validateReferences'
       description: |-
-        Performs the `UPSERT` operation. If a custom instance with specified ID exists in the system, then it is updated. If it doesn't exist, a new custom instance is created.
+        Performs the `UPSERT` operation. If a custom instance with the specified ID exists in the system, then it is updated. If it does not exist, a new custom instance is created.
+
+        For site-aware mixin schemas (`siteAware: true`), you can store per-site overlays in `mixins` under keys in the form `{mixinName}__{siteCode}`. Declare only the base mixin name in `metadata.mixins`. Overlay values are validated against the same JSON Schema as the base mixin. Overlay keys are rejected when the mixin schema is not site-aware.
 
       tags:
         - Custom Instance
@@ -1323,22 +1447,35 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CustomInstanceUpdate'
-            example:
-              name: {
-                "en": "Report"
-              }
-              mixins: {
-                productCustomAttributes: {
-                  inStock: false,
-                  popularity: 2
-                }
-              }
-              metadata: {
-                mixins: {
-                  "productCustomAttributes": 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
-                },
-                version: 1
-              }
+            examples:
+              Basic upsert:
+                value:
+                  name:
+                    en: Report
+                  mixins:
+                    productCustomAttributes:
+                      inStock: false
+                      popularity: 2
+                  metadata:
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
+                    version: 1
+              Upsert with site-aware mixin overlays:
+                value:
+                  name:
+                    en: Site-aware car
+                  mixins:
+                    productCustomAttributes:
+                      pricingMeasurePrice: 13
+                      taxClass: Vat_19
+                      orderUnit: H87
+                    productCustomAttributes__main:
+                      pricingMeasurePrice: 99
+                      taxClass: Vat_8
+                      orderUnit: H87
+                  metadata:
+                    mixins:
+                      productCustomAttributes: 'https://res.cloudinary.com/saas-ag/raw/upload/emporix-docs/productCustomAttributesMixIn-v38.json'
         description: ''
       responses:
         '201':
@@ -1441,7 +1578,7 @@ paths:
     post:
       summary: Searching for custom instances
       description: |-
-        Returns all custom instances for provided type that match specified criteria.
+        Returns all custom instances for the provided type that match the specified criteria.
 
         Supports offset pagination (`pageNumber`, `pageSize`) and cursor pagination (`next`, `prev`). Cursor pagination is active when `next` or `prev` is provided.
 
@@ -1451,6 +1588,8 @@ paths:
         - the `X-Total-Count` request header is ignored and the `X-Total-Count` response header is not returned.
 
         If no sort is provided, results are returned in `_id:ASC` order. If a sort is provided, `_id:ASC` is appended as a tie-breaker when `_id` is not already part of the sort.
+
+        When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
 
       tags:
         - Custom Instance
@@ -1584,6 +1723,7 @@ paths:
         - $ref: '#/components/parameters/trait_paged_pageSize'
         - $ref: '#/components/parameters/trait_sort'
         - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_emporix_site_header'
         - $ref: '#/components/parameters/trait_fields'
         - $ref: '#/components/parameters/trait_expand_references'
         - $ref: '#/components/parameters/trait_cursor_next'
@@ -1944,6 +2084,7 @@ components:
               required: true
         types:
           - PRODUCT
+        siteAware: false
         metadata:
           version: 1
           createdAt: "2023-08-09T09:21:42.693Z"
@@ -1967,6 +2108,7 @@ components:
                 required: true
           types:
             - PRODUCT
+          siteAware: true
           metadata:
             version: 1
             createdAt: "2023-08-09T09:21:42.693Z"
@@ -2229,15 +2371,22 @@ components:
     SchemaRequest:
       allOf:
         - $ref: '#/components/schemas/AbstractSchemaRequest'
-      type: object
-      properties:
-        attributes:
-          type: array
-          description: List of attributes related to the schema.
-          items:
-            $ref: '#/components/schemas/SchemaAttribute'
-      required:
-        - attributes
+        - type: object
+          properties:
+            siteAware:
+              type: boolean
+              nullable: true
+              description: |
+                When `true`, custom instances or products that use this mixin may store per-site overlays under keys in the form `{mixinName}__{siteCode}`.
+                On custom-instance writes, overlay keys are rejected when this flag is not `true`. Product Service does not enforce this flag on product writes.
+                If omitted or set to `null`, the value behaves like `false`.
+            attributes:
+              type: array
+              description: List of attributes related to the schema.
+              items:
+                $ref: '#/components/schemas/SchemaAttribute'
+          required:
+            - attributes
     SchemaCreation:
       allOf:
         - $ref: '#/components/schemas/SchemaRequest'
@@ -2325,6 +2474,12 @@ components:
         - $ref: '#/components/schemas/AbstractSchemaResponse'
         - type: object
           properties:
+            siteAware:
+              type: boolean
+              nullable: true
+              description: |
+                When `true`, custom instances or products that use this mixin may store per-site overlays under keys in the form `{mixinName}__{siteCode}`.
+                Historical schemas may omit the field (`null`), which behaves like `false`.
             attributes:
               type: array
               description: List of attributes related to the schema.
@@ -2410,14 +2565,19 @@ components:
         owner:
           $ref: '#/components/schemas/CustomInstanceOwnerRequest'
         mixins:
-          type: string
-          description: A key-value map of additional attributes.
+          type: object
+          description: |
+            Key-value map of mixin payloads. For site-aware schemas, include per-site overlays as additional keys in the form `{mixinName}__{siteCode}`.
+            Overlay values are validated against the base mixin JSON Schema.
+          additionalProperties: true
         metadata:
           type: object
           properties:
             mixins:
               type: object
-              description: A key-value map, where key is a mixin name and value is a link to the mixin schema.
+              description: |
+                Key-value map where each key is a base mixin name and each value is a link to the mixin schema.
+                Do not add `{mixinName}__{siteCode}` keys here. Site overlays reuse the base schema URL.
     CustomInstanceUpdate:
       type: object
       properties:
@@ -2427,8 +2587,11 @@ components:
         owner:
           $ref: '#/components/schemas/CustomInstanceOwnerRequest'
         mixins:
-          type: string
-          description: A key-value map of additional attributes.
+          type: object
+          description: |
+            Key-value map of mixin payloads. For site-aware schemas, include per-site overlays as additional keys in the form `{mixinName}__{siteCode}`.
+            Overlay values are validated against the base mixin JSON Schema.
+          additionalProperties: true
         metadata:
           type: object
           properties:
@@ -2437,7 +2600,9 @@ components:
               description: Version of the custom instance.  If provided, it will be validated against the current entity version.
             mixins:
               type: object
-              description: A key-value map, where key is a mixin name and value is a link to the mixin schema.
+              description: |
+                Key-value map where each key is a base mixin name and each value is a link to the mixin schema.
+                Do not add `{mixinName}__{siteCode}` keys here. Site overlays reuse the base schema URL.
     CustomInstanceOwner:
       type: object
       description: |
@@ -2501,8 +2666,11 @@ components:
           allOf:
             - $ref: '#/components/schemas/CustomInstanceOwner'
         mixins:
-          type: string
-          description: A key-value map of additional attributes.
+          type: object
+          description: |
+            Key-value map of mixin payloads. Without `emporix-site`, base keys and `{mixinName}__{siteCode}` overlay keys are returned as stored.
+            With `emporix-site`, overlays for that site are deep-merged into the base keys and only the merged base keys are returned.
+          additionalProperties: true
         media:
           type: array
           description: List of media IDs assigned to the custom instance.
@@ -2820,6 +2988,19 @@ components:
         * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
         * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
         * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    trait_emporix_site_header:
+      name: emporix-site
+      in: header
+      required: false
+      schema:
+        type: string
+        example: main
+      description: |
+        Site code used to resolve site-aware mixin overlays. The following behaviors apply:
+        * When set – each `{mixinName}__{siteCode}` overlay is deep-merged into the base `{mixinName}` value. Nested objects are merged recursively. Arrays and other non-object values are replaced by the overlay (not concatenated or merged by index). Non-null site values override base values for the same path. A null overlay node does not clear the base value. Only the merged base keys are returned.
+        * When omitted or blank – base mixin keys and overlay keys are returned unmerged.
+
+        `Accept-Language` is applied after the site merge when `emporix-site` is present.
     trail_xTotalCount_header:
       name: X-Total-Count
       in: header

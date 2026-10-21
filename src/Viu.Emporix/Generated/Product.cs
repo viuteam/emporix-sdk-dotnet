@@ -501,7 +501,9 @@ namespace Viu.Emporix.ProductModels
     {
 
         /// <summary>
-        /// Links to the mixin schemas.
+        /// Links to the mixin schemas, keyed by base mixin name.
+        /// <br/>Do not add `{mixinName}__{siteCode}` keys here. Site overlays reuse the base schema URL.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
         public object? Mixins { get; set; } = default!;
