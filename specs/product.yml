@@ -6,6 +6,8 @@ info:
     email: documentation@emporix.com
   description: |
     Manage structured product information.
+
+    Products support site-aware mixins. Store per-site mixin overlays under keys in the form `{mixinName}__{siteCode}`. Mark the mixin schema as `siteAware: true` in Schema Service and declare only the base mixin name in `metadata.mixins`. When the `emporix-site` request header is set on read operations, the matching overlay is deep-merged into the base mixin. Product Service does not reject overlay keys when the schema is not marked `siteAware`. Send overlays only for schemas marked `siteAware: true` in Schema Service.
 servers:
   - url: 'https://api.emporix.io'
 tags:
@@ -35,6 +37,8 @@ paths:
           $ref: '#/components/responses/common_response_InternalServerError_500'
       description: |
         Search a list of products.
+
+        When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
         ***
 
         **Additional scope information**
@@ -57,6 +61,7 @@ paths:
         - $ref: '#/components/parameters/query_sort_product'
         - $ref: '#/components/parameters/query_product_fields'
         - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/header_emporix_site'
         - $ref: '#/components/parameters/query_expand_product'
         - $ref: '#/components/parameters/query_raw_value_product'
       summary: Searching for products
@@ -77,6 +82,8 @@ paths:
           $ref: '#/components/responses/common_response_InternalServerError_500'
       description: |
         Retrieves a list of products.
+
+        When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
         ***
 
         **Additional scope information**
@@ -100,6 +107,7 @@ paths:
         - $ref: '#/components/parameters/query_q_product'
         - $ref: '#/components/parameters/query_product_fields'
         - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/header_emporix_site'
         - $ref: '#/components/parameters/query_expand_product'
         - $ref: '#/components/parameters/query_raw_value_product'
       summary: Retrieving all products
@@ -131,6 +139,8 @@ paths:
           $ref: '#/components/responses/common_response_InternalServerError_500'
       description: |-
         Creates a new product.
+
+        You can store site-aware mixin overlays in `mixins` under keys in the form `{mixinName}__{siteCode}` when the base mixin schema URL is present in `metadata.mixins`. Declare only the base mixin name in `metadata.mixins`. Product Service does not reject overlay keys when the schema is not marked `siteAware` in Schema Service. Send overlays only for schemas marked `siteAware: true` in Schema Service.
         ***
 
         **Additional scope information**
@@ -890,6 +900,8 @@ paths:
           $ref: '#/components/responses/common_response_InternalServerError_500'
       description: |-
         Retrieves a specified product details.
+
+        When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged so integrations can inspect the stored data. `Accept-Language` is applied after the site merge when `emporix-site` is present.
         ***
 
         **Additional scope information**
@@ -909,6 +921,7 @@ paths:
         - $ref: '#/components/parameters/path_tenant'
         - $ref: '#/components/parameters/path_productId'
         - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/header_emporix_site'
         - $ref: '#/components/parameters/query_product_fields'
         - $ref: '#/components/parameters/query_expand_product'
         - $ref: '#/components/parameters/query_raw_value_product'
@@ -950,6 +963,8 @@ paths:
         If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
 
         A full replacement (`partial=false`) removes mixin names that are omitted from the request body. To remove a mixin, omit it from `mixins` and `metadata.mixins`. The request body must include the complete product document.
+
+        You can store site-aware mixin overlays in `mixins` under keys in the form `{mixinName}__{siteCode}` when the base mixin schema URL is present in `metadata.mixins`. Declare only the base mixin name in `metadata.mixins`. Product Service does not reject overlay keys when the schema is not marked `siteAware` in Schema Service. Send overlays only for schemas marked `siteAware: true` in Schema Service.
         ***
 
         **Additional scope information**
@@ -1009,6 +1024,8 @@ paths:
         * Mixin names omitted from the request remain on the product.
         * Fields sent for a mixin are merged recursively. Fields omitted inside that mixin remain unchanged.
         * A `null` value does not remove a mixin. The mixin remains on the product with the value `null`.
+
+        You can store site-aware mixin overlays in `mixins` under keys in the form `{mixinName}__{siteCode}` when the base mixin schema URL is present in `metadata.mixins`. Declare only the base mixin name in `metadata.mixins`. Product Service does not reject overlay keys when the schema is not marked `siteAware` in Schema Service. Send overlays only for schemas marked `siteAware: true` in Schema Service.
 
         This endpoint does not accept JSON Patch operations (`op`, `path`, `value`).
 
@@ -2592,7 +2609,7 @@ components:
     productMixins:
       type: object
       description: |-
-        Custom product attributes, keyed by mixin name.
+        Custom product attributes, keyed by mixin name. For site-aware mixins, include per-site overlays as additional keys in the form `{mixinName}__{siteCode}`.
 
         On a partial update, omitted mixin names remain on the product. Sent fields are merged recursively. A `null` value does not remove a mixin. To remove a mixin, send a full product replacement and omit the mixin name.
       additionalProperties: true
@@ -2607,7 +2624,9 @@ components:
       properties:
         mixins:
           type: object
-          description: Links to the mixin schemas.
+          description: |
+            Links to the mixin schemas, keyed by base mixin name.
+            Do not add `{mixinName}__{siteCode}` keys here. Site overlays reuse the base schema URL.
           additionalProperties: true
     productMetadataWithVersion:
       type: object
@@ -3693,6 +3712,19 @@ components:
       schema:
         type: string
       description: 'The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If empty, the default system language is assumed. It can be a priority list working as a fallback mechanism.'
+    header_emporix_site:
+      name: emporix-site
+      in: header
+      required: false
+      schema:
+        type: string
+        example: main
+      description: |
+        Site code used to resolve site-aware mixin overlays. The following behaviors apply:
+        * When set – each `{mixinName}__{siteCode}` overlay is deep-merged into the base `{mixinName}` value. Nested objects are merged recursively. Arrays and other non-object values are replaced by the overlay (not concatenated or merged by index). Non-null site values override base values for the same path. A null overlay node does not clear the base value. Only the merged base keys are returned.
+        * When omitted or blank – base mixin keys and overlay keys are returned unmerged.
+
+        `Accept-Language` is applied after the site merge when `emporix-site` is present.
     header_x_total_count:
       name: X-Total-Count
       in: header
