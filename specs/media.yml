@@ -755,6 +755,9 @@ components:
         etag:
           type: string
           description: The ETAG digest for the asset.
+        md5:
+          type: string
+          description: Lowercase hex MD5 of the asset bytes. Empty when the store did not return a content digest.
     AssetUpdateMultipart:
       title: Asset Update Mutlipart Payload
       type: object

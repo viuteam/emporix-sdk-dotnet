@@ -188,7 +188,7 @@ namespace Viu.Emporix.TaxServiceModels
         /// <br/>
         /// <br/>* If the `Content-Language` header is set to `*`, then the name should be provided as a map of translations, where each key is a language code and the value is the name in its respective language.
         /// <br/>* If the `Content-Language` header is set to a specific language, the name should be provided as a string.
-        /// <br/>* If the `Content-Language` header is empty, the endpoint will asume that the name is provided in the default language defined in the Configuration Service.
+        /// <br/>* If the `Content-Language` header is empty, the endpoint will assume that the name is provided in the default language defined in the Configuration Service.
         /// <br/>
         /// <br/>**Note**: You can provide the names only in languages defined in the Configuration Service. In case the name is provided in a language that is not defined in the Configuration Service, the request will be rejected.
         /// </summary>
@@ -200,7 +200,7 @@ namespace Viu.Emporix.TaxServiceModels
         /// <br/>
         /// <br/>* If the `Content-Language` header is set to `*`, then the description should be provided as a map of translations, where each key is a language code and the value is the description in its respective language.
         /// <br/>* If the `Content-Language` header is set to a specific language, the description should be provided as a string.
-        /// <br/>* If the `Content-Language` header is empty, the endpoint will asume that the description is provided in the default language defined in the Configuration Service.
+        /// <br/>* If the `Content-Language` header is empty, the endpoint will assume that the description is provided in the default language defined in the Configuration Service.
         /// <br/>
         /// <br/>**Note**: You can provide the descriptions only in languages defined in the Configuration Service. In case the description is provided in a language that is not defined in the Configuration Service, the request will be rejected.
         /// </summary>
@@ -222,7 +222,7 @@ namespace Viu.Emporix.TaxServiceModels
         public double Rate { get; set; } = default!;
 
         /// <summary>
-        /// Indicates that the tax class is a default tax class for the tax configuration. Only one tax class can be marked as a default for a particular tax configuration.
+        /// Indicates whether the tax class is the default tax class for the tax configuration. Only one tax class can be marked as default for a particular tax configuration.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("isDefault")]
         public bool? IsDefault { get; set; } = default!;
@@ -243,7 +243,7 @@ namespace Viu.Emporix.TaxServiceModels
     {
 
         /// <summary>
-        /// Code of country for which the tax configuration has been created.
+        /// Code of the country for which the tax configuration has been created.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("locationCode")]
         public string? LocationCode { get; set; } = default!;
@@ -415,7 +415,7 @@ namespace Viu.Emporix.TaxServiceModels
         /// <summary>
         /// Original price value.
         /// <br/>
-        /// <br/>This field should contain by a number where the cent part is separated by a dot sign - such as `12.99`.
+        /// <br/>This field must contain a number where the cent part is separated by a dot — for example `12.99`.
         /// <br/>
         /// <br/>**Note**: The cent part of the price is not limited to two digits. You can specify the price with any precision.
         /// </summary>
@@ -466,8 +466,8 @@ namespace Viu.Emporix.TaxServiceModels
         /// <br/>
         /// <br/>| Value | Description |
         /// <br/>| --- | --- |
-        /// <br/>| `true` | Prices will be expressed as gross values. |
-        /// <br/>| `false` | Prices will be expressed as net values. |
+        /// <br/>| `true` | Prices are expressed as gross values. |
+        /// <br/>| `false` | Prices are expressed as net values. |
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("includesTax")]
         public bool? IncludesTax { get; set; } = default!;

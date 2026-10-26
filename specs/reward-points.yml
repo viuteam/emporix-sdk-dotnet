@@ -31,8 +31,8 @@ paths:
                       summary:
                         addedPointsList:
                           - id: 1c32ce73-8765-42a7-92af-ff370a0a59d6
-                            reference-id: <string>
-                            description: <string>
+                            reference-id: B7011746
+                            description: Points for order B7011746
                             points: 2000
                             createdAt: '2023-05-11T18:32:18.591+00:00'
                             allPointsAfterCreation: 2000
@@ -61,7 +61,7 @@ paths:
                             usedWith: []
                         redeemedPointsList:
                           - id: d85c0570-1d51-4611-bf2f-c67452384626
-                            description: test desc
+                            description: For 50 points you can have a voucher for 5 euros generated.
                             points: 50
                             createdAt: '2023-05-11T18:32:38.501+00:00'
                             allPointsAfterCreation: 1950
@@ -84,7 +84,7 @@ paths:
   '/reward-points/customer/{customerId}':
     get:
       description: |
-        Fetches the number of reward points for a particular customer of a given tenant. The tenant name is retrieved from the access token. 
+        Retrieves the number of reward points for a particular customer of a given tenant. The tenant name is retrieved from the access token. 
 
         **Note:** Only employees are authorized to perform this action.
       operationId: GET-reward-points-fetch-customer-reward-points
@@ -327,16 +327,11 @@ paths:
             - rewardspoints.rewardpoints_manage
       summary: Redeeming reward points of a customer
     parameters:
-      - description: Unique identifier of a customer
-        in: path
-        name: customerId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/customerId'
   '/reward-points/public/customer':
     get:
       description: |-
-        Fetches the number of reward points of a currently signed-in customer.
+        Retrieves the number of reward points of a currently signed-in customer.
 
         **Note:** This public API endpoint is accessible to all customers.
       operationId: GET-reward-points-fetch-logged-customer-points
@@ -351,7 +346,7 @@ paths:
                 title: pointsOut
                 type: integer
               examples:
-                'Number of points ':
+                'Number of points':
                   value: 1153
         '401':
           $ref: '#/components/responses/trait_unauthorized_401'
@@ -495,7 +490,7 @@ paths:
         - Redeem Options Management
       responses:
         '200':
-          description: Returns all configured reward points redemption options
+          description: The request was successful. The list of redemption options is returned.
           content:
             application/json:
               schema:
@@ -552,7 +547,7 @@ paths:
         - Redeem Options Management
       responses:
         '204':
-          description: Deletes given redeem option by id
+          description: The request was successful. No content is returned.
         '401':
           $ref: '#/components/responses/trait_unauthorized_401'
         '403':
@@ -574,7 +569,7 @@ paths:
           description: Tenant name.
       security:
         - CustomerAccessToken: []
-      summary: Deleting redemption options
+      summary: Deleting a redemption option
     put:
       description: |-
         Updates a reward points redemption option for a given tenant.
@@ -585,7 +580,7 @@ paths:
         - Redeem Options Management
       responses:
         '200':
-          description: Updates given redeem option by id
+          description: The request was successful. The redemption option has been updated.
         '400':
           $ref: '#/components/responses/trait_badRequest_400'
         '401':
@@ -645,7 +640,7 @@ paths:
         - CustomerAccessToken: []
         - OAuth2:
             - rewardspoints.rewardpoints_manage
-      summary: Updating redemption options
+      summary: Updating a redemption option
   '/reward-points/public/customer/redeem':
     post:
       description: |-
@@ -738,7 +733,7 @@ components:
               status:
                 minimum: 100
                 maximum: 599
-                description: 'Original HTTP error code, should be consistent with the response HTTP code'
+                description: 'Original HTTP error code, must be consistent with the response HTTP code'
                 type: integer
               title:
                 pattern: '[a-z]+[a-z_]*[a-z]+'
@@ -774,7 +769,7 @@ components:
               code:
                 minimum: 100
                 maximum: 599
-                description: 'Original HTTP error code, should be consistent with the response HTTP code'
+                description: 'Original HTTP error code, must be consistent with the response HTTP code'
                 type: integer
               status:
                 pattern: '[a-z]+[a-z_]*[a-z]+'
@@ -802,7 +797,7 @@ components:
                 details:
                   - 'Missing required scopes ''[rewardspoints.rewardpoints_view, saasag.rewardpoints_view]'''
     trait_conflict_409:
-      description: ''
+      description: The request conflicts with the current state of the resource.
       content:
         application/json:
           schema:
@@ -822,7 +817,7 @@ components:
               status:
                 minimum: 100
                 maximum: 599
-                description: 'Original HTTP error code, should be consistent with the response HTTP code'
+                description: 'Original HTTP error code, must be consistent with the response HTTP code'
                 type: integer
               type:
                 pattern: '[a-z]+[a-z_]*[a-z]+'
@@ -888,7 +883,7 @@ components:
                 description: 'Classification of the error type in the lower case with underscore format, for example: `validation_failure`'
                 type: string
               status:
-                description: 'Original HTTP error code, should be consistent with the response HTTP code'
+                description: 'Original HTTP error code, must be consistent with the response HTTP code'
                 type: integer
               message:
                 description: Descriptive error message for debugging
@@ -919,7 +914,7 @@ components:
                 description: Timestamp when the error occurred.
                 type: string
               status:
-                description: 'Original HTTP error code, should be consistent with the response HTTP code'
+                description: 'Original HTTP error code, must be consistent with the response HTTP code'
                 type: integer
               error:
                 description: Descriptive error message for debugging
@@ -935,7 +930,7 @@ components:
                 error: Internal Server Error
                 path: /customer/30010284222
     trait_unauthorized_401:
-      description: ''
+      description: The authorization token is invalid or has expired.
       content:
         application/json:
           schema:
@@ -1245,7 +1240,7 @@ components:
         clientCredentials:
           tokenUrl: 'https://api.emporix.io/oauth/token'
           scopes:
-            rewardspoints.rewardpoints_view: Nedeed to view reward points information
+            rewardspoints.rewardpoints_view: Needed to view reward points information.
             rewardspoints.rewardpoints_manage: Needed to manage reward points
     CustomerAccessToken:
       type: http

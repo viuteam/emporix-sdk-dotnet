@@ -277,6 +277,12 @@ namespace Viu.Emporix.MediaModels
         [System.Text.Json.Serialization.JsonPropertyName("etag")]
         public string? Etag { get; set; } = default!;
 
+        /// <summary>
+        /// Lowercase hex MD5 of the asset bytes. Empty when the store did not return a content digest.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("md5")]
+        public string? Md5 { get; set; } = default!;
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
