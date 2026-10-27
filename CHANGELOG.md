@@ -9,6 +9,17 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.13.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.12.5...v0.13.0) (2026-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* ListTreesAsync and SearchTreesAsync gain optional parameters before auth. Code compiled against the old signatures must be rebuilt, and a call that passes auth without its name no longer compiles.
+
+### Added
+
+* filter category trees by type, category and publication ([#89](https://github.com/viuteam/emporix-sdk-dotnet/issues/89)) ([208539c](https://github.com/viuteam/emporix-sdk-dotnet/commit/208539cf35f66ae4b9cf220067a8fa99fad9c1b4))
+
 ## [0.12.5](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.12.4...v0.12.5) (2026-10-27)
 
 
