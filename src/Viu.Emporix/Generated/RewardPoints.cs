@@ -486,7 +486,7 @@ namespace Viu.Emporix.RewardPointsModels
     {
 
         /// <summary>
-        /// Original HTTP error code, should be consistent with the response HTTP code
+        /// Original HTTP error code, must be consistent with the response HTTP code
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("code")]
         public int Code { get; set; } = default!;
@@ -534,7 +534,7 @@ namespace Viu.Emporix.RewardPointsModels
         public string? Timestamp { get; set; } = default!;
 
         /// <summary>
-        /// Original HTTP error code, should be consistent with the response HTTP code
+        /// Original HTTP error code, must be consistent with the response HTTP code
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         public int? Status { get; set; } = default!;
@@ -570,7 +570,7 @@ namespace Viu.Emporix.RewardPointsModels
     {
 
         /// <summary>
-        /// Original HTTP error code, should be consistent with the response HTTP code
+        /// Original HTTP error code, must be consistent with the response HTTP code
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         public int? Status { get; set; } = default!;
@@ -618,7 +618,7 @@ namespace Viu.Emporix.RewardPointsModels
     {
 
         /// <summary>
-        /// Original HTTP error code, should be consistent with the response HTTP code
+        /// Original HTTP error code, must be consistent with the response HTTP code
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         public int Status { get; set; } = default!;
@@ -672,7 +672,7 @@ namespace Viu.Emporix.RewardPointsModels
         public string? Type { get; set; } = default!;
 
         /// <summary>
-        /// Original HTTP error code, should be consistent with the response HTTP code
+        /// Original HTTP error code, must be consistent with the response HTTP code
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         public int? Status { get; set; } = default!;

@@ -2852,6 +2852,20 @@ paths:
             example:
               - d9e4fdd0-e671-4968-9ba1-a5533a7f3b02
               - 0f1056cc-b4b4-488b-9f95-245f6b542702
+        - name: type
+          in: query
+          description: |
+            Category type used to filter the category trees. If not provided, category trees of all types are returned.
+            You can combine this parameter with `categoryIds` to return trees of the specified type that include at least one of the specified categories.
+            The following category types are available:
+            * `STANDARD`
+            * `CLASSIFICATION`
+          schema:
+            type: string
+            enum:
+              - STANDARD
+              - CLASSIFICATION
+            example: STANDARD
       responses:
         '200':
           description: The request was successful. The category tree is returned.
@@ -2861,6 +2875,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CategoryTree'
+        '400':
+          description: The request was unsuccessful because the provided category type is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Invalid category type:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Constraint validation failed
+                    details:
+                      - "'type' parameter must be one of: STANDARD, CLASSIFICATION"
         '403':
           description: Permission denied due to insufficient rights. This may happen when request does not contain sufficient scopes for given query values.
           content:
