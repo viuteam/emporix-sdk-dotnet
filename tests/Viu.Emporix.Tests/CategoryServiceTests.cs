@@ -72,6 +72,48 @@ public class CategoryServiceTests
     }
 
     [Fact]
+    public async Task Listing_trees_sends_only_the_filters_the_caller_chose()
+    {
+        StubHttpMessageHandler handler = Categories("root");
+        CategoryService categories = Create(handler);
+
+        await categories.ListTreesAsync();
+        await categories.ListTreesAsync(
+            type: CategoryCreateRequestType.CLASSIFICATION,
+            categoryIds: ["c1", "c 2"],
+            showUnpublished: true);
+
+        Assert.Equal("/category/acme/category-trees", Uri(handler, 0));
+        Assert.Equal(
+            "/category/acme/category-trees?type=CLASSIFICATION&categoryIds=c1&categoryIds=c%202&showUnpublished=true",
+            Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task Listing_trees_by_no_category_sends_nothing()
+    {
+        StubHttpMessageHandler handler = Categories("root");
+
+        IReadOnlyList<CategoryModels.CategoryTree> trees = await Create(handler).ListTreesAsync(categoryIds: []);
+
+        Assert.Empty(trees);
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Searching_trees_sends_show_unpublished_only_when_set()
+    {
+        StubHttpMessageHandler handler = Categories("root");
+        CategoryService categories = Create(handler);
+
+        await categories.SearchTreesAsync(["c1"]);
+        await categories.SearchTreesAsync(["c1"], showUnpublished: false);
+
+        Assert.Equal("/category/acme/category-trees/search", Uri(handler, 0));
+        Assert.Equal("/category/acme/category-trees/search?showUnpublished=false", Uri(handler, 1));
+    }
+
+    [Fact]
     public async Task Subcategories_are_one_level_down()
     {
         StubHttpMessageHandler handler = new(HttpStatusCode.OK, """[{"id":"child"}]""");

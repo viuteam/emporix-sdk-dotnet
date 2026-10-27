@@ -119,6 +119,30 @@ await runner.RunAsync("categories", async () =>
     return Step.Ok($"{page.Items.Count} categories");
 });
 
+// Two ids must find two trees: a server that read only the first of the
+// repeated categoryIds would find one. The type counts are reported, not
+// checked — on viu both were 0 against 27 unfiltered trees on 2026-10-27.
+await runner.RunAsync("category trees by id and by type", async () =>
+{
+    IReadOnlyList<Viu.Emporix.CategoryModels.CategoryTree> all = await client.Categories.ListTreesAsync(auth: shopper);
+    if (all.Count < 2)
+    {
+        return Step.Empty($"{all.Count} tree(s), two are needed");
+    }
+
+    IReadOnlyList<Viu.Emporix.CategoryModels.CategoryTree> byId =
+        await client.Categories.ListTreesAsync(categoryIds: [all[0].Id, all[1].Id], auth: shopper);
+    IReadOnlyList<Viu.Emporix.CategoryModels.CategoryTree> standard = await client.Categories.ListTreesAsync(
+        Viu.Emporix.CategoryModels.CategoryCreateRequestType.STANDARD, auth: shopper);
+    IReadOnlyList<Viu.Emporix.CategoryModels.CategoryTree> classification = await client.Categories.ListTreesAsync(
+        Viu.Emporix.CategoryModels.CategoryCreateRequestType.CLASSIFICATION, auth: shopper);
+
+    string counts = $"{all.Count} trees, {standard.Count} STANDARD, {classification.Count} CLASSIFICATION";
+    return byId.Count == 2
+        ? Step.Ok($"{counts}, 2 by two ids")
+        : Step.Failed($"{counts}, but two ids found {byId.Count}");
+});
+
 await runner.RunAsync("price matching by context", async () =>
 {
     if (productId is null)

@@ -193,31 +193,83 @@ public sealed class CategoryService
     }
 
     /// <summary>Lists the category trees.</summary>
+    /// <param name="type">Only the trees of this category type. Every type when omitted.</param>
+    /// <param name="categoryIds">
+    /// Only the trees that contain at least one of these categories. An empty
+    /// list matches nothing and sends no request.
+    /// </param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: Emporix answers <c>403</c>.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Filter by <paramref name="type"/> with care. Live on 2026-10-27, a tenant
+    /// whose 27 trees were built from categories that all read <c>STANDARD</c>
+    /// returned none of them for <c>STANDARD</c>, and none for
+    /// <c>CLASSIFICATION</c>. Without the filter all 27 came back.
+    /// </remarks>
     public async Task<IReadOnlyList<CategoryTree>> ListTreesAsync(
+        CategoryCreateRequestType? type = null,
+        IEnumerable<string>? categoryIds = null,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => await _http.SendAsync(
+    {
+        List<KeyValuePair<string, string?>> query = [];
+
+        if (type is not null)
+        {
+            query.Add(new("type", type.Value.ToString()));
+        }
+
+        if (categoryIds is not null)
+        {
+            // Repeated rather than joined: the specification leaves the array in
+            // OpenAPI's default form. Emporix reads a comma-joined list as well.
+            List<string> ids = [.. categoryIds];
+            if (ids.Count == 0)
+            {
+                return [];
+            }
+
+            query.AddRange(ids.Select(id => new KeyValuePair<string, string?>("categoryIds", id)));
+        }
+
+        if (showUnpublished is not null)
+        {
+            query.Add(new("showUnpublished", showUnpublished.Value ? "true" : "false"));
+        }
+
+        return await _http.SendAsync(
             new EmporixRequest
             {
                 Method = HttpMethod.Get,
                 Path = $"/category/{_tenant}/category-trees",
                 Auth = Anonymous(auth),
+                Query = query,
             },
             CategoryJsonContext.Default.ListCategoryTree,
             cancellationToken).ConfigureAwait(false) ?? [];
+    }
 
     /// <summary>Fetches several category trees at once.</summary>
     /// <param name="rootCategoryIds">The root categories.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
     /// Sent as a <c>POST</c> because the id list does not fit in an address, but
-    /// declared repeatable: it only reads.
+    /// declared repeatable: it only reads. It takes no category type; filter by
+    /// type with <see cref="ListTreesAsync"/>, which also accepts category ids.
     /// </remarks>
     public async Task<IReadOnlyList<CategoryTree>> SearchTreesAsync(
         IEnumerable<string> rootCategoryIds,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -233,6 +285,9 @@ public sealed class CategoryService
                     Method = HttpMethod.Post,
                     Path = $"/category/{_tenant}/category-trees/search",
                     Auth = Anonymous(auth),
+                    Query = showUnpublished is null
+                        ? null
+                        : [new("showUnpublished", showUnpublished.Value ? "true" : "false")],
                     Content = EmporixJsonContent.Create(
                         new CategoryTreeSearchRequest { CategoryIds = ids },
                         CategoryJsonContext.Default.CategoryTreeSearchRequest),
