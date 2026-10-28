@@ -9,6 +9,13 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.14.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.13.0...v0.14.0) (2026-10-28)
+
+
+### Added
+
+* manage the file queue of a file-based import stream ([#91](https://github.com/viuteam/emporix-sdk-dotnet/issues/91)) ([45da865](https://github.com/viuteam/emporix-sdk-dotnet/commit/45da8656a3de9c58c9e2e5bb389e43e000a1f585))
+
 ## [0.13.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.12.5...v0.13.0) (2026-10-27)
 
 
