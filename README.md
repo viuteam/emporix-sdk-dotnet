@@ -651,6 +651,24 @@ response unread, and `System.Net.ServerSentEvents` — already in the `net10.0`
 shared framework — parses it in three lines
 ([ADR-0007](docs/adr/0007-streaming.md)).
 
+### Importing a file
+
+A file-based import stream reads delimited files — CSV or one of its variants —
+from a queue. Upload a file, then start a run, which drains the queue:
+
+```csharp
+await using FileStream csv = File.OpenRead("vendors-2026-10-23.csv");
+var queued = await client.Imports.UploadStreamFileAsync(streamId, csv, "vendors-2026-10-23.csv");
+await client.Imports.StartRunAsync(configId);
+```
+
+Emporix recognises a file by the SHA-256 of its content, so the same bytes are
+never imported twice: a repeat answers `409`. That is why the upload is not
+retried on a transient failure — read `ListStreamFilesAsync` before sending it
+again. `GetStreamFileLimitsAsync` reports the largest file accepted,
+`SetStreamFileOrderAsync` takes every waiting file's id in load order, and
+`DeleteStreamFileAsync` removes a file only while it is still waiting.
+
 ## Values the specification has not caught up with
 
 The vendored specifications declare 240 enums, and Emporix can add a value to
