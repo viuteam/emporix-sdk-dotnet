@@ -742,7 +742,12 @@ internal sealed partial class SchemaJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.ImportServiceModels.JobGroup>))]
 [JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.HealthSettings))]
 [JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportLicense))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.ImportFile))]
+[JsonSerializable(typeof(List<Viu.Emporix.ImportServiceModels.ImportFile>))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.FileQueue))]
+[JsonSerializable(typeof(Viu.Emporix.ImportServiceModels.FileUploadLimits))]
 [JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(List<Guid>))]
 internal sealed partial class ImportJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the indexing service. See <see cref="ProductJsonContext"/>.</summary>

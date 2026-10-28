@@ -329,6 +329,15 @@ internal static partial class SpecPatches
                         "streamOrder",
                         "              schema:\n                type: object\n                properties:\n                  order:\n                    type: array\n                    items:\n                      type: string\n                    description: Stream names in the order they run.",
                         "              schema:\n                type: object\n                title: streamOrder\n                properties:\n                  order:\n                    type: array\n                    items:\n                      type: string\n                    description: Stream names in the order they run.")),
+
+                new SpecPatch(
+                    "upstream: the response of the file upload limits read is written inline "
+                    + "with no title, so the generator numbers it — Response2, which pushed the "
+                    + "next numbered schema to Response3. A title names it FileUploadLimits.",
+                    Title(
+                        "fileUploadLimits",
+                        "              schema:\n                type: object\n                properties:\n                  maxUploadBytes:",
+                        "              schema:\n                type: object\n                title: fileUploadLimits\n                properties:\n                  maxUploadBytes:")),
             ],
             ["search-service"] =
             [

@@ -159,6 +159,136 @@ namespace Viu.Emporix.ImportServiceModels
     }
 
     /// <summary>
+    /// One file a file-based stream has been given, and what became of it.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ImportFile
+    {
+
+        /// <summary>
+        /// The file's identifier.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public System.Guid? Id { get; set; } = default!;
+
+        /// <summary>
+        /// The name the file was given, used to display it and to infer compression.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fileName")]
+        public string? FileName { get; set; } = default!;
+
+        /// <summary>
+        /// The file's size in bytes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("size")]
+        public long? Size { get; set; } = default!;
+
+        /// <summary>
+        /// Where the file is in its life. Possible values:
+        /// <br/>
+        /// <br/>* `PENDING` – waiting to be imported.
+        /// <br/>* `IN_PROGRESS` – a run has claimed it and is reading it.
+        /// <br/>* `PROCESSED` – read to completion. Set only once its records have been written, so a run that
+        /// <br/>  fails part-way leaves the file importable.
+        /// <br/>* `FAILED` – the stream that read the file finished `FAILED`. The file could not be read
+        /// <br/>  (malformed, truncated, wrong charset), or the import failed for another reason, such as the
+        /// <br/>  target being unavailable. Such a file can be sent again. Records that fail individually do not
+        /// <br/>  put a file here: a stream that finishes with record failures still marks its file imported.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportFileStatus>))]
+        public ImportFileStatus? Status { get; set; } = default!;
+
+        /// <summary>
+        /// The position in the drain order. For an incremental feed the order is part of the data: a later file's values win on a key an earlier one also carries.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("loadRank")]
+        public long? LoadRank { get; set; } = default!;
+
+        /// <summary>
+        /// When the file was added to the queue.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("queuedAt")]
+        public System.DateTimeOffset? QueuedAt { get; set; } = default!;
+
+        /// <summary>
+        /// When the file finished being imported.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("processedAt")]
+        public System.DateTimeOffset? ProcessedAt { get; set; } = default!;
+
+        /// <summary>
+        /// The run that consumed it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("runId")]
+        public System.Guid? RunId { get; set; } = default!;
+
+        /// <summary>
+        /// How many records came out of it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("recordsRead")]
+        public int? RecordsRead { get; set; } = default!;
+
+        /// <summary>
+        /// Why the file ended as it did, when that needs saying — a file superseded by a newer snapshot in the same run, or one imported with record-level failures.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// What a stream still has to import, and what it has already dealt with.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileQueue
+    {
+
+        /// <summary>
+        /// The files waiting to be imported, in the order they will be read.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("pending")]
+        public System.Collections.Generic.ICollection<ImportFile>? Pending { get; set; } = default!;
+
+        /// <summary>
+        /// Files already dealt with, newest first.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("history")]
+        public System.Collections.Generic.ICollection<ImportFile>? History { get; set; } = default!;
+
+        /// <summary>
+        /// True when more files are waiting than this response carries. The load order cannot be changed while it is true, because an order that cannot name every waiting file has no meaning.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("pendingTruncated")]
+        public bool? PendingTruncated { get; set; } = default!;
+
+        /// <summary>
+        /// How many files are waiting in total, however many this response lists.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("pendingTotal")]
+        public long? PendingTotal { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
     /// A stream that extracts from a source, maps fields, and upserts into an Emporix target type.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -287,6 +417,94 @@ namespace Viu.Emporix.ImportServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("enabled")]
         public bool? Enabled { get; set; } = default!;
+
+        /// <summary>
+        /// The source connection this stream reads from, when it has its own. Omitted means the configuration's default connection is used. One configuration can therefore mix sources.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("connectionId")]
+        public System.Guid? ConnectionId { get; set; } = default!;
+
+        /// <summary>
+        /// How this stream addresses its source. The recognised properties depend on the source type; the
+        /// <br/>ones below are common.
+        /// <br/>
+        /// <br/>* `keyField` – the source column holding the natural key.
+        /// <br/>* `keyFields` and `keyName` – a key that may resolve from more than one column: the first
+        /// <br/>  non-empty of `keyFields` wins, and `keyName` is the single canonical name recorded for it,
+        /// <br/>  so the same entity keeps one target id whichever column supplied the value. Put the stable
+        /// <br/>  identifier first: a lower-priority column winning on an earlier run and a higher-priority
+        /// <br/>  one later re-keys the record.
+        /// <br/>* `limit` – the maximum number of records one run reads (`Max records`). A positive number
+        /// <br/>  only; text or zero means no cap. A dry run reads at most the smaller of this and its own sample size.
+        /// <br/>* `record` – the source record, table, or endpoint to read.
+        /// <br/>* For a file source: the delimited-file format (`delimiter`, `quote`, `escape`, `charset`,
+        /// <br/>  `header`, `skipLines`, `nullLiterals`, `trimValues`, `compression`, `failOnRaggedRow`) and
+        /// <br/>  `arrays`, which reshapes repeated flat columns into nested form. The original columns are kept,
+        /// <br/>  and each array is added beside them under its name followed by `[]` — for example `lineItems[]`
+        /// <br/>  for `lineItems.0.sku`, or `COUNTRIES[]` for a delimited `COUNTRIES` column:
+        /// <br/>  * `style` – how a repeated column is recognised: `DOT` (`lineItems.0.sku`), `BRACKET`
+        /// <br/>    (`lineItems[0].sku`), `SUFFIX` (`phone_1`), or `NONE` (the default), which recognises no
+        /// <br/>    repeated columns.
+        /// <br/>  * `delimited` – a list of column names whose cells each hold a list of values.
+        /// <br/>  * `separator` – the character a `delimited` cell is split on. Defaults to `;`.
+        /// <br/>  * `maxElements` – the maximum number of elements one array can hold. Defaults to 1000; the
+        /// <br/>    highest allowed value is 10000. A row with a longer array is not truncated: only that row
+        /// <br/>    fails, with the error code `REJECTED_BY_SOURCE`, and the rest of the file is imported.
+        /// <br/>* For an HTTP source: `pagination`, `queryParams`, `bodyTemplate`, and `format` (`JSON` or
+        /// <br/>  `XML`).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("sourceDataset")]
+        public object? SourceDataset { get; set; } = default!;
+
+        /// <summary>
+        /// For a file-based source, what one file represents. `SNAPSHOT`: each file is the whole picture, so only the most recently arrived one is read, and the per-record content hash decides what is written. A record missing from a newer file is not deleted. `INCREMENTAL`: each file is a change set, so every queued file is read in order and a later file's values win. Defaults to `SNAPSHOT`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fileMode")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamFileMode>))]
+        public ImportStreamFileMode? FileMode { get; set; } = default!;
+
+        /// <summary>
+        /// For an `EMBED` composite child, the source column its parent matches records by. Required for such a stream: without it the parent cannot find its children and writes an empty array.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("parentKeyField")]
+        public string? ParentKeyField { get; set; } = default!;
+
+        /// <summary>
+        /// Whether the delta field counts as content when deciding a record has changed. Off by default: a modified timestamp is metadata about a change, not content, and a source that restamps every row on reload would otherwise make every run rewrite the whole table. Turn it on only when the timestamp moving genuinely means the record is different.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("hashIncludesDeltaField")]
+        public bool? HashIncludesDeltaField { get; set; } = default!;
+
+        /// <summary>
+        /// Extra target attributes to declare on the type beyond those the mappings cover, for fields written by something other than this import, keyed by attribute name.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("schemaAttributes")]
+        public object? SchemaAttributes { get; set; } = default!;
+
+        /// <summary>
+        /// The target mixin schema version this stream's mappings were written against, keyed by schema id. An instance is validated against the version it was written under, so a stream pinned here is also written at that version. Set by the mapping editor, not by a stream update: a stream update that carried this property would blank the pins.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mappingSchemaVersions")]
+        public System.Collections.Generic.IDictionary<string, int>? MappingSchemaVersions { get; set; } = default!;
+
+        /// <summary>
+        /// Whether to refuse to start a run when a pinned mixin's current version has moved past the pinned one, before any record is read. Opt-in, and bypassed by triggering a run with `force`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("abortOnSchemaVersionDrift")]
+        public bool? AbortOnSchemaVersionDrift { get; set; } = default!;
+
+        /// <summary>
+        /// Names of streams that must run before this one, beyond the ordering a composite parent already implies.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("dependsOn")]
+        public System.Collections.Generic.ICollection<string>? DependsOn { get; set; } = default!;
+
+        /// <summary>
+        /// The source field used as the instance's display name. Superseded by mapping a field to the standard `name` attribute, which a mapping's transformations also apply to; a `name` mapping wins over this property. Kept for streams configured before that existed.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("nameField")]
+        [System.Obsolete]
+        public string? NameField { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -475,7 +693,7 @@ namespace Viu.Emporix.ImportServiceModels
         public System.DateTimeOffset? LastRequestedAt { get; set; } = default!;
 
         /// <summary>
-        /// Records read (created + updated + skipped + deleted + failed).
+        /// Records read. The counters reconcile: `recordsRead` = created + updated + skipped + unresolvedParents + deleted + failed + collapsed + embedded. A client that sums only some of them will not balance.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("recordsRead")]
         public int? RecordsRead { get; set; } = default!;
@@ -521,6 +739,18 @@ namespace Viu.Emporix.ImportServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("unresolvedParents")]
         public int? UnresolvedParents { get; set; } = default!;
+
+        /// <summary>
+        /// Source rows that repeated a key already present in the same batch. They are merged before the write, last row wins, and counted here — so the report adds up however the source feed is batched. A repeat in a *later* batch is written again and counted as created or updated instead; `duplicateKeys` is the signal for a feed that is not unique on its key.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("collapsed")]
+        public int? Collapsed { get; set; } = default!;
+
+        /// <summary>
+        /// Child records an `EMBED` composite child handed to its parent, which the parent then wrote inside its own instance. One write of the parent covers them all, so they are never counted as created or updated (that would count each line as an instance) and never as skipped (which means "already up to date"). If the parent turned out to be unchanged, failed, or absent, these are settled onto `skipped`, `failed`, or `unresolvedParents` once the parent's pass completes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("embedded")]
+        public int? Embedded { get; set; } = default!;
 
         /// <summary>
         /// A terminal status message, typically set on failure.
@@ -620,7 +850,7 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportRunStreamStatus? Status { get; set; } = default!;
 
         /// <summary>
-        /// Records read for this stream.
+        /// Records read for this stream. The counters reconcile: `recordsRead` = created + updated + skipped + unresolvedParents + deleted + failed + collapsed + embedded.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("recordsRead")]
         public int? RecordsRead { get; set; } = default!;
@@ -668,10 +898,52 @@ namespace Viu.Emporix.ImportServiceModels
         public int? UnresolvedParents { get; set; } = default!;
 
         /// <summary>
+        /// Source rows that repeated a key already present in the same batch. They are merged before the write, last row wins, and counted here — so the report adds up however the source feed is batched. A repeat in a *later* batch is written again and counted as created or updated instead; `duplicateKeys` is the signal for a feed that is not unique on its key.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("collapsed")]
+        public int? Collapsed { get; set; } = default!;
+
+        /// <summary>
+        /// Child records an `EMBED` composite child handed to its parent, which the parent then wrote inside its own instance. One write of the parent covers them all, so they are never counted as created or updated (that would count each line as an instance) and never as skipped (which means "already up to date"). If the parent turned out to be unchanged, failed, or absent, these are settled onto `skipped`, `failed`, or `unresolvedParents` once the parent's pass completes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("embedded")]
+        public int? Embedded { get; set; } = default!;
+
+        /// <summary>
         /// A per-stream status message.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
+
+        /// <summary>
+        /// For a file-based source, the file locators this stream actually read, in the order it read them. Recorded so a retry re-reads exactly the same bytes: the file behind a locator can be replaced by a later drop, and re-running against a different file would report a clean success having repaired nothing.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("filesRead")]
+        public System.Collections.Generic.ICollection<string>? FilesRead { get; set; } = default!;
+
+        /// <summary>
+        /// The display name of each locator in `filesRead`, keyed by locator. A file is addressed by an opaque id, so the name is carried beside it rather than derived from it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fileNames")]
+        public System.Collections.Generic.IDictionary<string, string>? FileNames { get; set; } = default!;
+
+        /// <summary>
+        /// True when the tenant's licensed `maxRecordsPerEntity` was reached and the remaining records were read but not written. They are counted as `skipped` and the stream is `PARTIAL`: the data is not lost, but it is not imported either until the limit is raised. See the license endpoint.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("capSkipped")]
+        public bool? CapSkipped { get; set; } = default!;
+
+        /// <summary>
+        /// True when at least one source record had no value in its key column. Such a record is counted as both read and failed and is reported under error code `NO_KEY` — the import does not invent a key, because a synthesised one collides across records and changes whenever the record does.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("keylessSeen")]
+        public bool? KeylessSeen { get; set; } = default!;
+
+        /// <summary>
+        /// True for the extra row produced by the unresolved-parent sweep, which re-fetches the parents a composite child could not find and then re-reads their lines. A child's sweep row is folded into its original row and removed; a parent's sweep row remains, because its reads are genuinely new. Treat a row with this flag as a repair pass, not as a second stream.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("sweep")]
+        public bool? Sweep { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -791,7 +1063,27 @@ namespace Viu.Emporix.ImportServiceModels
         public string? Stage { get; set; } = default!;
 
         /// <summary>
-        /// A machine-readable error code.
+        /// A machine-readable error code:
+        /// <br/>
+        /// <br/>* `VALIDATION` – the mapped record failed validation before any write was attempted.
+        /// <br/>* `NO_KEY` – the record's key column was empty, so it cannot be identified.
+        /// <br/>* `UPSERT` – the target rejected the write.
+        /// <br/>* `CONFIGURATION` – something to change in the import's own configuration, not a fault: a
+        /// <br/>  missing base URL, refused credentials, an unknown path, a stream that names no parent.
+        /// <br/>* `EXTERNAL_SYSTEM` – another system answered with an error, for example the source returning
+        /// <br/>  5xx or a source-side extraction failure.
+        /// <br/>* `MERGE`, `PATCH_EMBED` – a composite merge or an embed patch onto the parent failed.
+        /// <br/>* `NO_LINKING_VALUE` – a composite child row carried no value in its linking field.
+        /// <br/>* `MARKER_DELETE`, `TOMBSTONE_DELETE`, `TOMBSTONE_NO_KEY` – a delete detected by a status
+        /// <br/>  marker or a tombstone record could not be applied.
+        /// <br/>* `REJECTED_BY_SOURCE` – the source rejected a single record because of its data, for example a
+        /// <br/>  delimited-file row whose array has more elements than `sourceDataset.arrays.maxElements`. That
+        /// <br/>  record is not imported, but the other records are; `message` names the column, its number of
+        /// <br/>  elements, and the limit.
+        /// <br/>* `STREAM_ERROR` – the stream failed as a whole; the record-level detail is in `message`.
+        /// <br/>
+        /// <br/>`CONFIGURATION` and `EXTERNAL_SYSTEM` are reported as a plain sentence naming what to change.
+        /// <br/>They are not application faults and are not alerted on as such.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("errorCode")]
         public string? ErrorCode { get; set; } = default!;
@@ -1910,6 +2202,39 @@ namespace Viu.Emporix.ImportServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileUploadLimits
+    {
+
+        /// <summary>
+        /// The largest file accepted, in bytes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("maxUploadBytes")]
+        public long? MaxUploadBytes { get; set; } = default!;
+
+        /// <summary>
+        /// Whether `maxUploadBytes` is set by the API gateway in front of the service rather than by the service itself. A larger file is then refused by the gateway, with the gateway's own `413` error body, before it reaches the service. Use the connection's file URL for it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("gatewayLimited")]
+        public bool? GatewayLimited { get; set; } = default!;
+
+        /// <summary>
+        /// False when the environment has nowhere to store an uploaded file. A file URL on the connection does not help: a fetched file is stored in the same place.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("uploadSupported")]
+        public bool? UploadSupported { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class StreamOrder
     {
 
@@ -1972,6 +2297,25 @@ namespace Viu.Emporix.ImportServiceModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportFileStatus>))]
+    public enum ImportFileStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"PENDING")]
+        PENDING = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"IN_PROGRESS")]
+        IN_PROGRESS = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"PROCESSED")]
+        PROCESSED = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"FAILED")]
+        FAILED = 3,
 
     }
 
@@ -2076,6 +2420,19 @@ namespace Viu.Emporix.ImportServiceModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamFileMode>))]
+    public enum ImportStreamFileMode
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SNAPSHOT")]
+        SNAPSHOT = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"INCREMENTAL")]
+        INCREMENTAL = 1,
 
     }
 
@@ -2377,6 +2734,33 @@ namespace Viu.Emporix.ImportServiceModels
             set { _additionalProperties = value; }
         }
 
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileParameter
+    {
+        public FileParameter(System.IO.Stream data)
+            : this (data, null, null)
+        {
+        }
+
+        public FileParameter(System.IO.Stream data, string? fileName)
+            : this (data, fileName, null)
+        {
+        }
+
+        public FileParameter(System.IO.Stream data, string? fileName, string? contentType)
+        {
+            Data = data;
+            FileName = fileName;
+            ContentType = contentType;
+        }
+
+        public System.IO.Stream Data { get; private set; }
+
+        public string? FileName { get; private set; }
+
+        public string? ContentType { get; private set; }
     }
 
 

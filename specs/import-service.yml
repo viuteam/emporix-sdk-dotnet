@@ -8,10 +8,11 @@ info:
     upserts idempotently. Imports run asynchronously and stream per-stream progress over Server-Sent Events.
 
     This reference covers the operational surface available with the `importtool.import_trigger` scope:
-    triggering, scheduling, monitoring, and cancelling import runs, reading configurations, streams,
-    schedules, runs, and imported data, and reading the import analytics that summarise them.
-    Administrative operations (creating and changing configurations, connections, streams, and mappings)
-    require the `importtool.import_manage` scope.
+    triggering, scheduling, monitoring, and cancelling import runs; managing the file queue of a
+    file-based stream (upload, list, reorder, remove); reading configurations, streams, schedules, runs,
+    and imported data; and reading the import analytics that summarise them. Administrative operations
+    (creating and changing configurations, connections, streams, and mappings) require the
+    `importtool.import_manage` scope.
   contact:
     name: Emporix
     url: https://emporix.com
@@ -21,6 +22,10 @@ tags:
     description: Read import configurations.
   - name: Streams
     description: Read the streams of a configuration.
+  - name: Files
+    description: >-
+      The queue of files a file-based stream imports: upload one, see what is waiting, change the load
+      order, remove one.
   - name: Schedules
     description: Read and set a configuration's run schedule.
   - name: Runs
@@ -163,6 +168,298 @@ paths:
           $ref: '#/components/responses/Forbidden_403'
         '404':
           $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/streams/{streamId}/files':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_streamId'
+    get:
+      summary: Retrieving a stream's files
+      description: |-
+        Lists what a file-based stream still has to import, in the order it will be read, and what it has
+        already dealt with. A file is identified by the SHA-256 of its content, so re-sending the same bytes
+        is recognised however the file is named.
+      operationId: GET-importtool-stream-files
+      tags:
+        - Files
+      parameters:
+        - schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 500
+          in: query
+          name: historyLimit
+          description: |-
+            Number of the stream's most recently handled files to return in `history`. A value below 1 is
+            treated as 1, and a value above 500 as 500. This parameter does not limit `pending`: the queue is
+            returned in full up to 2000 files, and `pendingTruncated` and `pendingTotal` indicate when it is
+            longer than the response.
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The queue and the history are returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileQueue'
+              examples:
+                File queue response:
+                  $ref: '#/components/examples/FileQueue_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+    post:
+      summary: Uploading a file for a stream to import
+      description: |-
+        Queues a delimited file (CSV or one of its variants) for a file-based stream to import on its next
+        run. Nothing is imported by this request.
+
+        The file is stored, and its content hash recorded, so the same bytes are never imported twice: a
+        file this stream has already imported is refused rather than queued again. A file that previously
+        failed is accepted, because the usual reason is that it has been fixed.
+
+        The request is refused while the stream's job has a run in flight if the upload would replace bytes
+        the stream already holds — a run may be reading them, and a retry may be waiting to re-read them.
+        A file the stream has not seen before is a new queue entry and is accepted at any time.
+      operationId: POST-importtool-stream-files
+      tags:
+        - Files
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to import.
+              required:
+                - file
+      responses:
+        '200':
+          description: The request was successful. The file is queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportFile'
+              examples:
+                Uploaded file response:
+                  $ref: '#/components/examples/ImportFile_Example'
+        '400':
+          description: No file was sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          description: >-
+            The stream has already imported this exact file, the file is already queued, the stream does not
+            read files, or a run in flight is using the bytes this upload would replace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '413':
+          description: >-
+            The file is larger than this environment's upload limit. Publish it at an HTTP(S) URL and set
+            that as the connection's file URL instead.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '503':
+          description: File upload is not configured in this environment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/streams/{streamId}/files/limits':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_streamId'
+    get:
+      summary: Retrieving the file upload limits
+      description: |-
+        Returns the largest file this environment accepts, and whether uploading is available at all, so a
+        client can state the limit and reject an oversize file before sending it.
+      operationId: GET-importtool-stream-file-limits
+      tags:
+        - Files
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                title: fileUploadLimits
+                properties:
+                  maxUploadBytes:
+                    type: integer
+                    format: int64
+                    description: The largest file accepted, in bytes.
+                    example: 9437184
+                  gatewayLimited:
+                    type: boolean
+                    description: >-
+                      Whether `maxUploadBytes` is set by the API gateway in front of the service rather than by
+                      the service itself. A larger file is then refused by the gateway, with the gateway's own
+                      `413` error body, before it reaches the service. Use the connection's file URL for it.
+                    example: true
+                  uploadSupported:
+                    type: boolean
+                    description: >-
+                      False when the environment has nowhere to store an uploaded file. A file URL on the
+                      connection does not help: a fetched file is stored in the same place.
+                    example: true
+              examples:
+                File upload limits response:
+                  $ref: '#/components/examples/FileUploadLimits_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/streams/{streamId}/files/order':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_streamId'
+    put:
+      summary: Setting the order in which files are imported
+      description: |-
+        Sets the order in which the waiting files are read. For an incremental feed the order is the data: a
+        later file's values win on a key an earlier one also carries, so an older export must be placed before
+        a newer one.
+
+        The request takes every waiting file's identifier, in load order, rather than moving one file: ranks
+        are only meaningful relative to each other, and a partial list would leave the omitted files at their
+        old ranks interleaved with the new ones. A list that is not exactly the waiting set is refused.
+
+        The request is refused while the job has a run in flight, which may be draining the queue as the order
+        changes.
+      operationId: PUT-importtool-stream-file-order
+      tags:
+        - Files
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: Every waiting file's identifier, in the order they must be imported.
+              example:
+                - 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                - c56a4180-65aa-42ec-a945-5fd21dec0538
+      responses:
+        '200':
+          description: The request was successful. The queue is returned in its new order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportFile'
+              examples:
+                Reordered file queue response:
+                  $ref: '#/components/examples/ImportFiles_Example'
+        '400':
+          description: The list is not exactly the set of waiting files.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          description: The job has a run in flight, or the queue is too long to be reordered in one request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/streams/{streamId}/files/{fileId}':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_streamId'
+      - name: fileId
+        in: path
+        required: true
+        description: The file's identifier.
+        schema:
+          type: string
+          format: uuid
+    delete:
+      summary: Removing a file from the queue
+      description: |-
+        Removes a waiting file and deletes the stored bytes with it. Only a waiting file can be removed: one
+        a run has claimed must not vanish underneath it, and one already imported is history — removing that
+        record would make the same bytes importable again, which is the one thing the file ledger exists to
+        prevent.
+
+        The request is refused while the job has a run in flight: the run may claim the file at any moment,
+        and a retry may be waiting to re-read it.
+      operationId: DELETE-importtool-stream-file
+      tags:
+        - Files
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '204':
+          description: The request was successful. The file is removed.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          description: >-
+            The file is no longer waiting — a run has claimed it or already imported it — or the job has a
+            run in flight.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
         '500':
           $ref: '#/components/responses/InternalServiceError_500'
   '/importtool/{tenant}/configs/{configId}/schedule':
@@ -1299,6 +1596,102 @@ components:
           format: date-time
           description: When the configuration was last updated.
           example: '2026-07-20T08:00:00.000Z'
+    ImportFile:
+      title: Import file
+      type: object
+      description: One file a file-based stream has been given, and what became of it.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The file's identifier.
+          example: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        fileName:
+          type: string
+          description: The name the file was given, used to display it and to infer compression.
+          example: vendors-2026-10-23.csv
+        size:
+          type: integer
+          format: int64
+          description: The file's size in bytes.
+          example: 2458112
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROGRESS
+            - PROCESSED
+            - FAILED
+          description: |-
+            Where the file is in its life. Possible values:
+
+            * `PENDING` – waiting to be imported.
+            * `IN_PROGRESS` – a run has claimed it and is reading it.
+            * `PROCESSED` – read to completion. Set only once its records have been written, so a run that
+              fails part-way leaves the file importable.
+            * `FAILED` – the stream that read the file finished `FAILED`. The file could not be read
+              (malformed, truncated, wrong charset), or the import failed for another reason, such as the
+              target being unavailable. Such a file can be sent again. Records that fail individually do not
+              put a file here: a stream that finishes with record failures still marks its file imported.
+          example: PROCESSED
+        loadRank:
+          type: integer
+          format: int64
+          description: >-
+            The position in the drain order. For an incremental feed the order is part of the data: a later
+            file's values win on a key an earlier one also carries.
+          example: 3
+        queuedAt:
+          type: string
+          format: date-time
+          description: When the file was added to the queue.
+          example: '2026-10-23T09:15:00.000Z'
+        processedAt:
+          type: string
+          format: date-time
+          description: When the file finished being imported.
+          example: '2026-10-23T09:17:42.000Z'
+        runId:
+          type: string
+          format: uuid
+          description: The run that consumed it.
+          example: c56a4180-65aa-42ec-a945-5fd21dec0538
+        recordsRead:
+          type: integer
+          description: How many records came out of it.
+          example: 43342
+        message:
+          type: string
+          description: >-
+            Why the file ended as it did, when that needs saying — a file superseded by a newer snapshot in
+            the same run, or one imported with record-level failures.
+          example: 'Imported with failures: 1 record had no key value'
+    FileQueue:
+      title: File queue
+      type: object
+      description: What a stream still has to import, and what it has already dealt with.
+      properties:
+        pending:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportFile'
+          description: The files waiting to be imported, in the order they will be read.
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportFile'
+          description: Files already dealt with, newest first.
+        pendingTruncated:
+          type: boolean
+          description: >-
+            True when more files are waiting than this response carries. The load order cannot be changed
+            while it is true, because an order that cannot name every waiting file has no meaning.
+          example: false
+        pendingTotal:
+          type: integer
+          format: int64
+          description: How many files are waiting in total, however many this response lists.
+          example: 3
     ImportStream:
       title: Stream
       type: object
@@ -1440,6 +1833,110 @@ components:
           type: boolean
           description: Whether the stream is active.
           example: true
+        connectionId:
+          type: string
+          format: uuid
+          description: >-
+            The source connection this stream reads from, when it has its own. Omitted means the
+            configuration's default connection is used. One configuration can therefore mix sources.
+          example: 2b069ad4-ee40-4c1d-9151-898ad59bd88a
+        sourceDataset:
+          type: object
+          additionalProperties: true
+          description: |-
+            How this stream addresses its source. The recognised properties depend on the source type; the
+            ones below are common.
+
+            * `keyField` – the source column holding the natural key.
+            * `keyFields` and `keyName` – a key that may resolve from more than one column: the first
+              non-empty of `keyFields` wins, and `keyName` is the single canonical name recorded for it,
+              so the same entity keeps one target id whichever column supplied the value. Put the stable
+              identifier first: a lower-priority column winning on an earlier run and a higher-priority
+              one later re-keys the record.
+            * `limit` – the maximum number of records one run reads (`Max records`). A positive number
+              only; text or zero means no cap. A dry run reads at most the smaller of this and its own sample size.
+            * `record` – the source record, table, or endpoint to read.
+            * For a file source: the delimited-file format (`delimiter`, `quote`, `escape`, `charset`,
+              `header`, `skipLines`, `nullLiterals`, `trimValues`, `compression`, `failOnRaggedRow`) and
+              `arrays`, which reshapes repeated flat columns into nested form. The original columns are kept,
+              and each array is added beside them under its name followed by `[]` — for example `lineItems[]`
+              for `lineItems.0.sku`, or `COUNTRIES[]` for a delimited `COUNTRIES` column:
+              * `style` – how a repeated column is recognised: `DOT` (`lineItems.0.sku`), `BRACKET`
+                (`lineItems[0].sku`), `SUFFIX` (`phone_1`), or `NONE` (the default), which recognises no
+                repeated columns.
+              * `delimited` – a list of column names whose cells each hold a list of values.
+              * `separator` – the character a `delimited` cell is split on. Defaults to `;`.
+              * `maxElements` – the maximum number of elements one array can hold. Defaults to 1000; the
+                highest allowed value is 10000. A row with a longer array is not truncated: only that row
+                fails, with the error code `REJECTED_BY_SOURCE`, and the rest of the file is imported.
+            * For an HTTP source: `pagination`, `queryParams`, `bodyTemplate`, and `format` (`JSON` or
+              `XML`).
+          example:
+            keyField: ID
+            limit: 1000
+        fileMode:
+          type: string
+          enum:
+            - SNAPSHOT
+            - INCREMENTAL
+          description: >-
+            For a file-based source, what one file represents. `SNAPSHOT`: each file is the whole picture,
+            so only the most recently arrived one is read, and the per-record content hash decides what is
+            written. A record missing from a newer file is not deleted. `INCREMENTAL`: each file is a change set, so every queued file is read in order and
+            a later file's values win. Defaults to `SNAPSHOT`.
+          example: SNAPSHOT
+        parentKeyField:
+          type: string
+          description: >-
+            For an `EMBED` composite child, the source column its parent matches records by. Required for
+            such a stream: without it the parent cannot find its children and writes an empty array.
+          example: INVOICE_ID
+        hashIncludesDeltaField:
+          type: boolean
+          description: >-
+            Whether the delta field counts as content when deciding a record has changed. Off by default: a
+            modified timestamp is metadata about a change, not content, and a source that restamps every row
+            on reload would otherwise make every run rewrite the whole table. Turn it on only when the
+            timestamp moving genuinely means the record is different.
+          example: false
+        schemaAttributes:
+          type: object
+          additionalProperties: true
+          description: >-
+            Extra target attributes to declare on the type beyond those the mappings cover, for fields
+            written by something other than this import, keyed by attribute name.
+        mappingSchemaVersions:
+          type: object
+          additionalProperties:
+            type: integer
+          description: >-
+            The target mixin schema version this stream's mappings were written against, keyed by schema
+            id. An instance is validated against the version it was written under, so a stream pinned here
+            is also written at that version. Set by the mapping editor, not by a stream update: a stream
+            update that carried this property would blank the pins.
+          example:
+            PO_INVOICE: 49
+        abortOnSchemaVersionDrift:
+          type: boolean
+          description: >-
+            Whether to refuse to start a run when a pinned mixin's current version has moved past the
+            pinned one, before any record is read. Opt-in, and bypassed by triggering a run with `force`.
+          example: false
+        dependsOn:
+          type: array
+          items:
+            type: string
+          description: >-
+            Names of streams that must run before this one, beyond the ordering a composite parent already
+            implies.
+        nameField:
+          type: string
+          deprecated: true
+          description: >-
+            The source field used as the instance's display name. Superseded by mapping a field to the
+            standard `name` attribute, which a mapping's transformations also apply to; a `name` mapping
+            wins over this property. Kept for streams configured before that existed.
+          example: VENDORNAME
     Schedule:
       title: Schedule
       type: object
@@ -1630,7 +2127,9 @@ components:
           example: '2026-07-27T03:00:00.000Z'
         recordsRead:
           type: integer
-          description: Records read (created + updated + skipped + deleted + failed).
+          description: >-
+            Records read. The counters reconcile: `recordsRead` = created + updated + skipped + unresolvedParents + deleted + failed + collapsed + embedded.
+            A client that sums only some of them will not balance.
           example: 1250
         created:
           type: integer
@@ -1665,6 +2164,23 @@ components:
             Child records that were not imported because their parent could not be found.
             Counted separately from `skipped`, which counts records that were already up to date.
           example: 25370
+        collapsed:
+          type: integer
+          description: >-
+            Source rows that repeated a key already present in the same batch. They are merged before the
+            write, last row wins, and counted here — so the report adds up however the source feed is
+            batched. A repeat in a *later* batch is written again and counted as created or updated
+            instead; `duplicateKeys` is the signal for a feed that is not unique on its key.
+          example: 12
+        embedded:
+          type: integer
+          description: >-
+            Child records an `EMBED` composite child handed to its parent, which the parent then wrote
+            inside its own instance. One write of the parent covers them all, so they are never counted as
+            created or updated (that would count each line as an instance) and never as skipped (which
+            means "already up to date"). If the parent turned out to be unchanged, failed, or absent, these
+            are settled onto `skipped`, `failed`, or `unresolvedParents` once the parent's pass completes.
+          example: 430
         message:
           type: string
           description: A terminal status message, typically set on failure.
@@ -1758,7 +2274,8 @@ components:
           example: PARTIAL
         recordsRead:
           type: integer
-          description: Records read for this stream.
+          description: >-
+            Records read for this stream. The counters reconcile: `recordsRead` = created + updated + skipped + unresolvedParents + deleted + failed + collapsed + embedded.
           example: 1250
         created:
           type: integer
@@ -1793,10 +2310,69 @@ components:
             Child records that were not imported because their parent could not be found.
             Counted separately from `skipped`, which counts records that were already up to date.
           example: 25370
+        collapsed:
+          type: integer
+          description: >-
+            Source rows that repeated a key already present in the same batch. They are merged before the
+            write, last row wins, and counted here — so the report adds up however the source feed is
+            batched. A repeat in a *later* batch is written again and counted as created or updated
+            instead; `duplicateKeys` is the signal for a feed that is not unique on its key.
+          example: 12
+        embedded:
+          type: integer
+          description: >-
+            Child records an `EMBED` composite child handed to its parent, which the parent then wrote
+            inside its own instance. One write of the parent covers them all, so they are never counted as
+            created or updated (that would count each line as an instance) and never as skipped (which
+            means "already up to date"). If the parent turned out to be unchanged, failed, or absent, these
+            are settled onto `skipped`, `failed`, or `unresolvedParents` once the parent's pass completes.
+          example: 430
         message:
           type: string
           description: A per-stream status message.
           example: 5 records failed validation.
+        filesRead:
+          type: array
+          items:
+            type: string
+          description: >-
+            For a file-based source, the file locators this stream actually read, in the order it read
+            them. Recorded so a retry re-reads exactly the same bytes: the file behind a locator can be
+            replaced by a later drop, and re-running against a different file would report a clean success
+            having repaired nothing.
+          example:
+            - 'media:5f1c0a9e8b7d4c2fa1e3'
+        fileNames:
+          type: object
+          additionalProperties:
+            type: string
+          description: >-
+            The display name of each locator in `filesRead`, keyed by locator. A file is addressed by an
+            opaque id, so the name is carried beside it rather than derived from it.
+          example:
+            'media:5f1c0a9e8b7d4c2fa1e3': vendors-2026-10-23.csv
+        capSkipped:
+          type: boolean
+          description: >-
+            True when the tenant's licensed `maxRecordsPerEntity` was reached and the remaining records
+            were read but not written. They are counted as `skipped` and the stream is `PARTIAL`: the data
+            is not lost, but it is not imported either until the limit is raised. See the license endpoint.
+          example: false
+        keylessSeen:
+          type: boolean
+          description: >-
+            True when at least one source record had no value in its key column. Such a record is counted
+            as both read and failed and is reported under error code `NO_KEY` — the import does not invent
+            a key, because a synthesised one collides across records and changes whenever the record does.
+          example: false
+        sweep:
+          type: boolean
+          description: >-
+            True for the extra row produced by the unresolved-parent sweep, which re-fetches the parents a
+            composite child could not find and then re-reads their lines. A child's sweep row is folded
+            into its original row and removed; a parent's sweep row remains, because its reads are genuinely
+            new. Treat a row with this flag as a repair pass, not as a second stream.
+          example: false
     RunDetail:
       title: Run detail
       type: object
@@ -1861,8 +2437,29 @@ components:
           example: MAPPING
         errorCode:
           type: string
-          description: A machine-readable error code.
-          example: REQUIRED_FIELD_MISSING
+          description: |-
+            A machine-readable error code:
+
+            * `VALIDATION` – the mapped record failed validation before any write was attempted.
+            * `NO_KEY` – the record's key column was empty, so it cannot be identified.
+            * `UPSERT` – the target rejected the write.
+            * `CONFIGURATION` – something to change in the import's own configuration, not a fault: a
+              missing base URL, refused credentials, an unknown path, a stream that names no parent.
+            * `EXTERNAL_SYSTEM` – another system answered with an error, for example the source returning
+              5xx or a source-side extraction failure.
+            * `MERGE`, `PATCH_EMBED` – a composite merge or an embed patch onto the parent failed.
+            * `NO_LINKING_VALUE` – a composite child row carried no value in its linking field.
+            * `MARKER_DELETE`, `TOMBSTONE_DELETE`, `TOMBSTONE_NO_KEY` – a delete detected by a status
+              marker or a tombstone record could not be applied.
+            * `REJECTED_BY_SOURCE` – the source rejected a single record because of its data, for example a
+              delimited-file row whose array has more elements than `sourceDataset.arrays.maxElements`. That
+              record is not imported, but the other records are; `message` names the column, its number of
+              elements, and the limit.
+            * `STREAM_ERROR` – the stream failed as a whole; the record-level detail is in `message`.
+
+            `CONFIGURATION` and `EXTERNAL_SYSTEM` are reported as a plain sentence naming what to change.
+            They are not application faults and are not alerted on as such.
+          example: VALIDATION
         message:
           type: string
           description: A human-readable error message.
@@ -2701,6 +3298,60 @@ components:
           enabled: true
           createdAt: '2026-07-01T10:15:30.000Z'
           updatedAt: '2026-07-20T08:00:00.000Z'
+    ImportFile_Example:
+      value:
+        id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+        fileName: vendors-2026-10-23.csv
+        size: 2458112
+        status: PENDING
+        loadRank: 1
+        queuedAt: '2026-10-23T09:15:00.000Z'
+    ImportFiles_Example:
+      value:
+        - id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+          fileName: vendors-2026-10-23.csv
+          size: 2458112
+          status: PENDING
+          loadRank: 1
+          queuedAt: '2026-10-23T09:15:00.000Z'
+        - id: c56a4180-65aa-42ec-a945-5fd21dec0538
+          fileName: vendors-2026-10-24.csv
+          size: 2510044
+          status: PENDING
+          loadRank: 2
+          queuedAt: '2026-10-24T09:15:00.000Z'
+    FileQueue_Example:
+      value:
+        pending:
+          - id: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+            fileName: vendors-2026-10-23.csv
+            size: 2458112
+            status: PENDING
+            loadRank: 1
+            queuedAt: '2026-10-23T09:15:00.000Z'
+          - id: c56a4180-65aa-42ec-a945-5fd21dec0538
+            fileName: vendors-2026-10-24.csv
+            size: 2510044
+            status: PENDING
+            loadRank: 2
+            queuedAt: '2026-10-24T09:15:00.000Z'
+        history:
+          - id: a3bb189e-8bf9-3888-9912-ace4e6543002
+            fileName: vendors-2026-10-22.csv
+            size: 2391001
+            status: PROCESSED
+            loadRank: 1
+            queuedAt: '2026-10-22T09:15:00.000Z'
+            processedAt: '2026-10-22T09:17:42.000Z'
+            runId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            recordsRead: 43342
+        pendingTruncated: false
+        pendingTotal: 2
+    FileUploadLimits_Example:
+      value:
+        maxUploadBytes: 9437184
+        gatewayLimited: true
+        uploadSupported: true
     ImportStream_Example:
       value:
         id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
@@ -2950,7 +3601,7 @@ components:
         clientCredentials:
           tokenUrl: 'https://api.emporix.io/oauth/token'
           scopes:
-            importtool.import_trigger: Needed to trigger, schedule, monitor, and cancel import runs and to read configurations, streams, schedules, runs, and imported data.
+            importtool.import_trigger: Needed to trigger, schedule, monitor, and cancel import runs; to manage a file-based stream's file queue; and to read configurations, streams, schedules, runs, and imported data.
 security:
   - OAuth2:
       - importtool.import_trigger

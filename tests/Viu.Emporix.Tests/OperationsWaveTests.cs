@@ -225,6 +225,85 @@ public class OperationsWaveTests
             Uri(handler));
     }
 
+    [Fact]
+    public async Task A_stream_file_queue_sends_the_history_limit_only_when_the_caller_chose_it()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """{"pending":[{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"PENDING","loadRank":1}],"pendingTruncated":false,"pendingTotal":1}""");
+        ImportService imports = new(Http(handler), Options());
+
+        ImportServiceModels.FileQueue? queue = await imports.ListStreamFilesAsync("str-1");
+        await imports.ListStreamFilesAsync("str-1", historyLimit: 5);
+
+        Assert.Equal("/importtool/acme/streams/str-1/files", Uri(handler, 0));
+        Assert.Equal("/importtool/acme/streams/str-1/files?historyLimit=5", Uri(handler, 1));
+        Assert.Equal(ImportServiceModels.ImportFileStatus.PENDING, queue!.Pending!.Single().Status);
+    }
+
+    [Fact]
+    public async Task An_uploaded_file_goes_as_the_multipart_part_file_under_its_name_and_is_never_repeated()
+    {
+        // Emporix dedupes on the content hash: repeating an upload that went
+        // through answers 409, so a timed-out upload must not be sent again.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"status":"PENDING"}""");
+        ImportService imports = new(Http(handler), Options());
+        using MemoryStream csv = new("ID;NAME\n1;A\n"u8.ToArray());
+
+        ImportServiceModels.ImportFile? file = await imports.UploadStreamFileAsync("str-1", csv, "vendors.csv");
+
+        Assert.Equal("/importtool/acme/streams/str-1/files", Uri(handler));
+        Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
+        Assert.Contains("name=file; filename=vendors.csv", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("ID;NAME\n1;A\n", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.False(IsRepeatable(handler));
+        Assert.Equal(ImportServiceModels.ImportFileStatus.PENDING, file!.Status);
+    }
+
+    [Fact]
+    public async Task The_upload_limits_are_read_per_stream()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """{"maxUploadBytes":9437184,"gatewayLimited":true,"uploadSupported":true}""");
+        ImportService imports = new(Http(handler), Options());
+
+        ImportServiceModels.FileUploadLimits? limits = await imports.GetStreamFileLimitsAsync("str-1");
+
+        Assert.Equal("/importtool/acme/streams/str-1/files/limits", Uri(handler));
+        Assert.Equal(9437184, limits!.MaxUploadBytes);
+        Assert.True(limits.GatewayLimited);
+    }
+
+    [Fact]
+    public async Task Reordering_the_file_queue_puts_every_id_in_load_order()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, "[]");
+        ImportService imports = new(Http(handler), Options());
+        Guid newer = Guid.Parse("c56a4180-65aa-42ec-a945-5fd21dec0538");
+        Guid older = Guid.Parse("9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d");
+
+        await imports.SetStreamFileOrderAsync("str-1", [older, newer]);
+
+        Assert.Equal("/importtool/acme/streams/str-1/files/order", Uri(handler));
+        Assert.Equal(HttpMethod.Put, handler.LastRequest!.Method);
+        Assert.Equal(
+            """["9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","c56a4180-65aa-42ec-a945-5fd21dec0538"]""",
+            handler.RequestBodies[0]);
+    }
+
+    [Fact]
+    public async Task Removing_a_queued_file_escapes_both_ids()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        ImportService imports = new(Http(handler), Options());
+
+        await imports.DeleteStreamFileAsync("str/1", "file/1");
+
+        Assert.Equal("/importtool/acme/streams/str%2F1/files/file%2F1", Uri(handler));
+        Assert.Equal(HttpMethod.Delete, handler.LastRequest!.Method);
+    }
+
     // ---------- Indexing ----------
 
     [Fact]

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using Viu.Emporix.ImportServiceModels;
 
@@ -824,6 +825,192 @@ public sealed class ImportService
             },
             ImportJsonContext.Default.ImportLicense,
             cancellationToken).ConfigureAwait(false);
+
+    /// <summary>Reads a file-based stream's queue: what it still has to import, and what it already did.</summary>
+    /// <param name="streamId">The stream id.</param>
+    /// <param name="historyLimit">
+    /// How many of the most recently handled files to return. Emporix returns 100
+    /// when omitted and treats a value outside 1 to 500 as the nearest bound.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <see cref="FileQueue.Pending"/> is in load order and complete up to 2,000
+    /// files; beyond that <see cref="FileQueue.PendingTruncated"/> is set,
+    /// <see cref="FileQueue.PendingTotal"/> has the real count, and the order
+    /// cannot be changed. <see cref="FileQueue.History"/> is newest first.
+    /// </remarks>
+    public async Task<FileQueue?> ListStreamFilesAsync(
+        string streamId,
+        int? historyLimit = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/streams/{Uri.EscapeDataString(streamId)}/files",
+                Auth = Defaults.Service(auth),
+                Query = historyLimit is null
+                    ? null
+                    : [new("historyLimit", historyLimit.Value.ToString(CultureInfo.InvariantCulture))],
+                Idempotent = true,
+            },
+            ImportJsonContext.Default.FileQueue,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Queues a delimited file — CSV or one of its variants — for a file-based stream's next run.</summary>
+    /// <param name="streamId">The stream id.</param>
+    /// <param name="content">The file's bytes.</param>
+    /// <param name="fileName">
+    /// The file's name. Emporix displays it and infers the compression from it.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The queued file, <c>PENDING</c>. Nothing is imported until a run reads it.</returns>
+    /// <remarks>
+    /// <para>
+    /// Emporix recognises a file by the SHA-256 of its content, whatever its
+    /// name, and answers <c>409</c> when the stream already imported or queued
+    /// those bytes; a file that previously failed is accepted again. It also
+    /// answers <c>409</c> when the stream does not read files, or when a run in
+    /// flight uses bytes this upload would replace. <c>413</c> means the file is
+    /// over the limit <see cref="GetStreamFileLimitsAsync"/> reports, <c>503</c>
+    /// that uploading is not configured in this environment.
+    /// </para>
+    /// <para>
+    /// Not repeatable: an upload that timed out may have been queued, and sending
+    /// it again would then answer <c>409</c>. Read
+    /// <see cref="ListStreamFilesAsync"/> instead.
+    /// </para>
+    /// </remarks>
+    public async Task<ImportFile?> UploadStreamFileAsync(
+        string streamId,
+        Stream content,
+        string fileName,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamId);
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+
+        using MultipartFormDataContent form = [];
+        StreamContent file = new(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        form.Add(file, "file", fileName);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/streams/{Uri.EscapeDataString(streamId)}/files",
+                Auth = Defaults.Service(auth),
+                Content = form,
+            },
+            ImportJsonContext.Default.ImportFile,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads the largest file this environment accepts, and whether uploading is available at all.</summary>
+    /// <param name="streamId">The stream id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// When <see cref="FileUploadLimits.GatewayLimited"/> is set, a larger file is
+    /// refused by the API gateway with its own <c>413</c> body before it reaches
+    /// the service. Publish such a file at an HTTP(S) URL and set it as the
+    /// connection's file URL instead.
+    /// </remarks>
+    public async Task<FileUploadLimits?> GetStreamFileLimitsAsync(
+        string streamId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/streams/{Uri.EscapeDataString(streamId)}/files/limits",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            ImportJsonContext.Default.FileUploadLimits,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Sets the order in which a stream's waiting files are read.</summary>
+    /// <param name="streamId">The stream id.</param>
+    /// <param name="fileIds">Every waiting file's id, in the order they must be imported.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The queue in its new order.</returns>
+    /// <remarks>
+    /// For an incremental feed the order is the data: a later file's values win
+    /// on a key an earlier one also carries. The list must be exactly the waiting
+    /// set, not one file to move — anything else answers <c>400</c>. <c>409</c>
+    /// means the job has a run in flight, or the queue is too long to reorder.
+    /// </remarks>
+    public async Task<IReadOnlyList<ImportFile>> SetStreamFileOrderAsync(
+        string streamId,
+        IEnumerable<Guid> fileIds,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamId);
+        ArgumentNullException.ThrowIfNull(fileIds);
+
+        List<Guid> order = [.. fileIds];
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Put,
+                Path = $"{BasePath}/streams/{Uri.EscapeDataString(streamId)}/files/order",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(order, ImportJsonContext.Default.ListGuid),
+                Idempotent = true,
+            },
+            ImportJsonContext.Default.ListImportFile,
+            cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Removes a waiting file from a stream's queue and deletes its stored bytes.</summary>
+    /// <param name="streamId">The stream id.</param>
+    /// <param name="fileId">The file id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// Only a waiting file can go: one a run has claimed or already imported
+    /// answers <c>409</c>, and so does any file while the job has a run in flight.
+    /// An imported file stays in the history on purpose — removing it would make
+    /// the same bytes importable again.
+    /// </remarks>
+    public Task DeleteStreamFileAsync(
+        string streamId,
+        string fileId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/streams/{Uri.EscapeDataString(streamId)}/files/{Uri.EscapeDataString(fileId)}",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            cancellationToken);
+    }
 
     private static void AddRecordFilters(
         List<KeyValuePair<string, string?>> query,
