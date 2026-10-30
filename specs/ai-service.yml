@@ -1086,6 +1086,7 @@ paths:
                   - $ref: '#/components/schemas/RagCustomNativeToolResponse'
                   - $ref: '#/components/schemas/RagEmporixNativeToolResponse'
                   - $ref: '#/components/schemas/TeamsNativeToolResponse'
+                  - $ref: '#/components/schemas/SearchNativeToolResponse'
               examples:
                 Tool Response:
                   $ref: '#/components/examples/SlackNativeToolResponse'
@@ -2394,13 +2395,14 @@ components:
     # Native Tools:
     NativeToolType:
       type: string
-      enum: [ slack, rag_custom, rag_emporix, teams ]
+      enum: [ slack, rag_custom, rag_emporix, teams, search ]
       description: |-
         Type of the native tool. Possible values:
         * `slack`
         * `rag_custom`
         * `rag_emporix`
         * `teams`
+        * `search`
     BaseNativeTool:
       type: object
       properties:
@@ -2612,7 +2614,13 @@ components:
           description: The prompt for an agent. It should define when and why this tool is to be called.
         entityType:
           type: string
-          description: "Type of the entity which is stored in the given collection. Supported predefined types: [ORDER, PRODUCT] and custom entity types."
+          description: |-
+            Type of the entity which is stored in the given collection. Possible values:
+            * `product`
+            * `order`
+            * `customer`
+            * `legal-entity`
+            * a custom entity type defined in the Schema Service
         indexedFields:
           type: array
           description: This field specifies the fields of the given entityType that are used for generating embeddings. The provided values are then concatenated and converted to embeddings.
@@ -2794,6 +2802,59 @@ components:
               $ref: '#/components/schemas/TeamsNativeToolConfigResponse'
             metadata:
               $ref: '#/components/schemas/MetadataResponse'
+    SearchEntityType:
+      type: string
+      enum: [ customer, legal-entity ]
+      description: |-
+        Type of documents the tool searches. Possible values:
+        * `customer`
+        * `legal-entity`
+    SearchNativeToolConfig:
+      type: object
+      description: Configuration of a search native tool instance.
+      properties:
+        prompt:
+          type: string
+          description: Instructions for the agent on when and why to call this tool. They are added to the tool description.
+        entityType:
+          $ref: '#/components/schemas/SearchEntityType'
+        maxResults:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+          description: Maximum number of documents the tool returns for one search.
+      required:
+        - entityType
+    SearchNativeToolRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            type:
+              description: For `SearchNativeTool`, it has to be set to `search`.
+              example: search
+            config:
+              $ref: '#/components/schemas/SearchNativeToolConfig'
+            metadata:
+              $ref: '#/components/schemas/MetadataRequest'
+          required:
+            - config
+    SearchNativeToolResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNativeTool'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique identifier of the tool.
+            type:
+              description: For `SearchNativeTool`, it has to be set to `search`.
+              example: search
+            config:
+              $ref: '#/components/schemas/SearchNativeToolConfig'
+            metadata:
+              $ref: '#/components/schemas/MetadataResponse'
     RagCustomNativeToolRequest:
       allOf:
         - $ref: '#/components/schemas/BaseNativeTool'
@@ -2861,6 +2922,7 @@ components:
           - $ref: '#/components/schemas/RagCustomNativeToolResponse'
           - $ref: '#/components/schemas/RagEmporixNativeToolResponse'
           - $ref: '#/components/schemas/TeamsNativeToolResponse'
+          - $ref: '#/components/schemas/SearchNativeToolResponse'
 
     ConversationResponse:
       type: object
@@ -5366,11 +5428,14 @@ components:
               - $ref: '#/components/schemas/RagCustomNativeToolRequest'
               - $ref: '#/components/schemas/RagEmporixNativeToolRequest'
               - $ref: '#/components/schemas/TeamsNativeToolRequest'
+              - $ref: '#/components/schemas/SearchNativeToolRequest'
           examples:
             Create Slack Tool:
               $ref: '#/components/examples/SlackNativeToolRequest'
             Create Teams Tool:
               $ref: '#/components/examples/TeamsNativeToolRequest'
+            Create Search Tool:
+              $ref: '#/components/examples/SearchNativeToolRequest'
     toolPatchBody:
       content:
         application/json:
@@ -5808,6 +5873,15 @@ components:
             - sendMessage
             - collaborateOnChannel
             - inviteParticipants
+    SearchNativeToolRequest:
+      value:
+        name: Customer Search Tool
+        enabled: true
+        type: search
+        config:
+          prompt: Use this tool to find customers by name, email, or customer number.
+          entityType: customer
+          maxResults: 5
     AgentRequest:
       value:
         name:

@@ -555,11 +555,11 @@ public class OperationsWaveTests
     }
 
     [Fact]
-    public async Task Reading_a_tool_hands_back_JSON_because_four_shapes_share_the_endpoint()
+    public async Task Reading_a_tool_hands_back_JSON_because_five_shapes_share_the_endpoint()
     {
         // The specification declares a oneOf with no discriminator the generator
-        // can use. Deserialising into one of the four would drop the other
-        // three's configuration without saying so.
+        // can use. Deserialising into one of the five would drop the other
+        // four's configuration without saying so.
         StubHttpMessageHandler handler = new(
             HttpStatusCode.OK, """{"id":"t1","type":"teams","config":{"channelId":"c1"}}""");
         AiService ai = new(Http(handler), Options());
@@ -568,6 +568,57 @@ public class OperationsWaveTests
 
         Assert.Equal("teams", tool.GetProperty("type").GetString());
         Assert.Equal("c1", tool.GetProperty("config").GetProperty("channelId").GetString());
+    }
+
+    [Fact]
+    public async Task Each_tool_write_names_its_kind_whatever_the_caller_set()
+    {
+        // «type» is required, and the generated request types hide the base's
+        // typed property behind an «object» one that stays null. Without this
+        // the body went out with no kind at all.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        AiToolOperations tools = new AiService(Http(handler), Options()).Tools;
+
+        await tools.ReplaceSlackAsync("t", new AiServiceModels.SlackNativeToolRequest { Name = "s" });
+        await tools.ReplaceTeamsAsync("t", new AiServiceModels.TeamsNativeToolRequest { Name = "t", Type = "slack" });
+        await tools.ReplaceRagCustomAsync("t", new AiServiceModels.RagCustomNativeToolRequest { Name = "c" });
+        await tools.ReplaceRagEmporixAsync("t", new AiServiceModels.RagEmporixNativeToolRequest { Name = "e" });
+
+        Assert.Contains("\"type\":\"slack\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("\"type\":\"teams\"", handler.RequestBodies[1], StringComparison.Ordinal);
+        Assert.Contains("\"type\":\"rag_custom\"", handler.RequestBodies[2], StringComparison.Ordinal);
+        Assert.Contains("\"type\":\"rag_emporix\"", handler.RequestBodies[3], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_search_tool_is_written_whole_under_its_own_kind()
+    {
+        // The fifth kind, added by the specification of 2026-10-29. Its entity
+        // type is hyphenated on the wire: «legal-entity», not «LegalEntity».
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, """{"id":"customer-search"}""");
+        AiService ai = new(Http(handler), Options());
+
+        string? id = await ai.Tools.ReplaceSearchAsync(
+            "customer-search",
+            new AiServiceModels.SearchNativeToolRequest
+            {
+                Name = "Customer search",
+                Enabled = true,
+                Config = new AiServiceModels.SearchNativeToolConfig
+                {
+                    EntityType = AiServiceModels.SearchEntityType.LegalEntity,
+                    MaxResults = 3,
+                },
+            },
+            force: true);
+
+        Assert.Equal(HttpMethod.Put, handler.RequestMethods[0]);
+        Assert.Equal("/ai-service/acme/agentic/tools/customer-search?force=true", Uri(handler));
+        Assert.Contains("\"type\":\"search\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("\"entityType\":\"legal-entity\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("\"maxResults\":3", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Equal("customer-search", id);
+        Assert.True(IsRepeatable(handler));
     }
 
     [Fact]

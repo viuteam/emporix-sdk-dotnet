@@ -60,6 +60,12 @@ namespace Viu.Emporix.AiRagIndexerModels
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<MetadataFilterType>))]
         public MetadataFilterType? Type { get; set; } = default!;
 
+        /// <summary>
+        /// Path of the list of objects that contains this field. Omitted when the field is not inside a list.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("parent")]
+        public string? Parent { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]

@@ -14,8 +14,9 @@ namespace Viu.Emporix;
 /// on.
 /// </para>
 /// <para>
-/// Every call names an entity type. <c>ORDER</c> and <c>PRODUCT</c> are built
-/// in; a tenant's own custom entity types work too.
+/// Every call names an entity type. <c>product</c>, <c>order</c>, <c>customer</c>
+/// and <c>legal-entity</c> are built in; a tenant's own custom entity types work
+/// too. Anything else answers <c>400</c>.
 /// </para>
 /// </remarks>
 public sealed class RagIndexerService
@@ -36,7 +37,8 @@ public sealed class RagIndexerService
 
     /// <summary>Rebuilds the index for one entity type.</summary>
     /// <param name="type">
-    /// The entity type — <c>ORDER</c>, <c>PRODUCT</c>, or one of your own.
+    /// The entity type — <c>product</c>, <c>order</c>, <c>customer</c>,
+    /// <c>legal-entity</c>, or one of your own.
     /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>

@@ -1,1 +1,2 @@
 #nullable enable
+Viu.Emporix.AiToolOperations.ReplaceSearchAsync(string! toolId, Viu.Emporix.AiServiceModels.SearchNativeToolRequest! tool, bool? force = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<string?>!
