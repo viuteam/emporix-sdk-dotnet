@@ -401,6 +401,8 @@ paths:
       description: |-
         Triggers indexing process of given entities for the tenant. The reindex works with a `FULL` mode - all entities are reindexed. It returns a reindex job which allows to track the progress. The `SUCCESS` means that all entities events are indexed.
 
+        Use `CUSTOMER` or `LEGAL-ENTITY` to reindex all customers or all legal entities of the tenant. AI RAG tools and Search Service searches for these types use the reindexed documents.
+
         When the active search provider is `BATTERY_INCLUDED` and `entityType` is `PRODUCT`, the service validates stored credentials before creating the job. Invalid credentials return `400`. If credential validation is temporarily unavailable, the request returns `502`. In both cases, no job is created.
       security:
         - OAuth2:
@@ -415,6 +417,12 @@ paths:
                 value:
                   entityType: PRODUCT
                   rag: true
+              Reindex customers:
+                value:
+                  entityType: CUSTOMER
+              Reindex legal entities:
+                value:
+                  entityType: LEGAL-ENTITY
     get:
       parameters:
         - $ref: '#/components/parameters/qParam'
@@ -545,7 +553,16 @@ components:
 
     ReindexEntityType:
       type: string
-      description: Entity type which should be reindexed. It supports `ORDER`, `PRODUCT` and custom schema types.
+      description: |-
+        Entity type to reindex. The following values are supported:
+        * `PRODUCT`
+        * `ORDER`
+        * `CUSTOMER`
+        * `LEGAL-ENTITY`
+
+        You can also use a custom schema type.
+
+        Values are case-insensitive. `LEGAL-ENTITY` uses a hyphen, not an underscore.
 
     ReindexJob:
       type: object

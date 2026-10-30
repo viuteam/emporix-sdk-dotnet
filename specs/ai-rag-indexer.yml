@@ -116,6 +116,18 @@ paths:
                       type: boolean
                     - key: segmentIds
                       type: list
+                Customer fields:
+                  value:
+                    - key: customerNumber
+                      type: string
+                    - key: defaultAddress.city
+                      type: string
+                    - key: addresses.city
+                      type: string
+                      parent: addresses
+                    - key: addresses.zipCode
+                      type: string
+                      parent: addresses
         '400':
           $ref: '#/components/responses/400_resp_common'
         '401':
@@ -124,6 +136,10 @@ paths:
           $ref: '#/components/responses/403_resp_common'
       description: |-
         Retrieves a list of fields which can be used for vector search filtering. Filtering is applied before RAG retrieval stage.
+
+        A field inside a list of objects, such as a customer's `addresses`, includes `parent` with the path of that list.
+
+        The endpoint returns a Schema Service `REFERENCE` attribute as two fields, `{path}` with type `object` and `{path}.id` with type `string`, where `{path}` is the attribute path. Use `{path}.id` to filter.
       security:
         - OAuth2:
             - ai.agent_read
@@ -159,6 +175,10 @@ components:
             - dictionary
             - list
             - object
+        parent:
+          type: string
+          description: Path of the list of objects that contains this field. Omitted when the field is not inside a list.
+          example: addresses
     ErrorMessage:
       type: object
       properties:
@@ -225,7 +245,15 @@ components:
       in: path
       required: true
       name: type
-      description: "Rag Entity Type. Supported predefined types: [ORDER, PRODUCT] and custom entity types."
+      description: |-
+        Entity type. Possible values:
+        * `product`
+        * `order`
+        * `customer`
+        * `legal-entity`
+        * a custom entity type defined in the Schema Service
+
+        Any other value returns `400 Bad Request`.
   responses:
     401_resp_common:
       description: The authorization token is invalid or has expired.

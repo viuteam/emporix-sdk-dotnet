@@ -57,10 +57,16 @@ namespace Viu.Emporix.SearchServiceModels
         /// <summary>
         /// Fields to index. At least one field is required.
         /// <br/>
-        /// <br/>A string field needs `text`, `autocomplete`, or `exact`. A number, boolean, or date field supports only `exact` set to `true`. `time`, `list`, `object`, and `dictionary` fields cannot be indexed. A path must be a field defined on the schema type, or `metadata.createdAt`, or `metadata.modifiedAt`. Any other path is rejected.
+        /// <br/>A string field needs `text`, `autocomplete`, or `exact`. A number, boolean, or date field supports only `exact` set to `true`. `time`, `object`, and `dictionary` fields cannot be indexed. A list of objects is indexed with `itemFields` on `IndexField`. A path must be a field defined on the type, or `metadata.createdAt`, or `metadata.modifiedAt`. Any other path is rejected.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("fields")]
         public System.Collections.Generic.ICollection<IndexField> Fields { get; set; } = new System.Collections.ObjectModel.Collection<IndexField>();
+
+        /// <summary>
+        /// Named text comparison rules. Optional. Every analyzer must be selected by a field.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("analyzers")]
+        public System.Collections.Generic.ICollection<IndexAnalyzer>? Analyzers { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public IndexMetadataRequest? Metadata { get; set; } = default!;
@@ -108,6 +114,95 @@ namespace Viu.Emporix.SearchServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("exact")]
         public bool? Exact { get; set; } = default!;
 
+        /// <summary>
+        /// Comparison rules for a string field with `text` set to `true`. Use a preset (`STANDARD`, `FOLDED`, `IDENTIFIER`, `SOUNDS_LIKE`) or the `name` of an analyzer on the index. When omitted, `STANDARD` is used.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("analyzer")]
+        public string? Analyzer { get; set; } = default!;
+
+        /// <summary>
+        /// Extra comparison rules for the same field. Each entry is a preset or the `name` of an analyzer on the index. A query uses one only when it selects it. Requires `text` set to `true`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("additionalAnalyzers")]
+        public System.Collections.Generic.ICollection<string>? AdditionalAnalyzers { get; set; } = default!;
+
+        /// <summary>
+        /// Fields inside one list of objects. `path` is that list. The catalog `parent` of each child must be this path. Matching within one list item uses these fields. Do not set `text`, `autocomplete`, `exact`, or `analyzer` on the list itself.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("itemFields")]
+        public System.Collections.Generic.ICollection<IndexField>? ItemFields { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Rules for comparing text. The service applies the same rules to the stored value and to the query. Unknown properties are ignored.
+    /// <br/>
+    /// <br/>`basedOn` starts from a preset. A property you set replaces that preset's value. `STANDARD` compares words and ignores case. `FOLDED` also ignores accents. `IDENTIFIER` compares the whole value, ignores case, and removes spaces, `-`, `.`, and `/`. `SOUNDS_LIKE` matches words that sound alike.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class IndexAnalyzer
+    {
+
+        /// <summary>
+        /// Analyzer name. A letter, then up to 39 letters, digits, underscores, or hyphens. Preset names, `keyword`, and `folded` are reserved.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string Name { get; set; } = default!;
+
+        /// <summary>
+        /// Preset these rules start from.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("basedOn")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<IndexAnalyzerBasedOn>))]
+        public IndexAnalyzerBasedOn? BasedOn { get; set; } = default!;
+
+        /// <summary>
+        /// `WORDS` compares word by word. `WHOLE_VALUE` compares the whole value as one token.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("split")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<IndexAnalyzerSplit>))]
+        public IndexAnalyzerSplit? Split { get; set; } = default!;
+
+        /// <summary>
+        /// If set to `true`, upper and lower case are treated as equal.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ignoreCase")]
+        public bool? IgnoreCase { get; set; } = default!;
+
+        /// <summary>
+        /// If set to `true`, letters with and without accents are treated as equal.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ignoreAccents")]
+        public bool? IgnoreAccents { get; set; } = default!;
+
+        /// <summary>
+        /// Characters removed before comparing. Each entry is one character.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ignoreCharacters")]
+        public System.Collections.Generic.ICollection<string>? IgnoreCharacters { get; set; } = default!;
+
+        /// <summary>
+        /// Words ignored when comparing. With `WORDS`, each word contains only letters and digits, is at most 50 characters, and must stay one word when text is split. For example, `中文` is two words.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ignoreWords")]
+        public System.Collections.Generic.ICollection<string>? IgnoreWords { get; set; } = default!;
+
+        /// <summary>
+        /// `SPELLING` compares the letters. `SOUND` matches words that sound alike.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("compare")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<IndexAnalyzerCompare>))]
+        public IndexAnalyzerCompare? Compare { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -153,7 +248,7 @@ namespace Viu.Emporix.SearchServiceModels
     {
 
         /// <summary>
-        /// Custom schema type this index belongs to.
+        /// Type this index belongs to. A custom schema type, `customer`, or `legal-entity`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
         public string Type { get; set; } = default!;
@@ -178,7 +273,7 @@ namespace Viu.Emporix.SearchServiceModels
     /// <summary>
     /// Package of search index configuration. `data` is the base64 encoding of a JSON array.
     /// <br/>
-    /// <br/>Each decoded item has `id`, `type`, and `fields`. `name` and `description` are optional localized maps. Export omits `status` and `metadata`. Import accepts `metadata.version` when the caller sends it.
+    /// <br/>Each decoded item has `id`, `type`, and `fields`. `name`, `description`, and `analyzers` are optional. Export omits `status` and `metadata`. Import accepts `metadata.version` when the caller sends it.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class IndexExportPackage
@@ -221,7 +316,7 @@ namespace Viu.Emporix.SearchServiceModels
         public string Id { get; set; } = default!;
 
         /// <summary>
-        /// Custom schema type this index belongs to.
+        /// Type this index belongs to. A custom schema type, `customer`, or `legal-entity`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
         public string Type { get; set; } = default!;
@@ -266,7 +361,7 @@ namespace Viu.Emporix.SearchServiceModels
         public string? Id { get; set; } = default!;
 
         /// <summary>
-        /// Custom schema type this index belongs to.
+        /// Type this index belongs to. A custom schema type, `customer`, or `legal-entity`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
         public string? Type { get; set; } = default!;
@@ -288,6 +383,12 @@ namespace Viu.Emporix.SearchServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("fields")]
         public System.Collections.Generic.ICollection<IndexField>? Fields { get; set; } = default!;
+
+        /// <summary>
+        /// Text comparison rules stored for this index. Omitted when the index has none.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("analyzers")]
+        public System.Collections.Generic.ICollection<IndexAnalyzer>? Analyzers { get; set; } = default!;
 
         /// <summary>
         /// Build state of the index.
@@ -480,7 +581,7 @@ namespace Viu.Emporix.SearchServiceModels
         public string Query { get; set; } = default!;
 
         /// <summary>
-        /// Id of the saved search for this schema type.
+        /// Id of the saved search for this type.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("searchQueryId")]
         public string SearchQueryId { get; set; } = default!;
@@ -497,7 +598,7 @@ namespace Viu.Emporix.SearchServiceModels
     }
 
     /// <summary>
-    /// Definition of a saved search. Unknown properties are ignored. The body must include `queries`, `filters`, or both. `index` must already exist for the schema type.
+    /// Definition of a saved search. Unknown properties are ignored. The body must include `queries`, `filters`, or both. `index` must already exist for the type.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class SavedQueryRequest
@@ -624,7 +725,7 @@ namespace Viu.Emporix.SearchServiceModels
         public System.Collections.Generic.IDictionary<string, string>? Description { get; set; } = default!;
 
         /// <summary>
-        /// Custom schema type this saved search belongs to.
+        /// Type this saved search belongs to. A custom schema type, `customer`, or `legal-entity`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("type")]
         public string? Type { get; set; } = default!;
@@ -685,7 +786,7 @@ namespace Viu.Emporix.SearchServiceModels
         public string? Query { get; set; } = default!;
 
         /// <summary>
-        /// Document field to match. `id` is stored as `_id`.
+        /// Document field to match. `id` is stored as `_id`. A field inside `itemFields` uses its full path, such as `addresses.city`. Conditions on one list joined by `and` must match the same item. The list path itself cannot be searched.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("field")]
         public string? Field { get; set; } = default!;
@@ -698,6 +799,14 @@ namespace Viu.Emporix.SearchServiceModels
 
         [System.Text.Json.Serialization.JsonPropertyName("fuzzy")]
         public Fuzzy? Fuzzy { get; set; } = default!;
+
+        /// <summary>
+        /// Optional analyzer for this clause. Allowed only when `type` is `TEXT` or `PHRASE`.
+        /// <br/>
+        /// <br/>The value is the field's `analyzer`, or one name from that field's `additionalAnalyzers`. The name is not case-sensitive. When omitted, the query uses the field's `analyzer`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("analyzer")]
+        public string? Analyzer { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -789,7 +898,7 @@ namespace Viu.Emporix.SearchServiceModels
         public System.Collections.Generic.ICollection<FilterNode>? Or { get; set; } = default!;
 
         /// <summary>
-        /// Document field to compare. `id` is stored as `_id`.
+        /// Document field to compare. `id` is stored as `_id`. A field inside `itemFields` uses its full path, such as `addresses.city`. Conditions on one list joined by `and` must match the same item. A lone `NEQ`, `NOT_IN`, or `EXISTS` `false` on a list excludes the document when any item matches the value. A document with no items in that list matches. The same operator joined by `and` with another condition on that list still applies to one item. The list path itself cannot be searched.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("field")]
         public string? Field { get; set; } = default!;
@@ -995,6 +1104,51 @@ namespace Viu.Emporix.SearchServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"NGRAM")]
         NGRAM = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<IndexAnalyzerBasedOn>))]
+    public enum IndexAnalyzerBasedOn
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"STANDARD")]
+        STANDARD = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"FOLDED")]
+        FOLDED = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"IDENTIFIER")]
+        IDENTIFIER = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SOUNDS_LIKE")]
+        SOUNDS_LIKE = 3,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<IndexAnalyzerSplit>))]
+    public enum IndexAnalyzerSplit
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"WORDS")]
+        WORDS = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"WHOLE_VALUE")]
+        WHOLE_VALUE = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<IndexAnalyzerCompare>))]
+    public enum IndexAnalyzerCompare
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SPELLING")]
+        SPELLING = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SOUND")]
+        SOUND = 1,
 
     }
 

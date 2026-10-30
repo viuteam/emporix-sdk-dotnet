@@ -204,6 +204,7 @@ namespace Viu.Emporix.AiServiceModels
     /// <br/>* `rag_custom`
     /// <br/>* `rag_emporix`
     /// <br/>* `teams`
+    /// <br/>* `search`
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<NativeToolType>))]
@@ -225,6 +226,10 @@ namespace Viu.Emporix.AiServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"teams")]
         [System.Text.Json.Serialization.JsonStringEnumMemberName("teams")]
         Teams = 3,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"search")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("search")]
+        Search = 4,
 
     }
 
@@ -592,7 +597,12 @@ namespace Viu.Emporix.AiServiceModels
         public string Prompt { get; set; } = default!;
 
         /// <summary>
-        /// Type of the entity which is stored in the given collection. Supported predefined types: [ORDER, PRODUCT] and custom entity types.
+        /// Type of the entity which is stored in the given collection. Possible values:
+        /// <br/>* `product`
+        /// <br/>* `order`
+        /// <br/>* `customer`
+        /// <br/>* `legal-entity`
+        /// <br/>* a custom entity type defined in the Schema Service
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("entityType")]
         public string EntityType { get; set; } = default!;
@@ -866,6 +876,102 @@ namespace Viu.Emporix.AiServiceModels
 
         [System.Text.Json.Serialization.JsonPropertyName("config")]
         public TeamsNativeToolConfigResponse? Config { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public MetadataResponse? Metadata { get; set; } = default!;
+
+    }
+
+    /// <summary>
+    /// Type of documents the tool searches. Possible values:
+    /// <br/>* `customer`
+    /// <br/>* `legal-entity`
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SearchEntityType>))]
+    public enum SearchEntityType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"customer")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("customer")]
+        Customer = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"legal-entity")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("legal-entity")]
+        LegalEntity = 1,
+
+    }
+
+    /// <summary>
+    /// Configuration of a search native tool instance.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SearchNativeToolConfig
+    {
+
+        /// <summary>
+        /// Instructions for the agent on when and why to call this tool. They are added to the tool description.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("prompt")]
+        public string? Prompt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("entityType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SearchEntityType>))]
+        public SearchEntityType EntityType { get; set; } = default!;
+
+        /// <summary>
+        /// Maximum number of documents the tool returns for one search.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("maxResults")]
+        public int? MaxResults { get; set; } = 5;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SearchNativeToolRequest : BaseNativeTool
+    {
+
+        /// <summary>
+        /// For `SearchNativeTool`, it has to be set to `search`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        public object? Type { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("config")]
+        public SearchNativeToolConfig Config { get; set; } = new SearchNativeToolConfig();
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public MetadataRequest? Metadata { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SearchNativeToolResponse : BaseNativeTool
+    {
+
+        /// <summary>
+        /// Unique identifier of the tool.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// For `SearchNativeTool`, it has to be set to `search`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        public object? Type { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("config")]
+        public SearchNativeToolConfig? Config { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public MetadataResponse? Metadata { get; set; } = default!;

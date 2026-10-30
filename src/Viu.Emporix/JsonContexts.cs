@@ -884,6 +884,7 @@ internal sealed class AiIdResponse
 [JsonSerializable(typeof(Viu.Emporix.AiServiceModels.TeamsNativeToolRequest))]
 [JsonSerializable(typeof(Viu.Emporix.AiServiceModels.RagCustomNativeToolRequest))]
 [JsonSerializable(typeof(Viu.Emporix.AiServiceModels.RagEmporixNativeToolRequest))]
+[JsonSerializable(typeof(Viu.Emporix.AiServiceModels.SearchNativeToolRequest))]
 [JsonSerializable(typeof(Viu.Emporix.AiServiceModels.CustomMcpServerRequest))]
 [JsonSerializable(typeof(Viu.Emporix.AiServiceModels.DynamicMcpServerRequest))]
 [JsonSerializable(typeof(Viu.Emporix.AiServiceModels.ProviderModelsResponse))]

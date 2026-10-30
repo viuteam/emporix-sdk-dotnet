@@ -37,13 +37,25 @@ paths:
 
         Filter and sort fields must be indexed. For a direct search, that is the index named by `index`. For a saved search, that is the index stored on the saved search.
 
+        A `TEXT` or `PHRASE` query can set `analyzer` to the field's analyzer or to one of its additional analyzers. When `analyzer` is omitted, the query uses the field's `analyzer`.
+
         **Additional permissions requirements**:
 
         | Type | Scope requirements |
         | --- | --- |
         | `Custom Schema Type` | `schema.custominstance_read`, `custom.{type}_read`, or `custom.{type}_read_own` |
+        | `customer` | `customer.customer_read` or `customer.customer_read_own` |
+        | `legal-entity` | `customermanagement.legalentity_read` or `customermanagement.legalentity_read_own` |
 
         A caller without one of those scopes receives `403 Forbidden`.
+
+        For `customer` and `legal-entity`, the scopes also limit which documents are returned:
+
+        * The unrestricted read scope, `customer.customer_read` or `customermanagement.legalentity_read`, returns every document.
+        * A restricted read scope, such as `customer.customer_read--DE#AT`, returns only documents whose `restriction` (customer) or `restrictions` (legal entity) contains one of the listed values. A restricted scope with no values returns `403 Forbidden`.
+        * The own-read scope returns only the caller's own customer or the caller's own legal entity. When the access token does not identify that customer or legal entity, the request returns `403 Forbidden`.
+
+        When a caller has both a restricted scope and the own-read scope, a document must match both.
       security:
         - OAuth2:
             - search.search_read
@@ -105,6 +117,11 @@ paths:
                     code: 400
                     status: '400'
                     message: Search query id is required.
+                Analyzer is not available:
+                  value:
+                    code: 400
+                    status: '400'
+                    message: Analyzer 'FOLDED' is not available on field 'name'.
         '401':
           $ref: '#/components/responses/401_resp_common'
         '403':
@@ -126,10 +143,25 @@ paths:
                     code: 403
                     status: '403'
                     message: Missing one of required scopes '[schema.custominstance_read, custom.vehicle_read, custom.vehicle_read_own]'.
+                Missing customer scope:
+                  value:
+                    code: 403
+                    status: '403'
+                    message: Missing one of required scopes '[customer.customer_read, customer.customer_read_own]'.
+                Restricted scope without values:
+                  value:
+                    code: 403
+                    status: '403'
+                    message: Restricted scope has no values.
+                Missing legal entity:
+                  value:
+                    code: 403
+                    status: '403'
+                    message: Missing legal entity information.
         '500':
           $ref: '#/components/responses/500_resp_common'
         '502':
-          description: The Schema Service could not confirm that the type is a custom entity.
+          description: For a type other than `customer` or `legal-entity`, the Schema Service could not confirm that the type is a custom entity.
           content:
             application/json:
               schema:
@@ -167,7 +199,7 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Retrieves the saved searches for every custom schema type on the tenant. Each item includes `type`.
+        Retrieves the saved searches for every searchable type on the tenant: custom schema types, `customer`, and `legal-entity`. Each item includes `type`.
       security:
         - OAuth2:
             - search.search_read
@@ -248,7 +280,7 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Retrieves the saved searches for one custom schema type.
+        Retrieves the saved searches for one type.
 
         When `sort` is omitted, saved searches are ordered by `metadata.createdAt` descending. When the `X-Total-Count` request header is `true`, the response includes the `X-Total-Count` header with the number of saved searches. The response body stays an array.
       security:
@@ -317,7 +349,7 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Creates or replaces the saved search identified by `{id}` for one custom schema type. Unknown properties in the body are ignored. Saving does not start an index build.
+        Creates or replaces the saved search identified by `{id}` for one type. Unknown properties in the body are ignored. Saving does not start an index build.
 
         A new saved search returns `201 Created` and the saved search id. Replacing an existing saved search returns `204 No Content`. `index` must already exist for this type. The body must include `queries`, `filters`, or both.
 
@@ -531,7 +563,7 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Retrieves the search indexes for every custom schema type on the tenant. Each item includes `type`.
+        Retrieves the search indexes for every searchable type on the tenant: custom schema types, `customer`, and `legal-entity`. Each item includes `type`.
 
         When `sort` is omitted, indexes are ordered by `metadata.createdAt` descending. When the `X-Total-Count` request header is `true`, the response includes the `X-Total-Count` header with the number of indexes. The response body stays an array.
       security:
@@ -689,7 +721,7 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Creates or updates each index in the package. Each index uses the same checks as saving an index. The type must be a custom schema type, and each field must be allowed on that type.
+        Creates or updates each index in the package. Each index uses the same checks as saving an index. The type must be a custom schema type, `customer`, or `legal-entity`, and each field must be allowed on that type.
 
         `data` is a base64-encoded JSON array of index configurations. `metadata` can be omitted. When `metadata.version` is present, it is the optimistic lock. A missing version still updates an index that already exists. Unknown properties in a decoded item are ignored.
 
@@ -786,7 +818,7 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Retrieves the search indexes for one custom schema type.
+        Retrieves the search indexes for one type.
 
         When `sort` is omitted, indexes are ordered by `metadata.createdAt` descending. When the `X-Total-Count` request header is `true`, the response includes the `X-Total-Count` header with the number of indexes. The response body stays an array.
       security:
@@ -851,9 +883,9 @@ paths:
         This functionality is in preview mode - some of the features may not be fully operational yet.
         {% endhint %}
 
-        Creates or updates the search index identified by `{id}` for one custom schema type. Unknown properties in the body are ignored.
+        Creates or updates the search index identified by `{id}` for one type: a custom schema type, `customer`, or `legal-entity`. Unknown properties in the body are ignored.
 
-        A new index returns `202 Accepted` and the id of a job that builds the index. Saving an index whose status is `building` or `failed`, or whose field definition changed, also returns `202 Accepted` and starts an update job. An index whose status is `ready` and whose field definition is unchanged returns `204 No Content` and does not start a job. `name` and `description` can still change in that case. A job that is already in progress for this index returns `409 Conflict`.
+        A new index returns `202 Accepted` and the id of a job that builds the index. Saving an index whose status is `building` or `failed`, or whose field definition changed, also returns `202 Accepted` and starts an update job. Analyzers are part of that definition. An index whose status is `ready` and whose field definition is unchanged returns `204 No Content` and does not start a job. `name` and `description` can still change in that case. A job that is already in progress for this index returns `409 Conflict`.
 
         `metadata` can be omitted when the index is created and when it is updated. A missing `metadata.version` still updates an existing index. When `metadata.version` is sent, it is the optimistic lock: a value that does not match the stored index returns `409 Conflict`.
       security:
@@ -883,6 +915,30 @@ paths:
                       exact: true
                     - path: mixins.brand.horsepower
                       exact: true
+              Create an index with analyzers and a list:
+                value:
+                  analyzers:
+                    - name: companyName
+                      basedOn: FOLDED
+                      ignoreCharacters:
+                        - .
+                      ignoreWords:
+                        - gmbh
+                        - ag
+                  fields:
+                    - path: name
+                      text: true
+                      analyzer: companyName
+                      additionalAnalyzers:
+                        - SOUNDS_LIKE
+                    - path: addresses
+                      itemFields:
+                        - path: addresses.street
+                          text: true
+                          analyzer: FOLDED
+                        - path: addresses.zipCode
+                          text: true
+                          analyzer: IDENTIFIER
       responses:
         '202':
           description: The index build has started. The body is the job id.
@@ -918,6 +974,16 @@ paths:
                     code: 400
                     status: '400'
                     message: Index id must match the path.
+                Analyzer is not used:
+                  value:
+                    code: 400
+                    status: '400'
+                    message: Analyzer 'companyName' is not used.
+                Field is outside its list:
+                  value:
+                    code: 400
+                    status: '400'
+                    message: Field 'addresses.street' belongs to 'addresses'. Declare it in itemFields.
         '401':
           $ref: '#/components/responses/401_resp_common'
         '403':
@@ -1169,6 +1235,10 @@ components:
             search.search_read: Needed to search documents, to read saved searches, and to read search indexes and index jobs.
             search.search_manage: Needed to create, update, and delete saved searches and search indexes.
             schema.custominstance_read: Needed to read every custom entity instance. When this scope is absent, `custom.{type}_read` or `custom.{type}_read_own` can still allow the search.
+            customer.customer_read: Needed to search every customer. A restricted form such as `customer.customer_read--DE#AT` returns only customers whose `restriction` matches one of the listed values.
+            customer.customer_read_own: Needed to search only the caller's own customer.
+            customermanagement.legalentity_read: Needed to search every legal entity. A restricted form such as `customermanagement.legalentity_read--DE#AT` returns only legal entities whose `restrictions` contain one of the listed values.
+            customermanagement.legalentity_read_own: Needed to search only the caller's own legal entity.
   parameters:
     path_tenant:
       name: tenant
@@ -1187,9 +1257,7 @@ components:
       in: path
       required: true
       description: |
-        Type of documents to search.
-
-        For now, only custom schema types are supported.
+        Type of documents to search. Use a custom schema type, `customer`, or `legal-entity`.
       schema:
         type: string
         example: VEHICLE
@@ -1377,6 +1445,8 @@ components:
               $ref: '#/components/examples/filterSearchRequest'
             Contains filter:
               $ref: '#/components/examples/containsFilterRequest'
+            Analyzer search:
+              $ref: '#/components/examples/analyzerSearchRequest'
             Range filter:
               $ref: '#/components/examples/rangeFilterRequest'
             List filter:
@@ -1475,9 +1545,15 @@ components:
           description: |-
             Fields to index. At least one field is required.
 
-            A string field needs `text`, `autocomplete`, or `exact`. A number, boolean, or date field supports only `exact` set to `true`. `time`, `list`, `object`, and `dictionary` fields cannot be indexed. A path must be a field defined on the schema type, or `metadata.createdAt`, or `metadata.modifiedAt`. Any other path is rejected.
+            A string field needs `text`, `autocomplete`, or `exact`. A number, boolean, or date field supports only `exact` set to `true`. `time`, `object`, and `dictionary` fields cannot be indexed. A list of objects is indexed with `itemFields` on `IndexField`. A path must be a field defined on the type, or `metadata.createdAt`, or `metadata.modifiedAt`. Any other path is rejected.
           items:
             $ref: '#/components/schemas/IndexField'
+        analyzers:
+          type: array
+          maxItems: 10
+          description: Named text comparison rules. Optional. Every analyzer must be selected by a field.
+          items:
+            $ref: '#/components/schemas/IndexAnalyzer'
         metadata:
           $ref: '#/components/schemas/IndexMetadataRequest'
       required:
@@ -1507,8 +1583,93 @@ components:
           type: boolean
           description: Indexes the field for equality, list, range, existence, and sort. Required for number, boolean, and date fields.
           example: true
+        analyzer:
+          type: string
+          description: |-
+            Comparison rules for a string field with `text` set to `true`. Use a preset (`STANDARD`, `FOLDED`, `IDENTIFIER`, `SOUNDS_LIKE`) or the `name` of an analyzer on the index. When omitted, `STANDARD` is used.
+          example: companyName
+        additionalAnalyzers:
+          type: array
+          maxItems: 3
+          description: Extra comparison rules for the same field. Each entry is a preset or the `name` of an analyzer on the index. A query uses one only when it selects it. Requires `text` set to `true`.
+          items:
+            type: string
+          example:
+            - SOUNDS_LIKE
+        itemFields:
+          type: array
+          description: |-
+            Fields inside one list of objects. `path` is that list. The catalog `parent` of each child must be this path. Matching within one list item uses these fields. Do not set `text`, `autocomplete`, `exact`, or `analyzer` on the list itself.
+          items:
+            $ref: '#/components/schemas/IndexField'
       required:
         - path
+    IndexAnalyzer:
+      type: object
+      description: |-
+        Rules for comparing text. The service applies the same rules to the stored value and to the query. Unknown properties are ignored.
+
+        `basedOn` starts from a preset. A property you set replaces that preset's value. `STANDARD` compares words and ignores case. `FOLDED` also ignores accents. `IDENTIFIER` compares the whole value, ignores case, and removes spaces, `-`, `.`, and `/`. `SOUNDS_LIKE` matches words that sound alike.
+      properties:
+        name:
+          type: string
+          description: Analyzer name. A letter, then up to 39 letters, digits, underscores, or hyphens. Preset names, `keyword`, and `folded` are reserved.
+          example: companyName
+        basedOn:
+          type: string
+          description: Preset these rules start from.
+          enum:
+            - STANDARD
+            - FOLDED
+            - IDENTIFIER
+            - SOUNDS_LIKE
+          example: FOLDED
+        split:
+          type: string
+          description: |-
+            `WORDS` compares word by word. `WHOLE_VALUE` compares the whole value as one token.
+          enum:
+            - WORDS
+            - WHOLE_VALUE
+          example: WORDS
+        ignoreCase:
+          type: boolean
+          description: If set to `true`, upper and lower case are treated as equal.
+          example: true
+        ignoreAccents:
+          type: boolean
+          description: If set to `true`, letters with and without accents are treated as equal.
+          example: true
+        ignoreCharacters:
+          type: array
+          maxItems: 20
+          description: Characters removed before comparing. Each entry is one character.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 1
+          example:
+            - .
+        ignoreWords:
+          type: array
+          maxItems: 200
+          description: Words ignored when comparing. With `WORDS`, each word contains only letters and digits, is at most 50 characters, and must stay one word when text is split. For example, `中文` is two words.
+          items:
+            type: string
+            maxLength: 50
+          example:
+            - gmbh
+            - ag
+        compare:
+          type: string
+          description: |-
+            `SPELLING` compares the letters. `SOUND` matches words that sound alike.
+          enum:
+            - SPELLING
+            - SOUND
+          example: SPELLING
+      required:
+        - name
     IndexMetadataRequest:
       type: object
       description: |-
@@ -1529,7 +1690,7 @@ components:
       properties:
         type:
           type: string
-          description: Custom schema type this index belongs to.
+          description: Type this index belongs to. A custom schema type, `customer`, or `legal-entity`.
           example: VEHICLE
         id:
           type: string
@@ -1543,7 +1704,7 @@ components:
       description: |-
         Package of search index configuration. `data` is the base64 encoding of a JSON array.
 
-        Each decoded item has `id`, `type`, and `fields`. `name` and `description` are optional localized maps. Export omits `status` and `metadata`. Import accepts `metadata.version` when the caller sends it.
+        Each decoded item has `id`, `type`, and `fields`. `name`, `description`, and `analyzers` are optional. Export omits `status` and `metadata`. Import accepts `metadata.version` when the caller sends it.
       properties:
         exportedAt:
           type: string
@@ -1567,7 +1728,7 @@ components:
           example: vehicles
         type:
           type: string
-          description: Custom schema type this index belongs to.
+          description: Type this index belongs to. A custom schema type, `customer`, or `legal-entity`.
           example: VEHICLE
         jobId:
           type: string
@@ -1596,7 +1757,7 @@ components:
           example: vehicles
         type:
           type: string
-          description: Custom schema type this index belongs to.
+          description: Type this index belongs to. A custom schema type, `customer`, or `legal-entity`.
           example: VEHICLE
         name:
           type: object
@@ -1617,6 +1778,11 @@ components:
           description: Fields stored for this index.
           items:
             $ref: '#/components/schemas/IndexField'
+        analyzers:
+          type: array
+          description: Text comparison rules stored for this index. Omitted when the index has none.
+          items:
+            $ref: '#/components/schemas/IndexAnalyzer'
         status:
           type: string
           description: Build state of the index.
@@ -1730,7 +1896,7 @@ components:
           example: diesel engine
         searchQueryId:
           type: string
-          description: Id of the saved search for this schema type.
+          description: Id of the saved search for this type.
           example: red-cars
       required:
         - query
@@ -1738,7 +1904,7 @@ components:
     SavedQueryRequest:
       type: object
       description: |-
-        Definition of a saved search. Unknown properties are ignored. The body must include `queries`, `filters`, or both. `index` must already exist for the schema type.
+        Definition of a saved search. Unknown properties are ignored. The body must include `queries`, `filters`, or both. `index` must already exist for the type.
       properties:
         id:
           type: string
@@ -1822,7 +1988,7 @@ components:
             en: Vehicles whose name contains red
         type:
           type: string
-          description: Custom schema type this saved search belongs to.
+          description: Type this saved search belongs to. A custom schema type, `customer`, or `legal-entity`.
           example: VEHICLE
         indexId:
           type: string
@@ -1857,7 +2023,7 @@ components:
           example: diesel engine
         field:
           type: string
-          description: Document field to match. `id` is stored as `_id`.
+          description: Document field to match. `id` is stored as `_id`. A field inside `itemFields` uses its full path, such as `addresses.city`. Conditions on one list joined by `and` must match the same item. The list path itself cannot be searched.
           example: name.en
         boost:
           type: number
@@ -1867,6 +2033,13 @@ components:
           example: 2
         fuzzy:
           $ref: '#/components/schemas/Fuzzy'
+        analyzer:
+          type: string
+          description: |-
+            Optional analyzer for this clause. Allowed only when `type` is `TEXT` or `PHRASE`.
+
+            The value is the field's `analyzer`, or one name from that field's `additionalAnalyzers`. The name is not case-sensitive. When omitted, the query uses the field's `analyzer`.
+          example: SOUNDS_LIKE
     SearchType:
       type: string
       description: |-
@@ -1915,7 +2088,7 @@ components:
             $ref: '#/components/schemas/FilterNode'
         field:
           type: string
-          description: Document field to compare. `id` is stored as `_id`.
+          description: Document field to compare. `id` is stored as `_id`. A field inside `itemFields` uses its full path, such as `addresses.city`. Conditions on one list joined by `and` must match the same item. A lone `NEQ`, `NOT_IN`, or `EXISTS` `false` on a list excludes the document when any item matches the value. A document with no items in that list matches. The same operator joined by `and` with another condition on that list still applies to one item. The list path itself cannot be searched.
           example: status
         operator:
           $ref: '#/components/schemas/FilterOperator'
@@ -2013,6 +2186,23 @@ components:
       value:
         query: diesel engine
         searchQueryId: red-cars
+    analyzerSearchRequest:
+      summary: Text search that also matches by sound
+      value:
+        index: matching
+        queries:
+          or:
+            - type: TEXT
+              field: name
+              query: Maier Logistik
+              fuzzy:
+                enabled: true
+                maxEdits: 1
+            - type: TEXT
+              field: name
+              query: Maier Logistik
+              analyzer: SOUNDS_LIKE
+              boost: 0.5
     textSearchRequest:
       summary: Text search with a status filter
       value:
