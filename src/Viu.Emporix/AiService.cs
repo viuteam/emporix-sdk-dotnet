@@ -944,7 +944,10 @@ public sealed class AiTemplateOperations
 /// data. Which one a given tool is shows in its <c>type</c> field.
 /// </para>
 /// <para>
-/// Writing is typed, one method per kind. Reading is not: the specification
+/// Writing is typed, one method per kind, and each sets the tool's <c>type</c>
+/// itself: the generated request types hide the base's typed property behind an
+/// untyped one that stays empty, and a body without a kind is one the API cannot
+/// place. Reading is not typed: the specification
 /// declares the response as a <c>oneOf</c> with no discriminator the generator
 /// can use, and picking one of the four would quietly drop the configuration of
 /// the other three. So reads hand back the JSON — read <c>type</c>, then
@@ -1056,10 +1059,15 @@ public sealed class AiToolOperations
         bool? force = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => ReplaceAsync(
+    {
+        ArgumentNullException.ThrowIfNull(tool);
+        tool.Type = "slack";
+
+        return ReplaceAsync(
             toolId,
             EmporixJsonContent.Create(tool, AiJsonContext.Default.SlackNativeToolRequest),
             force, auth, cancellationToken);
+    }
 
     /// <summary>Creates or replaces a Teams tool.</summary>
     /// <param name="toolId">Which tool.</param>
@@ -1075,10 +1083,15 @@ public sealed class AiToolOperations
         bool? force = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => ReplaceAsync(
+    {
+        ArgumentNullException.ThrowIfNull(tool);
+        tool.Type = "teams";
+
+        return ReplaceAsync(
             toolId,
             EmporixJsonContent.Create(tool, AiJsonContext.Default.TeamsNativeToolRequest),
             force, auth, cancellationToken);
+    }
 
     /// <summary>Creates or replaces a retrieval tool over your own store.</summary>
     /// <param name="toolId">Which tool.</param>
@@ -1093,10 +1106,15 @@ public sealed class AiToolOperations
         bool? force = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => ReplaceAsync(
+    {
+        ArgumentNullException.ThrowIfNull(tool);
+        tool.Type = "rag_custom";
+
+        return ReplaceAsync(
             toolId,
             EmporixJsonContent.Create(tool, AiJsonContext.Default.RagCustomNativeToolRequest),
             force, auth, cancellationToken);
+    }
 
     /// <summary>Creates or replaces a retrieval tool over Emporix's own data.</summary>
     /// <param name="toolId">Which tool.</param>
@@ -1115,10 +1133,15 @@ public sealed class AiToolOperations
         bool? force = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
-        => ReplaceAsync(
+    {
+        ArgumentNullException.ThrowIfNull(tool);
+        tool.Type = "rag_emporix";
+
+        return ReplaceAsync(
             toolId,
             EmporixJsonContent.Create(tool, AiJsonContext.Default.RagEmporixNativeToolRequest),
             force, auth, cancellationToken);
+    }
 
     /// <summary>Changes parts of a tool.</summary>
     /// <param name="toolId">Which tool.</param>

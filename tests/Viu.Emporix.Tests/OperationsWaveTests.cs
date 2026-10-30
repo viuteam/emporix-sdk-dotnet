@@ -571,6 +571,26 @@ public class OperationsWaveTests
     }
 
     [Fact]
+    public async Task Each_tool_write_names_its_kind_whatever_the_caller_set()
+    {
+        // «type» is required, and the generated request types hide the base's
+        // typed property behind an «object» one that stays null. Without this
+        // the body went out with no kind at all.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        AiToolOperations tools = new AiService(Http(handler), Options()).Tools;
+
+        await tools.ReplaceSlackAsync("t", new AiServiceModels.SlackNativeToolRequest { Name = "s" });
+        await tools.ReplaceTeamsAsync("t", new AiServiceModels.TeamsNativeToolRequest { Name = "t", Type = "slack" });
+        await tools.ReplaceRagCustomAsync("t", new AiServiceModels.RagCustomNativeToolRequest { Name = "c" });
+        await tools.ReplaceRagEmporixAsync("t", new AiServiceModels.RagEmporixNativeToolRequest { Name = "e" });
+
+        Assert.Contains("\"type\":\"slack\"", handler.RequestBodies[0], StringComparison.Ordinal);
+        Assert.Contains("\"type\":\"teams\"", handler.RequestBodies[1], StringComparison.Ordinal);
+        Assert.Contains("\"type\":\"rag_custom\"", handler.RequestBodies[2], StringComparison.Ordinal);
+        Assert.Contains("\"type\":\"rag_emporix\"", handler.RequestBodies[3], StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task The_list_options_send_nothing_the_caller_did_not_set()
     {
         StubHttpMessageHandler bare = new(HttpStatusCode.OK, "[]");
