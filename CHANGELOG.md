@@ -9,6 +9,13 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.15.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.14.0...v0.15.0) (2026-10-30)
+
+
+### Added
+
+* write search native tools, and name the kind of every tool written ([#93](https://github.com/viuteam/emporix-sdk-dotnet/issues/93)) ([faf5cf6](https://github.com/viuteam/emporix-sdk-dotnet/commit/faf5cf65dee64b19e3d398b8cedaf3110b04087d))
+
 ## [0.14.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.13.0...v0.14.0) (2026-10-28)
 
 
