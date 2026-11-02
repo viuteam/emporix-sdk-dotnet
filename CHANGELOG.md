@@ -9,6 +9,15 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.15.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.15.0...v0.15.1) (2026-11-02)
+
+
+### Dependencies
+
+* Bump Microsoft.Extensions.Logging.Abstractions from 10.0.12 to 10.0.14 ([#96](https://github.com/viuteam/emporix-sdk-dotnet/issues/96)) ([ff7bf63](https://github.com/viuteam/emporix-sdk-dotnet/commit/ff7bf63969efbb065664239e507190f68c37ee27))
+* Bump Microsoft.Extensions.Options from 10.0.12 to 10.0.14 ([#97](https://github.com/viuteam/emporix-sdk-dotnet/issues/97)) ([b91913f](https://github.com/viuteam/emporix-sdk-dotnet/commit/b91913f0ee321e313e27bc70865b55bd0171ecc5))
+* Bump the development group with 4 updates ([#95](https://github.com/viuteam/emporix-sdk-dotnet/issues/95)) ([3fc425e](https://github.com/viuteam/emporix-sdk-dotnet/commit/3fc425ef8050b6ad97a189cb536abdbba6feb967))
+
 ## [0.15.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.14.0...v0.15.0) (2026-10-30)
 
 
