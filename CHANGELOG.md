@@ -9,6 +9,17 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.16.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.15.1...v0.16.0) (2026-11-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop the IAM roles, permissions and resources Emporix removed ([#99](https://github.com/viuteam/emporix-sdk-dotnet/issues/99))
+
+### Added
+
+* drop the IAM roles, permissions and resources Emporix removed ([#99](https://github.com/viuteam/emporix-sdk-dotnet/issues/99)) ([d8596be](https://github.com/viuteam/emporix-sdk-dotnet/commit/d8596be23c11080308c80ccf9060119989624492))
+
 ## [0.15.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.15.0...v0.15.1) (2026-11-02)
 
 
