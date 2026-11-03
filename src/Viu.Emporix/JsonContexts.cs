@@ -624,12 +624,6 @@ internal sealed partial class CountryJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.IamModels.CustomScopeQueryDocument>))]
 [JsonSerializable(typeof(Viu.Emporix.IamModels.CustomScopeUpsertRequest))]
 [JsonSerializable(typeof(Viu.Emporix.IamModels.CustomScopeIdResponse))]
-[JsonSerializable(typeof(List<Viu.Emporix.IamModels.PermissionQueryDocument>))]
-[JsonSerializable(typeof(Viu.Emporix.IamModels.PermissionQueryDocument))]
-[JsonSerializable(typeof(List<Viu.Emporix.IamModels.ResourceQueryDocument>))]
-[JsonSerializable(typeof(Viu.Emporix.IamModels.ResourceQueryDocument))]
-[JsonSerializable(typeof(List<Viu.Emporix.IamModels.RoleQueryDocument>))]
-[JsonSerializable(typeof(Viu.Emporix.IamModels.RoleQueryDocument))]
 [JsonSerializable(typeof(List<Viu.Emporix.IamModels.TemplateQueryDocument>))]
 internal sealed partial class IamJsonContext : JsonSerializerContext;
 

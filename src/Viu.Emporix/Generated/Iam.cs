@@ -79,20 +79,6 @@ namespace Viu.Emporix.IamModels
         public string? Id { get; set; } = default!;
 
         /// <summary>
-        /// Role unique identifier associated with this access control.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("roleId")]
-        [System.Obsolete]
-        public string? RoleId { get; set; } = default!;
-
-        /// <summary>
-        /// Resource unique identifier associated with this access control.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("resourceId")]
-        [System.Obsolete]
-        public string? ResourceId { get; set; } = default!;
-
-        /// <summary>
         /// Domain identifiers associated with this access control.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("domains")]
@@ -103,12 +89,6 @@ namespace Viu.Emporix.IamModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
         public System.Collections.Generic.IDictionary<string, string>? Name { get; set; } = default!;
-
-        [System.Text.Json.Serialization.JsonPropertyName("role")]
-        public RoleQueryDocument? Role { get; set; } = default!;
-
-        [System.Text.Json.Serialization.JsonPropertyName("resource")]
-        public ResourceQueryDocument? Resource { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public AccessControlMetadataQueryDocument? Metadata { get; set; } = default!;
@@ -718,283 +698,6 @@ namespace Viu.Emporix.IamModels
     }
 
     /// <summary>
-    /// Definition of permissions
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class PermissionQueryDocument
-    {
-
-        /// <summary>
-        /// Permission unique identifier generated when the permission is created.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        public string? Id { get; set; } = default!;
-
-        /// <summary>
-        /// Permission code identifier used for scopes mapping.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        public string? Code { get; set; } = default!;
-
-        /// <summary>
-        /// Localized permission name in the form of a map of codes.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public System.Collections.Generic.IDictionary<string, string>? Name { get; set; } = default!;
-
-        /// <summary>
-        /// Localized permission description in the form of a map of translations.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public System.Collections.Generic.IDictionary<string, string>? Description { get; set; } = default!;
-
-        /// <summary>
-        /// Applicable domains list declared for this permission.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("applicableResources")]
-        public System.Collections.Generic.ICollection<string>? ApplicableResources { get; set; } = default!;
-
-        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public PermissionsMetadataQueryDocument? Metadata { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    /// <summary>
-    /// Permission metadata.
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class PermissionsMetadataQueryDocument
-    {
-
-        /// <summary>
-        /// Permission document version.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("version")]
-        public int Version { get; set; } = default!;
-
-        /// <summary>
-        /// Timestamp indicating when the permission was created.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        public System.DateTimeOffset CreatedAt { get; set; } = default!;
-
-        /// <summary>
-        /// Timestamp indicating when the permission was last modified.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
-        public System.DateTimeOffset? ModifiedAt { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    /// <summary>
-    /// Resource definition associated with this access control.
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ResourceQueryDocument
-    {
-
-        /// <summary>
-        /// Resource unique identifier generated when the resource is created.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        public string? Id { get; set; } = default!;
-
-        /// <summary>
-        /// Localized resource name in the form of a map of translations.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public System.Collections.Generic.IDictionary<string, string>? Name { get; set; } = default!;
-
-        /// <summary>
-        /// Localized resource description in the form of a map of translations.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public System.Collections.Generic.IDictionary<string, string>? Description { get; set; } = default!;
-
-        /// <summary>
-        /// Resource unique code identifier.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("code")]
-        public string? Code { get; set; } = default!;
-
-        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public ResourcesMetadataQueryDocument? Metadata { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    /// <summary>
-    /// Resource metadata.
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ResourcesMetadataQueryDocument
-    {
-
-        /// <summary>
-        /// Resource document version.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("version")]
-        public int Version { get; set; } = default!;
-
-        /// <summary>
-        /// Timestamp indicating when the resource was created.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        public System.DateTimeOffset CreatedAt { get; set; } = default!;
-
-        /// <summary>
-        /// Timestamp indicating when the resource was last modified.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
-        public System.DateTimeOffset? ModifiedAt { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    /// <summary>
-    /// Role permissions list.
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class RolePermissionsDocument
-    {
-
-        /// <summary>
-        /// Allows you to allowlist resources that the permission is applicable to. Can only contain resources specified in the permission document under `applicableResources`.
-        /// <br/>
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("applicablePermissionResources")]
-        public System.Collections.Generic.ICollection<string>? ApplicablePermissionResources { get; set; } = default!;
-
-        /// <summary>
-        /// Reference to the permission document with specific resources defined.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        public string Id { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    /// <summary>
-    /// Role definition associated with this access control.
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class RoleQueryDocument
-    {
-
-        /// <summary>
-        /// Role unique identifier generated when the role is created.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        public string? Id { get; set; } = default!;
-
-        /// <summary>
-        /// Localized role name in the form of a map of translations.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("name")]
-        public System.Collections.Generic.IDictionary<string, string>? Name { get; set; } = default!;
-
-        /// <summary>
-        /// Localized role description in the form of a map of translations.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("description")]
-        public System.Collections.Generic.IDictionary<string, string>? Description { get; set; } = default!;
-
-        /// <summary>
-        /// Permissions unique identifier list declared for this role.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("permissions")]
-        public System.Collections.Generic.ICollection<RolePermissionsDocument>? Permissions { get; set; } = default!;
-
-        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public RolesMetadata? Metadata { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class RolesMetadata
-    {
-
-        /// <summary>
-        /// Role document version.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("version")]
-        public int Version { get; set; } = default!;
-
-        /// <summary>
-        /// Timestamp indicating when the role was created.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
-        public System.DateTimeOffset CreatedAt { get; set; } = default!;
-
-        /// <summary>
-        /// Timestamp indicating when the role was last modified.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
-        public System.DateTimeOffset? ModifiedAt { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    /// <summary>
     /// Definition of user scopes
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -1416,29 +1119,6 @@ namespace Viu.Emporix.IamModels
     public enum Expand
     {
 
-        [System.Runtime.Serialization.EnumMember(Value = @"role,resource")]
-        [System.Text.Json.Serialization.JsonStringEnumMemberName("role,resource")]
-        Role_resource = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"resource,role")]
-        [System.Text.Json.Serialization.JsonStringEnumMemberName("resource,role")]
-        Resource_role = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"role")]
-        [System.Text.Json.Serialization.JsonStringEnumMemberName("role")]
-        Role = 2,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"resource")]
-        [System.Text.Json.Serialization.JsonStringEnumMemberName("resource")]
-        Resource = 3,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand2>))]
-    public enum Expand2
-    {
-
         [System.Runtime.Serialization.EnumMember(Value = @"accessControls")]
         [System.Text.Json.Serialization.JsonStringEnumMemberName("accessControls")]
         AccessControls = 0,
@@ -1446,8 +1126,8 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand3>))]
-    public enum Expand3
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand2>))]
+    public enum Expand2
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"groups")]
@@ -1467,8 +1147,8 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand4>))]
-    public enum Expand4
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand3>))]
+    public enum Expand3
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"groups")]
@@ -1478,8 +1158,8 @@ namespace Viu.Emporix.IamModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand5>))]
-    public enum Expand5
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Expand4>))]
+    public enum Expand4
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"groups")]
