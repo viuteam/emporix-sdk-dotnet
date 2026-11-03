@@ -11,8 +11,14 @@ namespace Viu.Emporix;
 /// <para>
 /// The widest service in the API, and it divides along what is configurable and
 /// what is not. <see cref="Users"/>, <see cref="Groups"/> and
-/// <see cref="AccessControls"/> are managed; permissions, resources, roles,
-/// scopes and templates are Emporix's own catalogue and read-only here.
+/// <see cref="AccessControls"/> are managed, and so are a tenant's custom
+/// scopes; templates are Emporix's own catalogue and read-only here.
+/// </para>
+/// <para>
+/// The older model of roles, permissions and resources is gone: Emporix
+/// deprecated it on 2026-05-13 and removed it in November 2026. An access
+/// control is now a set of scopes, and what a user may do is
+/// <see cref="IamUserOperations.ListScopesAsync"/>.
 /// </para>
 /// <para>
 /// B2B group membership lives here rather than under customers: putting a
@@ -42,7 +48,7 @@ public sealed class IamService
     /// <summary>Groups, and who is in them.</summary>
     public IamGroupOperations Groups => new(_http, _tenant);
 
-    /// <summary>Access controls — a role granted on a resource.</summary>
+    /// <summary>Access controls — a named set of scopes a group is granted.</summary>
     public IamAccessControlOperations AccessControls => new(_http, _tenant);
 
     /// <summary>Lists the scopes.</summary>
@@ -134,121 +140,6 @@ public sealed class IamService
                 Auth = Defaults.Service(auth),
             },
             cancellationToken);
-    }
-
-    /// <summary>Lists the permissions Emporix defines.</summary>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    /// <remarks>Read-only: the catalogue is Emporix's, not the tenant's.</remarks>
-    public async Task<IReadOnlyList<PermissionQueryDocument>> ListPermissionsAsync(
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-        => await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/permissions",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.ListPermissionQueryDocument,
-            cancellationToken).ConfigureAwait(false) ?? [];
-
-    /// <summary>Fetches a permission.</summary>
-    /// <param name="permissionId">The permission id.</param>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<PermissionQueryDocument?> GetPermissionAsync(
-        string permissionId,
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(permissionId);
-
-        return await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/permissions/{Uri.EscapeDataString(permissionId)}",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.PermissionQueryDocument,
-            cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>Lists the resources access can be granted on.</summary>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<ResourceQueryDocument>> ListResourcesAsync(
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-        => await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/resources",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.ListResourceQueryDocument,
-            cancellationToken).ConfigureAwait(false) ?? [];
-
-    /// <summary>Fetches a resource.</summary>
-    /// <param name="resourceId">The resource id.</param>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<ResourceQueryDocument?> GetResourceAsync(
-        string resourceId,
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceId);
-
-        return await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/resources/{Uri.EscapeDataString(resourceId)}",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.ResourceQueryDocument,
-            cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>Lists the roles.</summary>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<RoleQueryDocument>> ListRolesAsync(
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-        => await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/roles",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.ListRoleQueryDocument,
-            cancellationToken).ConfigureAwait(false) ?? [];
-
-    /// <summary>Fetches a role.</summary>
-    /// <param name="roleId">The role id.</param>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<RoleQueryDocument?> GetRoleAsync(
-        string roleId,
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(roleId);
-
-        return await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/roles/{Uri.EscapeDataString(roleId)}",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.RoleQueryDocument,
-            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Lists the access-control templates.</summary>
@@ -472,62 +363,6 @@ public sealed class IamUserOperations
                 Auth = Defaults.Service(auth),
             },
             IamJsonContext.Default.ListAccessControlQueryDocument,
-            cancellationToken).ConfigureAwait(false) ?? [];
-    }
-
-    /// <summary>Lists a user's access controls on one resource.</summary>
-    /// <param name="userId">The user id.</param>
-    /// <param name="resourceId">The resource.</param>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    public async Task<IReadOnlyList<AccessControlQueryDocument>> ListAccessControlsForResourceAsync(
-        string userId,
-        string resourceId,
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceId);
-
-        return await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/{Uri.EscapeDataString(userId)}/access-controls"
-                    + $"/{Uri.EscapeDataString(resourceId)}",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.ListAccessControlQueryDocument,
-            cancellationToken).ConfigureAwait(false) ?? [];
-    }
-
-    /// <summary>Lists a user's permissions on one resource.</summary>
-    /// <param name="userId">The user id.</param>
-    /// <param name="resourceId">The resource.</param>
-    /// <param name="auth">What to authorise with; a service token when omitted.</param>
-    /// <param name="cancellationToken">Cancels the call.</param>
-    /// <remarks>
-    /// The resolved answer: what this person may actually do here, after groups
-    /// and templates have been applied.
-    /// </remarks>
-    public async Task<IReadOnlyList<PermissionQueryDocument>> ListPermissionsAsync(
-        string userId,
-        string resourceId,
-        AuthContext auth = default,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceId);
-
-        return await _http.SendAsync(
-            new EmporixRequest
-            {
-                Method = HttpMethod.Get,
-                Path = $"{BasePath}/{Uri.EscapeDataString(userId)}/permissions"
-                    + $"/{Uri.EscapeDataString(resourceId)}",
-                Auth = Defaults.Service(auth),
-            },
-            IamJsonContext.Default.ListPermissionQueryDocument,
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 

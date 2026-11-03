@@ -5,7 +5,9 @@ facade, and so does cloud functions, which has none. Forty-seven properties on
 the client and 665 public calls, built in five waves.
 
 Pick-Pack has left since. Emporix retired the service on 2026-09-16, and the SDK
-removed its property and its twelve calls. The tables below still count it,
+removed its property and its twelve calls. IAM followed in November 2026: the
+roles, permissions and resources model, deprecated since 2026-05-13, left the
+specification, and with it eight read calls. The tables below still count both,
 because they record how the coverage was built.
 
 | Wave | Services | API operations | Facade calls |
