@@ -674,7 +674,17 @@ paths:
       description: |
         Deletes a specified group.
 
-        ***Important***: If you want to delete a group that has users assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all user group assignments are deleted as well. The force flag requires the `iam.assignment_manage` scope. The `iam.assignment_manage` scope is only required if you want to delete a group that has users assigned to it.
+        The endpoint does not delete a group whose `code` is one of the following values, in any letter case:
+
+        * `CUSTOMER`
+        * `BO_USER`
+        * `BO_MANAGER`
+        * `BO_ADMIN`
+        * `SUPPORT_USER`
+
+        The response is HTTP 400, the detail is `System group cannot be deleted.`, and the group and its assignments stay. Setting `forceDelete` to `true` does not delete these groups. A group with no `code`, a blank `code`, or any other `code` can still be deleted.
+
+        ***Important***: If you want to delete a group that has users assigned to it, you need to set the `forceDelete` query parameter to `true`. In this case, all user group assignments are deleted as well. The force flag requires the `iam.assignment_manage` scope. The `iam.assignment_manage` scope is only required if you want to delete a group that has users assigned to it. This does not apply to the codes listed above.
       operationId: DELETE-iam-remove-user-group
       parameters:
         - $ref: '#/components/parameters/tenant'
@@ -682,11 +692,13 @@ paths:
         - name: forceDelete
           in: query
           description: |
-            * If set to `true` and the group has users assigned to it, both the group and the group assignments will be deleted.
+            The parameter has the following effects:
+
+            * `true` when the group has assigned users – the endpoint deletes the group and its assignments. This does not apply when the group's `code` is `CUSTOMER`, `BO_USER`, `BO_MANAGER`, `BO_ADMIN`, or `SUPPORT_USER`. Those groups stay, and the response is HTTP 400.
 
               **Important**: To set this parameter to true, you must request an access token with the `iam.assignment_manage` scope.
 
-            * If set to `false` or not specified and the group has users assigned to it, the endpoint will respond with the 400 error.
+            * `false` or omitted when the group has assigned users – the endpoint responds with HTTP 400.
           schema:
             type: boolean
             example: false
@@ -722,6 +734,13 @@ paths:
                     message: Constraint validation failed
                     details:
                       - Could not delete a group with assigned users. Please use the 'forceDelete' query param with token containing the `iam.assignment_manage` scope to delete the group and group assignments or clean up the group assignments first.
+                System group:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Constraint validation failed
+                    details:
+                      - System group cannot be deleted.
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
