@@ -9,8 +9,8 @@ info:
 
     This reference covers the operational surface available with the `importtool.import_trigger` scope:
     triggering, scheduling, monitoring, and cancelling import runs; managing the file queue of a
-    file-based stream (upload, list, reorder, remove); reading configurations, streams, schedules, runs,
-    and imported data; and reading the import analytics that summarise them. Administrative operations
+    file-based stream (upload, list, reorder, remove, queue a failed file again); reading configurations,
+    streams, schedules, runs, and imported data; and reading the import analytics that summarise them. Administrative operations
     (creating and changing configurations, connections, streams, and mappings) require the
     `importtool.import_manage` scope.
   contact:
@@ -25,7 +25,7 @@ tags:
   - name: Files
     description: >-
       The queue of files a file-based stream imports: upload one, see what is waiting, change the load
-      order, remove one.
+      order, remove one, queue a failed one again.
   - name: Schedules
     description: Read and set a configuration's run schedule.
   - name: Runs
@@ -225,7 +225,8 @@ paths:
 
         The file is stored, and its content hash recorded, so the same bytes are never imported twice: a
         file this stream has already imported is refused rather than queued again. A file that previously
-        failed is accepted, because the usual reason is that it has been fixed.
+        failed is accepted, because the usual reason is that it has been fixed. To import a failed file again
+        unchanged, queue it again with the stored content instead of uploading it.
 
         The request is refused while the stream's job has a run in flight if the upload would replace bytes
         the stream already holds — a run may be reading them, and a retry may be waiting to re-read them.
@@ -456,6 +457,68 @@ paths:
           description: >-
             The file is no longer waiting — a run has claimed it or already imported it — or the job has a
             run in flight.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+  '/importtool/{tenant}/streams/{streamId}/files/{fileId}/requeue':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/trait_streamId'
+      - name: fileId
+        in: path
+        required: true
+        description: The file's identifier.
+        schema:
+          type: string
+          format: uuid
+    post:
+      summary: Queuing a failed file again
+      description: |-
+        Puts a file whose import failed (`status` `FAILED`) back at the end of the stream's queue, so the next
+        run reads it again. The service reads the content it already holds for the file, so you do not need to
+        upload the file again. Use this after you fix the cause of the failure, for example a mapping.
+
+        Only a failed file can be queued again. An imported file (`status` `PROCESSED`) cannot be queued again, because
+        importing an older snapshot again would overwrite newer data. When a file was imported with some
+        records failing, its status is `PROCESSED`: retry those records with the run's
+        `POST /importtool/{tenant}/runs/{runId}/retry` operation instead.
+
+        On a snapshot stream, a run reads the newest file in the queue. So a failed file cannot be queued again after
+        a newer file has arrived for the stream, whether that file is imported, waiting or being read: queued again,
+        the older snapshot would be imported over the newer data. Upload a corrected current file instead. A stream
+        with incremental files reads its files in queue order, so this restriction does not apply.
+
+        The request is refused while the job has a run in the `QUEUED`, `RUNNING`, or `RESUMABLE` status.
+      operationId: POST-importtool-stream-file-requeue
+      tags:
+        - Files
+      security:
+        - OAuth2:
+            - importtool.import_trigger
+      responses:
+        '200':
+          description: The request was successful. The file is queued again in the `PENDING` status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportFile'
+              examples:
+                Requeued file response:
+                  $ref: '#/components/examples/RequeuedFile_Example'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
+        '409':
+          description: >-
+            The file has not failed, its stored content is no longer available, or it is not one of this
+            stream's files. Also returned when a newer file arrived after it on a snapshot stream, and while the
+            job has a run in flight.
           content:
             application/json:
               schema:
@@ -788,7 +851,10 @@ paths:
         '400':
           description: >-
             The request is invalid. For example, `dryRun` is `true` and `mappings` has a value other than
-            `published` or `draft`.
+            `published` or `draft`. Also returned for a run with nothing to import: every stream the run starts
+            from reads uploaded files and none has ever had a file, neither waiting nor imported. Upload a file
+            to a stream's queue first. A dry run is not refused for this, because it reads the connection's
+            sample file.
           content:
             application/json:
               schema:
@@ -818,6 +884,8 @@ paths:
           $ref: '#/components/responses/Unauthorized_401'
         '403':
           $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/NotFound_404'
         '409':
           $ref: '#/components/responses/Conflict_409'
         '500':
@@ -1631,7 +1699,8 @@ components:
               fails part-way leaves the file importable.
             * `FAILED` – the stream that read the file finished `FAILED`. The file could not be read
               (malformed, truncated, wrong charset), or the import failed for another reason, such as the
-              target being unavailable. Such a file can be sent again. Records that fail individually do not
+              target being unavailable. Such a file can be queued again with the content the service holds, or
+              uploaded again. Records that fail individually do not
               put a file here: a stream that finishes with record failures still marks its file imported.
           example: PROCESSED
         loadRank:
@@ -1692,6 +1761,14 @@ components:
           format: int64
           description: How many files are waiting in total, however many this response lists.
           example: 3
+        lastProcessed:
+          description: >-
+            The newest file the stream has imported, or `null` when it has imported none. Returned whatever
+            `historyLimit` is, because a run with no file waiting reads this file again (a snapshot stream).
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ImportFile'
+          nullable: true
     ImportStream:
       title: Stream
       type: object
@@ -2329,7 +2406,14 @@ components:
           example: 430
         message:
           type: string
-          description: A per-stream status message.
+          description: |-
+            A per-stream status message.
+
+            When a run of a file-based stream finds no file waiting, the message starts with `No file was
+            waiting, so nothing was imported`. If the latest file in the stream's history failed, the message
+            names that file and suggests queuing it again. Otherwise, it suggests uploading a file to the
+            stream's queue first. This message is not set for a dry run, for a retry, or for a stream whose
+            connection reads its file from a file URL.
           example: 5 records failed validation.
         filesRead:
           type: array
@@ -3320,6 +3404,14 @@ components:
           status: PENDING
           loadRank: 2
           queuedAt: '2026-10-24T09:15:00.000Z'
+    RequeuedFile_Example:
+      value:
+        id: 1b4e28ba-2fa1-41d2-883f-0016d3cca427
+        fileName: vendors-2026-10-21.csv
+        size: 2387310
+        status: PENDING
+        loadRank: 3
+        queuedAt: '2026-10-24T11:40:00.000Z'
     FileQueue_Example:
       value:
         pending:
@@ -3347,6 +3439,16 @@ components:
             recordsRead: 43342
         pendingTruncated: false
         pendingTotal: 2
+        lastProcessed:
+          id: a3bb189e-8bf9-3888-9912-ace4e6543002
+          fileName: vendors-2026-10-22.csv
+          size: 2391001
+          status: PROCESSED
+          loadRank: 1
+          queuedAt: '2026-10-22T09:15:00.000Z'
+          processedAt: '2026-10-22T09:17:42.000Z'
+          runId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          recordsRead: 43342
     FileUploadLimits_Example:
       value:
         maxUploadBytes: 9437184

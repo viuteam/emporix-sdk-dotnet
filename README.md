@@ -667,7 +667,9 @@ never imported twice: a repeat answers `409`. That is why the upload is not
 retried on a transient failure — read `ListStreamFilesAsync` before sending it
 again. `GetStreamFileLimitsAsync` reports the largest file accepted,
 `SetStreamFileOrderAsync` takes every waiting file's id in load order, and
-`DeleteStreamFileAsync` removes a file only while it is still waiting.
+`DeleteStreamFileAsync` removes a file only while it is still waiting. A file
+that failed goes back into the queue with `RequeueStreamFileAsync`, from the
+content Emporix already holds, once the cause is fixed.
 
 ## Values the specification has not caught up with
 

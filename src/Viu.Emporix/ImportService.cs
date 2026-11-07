@@ -272,6 +272,12 @@ public sealed class ImportService
     /// as a run that finishes <c>ABORTED</c> with a message naming the streams.
     /// </para>
     /// <para>
+    /// A run with nothing to import is refused up front with <c>400</c>: every
+    /// stream it starts from reads uploaded files, and none has ever had one,
+    /// waiting or imported. A dry run is not refused for this, because it reads
+    /// the connection's sample file.
+    /// </para>
+    /// <para>
     /// Deliberately not repeatable. A retried start imports the same source
     /// twice, and the SDK cannot know whether the target tolerates that.
     /// </para>
@@ -839,6 +845,9 @@ public sealed class ImportService
     /// files; beyond that <see cref="FileQueue.PendingTruncated"/> is set,
     /// <see cref="FileQueue.PendingTotal"/> has the real count, and the order
     /// cannot be changed. <see cref="FileQueue.History"/> is newest first.
+    /// <see cref="FileQueue.LastProcessed"/> is the newest imported file whatever
+    /// <paramref name="historyLimit"/> is: on a snapshot stream with nothing
+    /// waiting, it is the file the next run reads again.
     /// </remarks>
     public async Task<FileQueue?> ListStreamFilesAsync(
         string streamId,
@@ -876,7 +885,9 @@ public sealed class ImportService
     /// <para>
     /// Emporix recognises a file by the SHA-256 of its content, whatever its
     /// name, and answers <c>409</c> when the stream already imported or queued
-    /// those bytes; a file that previously failed is accepted again. It also
+    /// those bytes; a file that previously failed is accepted again, and
+    /// <see cref="RequeueStreamFileAsync"/> imports it unchanged without
+    /// uploading it. It also
     /// answers <c>409</c> when the stream does not read files, or when a run in
     /// flight uses bytes this upload would replace. <c>413</c> means the file is
     /// over the limit <see cref="GetStreamFileLimitsAsync"/> reports, <c>503</c>
@@ -1010,6 +1021,53 @@ public sealed class ImportService
                 Idempotent = true,
             },
             cancellationToken);
+    }
+
+    /// <summary>Queues a failed file again, from the content Emporix already holds.</summary>
+    /// <param name="streamId">The stream id.</param>
+    /// <param name="fileId">The file id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The file, <c>PENDING</c> at the end of the queue. Nothing is imported until a run reads it.</returns>
+    /// <remarks>
+    /// <para>
+    /// For a file that failed for a reason since fixed, a mapping for instance:
+    /// no upload is needed. Only a <c>FAILED</c> file can be queued again. A
+    /// <c>PROCESSED</c> file with records that failed is retried through
+    /// <see cref="RetryRunAsync"/> instead.
+    /// </para>
+    /// <para>
+    /// Emporix answers <c>409</c> when the file has not failed, when its stored
+    /// content is gone, when it is not this stream's file, and while the job has
+    /// a run <c>QUEUED</c>, <c>RUNNING</c> or <c>RESUMABLE</c>. On a snapshot
+    /// stream it also answers <c>409</c> once a newer file has arrived, because
+    /// the older snapshot would overwrite newer data; upload a corrected current
+    /// file there instead.
+    /// </para>
+    /// <para>
+    /// Not repeatable: a call that timed out may have queued the file, and
+    /// sending it again would then answer <c>409</c>. Read
+    /// <see cref="ListStreamFilesAsync"/> instead.
+    /// </para>
+    /// </remarks>
+    public async Task<ImportFile?> RequeueStreamFileAsync(
+        string streamId,
+        string fileId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(streamId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/streams/{Uri.EscapeDataString(streamId)}/files/{Uri.EscapeDataString(fileId)}/requeue",
+                Auth = Defaults.Service(auth),
+            },
+            ImportJsonContext.Default.ImportFile,
+            cancellationToken).ConfigureAwait(false);
     }
 
     private static void AddRecordFilters(
