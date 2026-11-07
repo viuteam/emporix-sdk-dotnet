@@ -304,6 +304,24 @@ public class OperationsWaveTests
         Assert.Equal(HttpMethod.Delete, handler.LastRequest!.Method);
     }
 
+    [Fact]
+    public async Task Queuing_a_failed_file_again_sends_no_body_and_is_never_repeated()
+    {
+        // A requeue that went through leaves the file PENDING, and a second
+        // one answers 409 because only a FAILED file can be queued again.
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"status":"PENDING","loadRank":3}""");
+        ImportService imports = new(Http(handler), Options());
+
+        ImportServiceModels.ImportFile? file = await imports.RequeueStreamFileAsync("str/1", "file/1");
+
+        Assert.Equal("/importtool/acme/streams/str%2F1/files/file%2F1/requeue", Uri(handler));
+        Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
+        Assert.Null(handler.LastRequest.Content);
+        Assert.False(IsRepeatable(handler));
+        Assert.Equal(ImportServiceModels.ImportFileStatus.PENDING, file!.Status);
+        Assert.Equal(3, file.LoadRank);
+    }
+
     // ---------- Indexing ----------
 
     [Fact]

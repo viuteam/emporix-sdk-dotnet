@@ -192,7 +192,8 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>  fails part-way leaves the file importable.
         /// <br/>* `FAILED` – the stream that read the file finished `FAILED`. The file could not be read
         /// <br/>  (malformed, truncated, wrong charset), or the import failed for another reason, such as the
-        /// <br/>  target being unavailable. Such a file can be sent again. Records that fail individually do not
+        /// <br/>  target being unavailable. Such a file can be queued again with the content the service holds, or
+        /// <br/>  uploaded again. Records that fail individually do not
         /// <br/>  put a file here: a stream that finishes with record failures still marks its file imported.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
@@ -276,6 +277,12 @@ namespace Viu.Emporix.ImportServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("pendingTotal")]
         public long? PendingTotal { get; set; } = default!;
+
+        /// <summary>
+        /// The newest file the stream has imported, or `null` when it has imported none. Returned whatever `historyLimit` is, because a run with no file waiting reads this file again (a snapshot stream).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("lastProcessed")]
+        public ImportFile? LastProcessed { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -911,6 +918,12 @@ namespace Viu.Emporix.ImportServiceModels
 
         /// <summary>
         /// A per-stream status message.
+        /// <br/>
+        /// <br/>When a run of a file-based stream finds no file waiting, the message starts with `No file was
+        /// <br/>waiting, so nothing was imported`. If the latest file in the stream's history failed, the message
+        /// <br/>names that file and suggests queuing it again. Otherwise, it suggests uploading a file to the
+        /// <br/>stream's queue first. This message is not set for a dry run, for a retry, or for a stream whose
+        /// <br/>connection reads its file from a file URL.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
@@ -2318,6 +2331,7 @@ namespace Viu.Emporix.ImportServiceModels
         FAILED = 3,
 
     }
+
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ImportStreamMode>))]
