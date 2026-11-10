@@ -213,6 +213,40 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     /// <summary>
+    /// Site and access boundary copied from the referenced orders. You can send these fields on the create request. The create response returns only the new return id. Retrieved return documents include the fields. Update and patch request bodies do not accept them.
+    /// <br/>
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ReturnSite
+    {
+
+        /// <summary>
+        /// Site of the orders in the return. On create, the service copies this value from the referenced orders. You can omit it. If you send it, it must match the orders. Every order in the return must use the same site.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("siteCode")]
+        public string? SiteCode { get; set; } = default!;
+
+        /// <summary>
+        /// Access boundary copied from the referenced orders, together with `siteCode`. You can omit it. If you send it, it must match the orders. Every order in the return must use the same restriction.
+        /// <br/>An employee scope with a site suffix, such as `returns.returns_read--DE`, can access only returns whose `restriction` is in that list. A scope without a suffix can access every return. A return with no `restriction` is hidden from a site-limited employee.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("restriction")]
+        public string? Restriction { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
     /// Base schema for a return.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -252,6 +286,30 @@ namespace Viu.Emporix.ReturnsModels
     }
 
     /// <summary>
+    /// Base schema for a return requested BY A CUSTOMER.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class BasicCustomerReturn : BasicReturn
+    {
+
+        /// <summary>
+        /// Site of the orders in the return. On create, the service copies this value from the referenced orders. You can omit it. If you send it, it must match the orders. Every order in the return must use the same site.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("siteCode")]
+        public string? SiteCode { get; set; } = default!;
+
+        /// <summary>
+        /// Access boundary copied from the referenced orders, together with `siteCode`. You can omit it. If you send it, it must match the orders. Every order in the return must use the same restriction.
+        /// <br/>An employee scope with a site suffix, such as `returns.returns_read--DE`, can access only returns whose `restriction` is in that list. A scope without a suffix can access every return. A return with no `restriction` is hidden from a site-limited employee.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("restriction")]
+        public string? Restriction { get; set; } = default!;
+
+    }
+
+    /// <summary>
     /// Base schema for returns created by an employee FOR A REGISTERED CUSTOMER.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -287,6 +345,21 @@ namespace Viu.Emporix.ReturnsModels
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class BasicEmployeeReturnBase : BasicReturn
     {
+
+        /// <summary>
+        /// Site of the orders in the return. On create, the service copies this value from the referenced orders. You can omit it. If you send it, it must match the orders. Every order in the return must use the same site.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("siteCode")]
+        public string? SiteCode { get; set; } = default!;
+
+        /// <summary>
+        /// Access boundary copied from the referenced orders, together with `siteCode`. You can omit it. If you send it, it must match the orders. Every order in the return must use the same restriction.
+        /// <br/>An employee scope with a site suffix, such as `returns.returns_read--DE`, can access only returns whose `restriction` is in that list. A scope without a suffix can access every return. A return with no `restriction` is hidden from a site-limited employee.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("restriction")]
+        public string? Restriction { get; set; } = default!;
 
         /// <summary>
         /// Indicates who requested the return. The field can be set and updated only by an employee,
@@ -406,7 +479,7 @@ namespace Viu.Emporix.ReturnsModels
     /// Schema for retrieving returns by a customer.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class FullCustomerReturn : BasicReturn
+    public partial class FullCustomerReturn : BasicCustomerReturn
     {
 
         /// <summary>

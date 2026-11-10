@@ -32,7 +32,7 @@ paths:
         '401':
           $ref: '#/components/responses/common_response_Unauthorized_401'
         '403':
-          $ref: '#/components/responses/common_response_Forbidden_403'
+          $ref: '#/components/responses/returns_post_response_Forbidden_403'
         '409':
           $ref: '#/components/responses/returns_post_response_Conflict_409'
         '500':
@@ -41,6 +41,10 @@ paths:
         Creates a single return document with given information.
         If a return is created by a customer directly, then the `returns.returns_manage_own` scope is required.
         If a return is created by a tenant employee on behalf of a customer, then the `returns.returns_manage` scope is required.
+
+        The service copies `siteCode` and `restriction` from the referenced orders. You can omit both. A sent value that differs from the orders returns `400` with message `site does not match order`. Orders that disagree on `siteCode` or on `restriction` return `400` with message `orders belong to different sites`.
+
+        An employee scope with a site suffix, such as `returns.returns_manage--DE`, can create a return only for that site. Creating a return outside that site, including a return whose copied `restriction` is empty, returns `403` with message `Creating a return for this site is not allowed.`
 
         **Note**: Depending on a case, a different set of fields is required and allowed.
 
@@ -70,6 +74,10 @@ paths:
         - Returns
       description: |
         Retrieves a list of return documents.
+
+        An employee scope with a site suffix retrieves only the returns whose `restriction` is in that list. The `X-Total-Count` header uses the same filter. A return with no `restriction` is omitted. An employee scope without a site suffix returns every return. A customer scope returns that customer's own returns.
+
+        Filter by site code with `q=siteCode:{siteCode}` — for example, `q=siteCode:DE`.
       parameters:
         - $ref: '#/components/parameters/x_total_count_header'
         - $ref: '#/components/parameters/page_size_query_param'
@@ -91,6 +99,8 @@ paths:
       operationId: GET-returns-retrieve-return
       description: |
         Retrieves a single return document.
+
+        A site-limited employee who requests a return outside that site, or a return with no `restriction`, receives `404` with message `The return with id {id} has not been found.` An employee scope without a site suffix can retrieve every return.
       responses:
         '200':
           $ref: '#/components/responses/singleReturnResponse_200'
@@ -130,6 +140,10 @@ paths:
         **Note**: Depending on a case, a different set of fields is required and allowed.
 
         A customer can change a return only when the return approval status is `PENDING`.
+
+        The request body does not accept `siteCode` or `restriction`. The stored values stay as they were set when the return was created. Attaching an order from a different site, or with a different restriction, returns `400` with message `site does not match order` or `orders belong to different sites`.
+
+        A site-limited employee who updates a return outside that site, or a return with no `restriction`, receives `404` with message `The return with id {id} has not been found.`
       requestBody:
         $ref: '#/components/requestBodies/returnUpdateBody'
       security:
@@ -150,6 +164,8 @@ paths:
           $ref: '#/components/responses/common_response_Unauthorized_401'
         '403':
           $ref: '#/components/responses/common_response_Forbidden_403'
+        '404':
+          $ref: '#/components/responses/returns_response_NotFound_404'
         '500':
           $ref: '#/components/responses/common_response_InternalServerError_500'
       tags:
@@ -157,6 +173,7 @@ paths:
       description: |-
         Deletes a single return document.
         The return can be deleted completely only by an employee, that is a user who has the `returns.returns_manage` scope granted. A customer, who has the `returns.returns_manage_own` scope granted, can delete a return only if the return status is `PENDING`. The return status is changed to `CLOSED` during the delete operation.
+        A site-limited employee who deletes a return outside that site, or a return with no `restriction`, receives `404` with message `The return with id {id} has not been found.`
       security:
         - OAuth2:
             - returns.returns_manage
@@ -189,6 +206,8 @@ paths:
         **Note**: Depending on a case, a different set of fields is allowed.
 
         A customer can change a return only when the return approval status is `PENDING`.
+
+        The patch body does not accept `siteCode` or `restriction`. The stored values stay as they were set when the return was created. A site-limited employee who patches a return outside that site, or a return with no `restriction`, receives `404` with message `The return with id {id} has not been found.` The service returns that `404` before it applies the patch.
 
         The patch request consists of set of operation, that should be defined according to [RFC-6902](https://datatracker.ietf.org/doc/html/rfc6902) standard
       security:
@@ -238,7 +257,8 @@ paths:
 components:
   responses:
     returns_response_NotFound_404:
-      description: Not found response due to not-existing entity
+      description: |
+        The return does not exist, or a site-limited employee cannot see it. A return with no `restriction` is hidden from a site-limited employee. The message is the same in both cases.
       content:
         application/json:
           schema:
@@ -256,6 +276,17 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Site does not match the order:
+              value:
+                code: 400
+                status: Bad Request
+                message: site does not match order
+            Orders belong to different sites:
+              value:
+                code: 400
+                status: Bad Request
+                message: orders belong to different sites
     common_response_Unauthorized_401:
       description: Unauthorized
       content:
@@ -317,6 +348,35 @@ components:
           schema:
             oneOf:
               - $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Site does not match the order:
+              value:
+                code: 400
+                status: Bad Request
+                message: site does not match order
+            Orders belong to different sites:
+              value:
+                code: 400
+                status: Bad Request
+                message: orders belong to different sites
+    returns_post_response_Forbidden_403:
+      description: |
+        The caller is not allowed to create the return. A missing `returns.returns_manage` or `returns.returns_manage_own` scope returns `The access to the requested resource has been forbidden by the server.` A site-limited employee who creates a return outside that site, including a return whose copied `restriction` is empty, returns `Creating a return for this site is not allowed.`
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/coreErrorMessage'
+          examples:
+            Missing permission:
+              value:
+                code: 403
+                status: Forbidden
+                message: The access to the requested resource has been forbidden by the server.
+            Site outside the employee restriction:
+              value:
+                code: 403
+                status: Forbidden
+                message: Creating a return for this site is not allowed.
     returns_post_response_Conflict_409:
       description: |
         Return with given code already exists.
@@ -348,6 +408,8 @@ components:
             A return retrieved by a customer:
               value:
                 id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                siteCode: DE
+                restriction: DE
                 approvalStatus: PENDING
                 received: false
                 orders:
@@ -421,6 +483,8 @@ components:
             A return retrieved by an employee:
               value:
                 id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                siteCode: DE
+                restriction: DE
                 approvalStatus: PENDING
                 received: false
                 orders:
@@ -523,6 +587,8 @@ components:
             Returns retrieved by a customer:
               value:
                 - id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                  siteCode: DE
+                  restriction: DE
                   approvalStatus: PENDING
                   received: false
                   orders:
@@ -596,6 +662,8 @@ components:
             Returns retrieved by an employee:
               value:
                 - id: 7ba2f2b6-7dc8-45ff-9f20-4e6163c14c2e
+                  siteCode: DE
+                  restriction: DE
                   approvalStatus: PENDING
                   received: false
                   orders:
@@ -779,6 +847,23 @@ components:
             modifiedAt:
               description: 'Date and time when the object was last modified. The value is returned as an ISO-8601 representation of an Instant. For example: `2022-04-31T13:18:02.379Z`'
               type: string
+    returnSite:
+      title: Site copied from the orders
+      description: |
+        Site and access boundary copied from the referenced orders. You can send these fields on the create request. The create response returns only the new return id. Retrieved return documents include the fields. Update and patch request bodies do not accept them.
+      type: object
+      properties:
+        siteCode:
+          type: string
+          example: DE
+          description: |
+            Site of the orders in the return. On create, the service copies this value from the referenced orders. You can omit it. If you send it, it must match the orders. Every order in the return must use the same site.
+        restriction:
+          type: string
+          example: DE
+          description: |
+            Access boundary copied from the referenced orders, together with `siteCode`. You can omit it. If you send it, it must match the orders. Every order in the return must use the same restriction.
+            An employee scope with a site suffix, such as `returns.returns_read--DE`, can access only returns whose `restriction` is in that list. A scope without a suffix can access every return. A return with no `restriction` is hidden from a site-limited employee.
     basicReturn:
       title: basicReturn
       description: Base schema for a return.
@@ -812,7 +897,9 @@ components:
     basicCustomerReturn:
       title: A return request created by a customer.
       description: Base schema for a return requested BY A CUSTOMER.
-      $ref: '#/components/schemas/basicReturn'
+      allOf:
+        - $ref: '#/components/schemas/basicReturn'
+        - $ref: '#/components/schemas/returnSite'
     basicEmployeeReturn:
       title: A return request created on behalf of a customer.
       description: Base schema for returns created by an employee FOR A REGISTERED CUSTOMER.
@@ -857,6 +944,7 @@ components:
       description: Common structure for returns created by an employee on behalf of a customer.
       allOf:
         - $ref: '#/components/schemas/basicReturn'
+        - $ref: '#/components/schemas/returnSite'
         - type: object
           properties:
             requestor:
@@ -1247,6 +1335,8 @@ components:
           examples:
             A return requested by a customer:
               value:
+                siteCode: DE
+                restriction: DE
                 orders:
                   - id: B1LMYY52
                     items:
@@ -1435,7 +1525,7 @@ components:
       description: |
         A standard query parameter is used to search for specific values.
 
-           + Searching for an item by a string property: `q=approvalStatus:PENDING`, where `approvalStatus` is the name of the string field and `PENDING` is its required value.
+           + Searching for an item by a string property: `q=approvalStatus:PENDING`, where `approvalStatus` is the name of the string field and `PENDING` is its required value. Searching by site uses the same form: `q=siteCode:{siteCode}` — for example, `q=siteCode:DE`.
            + Searching for items by a number-based property:
              + Searching for items with specific values: `q=mixins.returnCustomAttributes.orderQuantity:20`
              + Searching for items with values greater than: `q=mixins.returnCustomAttributes.orderQuantity:>20`
@@ -1478,8 +1568,8 @@ components:
         clientCredentials:
           tokenUrl: 'https://api.emporix.io/oauth/token'
           scopes:
-            returns.returns_read: Needed for reading returns by a tenant employee (all tenant returns).
-            returns.returns_manage: Needed to manage returns by a tenant employee (all tenant returns).
+            returns.returns_read: Needed for reading returns by a tenant employee. Without a site suffix, the token can read every return. With a suffix, such as `returns.returns_read--DE`, the token can read only returns whose `restriction` is in that list.
+            returns.returns_manage: Needed to manage returns by a tenant employee. Without a site suffix, the token can manage every return. With a suffix, such as `returns.returns_manage--DE`, the token can manage only returns whose `restriction` is in that list.
             returns.returns_read_own: Needed for reading returns by a customer (only customer's own returns).
             returns.returns_manage_own: Needed to manage returns by a customer (only customer's own returns).
 security:
