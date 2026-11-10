@@ -93,6 +93,23 @@ public class PlatformWaveTests
     }
 
     [Fact]
+    public async Task Only_deleting_a_group_with_its_members_sends_the_force_flag()
+    {
+        // Without forceDelete Emporix refuses a group that still has members,
+        // so the flag is what separates the two calls.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        IamService iam = new(Http(handler), Options());
+
+        await iam.Groups.DeleteAsync("g/1");
+        await iam.Groups.DeleteWithMembersAsync("g/1");
+
+        Assert.Equal(HttpMethod.Delete, handler.RequestMethods[0]);
+        Assert.Equal("/iam/acme/groups/g%2F1", Uri(handler, 0));
+        Assert.Equal(HttpMethod.Delete, handler.RequestMethods[1]);
+        Assert.Equal("/iam/acme/groups/g%2F1?forceDelete=true", Uri(handler, 1));
+    }
+
+    [Fact]
     public async Task The_me_calls_are_their_own_endpoints()
     {
         // Not «users/{id}» with the caller's id — Emporix resolves the token,
