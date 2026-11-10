@@ -629,11 +629,18 @@ public sealed class IamGroupOperations
             cancellationToken);
     }
 
-    /// <summary>Deletes a group.</summary>
+    /// <summary>Deletes a group that has no members.</summary>
     /// <param name="groupId">The group id.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <remarks>Its members lose whatever the group granted them.</remarks>
+    /// <remarks>
+    /// A group that still has members answers <c>400</c> and stays: empty it
+    /// with <see cref="RemoveAllMembersAsync"/> first, or use
+    /// <see cref="DeleteWithMembersAsync"/>. The system groups <c>CUSTOMER</c>,
+    /// <c>BO_USER</c>, <c>BO_MANAGER</c>, <c>BO_ADMIN</c> and
+    /// <c>SUPPORT_USER</c> answer <c>400</c> whatever the case of their code,
+    /// and cannot be deleted at all.
+    /// </remarks>
     public Task DeleteAsync(
         string groupId,
         AuthContext auth = default,
@@ -647,6 +654,37 @@ public sealed class IamGroupOperations
                 Method = HttpMethod.Delete,
                 Path = $"{BasePath}/{Uri.EscapeDataString(groupId)}",
                 Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Deletes a group together with its members' assignments.</summary>
+    /// <param name="groupId">The group id.</param>
+    /// <param name="auth">
+    /// What to authorise with; a service token when omitted. It needs
+    /// <c>iam.assignment_manage</c> as well as <c>iam.group_manage</c>.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// One call where <see cref="RemoveAllMembersAsync"/> followed by
+    /// <see cref="DeleteAsync"/> takes two. The members lose whatever the group
+    /// granted them. The system groups <see cref="DeleteAsync"/> names still
+    /// answer <c>400</c> and stay.
+    /// </remarks>
+    public Task DeleteWithMembersAsync(
+        string groupId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(groupId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/{Uri.EscapeDataString(groupId)}",
+                Auth = Defaults.Service(auth),
+                Query = [new("forceDelete", "true")],
             },
             cancellationToken);
     }

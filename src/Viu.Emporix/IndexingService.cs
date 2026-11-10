@@ -42,6 +42,13 @@ public sealed class IndexingService
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The new configuration's id, which is the provider name.</returns>
+    /// <remarks>
+    /// For Battery Included, Emporix checks the write key before saving, against
+    /// the host in <see cref="IndexConfiguration.ApiUrl"/> or the default host
+    /// when it is not set. <c>ApiUrl</c> must be the <c>https</c> address of an
+    /// allowed Battery Included host and is refused with <c>400</c> for any
+    /// other provider.
+    /// </remarks>
     public async Task<IndexCreationResponse?> CreateConfigurationAsync(
         IndexConfiguration configuration,
         AuthContext auth = default,
@@ -111,6 +118,14 @@ public sealed class IndexingService
     /// <param name="configuration">The configuration to store.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The whole configuration is replaced: a Battery Included configuration
+    /// sent without <see cref="IndexConfiguration.ApiUrl"/> moves the tenant
+    /// back to the default host, and the write key must be valid there. Read
+    /// the configuration first and change what you mean to. A new host takes
+    /// effect within ten minutes; Emporix advises changing it while no product
+    /// reindex runs, and reindexing afterwards if the new index is incomplete.
+    /// </remarks>
     public Task UpdateConfigurationAsync(
         string provider,
         IndexConfiguration configuration,

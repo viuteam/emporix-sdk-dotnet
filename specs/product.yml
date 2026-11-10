@@ -39,6 +39,8 @@ paths:
         Search a list of products.
 
         When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
+
+        For v2 mixins, `Accept-Language` filters localized `TEXT` and `OBJECT` maps, including maps nested under plain objects and maps used as array items.
         ***
 
         **Additional scope information**
@@ -60,7 +62,7 @@ paths:
         - $ref: '#/components/parameters/query_page_size'
         - $ref: '#/components/parameters/query_sort_product'
         - $ref: '#/components/parameters/query_product_fields'
-        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/header_accept_language_product_mixins'
         - $ref: '#/components/parameters/header_emporix_site'
         - $ref: '#/components/parameters/query_expand_product'
         - $ref: '#/components/parameters/query_raw_value_product'
@@ -84,6 +86,8 @@ paths:
         Retrieves a list of products.
 
         When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
+
+        For v2 mixins, `Accept-Language` filters localized `TEXT` and `OBJECT` maps, including maps nested under plain objects and maps used as array items.
         ***
 
         **Additional scope information**
@@ -106,7 +110,7 @@ paths:
         - $ref: '#/components/parameters/query_sort_product'
         - $ref: '#/components/parameters/query_q_product'
         - $ref: '#/components/parameters/query_product_fields'
-        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/header_accept_language_product_mixins'
         - $ref: '#/components/parameters/header_emporix_site'
         - $ref: '#/components/parameters/query_expand_product'
         - $ref: '#/components/parameters/query_raw_value_product'
@@ -902,6 +906,8 @@ paths:
         Retrieves a specified product details.
 
         When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged so integrations can inspect the stored data. `Accept-Language` is applied after the site merge when `emporix-site` is present.
+
+        For v2 mixins, `Accept-Language` filters localized `TEXT` and `OBJECT` maps, including maps nested under plain objects and maps used as array items.
         ***
 
         **Additional scope information**
@@ -920,7 +926,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/path_tenant'
         - $ref: '#/components/parameters/path_productId'
-        - $ref: '#/components/parameters/header_accept_language'
+        - $ref: '#/components/parameters/header_accept_language_product_mixins'
         - $ref: '#/components/parameters/header_emporix_site'
         - $ref: '#/components/parameters/query_product_fields'
         - $ref: '#/components/parameters/query_expand_product'
@@ -3705,13 +3711,44 @@ components:
         * If the `Content-Language` header is empty, the endpoint interprets the localized fields as being provided in the default language or the languages defined in the Configuration Service.
 
         **Note**: You can provide the localized fields only in languages defined in the Configuration Service. In case the fields are provided in languages that are not defined in the Configuration Service, the request is rejected.
+
+        Language codes are matched to the languages defined in the Configuration Service regardless of letter case and are resolved to the configured letter case. For example, if `de-DE` is configured, `de-de` is treated as `de-DE`. When you update a localized field, a translation that is already stored keeps the letter case of its key. For example, sending `de-de` updates the stored `de-DE` translation. If the `Content-Language` header is set to `*`, the keys in the maps of translations must match the configured letter case exactly.
+
+        The request is rejected with the `400` status in the following cases:
+        * A language code has an invalid format. A valid code is a language code of 2 or 3 letters, optionally followed by hyphen-separated subtags of 2 to 8 letters or digits, for example `en`, `en-US`, or `zh-Hant`.
+        * A localized field contains the same language more than once in different letter case, for example both `de-DE` and `de-de`.
+
+        For more information, see [Translations](https://developer.emporix.io/api-documentation/standard-practices/translations).
     header_accept_language:
       name: Accept-Language
       in: header
       required: false
       schema:
         type: string
-      description: 'The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If empty, the default system language is assumed. It can be a priority list working as a fallback mechanism.'
+      description: |-
+        The Accept-Language request HTTP header defines which languages the client is able to understand, and which locale variant is preferred. If empty, the default system language is assumed. It can be a priority list working as a fallback mechanism.
+
+        Language codes are matched to the languages defined in the Configuration Service regardless of letter case and are resolved to the configured letter case. For more information, see [Translations](https://developer.emporix.io/api-documentation/standard-practices/translations).
+    header_accept_language_product_mixins:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the product response, ordered by preference.
+
+        The following rules apply:
+
+        * For first-class localized fields such as `name` and `description`, a specific language or ordered list returns the first matching translation.
+        * If none of the requested languages has a translation for a first-class localized field, the field is returned as `null`.
+        * `*` returns all translations for first-class localized fields.
+        * An omitted or empty header uses the tenant's default language for first-class localized fields.
+        * For v2 mixin language maps, a specific language or ordered list returns the first matching non-null translation as a single-key map.
+        * A v2 mixin language map without a matching non-null translation is omitted. For a localized `OBJECT`, a whole-field `null` value is preserved.
+        * In an array of language maps, an element without a matching translation is omitted.
+        * `*`, an omitted header, or an empty header leaves full v2 mixin language maps unchanged.
+        * v1 `[{language,value}]` mixin arrays remain unchanged.
     header_emporix_site:
       name: emporix-site
       in: header

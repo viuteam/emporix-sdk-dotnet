@@ -255,6 +255,7 @@ public sealed class ImportService
     /// finish. <c>MappingVersions</c> is not set yet: the versions are fixed when
     /// the run begins executing, so read them from <see cref="GetRunAsync"/>.
     /// </returns>
+    /// <exception cref="EmporixNotFoundException">No configuration exists with this id.</exception>
     /// <remarks>
     /// <para>
     /// A configuration has at most one run executing and one queued: while it has
@@ -480,6 +481,7 @@ public sealed class ImportService
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The new run, <c>QUEUED</c> — this call does not wait for it.</returns>
+    /// <exception cref="EmporixNotFoundException">No run exists with this id.</exception>
     /// <remarks>
     /// Refused with <c>409</c> like <see cref="StartRunAsync"/>, while the
     /// configuration has a run <c>QUEUED</c>, <c>RUNNING</c> or <c>RESUMABLE</c>.
