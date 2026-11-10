@@ -9,6 +9,18 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.18.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.17.0...v0.18.0) (2026-11-10)
+
+
+### Added
+
+* delete an IAM group with its members, and keep the schema ArrayType name through the sync ([#107](https://github.com/viuteam/emporix-sdk-dotnet/issues/107)) ([e949977](https://github.com/viuteam/emporix-sdk-dotnet/commit/e949977e53b82c23262cb93228a4cc08f392c9ea))
+
+
+### Fixed
+
+* sync generated types with upstream Emporix specifications ([#106](https://github.com/viuteam/emporix-sdk-dotnet/issues/106)) ([551a22b](https://github.com/viuteam/emporix-sdk-dotnet/commit/551a22b3b187f1febb4fd7c30fbfef101d59ac06))
+
 ## [0.17.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.16.1...v0.17.0) (2026-11-07)
 
 
