@@ -267,7 +267,10 @@ namespace Viu.Emporix.SchemaModels
         public bool? Required { get; set; } = default!;
 
         /// <summary>
-        /// Whether the attribute could accept null or not.
+        /// Whether the attribute accepts `null`.
+        /// <br/>
+        /// <br/>For a localized v2 `OBJECT`, both the whole field and each per-language value can be `null`.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("nullable")]
         public bool? Nullable { get; set; } = default!;
@@ -320,16 +323,32 @@ namespace Viu.Emporix.SchemaModels
         /// Unique key of the attribute.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("key")]
-        public string? Key { get; set; } = default!;
+        public string Key { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SchemaAttributeType>))]
+        public SchemaAttributeType Type { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public SchemaAttributeMetadata? Metadata { get; set; } = default!;
+        public SchemaAttributeMetadata Metadata { get; set; } = new SchemaAttributeMetadata();
 
         /// <summary>
         /// List of available values for the attribute. Only valid for `ENUM` and `REFERENCE` types.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("values")]
         public System.Collections.Generic.ICollection<SchemaAttributeValue>? Values { get; set; } = default!;
+
+        /// <summary>
+        /// Nested properties of an `OBJECT` attribute.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("attributes")]
+        public System.Collections.Generic.ICollection<SchemaFileAttributeResponse>? Attributes { get; set; } = default!;
+
+        /// <summary>
+        /// Parsed type information for items of an `ARRAY` attribute.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("arrayType")]
+        public SchemaFileArrayType? ArrayType { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -394,7 +413,10 @@ namespace Viu.Emporix.SchemaModels
         public System.Collections.Generic.ICollection<SchemaAttributeValue>? Values { get; set; } = default!;
 
         /// <summary>
-        /// Object's properties. It can only be provided for attribute of `OBJECT` type.
+        /// Object properties. This field can only be provided for an `OBJECT` attribute.
+        /// <br/>
+        /// <br/>For a localized `OBJECT`, these properties define each language value. None of the nested properties can be localized.
+        /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("attributes")]
         public System.Collections.Generic.ICollection<SchemaAttribute>? Attributes { get; set; } = default!;
@@ -1318,6 +1340,46 @@ namespace Viu.Emporix.SchemaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SchemaFileArrayType
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<SchemaAttributeType>))]
+        public SchemaAttributeType Type { get; set; } = default!;
+
+        /// <summary>
+        /// List of available values for `ENUM` or `REFERENCE` array items.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("values")]
+        public System.Collections.Generic.ICollection<SchemaAttributeValue>? Values { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("localized")]
+        public bool? Localized { get; set; } = default!;
+
+        /// <summary>
+        /// Whether each array item accepts `null`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("nullable")]
+        public bool? Nullable { get; set; } = default!;
+
+        /// <summary>
+        /// Nested properties of an `OBJECT` array item.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("attributes")]
+        public System.Collections.Generic.ICollection<SchemaFileAttributeResponse>? Attributes { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class ArrayType
     {
 
@@ -1333,6 +1395,21 @@ namespace Viu.Emporix.SchemaModels
 
         [System.Text.Json.Serialization.JsonPropertyName("localized")]
         public bool? Localized { get; set; } = default!;
+
+        /// <summary>
+        /// Whether each array item accepts `null`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("nullable")]
+        public bool? Nullable { get; set; } = default!;
+
+        /// <summary>
+        /// Object properties for an array whose `arrayType.type` is `OBJECT`.
+        /// <br/>
+        /// <br/>For localized `OBJECT` items, these properties define each language value. None of the nested properties can be localized.
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("attributes")]
+        public System.Collections.Generic.ICollection<SchemaAttribute>? Attributes { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

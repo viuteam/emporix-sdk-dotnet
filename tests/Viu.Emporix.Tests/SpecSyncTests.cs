@@ -252,6 +252,79 @@ public class SpecSyncTests
         Assert.Empty(replaced);
     }
 
+    [Fact]
+    public void A_pinned_type_takes_its_name_back_and_the_newcomer_gets_another()
+    {
+        // The schema specification on 2026-11-09: a second inline arrayType,
+        // earlier in the file, took the name and pushed SchemaAttribute's to
+        // ArrayType2. The property names must stay as they are.
+        string source = Wrap("""
+                public partial class SchemaFileAttributeResponse
+                {
+                    public ArrayType? ArrayType { get; set; } = default!;
+                }
+
+                public partial class SchemaAttribute
+                {
+                    public ArrayType2? ArrayType { get; set; } = default!;
+                }
+
+                public partial class ArrayType
+                {
+                    public System.Collections.Generic.ICollection<SchemaFileAttributeResponse>? Attributes { get; set; } = default!;
+                }
+
+                public partial class ArrayType2
+                {
+                    public System.Collections.Generic.ICollection<SchemaAttribute>? Attributes { get; set; } = default!;
+                }
+            """);
+
+        (string result, IReadOnlyList<string> pinned, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.PinTypeNames(
+                source,
+                [new("SchemaAttribute.ArrayType", "ArrayType", "SchemaFileArrayType")]);
+
+        Assert.Single(pinned);
+        Assert.Empty(missed);
+        Assert.Contains("public SchemaFileArrayType? ArrayType { get;", result, StringComparison.Ordinal);
+        Assert.Contains("public ArrayType? ArrayType { get;", result, StringComparison.Ordinal);
+        Assert.Matches(@"class SchemaFileArrayType\s*\{\s*public System\.Collections\.Generic\.ICollection<SchemaFileAttributeResponse>\?", result);
+        Assert.Matches(@"class ArrayType\s*\{\s*public System\.Collections\.Generic\.ICollection<SchemaAttribute>\?", result);
+        Assert.DoesNotContain("ArrayType2", result, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_pin_already_in_place_changes_nothing_and_a_lost_one_is_reported()
+    {
+        string source = Wrap("""
+                public partial class SchemaAttribute
+                {
+                    public ArrayType? ArrayType { get; set; } = default!;
+                }
+            """);
+
+        (string result, IReadOnlyList<string> pinned, IReadOnlyList<string> missed) =
+            GeneratedCodeFixer.PinTypeNames(
+                source,
+                [
+                    new("SchemaAttribute.ArrayType", "ArrayType", "SchemaFileArrayType"),
+                    new("SchemaAttribute.Gone", "Gone", "GoneElsewhere"),
+                ]);
+
+        Assert.Empty(pinned);
+        Assert.Equal(["SchemaAttribute.Gone"], missed);
+        Assert.Equal(source, result);
+    }
+
+    [Fact]
+    public void Every_type_name_pin_names_a_known_service()
+    {
+        HashSet<string> known = [.. SpecCatalog.All.Select(spec => spec.Name)];
+
+        Assert.All(GeneratedCodeFixer.PinnedTypeNames.Keys, name => Assert.Contains(name, known));
+    }
+
     private static string Wrap(string body) => $"namespace X;\n\n{body}\n";
 
     private static SyncManifest Manifest(params (string Name, string Digest)[] services)

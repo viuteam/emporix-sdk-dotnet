@@ -2,6 +2,12 @@ using System.Text.RegularExpressions;
 
 namespace Viu.Emporix.SpecSync;
 
+/// <summary>A generated type name that callers depend on, held in place.</summary>
+/// <param name="Property">The property whose type must keep its name, as <c>Class.Property</c>.</param>
+/// <param name="Name">The name that type must have.</param>
+/// <param name="Displaced">The name for whichever type took it instead.</param>
+internal sealed record TypeNamePin(string Property, string Name, string Displaced);
+
 /// <summary>
 /// Cleans up two quirks of the generated code that do not compile.
 /// </summary>
@@ -590,6 +596,77 @@ internal static partial class GeneratedCodeFixer
 
         return (result, renamed);
     }
+
+    /// <summary>
+    /// The inline types whose generated name callers already depend on, by
+    /// specification.
+    /// </summary>
+    /// <remarks>
+    /// NSwag names an inline property schema after the property, in file order,
+    /// and numbers the next one with the same property name. A title does not
+    /// help: the property name wins over it. So when upstream adds a second
+    /// inline schema under a familiar property name earlier in the file, the
+    /// existing type is renamed under every caller without any change to its
+    /// shape.
+    /// </remarks>
+    public static IReadOnlyDictionary<string, IReadOnlyList<TypeNamePin>> PinnedTypeNames { get; } =
+        new Dictionary<string, IReadOnlyList<TypeNamePin>>(StringComparer.Ordinal)
+        {
+            // On 2026-11-09 the schema-file response gained its own inline
+            // arrayType ahead of SchemaAttribute's, took the name ArrayType, and
+            // pushed SchemaAttribute.ArrayType to ArrayType2.
+            ["schema"] = [new("SchemaAttribute.ArrayType", "ArrayType", "SchemaFileArrayType")],
+        };
+
+    /// <summary>
+    /// Gives each pinned property's type its pinned name back, and the type that
+    /// took the name a name of its own.
+    /// </summary>
+    /// <remarks>
+    /// A pin whose property cannot be found is reported rather than skipped, like
+    /// a missed retype: the specification moved, and the pin needs a look.
+    /// </remarks>
+    public static (string Source, IReadOnlyList<string> Pinned, IReadOnlyList<string> Missed) PinTypeNames(
+        string source,
+        IReadOnlyCollection<TypeNamePin> pins)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(pins);
+
+        List<string> pinned = [];
+        List<string> missed = [];
+        string result = source;
+
+        foreach (TypeNamePin pin in pins)
+        {
+            string[] parts = pin.Property.Split('.');
+            string? current = parts.Length == 2 ? DeclaredTypeOf(result, parts[0], parts[1]) : null;
+
+            if (current is null)
+            {
+                missed.Add(pin.Property);
+                continue;
+            }
+
+            if (string.Equals(current, pin.Name, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // Free the name first, then take it.
+            result = RenameType(result, pin.Name, pin.Displaced);
+            result = RenameType(result, current, pin.Name);
+            pinned.Add($"{current} → {pin.Name}, {pin.Name} → {pin.Displaced}");
+        }
+
+        return (result, pinned, missed);
+    }
+
+    // Type references only. NSwag names a property after its type as often as
+    // not, «public ArrayType? ArrayType { get; set; }», and the property must
+    // keep its name.
+    private static string RenameType(string source, string from, string to)
+        => new Regex($@"\b{Regex.Escape(from)}\b(?!\s*\{{\s*get)").Replace(source, to);
 
     private static bool IsTypeParameter(string name)
         => name.Length >= 1

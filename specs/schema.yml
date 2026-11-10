@@ -23,6 +23,13 @@ paths:
 
         Set `siteAware` to `true` when custom instances or products that use this mixin may store per-site overlays. Overlay keys use the form `{mixinName}__{siteCode}`. On custom instances, only schemas with `siteAware: true` accept those overlay keys.
 
+        The tenant's `languageSchemaVersion` configuration determines how localized attributes are generated. Set that Configuration Service key to `v2` before you send localized `OBJECT` attributes. See [Creating configurations](https://developer.emporix.io/api-documentation/api-guides/configuration/configuration-service/api-reference/tenant-configurations#post-configuration-tenant-configurations) and [Updating a configuration](https://developer.emporix.io/api-documentation/api-guides/configuration/configuration-service/api-reference/tenant-configurations#put-configuration-tenant-configurations-propertykey). The following rules apply:
+
+        * With `v2`, localized `TEXT` attributes use language maps. Localized `OBJECT` attributes use maps whose keys are BCP 47 language tags and whose values are nested objects. Localized `TEXT` or `OBJECT` array items use the same v2 map shapes.
+        * With `v1`, or when the configuration is missing, localized `TEXT` attributes use `[{language,value}]` arrays and localized `OBJECT` attributes are rejected.
+
+        A localized `OBJECT` can be nested under a plain `OBJECT`, but it cannot contain another localized attribute anywhere in its subtree.
+
       operationId: POST-schema-create-schema
       requestBody:
         content:
@@ -172,6 +179,48 @@ paths:
                                 en: Zip Code
                               type: TEXT
                               metadata: {}
+              Localized OBJECT and arrays (v2):
+                value:
+                  name:
+                    en: Localized content attributes
+                  types:
+                    - PRODUCT
+                  attributes:
+                    - key: address
+                      name:
+                        en: Address
+                      type: OBJECT
+                      metadata:
+                        localized: true
+                        nullable: true
+                      attributes:
+                        - key: city
+                          name:
+                            en: City
+                          type: TEXT
+                          metadata: {}
+                    - key: labels
+                      name:
+                        en: Labels
+                      type: ARRAY
+                      metadata: {}
+                      arrayType:
+                        type: TEXT
+                        localized: true
+                    - key: contentBlocks
+                      name:
+                        en: Content blocks
+                      type: ARRAY
+                      metadata: {}
+                      arrayType:
+                        type: OBJECT
+                        localized: true
+                        attributes:
+                          - key: title
+                            name:
+                              en: Title
+                            type: TEXT
+                            metadata: {}
 
         description: ''
       responses:
@@ -308,6 +357,10 @@ paths:
 
         You can set or clear `siteAware` on update. The flag is versioned with the schema attributes snapshot.
 
+        The tenant's `languageSchemaVersion` configuration applies the same localized attribute generation rules as when creating a schema.
+
+        When `languageSchemaVersion` is `v2`, updating a schema regenerates localized `TEXT` and `OBJECT` array items as v2 language maps. Migrate stored `[{language,value}]` array values to language maps before validating them against the new schema version.
+
       tags:
         - Schema
       requestBody:
@@ -440,7 +493,11 @@ paths:
         - Schema
       summary: Providing a file
       description: |
-        Validates and parses provided json schema file. When the file is valid, it returns a json which can be used either to create a new schema via POST operation or to update an existing one via PUT operation when all the missing fields are provided. It doesn't create any file and it doesn't crease a database entity.
+        Validates and parses a provided JSON Schema file. When the file is valid, the endpoint returns a JSON representation that you can complete and use to create or update a schema. It does not create a file or a database entity.
+
+        The parser recognizes v2 localized `TEXT` fields that reference `languageValue_v2.json` or `languageValueNullable_v2.json`, including references used as array items. It also recognizes localized `OBJECT` language maps defined with `patternProperties`, including localized `OBJECT` array items.
+
+        When you use the parsed representation to create or update a schema with `languageSchemaVersion` set to `v2`, Schema Service preserves these v2 localized shapes.
       operationId: POST-schema-parse-schema-file
       requestBody:
         content:
@@ -1091,6 +1148,8 @@ paths:
 
         When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
 
+        For v2 mixins, `Accept-Language` filters localized `TEXT` and `OBJECT` maps, including maps nested under plain objects and maps used as array items.
+
       tags:
         - Custom Instance
       responses:
@@ -1246,7 +1305,7 @@ paths:
         - $ref: '#/components/parameters/trait_sort'
         - $ref: '#/components/parameters/trait_q_param'
         - $ref: '#/components/parameters/trait_fields'
-        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_acceptLanguage_customInstance_header'
         - $ref: '#/components/parameters/trait_emporix_site_header'
         - $ref: '#/components/parameters/trait_expand_references'
         - $ref: '#/components/parameters/trait_cursor_next'
@@ -1260,13 +1319,15 @@ paths:
     get:
       summary: Retrieving a custom instance
       parameters:
-        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_acceptLanguage_customInstance_header'
         - $ref: '#/components/parameters/trait_emporix_site_header'
         - $ref: '#/components/parameters/trait_expand_references'
       description: |-
         Retrieves a single custom instance by id.
 
         When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged so integrations can inspect the stored data. `Accept-Language` is applied after the site merge when `emporix-site` is present.
+
+        For v2 mixins, `Accept-Language` filters localized `TEXT` and `OBJECT` maps, including maps nested under plain objects and maps used as array items.
 
       tags:
         - Custom Instance
@@ -1591,6 +1652,8 @@ paths:
 
         When the `emporix-site` header is set, each site-aware mixin is deep-merged. `{mixinName}__{siteCode}` overlays the base `{mixinName}`, and only the merged base keys are returned. Without the header, base and overlay keys are returned unmerged. `Accept-Language` is applied after the site merge when `emporix-site` is present.
 
+        For v2 mixins, `Accept-Language` filters localized `TEXT` and `OBJECT` maps, including maps nested under plain objects and maps used as array items.
+
       tags:
         - Custom Instance
       requestBody:
@@ -1722,7 +1785,7 @@ paths:
         - $ref: '#/components/parameters/trait_paged_pageNumber'
         - $ref: '#/components/parameters/trait_paged_pageSize'
         - $ref: '#/components/parameters/trait_sort'
-        - $ref: '#/components/parameters/trait_acceptLanguage_header'
+        - $ref: '#/components/parameters/trait_acceptLanguage_customInstance_header'
         - $ref: '#/components/parameters/trait_emporix_site_header'
         - $ref: '#/components/parameters/trait_fields'
         - $ref: '#/components/parameters/trait_expand_references'
@@ -2055,15 +2118,36 @@ components:
     SchemaFileResponse:
       value:
         id: 64d35aa7fa54121ca47db657
-        name:
-          en: Product Custom Attributes
         attributes:
-          - key: weight
-            type: NUMBER
+          - key: address
+            type: OBJECT
             metadata:
-              readOnly: true
+              localized: true
+              nullable: true
+            attributes:
+              - key: city
+                type: TEXT
+                metadata:
+                  localized: false
+          - key: labels
+            type: ARRAY
+            metadata:
               localized: false
-              required: true
+            arrayType:
+              type: TEXT
+              localized: true
+          - key: contentBlocks
+            type: ARRAY
+            metadata:
+              localized: false
+            arrayType:
+              type: OBJECT
+              localized: true
+              attributes:
+                - key: title
+                  type: TEXT
+                  metadata:
+                    localized: false
         metadata:
           version: 1
     SchemaResponse:
@@ -2252,7 +2336,10 @@ components:
       enum: [TEXT, NUMBER, DECIMAL, BOOLEAN, DATE, TIME, DATE_TIME, ENUM, ARRAY, OBJECT, REFERENCE]
     Localized:
       type: boolean
-      description: Whether the attribute is localized or not. Only attributes of 'TEXT' type can be localized.
+      description: |
+        Whether the attribute or array item is localized.
+
+        `TEXT` can be localized with either language schema version. `OBJECT` can be localized only when the tenant's `languageSchemaVersion` configuration is `v2`. Its map keys must be BCP 47 language tags. A localized `OBJECT` cannot contain another localized attribute anywhere in its subtree.
     SchemaAttributeMetadata:
       type: object
       description: Metadata of the schema attribute.
@@ -2267,7 +2354,10 @@ components:
           description: Whether the attribute is required or not. Attributes of 'BOOLEAN' type cannot be required.
         nullable:
           type: boolean
-          description: Whether the attribute could accept null or not.
+          description: |
+            Whether the attribute accepts `null`.
+
+            For a localized v2 `OBJECT`, both the whole field and each per-language value can be `null`.
     SchemaAttributeValue:
       type: object
       description: |
@@ -2288,6 +2378,8 @@ components:
         key:
           type: string
           description: Unique key of the attribute.
+        type:
+          $ref: '#/components/schemas/SchemaAttributeType'
         metadata:
           $ref: '#/components/schemas/SchemaAttributeMetadata'
         values:
@@ -2295,6 +2387,38 @@ components:
           description: List of available values for the attribute. Only valid for `ENUM` and `REFERENCE` types.
           items:
             $ref: '#/components/schemas/SchemaAttributeValue'
+        attributes:
+          type: array
+          description: Nested properties of an `OBJECT` attribute.
+          items:
+            $ref: '#/components/schemas/SchemaFileAttributeResponse'
+        arrayType:
+          type: object
+          description: Parsed type information for items of an `ARRAY` attribute.
+          properties:
+            type:
+              $ref: '#/components/schemas/SchemaAttributeType'
+            values:
+              type: array
+              description: List of available values for `ENUM` or `REFERENCE` array items.
+              items:
+                $ref: '#/components/schemas/SchemaAttributeValue'
+            localized:
+              $ref: '#/components/schemas/Localized'
+            nullable:
+              type: boolean
+              description: Whether each array item accepts `null`.
+            attributes:
+              type: array
+              description: Nested properties of an `OBJECT` array item.
+              items:
+                $ref: '#/components/schemas/SchemaFileAttributeResponse'
+          required:
+            - type
+      required:
+        - key
+        - type
+        - metadata
     SchemaAttribute:
       type: object
       description: Schema attribute.
@@ -2331,7 +2455,10 @@ components:
             $ref: '#/components/schemas/SchemaAttributeValue'
         attributes:
           type: array
-          description: Object's properties. It can only be provided for attribute of `OBJECT` type.
+          description: |
+            Object properties. This field can only be provided for an `OBJECT` attribute.
+
+            For a localized `OBJECT`, these properties define each language value. None of the nested properties can be localized.
           items:
             $ref: '#/components/schemas/SchemaAttribute'
         arrayType:
@@ -2347,6 +2474,17 @@ components:
                 $ref: '#/components/schemas/SchemaAttributeValue'
             localized:
               $ref: '#/components/schemas/Localized'
+            nullable:
+              type: boolean
+              description: Whether each array item accepts `null`.
+            attributes:
+              type: array
+              description: |
+                Object properties for an array whose `arrayType.type` is `OBJECT`.
+
+                For localized `OBJECT` items, these properties define each language value. None of the nested properties can be localized.
+              items:
+                $ref: '#/components/schemas/SchemaAttribute'
           required:
             - type
       required:
@@ -2988,6 +3126,25 @@ components:
         * If the header is set to a particular language or a list of languages, all localized fields are retrieved as strings.
         * If the header is set to `*`, all localized fields are retrieved as maps of translations, where the keys are language codes and values are the fields in their respective languages.
         * If the header is empty, localized fields are retrieved in the default language defined in the Configuration Service.
+    trait_acceptLanguage_customInstance_header:
+      name: Accept-Language
+      in: header
+      required: false
+      schema:
+        type: string
+      description: |
+        List of language codes acceptable for the custom-instance response, ordered by preference. If a value is specified, it must be present in the tenant configuration.
+
+        The following rules apply:
+
+        * A specific language or ordered list returns first-class localized fields as strings in the first matching language.
+        * `*` returns first-class localized fields as maps of translations.
+        * An omitted or empty header returns first-class localized fields as strings in the tenant's default language.
+        * For v2 mixin language maps, a specific language or ordered list returns the first matching non-null translation as a single-key map.
+        * A v2 mixin language map without a matching non-null translation is omitted. For a localized `OBJECT`, a whole-field `null` value is preserved.
+        * In an array of language maps, an element without a matching translation is omitted.
+        * `*`, an omitted header, or an empty header leaves full v2 mixin language maps unchanged.
+        * v1 `[{language,value}]` mixin arrays remain unchanged.
     trait_emporix_site_header:
       name: emporix-site
       in: header

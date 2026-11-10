@@ -253,6 +253,14 @@ namespace Viu.Emporix.IndexingServiceModels
         public string? WriteKey { get; set; } = default!;
 
         /// <summary>
+        /// Optional base URL of the Battery Included API that holds the tenant's index, for example `https://api-next.batteryincluded.io`. Applies only to the `BATTERY_INCLUDED` provider.
+        /// <br/>When set, the Indexing Service sends all of the tenant's Battery Included requests to this host and validates `writeKey` against it, so the write key must be valid on this host. When not set, the default Battery Included host is used.
+        /// <br/>The value must be an `https` address of an allowed Battery Included host, without a path, query, fragment, user information, or port. A trailing slash is allowed. Other values are rejected with `400`. A change takes effect within 10 minutes. Change `apiUrl` when no product reindex is running. If the index on the new host does not yet hold all products, start a full product reindex after the change takes effect.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("apiUrl")]
+        public string? ApiUrl { get; set; } = default!;
+
+        /// <summary>
         /// Optional list of root product mixin keys to exclude from indexing. When set, the specified mixin keys are omitted from both the non-localized and localized portions of the indexed document. Applies only to the `BATTERY_INCLUDED` provider.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("excludedMixinKeys")]
