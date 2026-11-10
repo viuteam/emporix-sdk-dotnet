@@ -7,10 +7,20 @@ namespace Viu.Emporix;
 /// Returns — the other half of an order.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A return belongs to an order and, through it, to a customer. Emporix answers
 /// a customer's read with the customer view and an employee's with a wider one;
 /// the SDK reads the wider type either way, so the employee-only fields are
 /// simply absent rather than needing a second method.
+/// </para>
+/// <para>
+/// A return also carries the <c>SiteCode</c> and <c>Restriction</c> of its
+/// orders, copied when it is created. An employee whose returns scope has a
+/// site suffix, such as <c>returns.returns_manage--DE</c>, sees only the returns
+/// restricted to that site: any other, and any return without a restriction,
+/// answers <c>404</c> to a read, a change or a delete, exactly as if it did not
+/// exist. Returns created before Emporix introduced this have no site.
+/// </para>
 /// </remarks>
 public sealed class ReturnService
 {
@@ -32,7 +42,9 @@ public sealed class ReturnService
     /// <param name="returnId">The return id.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <exception cref="EmporixNotFoundException">No such return.</exception>
+    /// <exception cref="EmporixNotFoundException">
+    /// No such return, or one outside the site a site-limited employee may see.
+    /// </exception>
     public async Task<ReturnsModels.FullEmployeeReturn?> GetAsync(
         string returnId,
         AuthContext auth = default,
@@ -52,7 +64,9 @@ public sealed class ReturnService
     }
 
     /// <summary>Fetches one page of returns.</summary>
-    /// <param name="query">An optional Emporix filter.</param>
+    /// <param name="query">
+    /// An optional Emporix filter, for example <c>siteCode:DE</c> for one site's returns.
+    /// </param>
     /// <param name="pageNumber">The page number, counting from 1.</param>
     /// <param name="pageSize">The page size.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
@@ -60,7 +74,8 @@ public sealed class ReturnService
     /// <remarks>
     /// With a customer's own token this lists that customer's returns; with a
     /// service token, the tenant's. Emporix decides from the token, so there is
-    /// no customer parameter.
+    /// no customer parameter. A site-limited employee's token lists only that
+    /// site's returns, and the total counts the same set.
     /// </remarks>
     public async Task<PaginatedItems<ReturnsModels.FullEmployeeReturn>> ListAsync(
         string? query = null,
@@ -98,8 +113,18 @@ public sealed class ReturnService
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
+    /// <para>
+    /// Leave <c>SiteCode</c> and <c>Restriction</c> unset: Emporix copies both
+    /// from the orders. A value that differs from them answers <c>400</c>
+    /// «site does not match order», and orders that disagree with each other
+    /// answer <c>400</c> «orders belong to different sites». A site-limited
+    /// employee creating a return for another site, or for orders with no
+    /// restriction, gets <c>403</c>.
+    /// </para>
+    /// <para>
     /// Deliberately not repeatable: a retried create is a second return against
     /// the same order.
+    /// </para>
     /// </remarks>
     public async Task<ReturnsModels.ReturnId?> CreateAsync(
         ReturnsModels.BasicEmployeeReturn request,
@@ -157,7 +182,8 @@ public sealed class ReturnService
     /// <remarks>
     /// JSON Patch, so the operation names are lowercase — the specification says
     /// uppercase and the API rejects that, which the spec patch for the approval
-    /// service documents for the same reason.
+    /// service documents for the same reason. <c>siteCode</c> and
+    /// <c>restriction</c> cannot be patched; they stay as the create set them.
     /// </remarks>
     public Task UpdateAsync(
         string returnId,
