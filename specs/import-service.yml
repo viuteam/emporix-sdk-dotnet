@@ -111,7 +111,7 @@ paths:
     get:
       summary: Retrieving all streams of a configuration
       description: |-
-        Retrieves the streams belonging to a configuration, ordered by sequence.
+        Retrieves the streams belonging to a configuration, ordered by `seq`.
 
       operationId: GET-importtool-list-streams
       tags:
@@ -144,7 +144,7 @@ paths:
     get:
       summary: Retrieving a stream
       description: |-
-        Retrieves a single stream by its identifier, including its resolved target types.
+        Retrieves a single stream by its identifier.
 
       operationId: GET-importtool-get-stream
       tags:
@@ -639,14 +639,15 @@ paths:
       description: |-
         Retrieves the order in which the configuration's streams run, and the dependencies behind that order.
 
-        Dependencies between streams decide the order. Sequence breaks ties.
+        Dependencies between streams decide the order. The streams' `seq` values break ties.
 
-        Dependencies come from four sources:
+        Dependencies come from five sources:
 
         * an explicit dependency on another stream
         * a mapping that references a type another stream produces
         * a `COMPOSITE_CHILD` stream with `childStrategy` set to `EMBED` – runs before the parent that embeds it
         * a `COMPOSITE_CHILD` stream with `childStrategy` set to `PATCH`, or a `COMPOSITE_MERGE` stream – run after the parent they update
+        * a `FAN_OUT` stream – runs after the parent whose records it reads
 
         Use this endpoint rather than calculating the order yourself. Mapping transformations add
         dependencies that a single stream definition does not show. An order calculated without those
@@ -714,7 +715,9 @@ paths:
 
         A configuration has at most one run executing and at most one run queued. The service rejects a
         request with a `409 Conflict` response while the configuration has a run in the `QUEUED`, `RUNNING`, or
-        `RESUMABLE` status.
+        `RESUMABLE` status. The response names that run in the `details` entry whose `field` is `activeRunId`. The service also
+        rejects the request with a `409 Conflict` response while a data purge is in progress for the
+        configuration.
 
         A scheduled run is not rejected. It is queued behind the configuration's current run and starts when
         that run finishes. If the schedule requests another run while the configuration's run is still
@@ -756,7 +759,10 @@ paths:
                   enum:
                     - FULL
                     - DELTA
-                  description: The run mode. When omitted, defaults to `DELTA`.
+                  description: >-
+                    The run mode, `FULL` or `DELTA`. When omitted, defaults to `DELTA`. The value is not
+                    case-sensitive. Send one of the listed values. The service does not reject another value and runs
+                    the import as `DELTA`.
                   example: DELTA
                 dryRun:
                   type: boolean
@@ -793,10 +799,10 @@ paths:
                   maxLength: 40
                   description: >-
                     What requested this run. Examples: `Dashboard`, an integration scenario name, or a scheduler name.
-                    The `trigger` field records only `MANUAL` or `SCHEDULED`. Use `origin` when more than one system
-                    calls this endpoint. If you omit `origin` or send a blank value, the service stores the `trigger`
-                    value. The service rejects values longer than 40 characters and values that contain control
-                    characters. It does not shorten them.
+                    The `trigger` field records only how the run started, for example `MANUAL`. Use `origin` when
+                    more than one system calls this endpoint. If you omit `origin` or send a blank value, the service
+                    stores the `trigger` value. The service rejects values longer than 40 characters and values that
+                    contain control characters. It does not shorten them.
                   example: Make scenario 42
                 streamIds:
                   type: array
@@ -849,37 +855,41 @@ paths:
                 Run response:
                   $ref: '#/components/examples/ImportRun_Example'
         '400':
-          description: >-
+          description: |-
             The request is invalid. For example, `dryRun` is `true` and `mappings` has a value other than
-            `published` or `draft`. Also returned for a run with nothing to import: every stream the run starts
-            from reads uploaded files and none has ever had a file, neither waiting nor imported. Upload a file
-            to a stream's queue first. A dry run is not refused for this, because it reads the connection's
-            sample file.
+            `published` or `draft`.
+
+            Also returned for a run with nothing to import: every stream the run starts from reads uploaded
+            files, and none of them has a file to read. A stream has a file to read when a file is waiting in
+            its queue, or when it is a snapshot stream with an imported file, which the run reads again. A
+            stream with incremental files reads each file once, so it has nothing to read when every file in
+            its queue has been imported. The message names each stream and what to do: upload a file to its
+            queue, or, when its latest file failed, queue that file again after fixing the cause.
+
+            Only streams that the run would execute are checked. A stream whose mappings have never been
+            published is not considered. A dry run, a scheduled run, and a retry are not refused for this. When
+            the configuration already has a run in progress, the response is `409 Conflict` instead.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  timestamp:
-                    type: string
-                    format: date-time
-                    description: When the error occurred.
-                  status:
-                    type: integer
-                    description: HTTP status code.
-                  error:
-                    type: string
-                    description: HTTP status reason phrase.
-                  path:
-                    type: string
-                    description: The request path.
+                $ref: '#/components/schemas/errorMessage'
               examples:
                 Invalid mappings value:
                   value:
-                    timestamp: '2026-09-28T09:15:02.118+00:00'
-                    status: 400
-                    error: Bad Request
-                    path: /importtool/mytenant/configs/7c9e6679-7425-40de-944b-e07fc1f90ae7/runs
+                    resourceId: null
+                    status: Bad Request
+                    code: 400
+                    message: mappings must be "draft" or "published"
+                    details: []
+                Nothing to import:
+                  value:
+                    resourceId: null
+                    status: Bad Request
+                    code: 400
+                    message: >-
+                      Nothing to import: no file has been uploaded to 'Vendors' — upload one to its queue (Edit
+                      stream → Files). Then run the import.
+                    details: []
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -914,6 +924,8 @@ paths:
               examples:
                 Run history response:
                   $ref: '#/components/examples/ImportRunPage_Example'
+        '400':
+          $ref: '#/components/responses/InvalidPaging_400'
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -960,8 +972,19 @@ paths:
     get:
       summary: Streaming run progress
       description: |-
-        Streams a run's progress as Server-Sent Events: an initial `snapshot` (run and streams), then a
-        `stream` event per processed batch, and a final `run` event when the run finishes.
+        Streams a run's progress as Server-Sent Events. The service sends these events:
+
+        * `snapshot` – sent once when the connection opens. `run` is the run and `streams` its per-stream
+          entries, as returned by retrieving the run. `streams` can be empty when the entries cannot be read in
+          time; the `stream` events then fill them in.
+        * `stream` – sent per processed batch and when a stream finishes. Carries `runId`, `streamId`,
+          `streamName`, `status`, the counters `recordsRead`, `created`, `updated`, `skipped`, `failed`, `deleted`,
+          `collapsed` and `embedded`, and the stream's `message`.
+        * `run` – sent when the run's status or totals change, for example when a queued run starts. Carries
+          `runId`, `configId`, `status`, the run's counters, and `finished`. The event with `finished` set to
+          `true` is the last one: the service then closes the stream.
+
+        An event can repeat values already sent. Each event carries complete counters, not increments.
       operationId: GET-importtool-stream-run-events
       tags:
         - Runs
@@ -980,10 +1003,10 @@ paths:
                   data: {"run":{"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"RUNNING"},"streams":[{"streamName":"Products","status":"RUNNING","recordsRead":120}]}
 
                   event: stream
-                  data: {"streamName":"Products","status":"RUNNING","recordsRead":240,"created":20,"updated":210,"failed":2}
+                  data: {"runId":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","streamId":"3fa85f64-5717-4562-b3fc-2c963f66afa6","streamName":"Products","status":"RUNNING","recordsRead":240,"created":20,"updated":210,"skipped":8,"failed":2,"deleted":0,"collapsed":0,"embedded":0}
 
                   event: run
-                  data: {"id":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","status":"SUCCEEDED","recordsRead":1250}
+                  data: {"runId":"9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d","configId":"7c9e6679-7425-40de-944b-e07fc1f90ae7","status":"SUCCEEDED","recordsRead":1250,"created":40,"updated":1190,"skipped":15,"failed":5,"deleted":0,"collapsed":0,"embedded":0,"finished":true}
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -1003,6 +1026,10 @@ paths:
         A run in the `QUEUED` status has not started, so it is cancelled immediately and gets the `CANCELLED`
         status, with or without `force`. A run in the `RESUMABLE` status can be stopped only with
         `force=true`. Without `force`, the request returns a `409 Conflict` response.
+
+        A `409 Conflict` response is also returned when the run does not exist or has already finished. In every
+        case, the `409 Conflict` response body is the same cancellation result as a `202 Accepted` response, with `accepted` set to
+        `false`.
       operationId: POST-importtool-cancel-run
       tags:
         - Runs
@@ -1033,7 +1060,20 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden_403'
         '409':
-          $ref: '#/components/responses/Conflict_409'
+          description: >-
+            Nothing was cancelled. The run does not exist, has already finished, or has the `RESUMABLE` status and
+            `force` was not set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelResult'
+              examples:
+                Cancellation not accepted:
+                  value:
+                    runId: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
+                    force: false
+                    accepted: false
+                    cancelRequested: false
         '500':
           $ref: '#/components/responses/InternalServiceError_500'
   '/importtool/{tenant}/runs/{runId}/errors':
@@ -1064,6 +1104,8 @@ paths:
               examples:
                 Errors response:
                   $ref: '#/components/examples/ErrorRecordPage_Example'
+        '400':
+          $ref: '#/components/responses/InvalidPaging_400'
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -1217,7 +1259,7 @@ paths:
     get:
       summary: Searching imported records
       description: |-
-        Searches imported records of a given type with an optional `search` filter on the natural key, paginated.
+        Searches imported records of a given type with an optional `search` filter on the natural key or Emporix identifier, paginated.
 
       operationId: GET-importtool-search-data-records
       tags:
@@ -1234,9 +1276,12 @@ paths:
           in: query
           required: false
           description: >-
-            Optional free-text filter. This is a case-insensitive substring match on the record's
-            natural key only — it is NOT the Emporix query language, so field selectors and operators
-            (e.g. `field:value`, comparisons, boolean logic) are not supported.
+            Optional filter. Returns the records whose natural key or Emporix identifier starts with the given
+            text. The natural key can be given with its key name (`ID:SKU-1001`) or as the source value alone
+            (`SKU-1001`). The match is case-sensitive and matches from the start only: text from the middle of
+            a key matches nothing. Emporix identifiers are lower case, so the identifier is also matched with
+            the text converted to lower case: `3FA85F64` finds `3fa85f64-…`. This is not the Emporix query
+            language, so field selectors and operators are not supported.
           schema:
             type: string
             default: ''
@@ -1244,13 +1289,17 @@ paths:
         - name: outcome
           in: query
           required: false
-          description: >-
-            Optional filter by import outcome. Omit to return records of all outcomes. `UPSERTED`
-            (created or updated), `DELETED` (removed at the source), `DELETED_TARGET` (removed in
-            Emporix), `FAILED`, `DRY_RUN` (produced by a dry run).
+          description: |-
+            Optional filter by import outcome. Omit to return records of all outcomes. The value must match
+            exactly, in upper case. Any other value returns no records. Possible values:
+
+            * `UPSERTED` – created or updated.
+            * `DELETED` – removed at the source.
+            * `FAILED` – the record could not be imported.
+            * `DRY_RUN` – produced by a dry run.
           schema:
             type: string
-            enum: [UPSERTED, DELETED, DELETED_TARGET, FAILED, DRY_RUN]
+            enum: [UPSERTED, DELETED, FAILED, DRY_RUN]
         - $ref: '#/components/parameters/trait_page'
         - $ref: '#/components/parameters/trait_size'
       security:
@@ -1266,6 +1315,8 @@ paths:
               examples:
                 Imported records response:
                   $ref: '#/components/examples/ImportedRecordPage_Example'
+        '400':
+          $ref: '#/components/responses/InvalidPaging_400'
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -1279,7 +1330,7 @@ paths:
     get:
       summary: Searching a stream's imported records
       description: |-
-        Searches the imported records produced by a specific stream with an optional `search` filter on the natural key, paginated.
+        Searches the imported records produced by a specific stream with an optional `search` filter on the natural key or Emporix identifier, paginated.
 
       operationId: GET-importtool-search-stream-records
       tags:
@@ -1289,9 +1340,12 @@ paths:
           in: query
           required: false
           description: >-
-            Optional free-text filter. This is a case-insensitive substring match on the record's
-            natural key only — it is NOT the Emporix query language, so field selectors and operators
-            (e.g. `field:value`, comparisons, boolean logic) are not supported.
+            Optional filter. Returns the records whose natural key or Emporix identifier starts with the given
+            text. The natural key can be given with its key name (`ID:SKU-1001`) or as the source value alone
+            (`SKU-1001`). The match is case-sensitive and matches from the start only: text from the middle of
+            a key matches nothing. Emporix identifiers are lower case, so the identifier is also matched with
+            the text converted to lower case: `3FA85F64` finds `3fa85f64-…`. This is not the Emporix query
+            language, so field selectors and operators are not supported.
           schema:
             type: string
             default: ''
@@ -1299,13 +1353,17 @@ paths:
         - name: outcome
           in: query
           required: false
-          description: >-
-            Optional filter by import outcome. Omit to return records of all outcomes. `UPSERTED`
-            (created or updated), `DELETED` (removed at the source), `DELETED_TARGET` (removed in
-            Emporix), `FAILED`, `DRY_RUN` (produced by a dry run).
+          description: |-
+            Optional filter by import outcome. Omit to return records of all outcomes. The value must match
+            exactly, in upper case. Any other value returns no records. Possible values:
+
+            * `UPSERTED` – created or updated.
+            * `DELETED` – removed at the source.
+            * `FAILED` – the record could not be imported.
+            * `DRY_RUN` – produced by a dry run.
           schema:
             type: string
-            enum: [UPSERTED, DELETED, DELETED_TARGET, FAILED, DRY_RUN]
+            enum: [UPSERTED, DELETED, FAILED, DRY_RUN]
         - $ref: '#/components/parameters/trait_page'
         - $ref: '#/components/parameters/trait_size'
       security:
@@ -1321,6 +1379,8 @@ paths:
               examples:
                 Stream records response:
                   $ref: '#/components/examples/ImportedRecordPage_Example'
+        '400':
+          $ref: '#/components/responses/InvalidPaging_400'
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -1368,7 +1428,9 @@ paths:
         - name: streamId
           in: query
           required: false
-          description: Restricts the statistics to a single stream. Takes precedence over the configuration filters.
+          description: >-
+            Restricts the statistics to a single stream. Takes precedence over `configIds`. When `configId` is also
+            given, the stream must belong to that configuration.
           schema:
             type: string
             format: uuid
@@ -1407,7 +1469,7 @@ paths:
           description: >-
             A comma-separated list of the sections to compute: `TOTALS`, `STREAMS`, `ERRORS`, `CHANGES`.
             When omitted, defaults to all sections. A section not requested through the `sections` parameter
-            is returned as `null`.
+            is returned as `null`. `sourceIssues` belongs to the `STREAMS` section.
           schema:
             type: string
             example: 'TOTALS,ERRORS'
@@ -1425,15 +1487,39 @@ paths:
                 Import statistics response:
                   $ref: '#/components/examples/ImportStats_Example'
         '400':
-          description: The window or a filter value is invalid.
+          description: >-
+            The window or a filter value is invalid. For example, `from` is after `to`, the window is longer than
+            366 days, `streamId` does not belong to `configId`, or `sections` names an unknown section.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/errorMessage'
+              examples:
+                Window too long:
+                  value:
+                    resourceId: null
+                    status: Bad Request
+                    code: 400
+                    message: window must not exceed 366 days
+                    details: []
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
           $ref: '#/components/responses/Forbidden_403'
+        '404':
+          description: The stream named in `streamId` does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Unknown stream:
+                  value:
+                    resourceId: null
+                    status: Not Found
+                    code: 404
+                    message: stream not found
+                    details: []
         '500':
           $ref: '#/components/responses/InternalServiceError_500'
   '/importtool/{tenant}/dashboard/job-groups':
@@ -1553,7 +1639,13 @@ paths:
         free. It reports its own progress. The original run is left untouched and keeps its counters.
 
         As with a run that you trigger, the service rejects the retry with a `409 Conflict` response while the
-        configuration has a run in the `QUEUED`, `RUNNING`, or `RESUMABLE` status.
+        configuration has a run in the `QUEUED`, `RUNNING`, or `RESUMABLE` status, or while a data purge is in
+        progress for it. A `409 Conflict` response is also returned when the run cannot be retried:
+
+        * The run is still active.
+        * The run has no failed records that a retry can re-read.
+        * A failed stream reads from a source that cannot fetch specific records by key, such as an HTTP source.
+        * A file that the run read has been removed or replaced since the run.
       operationId: POST-importtool-retry-run
       tags:
         - Runs
@@ -1593,18 +1685,31 @@ components:
           minimum: 100
           maximum: 599
         status:
-          description: HTTP status.
+          description: The HTTP status reason phrase, for example `Conflict`.
           type: string
         message:
           description: Descriptive error message for debugging.
           type: string
+        resourceId:
+          description: >-
+            Identifier of the resource the error concerns, for example the configuration of a run that conflicts with an
+            active run, or the run a retry was requested for. `null` when the error concerns no single resource.
+          type: string
+          nullable: true
         details:
           description: List of problems causing this error.
           type: array
           items:
             title: Error Detail
-            description: Error details.
-            type: string
+            description: One problem causing the error.
+            type: object
+            properties:
+              message:
+                type: string
+                description: What is wrong.
+              field:
+                type: string
+                description: The field the problem concerns, when there is one.
       required:
         - status
         - code
@@ -1763,12 +1868,11 @@ components:
           example: 3
         lastProcessed:
           description: >-
-            The newest file the stream has imported, or `null` when it has imported none. Returned whatever
+            The newest file the stream has imported. Absent when it has imported none. Returned whatever
             `historyLimit` is, because a run with no file waiting reads this file again (a snapshot stream).
           type: object
           allOf:
             - $ref: '#/components/schemas/ImportFile'
-          nullable: true
     ImportStream:
       title: Stream
       type: object
@@ -1794,20 +1898,100 @@ components:
           example: PRODUCT
         targetWriter:
           type: string
-          description: The target writer code, for example `emporix.customEntity`.
+          description: |-
+            Where the stream writes. Possible values:
+
+            * `emporix.customEntity` – instances of a custom entity type, named by `targetType`.
+            * `emporix.product` – products. `STANDALONE` streams only.
+            * `emporix.category` – categories of the tenant's category tree. `STANDALONE` streams only.
+            * `emporix.price` – prices of products.
+            * `emporix.availability` – stock of products at a site.
+            * `emporix.media` – images of products, linked by URL. The images stay where they are hosted.
+            * `emporix.categoryAssignment` – assignments of products to existing categories.
+
+            The price, availability, media, and category assignment writers are normally used by a `FAN_OUT`
+            stream whose parent is a product stream. The `FAN_OUT` stream supplies each product's identifier as
+            `productId`. A `STANDALONE` stream that uses them maps `productId` itself.
+
+            The writers other than `emporix.customEntity` are catalog writers. The Management Dashboard offers them
+            only to tenants for which Emporix has enabled catalog targets. To have them enabled, contact Emporix
+            support.
           example: emporix.customEntity
         targetType:
           type: string
-          description: The default target type (custom-entity type identifier).
+          description: >-
+            For `emporix.customEntity`, the custom entity type the stream writes to. For the other writers, a label
+            that groups the stream's imported records, for example in imported data and statistics. Defaults to
+            `PRODUCT` for `emporix.product` and `CATEGORY` for `emporix.category`. For a `FAN_OUT` stream into a
+            catalog writer, the service sets the label.
           example: product
+        seq:
+          type: integer
+          description: >-
+            The stream's position in the configuration. Streams are listed in this order. When dependencies do not
+            decide the run order, streams run in this order.
+          example: 0
         mode:
           type: string
           enum:
             - STANDALONE
             - COMPOSITE_CHILD
             - COMPOSITE_MERGE
-          description: How the stream contributes to the target.
+            - FAN_OUT
+          description: |-
+            How the stream contributes to the target. Possible values:
+
+            * `STANDALONE` – reads its source and writes its own target objects.
+            * `COMPOSITE_CHILD` – reads its source and writes into the objects of the stream named in
+              `compositeParent`.
+            * `COMPOSITE_MERGE` – reads its source and adds fields to the objects of the stream named in
+              `compositeParent`.
+            * `FAN_OUT` – has no source of its own. It reads the records the stream named in `compositeParent`
+              wrote in the same run, and writes further objects for each of them, for example a product's prices.
+              It runs after that stream. Objects it created earlier for a record that no longer lists them are
+              removed.
           example: STANDALONE
+        fanOutPath:
+          type: string
+          description: >-
+            `FAN_OUT` only. The array in the parent record whose elements each produce one target object, for example
+            `prices[]`. When omitted, one target object is written per parent record.
+          example: prices[]
+        fanOutKey:
+          type: string
+          description: >-
+            `FAN_OUT` only. The element field that identifies an element of `fanOutPath`, for example `currency`,
+            so that a target object keeps its identity when the elements change order. When omitted, a scalar
+            element identifies itself and an object element is identified by its position.
+          example: currency
+        fanOut:
+          type: boolean
+          readOnly: true
+          description: Whether the stream is a `FAN_OUT` stream with a parent. Derived from `mode` and `compositeParent`.
+          example: false
+        targetOptions:
+          type: object
+          additionalProperties: true
+          description: |-
+            Settings for the target writer. Absent when the writer needs none. `emporix.product` reads the
+            following settings:
+
+            * `matchField` – how existing products are found: `CODE` (the default) or `ID`.
+            * `createMissing` – whether products that are not found are created. Defaults to `true`.
+            * `schemas` – a list of the identifiers of the product mixin schemas the stream writes.
+            * `templateId` – the product template assigned to the products.
+            * `language` – the language of localized fields. Defaults to `en`.
+            * `categoryMatchField` – how the categories to assign are found: `CODE` (the default) or `ID`.
+
+            `emporix.category` reads `language`, and `emporix.categoryAssignment` reads `categoryMatchField`.
+            `emporix.price` reads `currency`, `countryCode`, `siteCode`, and `priceModelId`, and
+            `emporix.availability` reads `site`. These price and availability settings are fallback values with no
+            default of their own: a record that does not map the field gets the stream's value. A price needs a
+            currency and a country, and stock needs a site, from a mapping or from these settings.
+          example:
+            matchField: CODE
+            createMissing: true
+            language: en
         deltaField:
           type: string
           description: >-
@@ -1824,7 +2008,9 @@ components:
           example: DATE
         compositeParent:
           type: string
-          description: For a composite child stream, the name of the stream it contributes to.
+          description: >-
+            For a `COMPOSITE_CHILD`, `COMPOSITE_MERGE`, or `FAN_OUT` stream, the name of the stream it contributes
+            to or fans out from.
           example: invoices
         linkingField:
           type: string
@@ -1847,10 +2033,20 @@ components:
             - PATCH
             - MERGE_PUT
             - REPLACE_PUT
-          description: >-
-            How an existing target object is updated. `PATCH` changes only the mapped fields and preserves
-            everything else; `REPLACE_PUT` replaces the whole object, so fields this import does not manage
-            are cleared.
+          description: |-
+            How an existing target object is updated. Possible values:
+
+            * `PATCH` – changes only the mapped fields and keeps everything else.
+            * `MERGE_PUT` – reads the object, merges the mapped fields into it, and writes it back whole.
+            * `REPLACE_PUT` – replaces the whole object, so fields this import does not manage are cleared.
+
+            The values a stream can use depend on its target writer. The following values are available per
+            writer, with the default listed first:
+
+            * `emporix.customEntity` – `PATCH`, `MERGE_PUT`, `REPLACE_PUT`.
+            * `emporix.product` and `emporix.category` – `PATCH`.
+            * `emporix.media` – `PATCH`, `REPLACE_PUT`.
+            * `emporix.price`, `emporix.availability`, and `emporix.categoryAssignment` – `REPLACE_PUT`.
           example: PATCH
         discriminatorField:
           type: string
@@ -1962,6 +2158,11 @@ components:
             written. A record missing from a newer file is not deleted. `INCREMENTAL`: each file is a change set, so every queued file is read in order and
             a later file's values win. Defaults to `SNAPSHOT`.
           example: SNAPSHOT
+        snapshotFiles:
+          type: boolean
+          readOnly: true
+          description: Whether the stream treats each file as a snapshot. `true` unless `fileMode` is `INCREMENTAL`.
+          example: true
         parentKeyField:
           type: string
           description: >-
@@ -2035,11 +2236,11 @@ components:
           example: '0 0 2 * * *'
         timezone:
           type: string
-          description: The IANA time zone the cron is evaluated in.
+          description: The IANA time zone the cron is evaluated in. Defaults to `UTC`.
           example: Europe/Berlin
         enabled:
           type: boolean
-          description: Whether the schedule is active.
+          description: Whether the schedule is active. Defaults to `true`.
           example: true
         nextFireAt:
           type: string
@@ -2072,7 +2273,13 @@ components:
           enum:
             - MANUAL
             - SCHEDULED
-          description: What triggered the run.
+            - RETRY
+          description: |-
+            What triggered the run. Possible values:
+
+            * `MANUAL` – triggered with the run operation.
+            * `SCHEDULED` – started by the configuration's schedule.
+            * `RETRY` – created by retrying the failed records of an earlier run. `retryOfRunId` names that run.
           example: MANUAL
         dryRunSample:
           type: array
@@ -2262,6 +2469,16 @@ components:
           type: string
           description: A terminal status message, typically set on failure.
           example: Import completed with 5 record failures.
+        streamIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: >-
+            The streams the run was asked to execute, as sent in `streamIds` when it was triggered. Absent when the
+            run executes every stream of the configuration.
+          example:
+            - 3fa85f64-5717-4562-b3fc-2c963f66afa6
         retryOfRunId:
           type: string
           format: uuid
@@ -2337,17 +2554,17 @@ components:
         status:
           type: string
           enum:
-            - QUEUED
             - RUNNING
             - SUCCEEDED
             - PARTIAL
             - FAILED
-            - SKIPPED
             - ABORTED
+            - CANCELLED
           description: >-
             The stream's status within the run. `ABORTED` means the service refused to run the stream because
             of its configuration, for example because its mappings have never been published. It indicates a
-            configuration problem to fix. The `message` field gives the reason.
+            configuration problem to fix. The `message` field gives the reason. `CANCELLED` means the run was
+            cancelled while the stream was running.
           example: PARTIAL
         recordsRead:
           type: integer
@@ -2485,7 +2702,14 @@ components:
           example: false
         accepted:
           type: boolean
-          description: Whether the cancellation was accepted. `false` when the run is unknown or already finished.
+          description: >-
+            Whether the cancellation was accepted. `false` when the run does not exist, has already finished, or has
+            the `RESUMABLE` status and `force` was not set.
+          example: true
+        cancelRequested:
+          type: boolean
+          deprecated: true
+          description: The same value as `accepted`. Kept for clients written against an earlier response. Use `accepted`.
           example: true
     ErrorRecord:
       title: Error record
@@ -2517,8 +2741,19 @@ components:
           example: emporix.customEntity
         stage:
           type: string
-          description: The pipeline stage the error occurred in.
-          example: MAPPING
+          enum:
+            - EXTRACT
+            - MAP
+            - VALIDATE
+            - UPSERT
+          description: |-
+            The pipeline stage the error occurred in. Possible values:
+
+            * `EXTRACT` – reading records from the source.
+            * `MAP` – applying the field mappings.
+            * `VALIDATE` – validating the mapped record before the write.
+            * `UPSERT` – writing to the target.
+          example: VALIDATE
         errorCode:
           type: string
           description: |-
@@ -2539,6 +2774,8 @@ components:
               delimited-file row whose array has more elements than `sourceDataset.arrays.maxElements`. That
               record is not imported, but the other records are; `message` names the column, its number of
               elements, and the limit.
+            * `FAN_OUT_REMOVE` – a `FAN_OUT` stream could not remove the objects its parent record no longer
+              lists. The next run that carries those records tries again.
             * `STREAM_ERROR` – the stream failed as a whole; the record-level detail is in `message`.
 
             `CONFIGURATION` and `EXTERNAL_SYSTEM` are reported as a plain sentence naming what to change.
@@ -2548,6 +2785,15 @@ components:
           type: string
           description: A human-readable error message.
           example: Required field 'name' is missing for natural key SKU-1001.
+        payload:
+          type: object
+          additionalProperties: true
+          description: >-
+            The source record that failed, as the service read it, when the error concerns one record. Absent
+            for errors that concern the whole stream.
+          example:
+            SKU: SKU-1001
+            PRICE: '12.50'
         createdAt:
           type: string
           format: date-time
@@ -2605,8 +2851,8 @@ components:
             active: true
         outcome:
           type: string
-          description: The last outcome, one of `UPSERTED`, `DELETED`, `DELETED_TARGET`, `FAILED`, or `DRY_RUN`.
-          example: UPDATED
+          description: The last outcome, one of `UPSERTED`, `DELETED`, `FAILED`, or `DRY_RUN`.
+          example: UPSERTED
         importedAt:
           type: string
           format: date-time
@@ -2878,6 +3124,10 @@ components:
         cancelled:
           type: integer
           description: The number of runs that were cancelled.
+          example: 0
+        aborted:
+          type: integer
+          description: The number of runs the service refused to run because of their configuration (`ABORTED`).
           example: 0
         recordsRead:
           type: integer
@@ -3227,6 +3477,20 @@ components:
           examples:
             Access to resource is forbidden:
               $ref: '#/components/examples/Forbidden403_Example'
+    InvalidPaging_400:
+      description: The `page` or `size` query parameter is out of range. The message names the parameter.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorMessage'
+          examples:
+            Invalid page size:
+              value:
+                resourceId: null
+                status: Bad Request
+                code: 400
+                message: Query parameter 'size' must be 1 or greater; got 0.
+                details: []
     NotFound_404:
       description: The requested resource does not exist.
       content:
@@ -3246,11 +3510,27 @@ components:
             Run already active:
               $ref: '#/components/examples/Conflict409_Example'
     InternalServiceError_500:
-      description: Internal Service Error occurred.
+      description: >-
+        An unexpected error occurred in the service. The body is the framework's default error body, not the error
+        schema of the other responses.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/errorMessage'
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                description: When the error occurred.
+              status:
+                type: integer
+                description: The HTTP status code.
+              error:
+                type: string
+                description: The HTTP status reason phrase.
+              path:
+                type: string
+                description: The request path.
           examples:
             Internal service error:
               $ref: '#/components/examples/InternalServiceError500_Example'
@@ -3322,44 +3602,53 @@ components:
       name: page
       in: query
       required: false
-      description: The zero-based page number.
+      description: The zero-based page number. A negative value returns HTTP 400.
       schema:
         type: integer
+        minimum: 0
         default: 0
         example: 0
     trait_size:
       name: size
       in: query
       required: false
-      description: The page size.
+      description: >-
+        The page size. Defaults to 20 for run history, 50 for run errors, and 25 for imported records. A value
+        below 1 returns HTTP 400.
       schema:
         type: integer
+        minimum: 1
         example: 20
   examples:
     Forbidden403_Example:
       value:
-        status: forbidden
+        resourceId: null
+        status: Forbidden
         code: 403
-        message: The access to the requested resource has been forbidden.
-        details:
-          - Missing required scopes
+        message: This request requires the scope importtool.import_trigger (or importtool.import_manage).
+        details: []
     NotFound404_Example:
       value:
-        status: element_resource_non_existing
+        resourceId: null
+        status: Not Found
         code: 404
-        message: The requested resource does not exist.
+        message: Run 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d not found.
+        details: []
     Conflict409_Example:
       value:
-        status: conflict
+        resourceId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        status: Conflict
         code: 409
-        message: An import run is already active for this configuration.
+        message: An import is already running for config 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        details:
+          - message: 'Active run: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
+            field: activeRunId
     InternalServiceError500_Example:
       value:
-        status: internal_service_error
-        code: 500
-        message: A server-side exception occurred that prevented the system from correctly returning the result.
-        details:
-          - 'https://pattern.yaas.io/errortypes.html'
+        timestamp: '2026-11-10T09:15:00.000+00:00'
+        status: 500
+        error: Internal Server Error
+        path: /importtool/mytenant/runs/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
     ImportConfig_Example:
       value:
         id: 7c9e6679-7425-40de-944b-e07fc1f90ae7
@@ -3492,8 +3781,6 @@ components:
         status: QUEUED
         mode: FULL
         startedAt: '2026-07-27T02:00:00.000Z'
-        executionStartedAt: null
-        finishedAt: null
         recordsRead: 0
         created: 0
         updated: 0
@@ -3501,7 +3788,6 @@ components:
         failed: 0
         deleted: 0
         supersededRequests: 0
-        message: null
     ImportRunPage_Example:
       value:
         totalElements: 3
@@ -3564,6 +3850,7 @@ components:
         runId: 9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d
         force: false
         accepted: true
+        cancelRequested: true
     ErrorRecordPage_Example:
       value:
         totalElements: 5
@@ -3576,8 +3863,8 @@ components:
             streamId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
             naturalKey: SKU-1001
             targetEntity: emporix.customEntity
-            stage: MAPPING
-            errorCode: REQUIRED_FIELD_MISSING
+            stage: VALIDATE
+            errorCode: VALIDATION
             message: Required field 'name' is missing for natural key SKU-1001.
             createdAt: '2026-07-27T02:03:41.000Z'
     DataTypes_Example:
@@ -3587,9 +3874,9 @@ components:
     ImportedRecordPage_Example:
       value:
         totalElements: 1250
-        totalPages: 63
+        totalPages: 50
         number: 0
-        size: 20
+        size: 25
         content:
           - id: 1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed
             configId: 7c9e6679-7425-40de-944b-e07fc1f90ae7
@@ -3602,7 +3889,7 @@ components:
               name: Pipe cutter
               sku: SKU-1001
               active: true
-            outcome: UPDATED
+            outcome: UPSERTED
             importedAt: '2026-07-27T02:03:55.000Z'
     ImportStats_Example:
       value:
@@ -3612,6 +3899,7 @@ components:
           partial: 3
           failed: 1
           cancelled: 0
+          aborted: 0
           recordsRead: 125000
           created: 4300
           updated: 98000

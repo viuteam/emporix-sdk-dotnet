@@ -43,7 +43,7 @@ namespace Viu.Emporix.ImportServiceModels
         public int Code { get; set; } = default!;
 
         /// <summary>
-        /// HTTP status.
+        /// The HTTP status reason phrase, for example `Conflict`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         public string Status { get; set; } = default!;
@@ -55,10 +55,16 @@ namespace Viu.Emporix.ImportServiceModels
         public string Message { get; set; } = default!;
 
         /// <summary>
+        /// Identifier of the resource the error concerns, for example the configuration of a run that conflicts with an active run, or the run a retry was requested for. `null` when the error concerns no single resource.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("resourceId")]
+        public string? ResourceId { get; set; } = default!;
+
+        /// <summary>
         /// List of problems causing this error.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("details")]
-        public System.Collections.Generic.ICollection<string>? Details { get; set; } = default!;
+        public System.Collections.Generic.ICollection<Details>? Details { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -279,7 +285,7 @@ namespace Viu.Emporix.ImportServiceModels
         public long? PendingTotal { get; set; } = default!;
 
         /// <summary>
-        /// The newest file the stream has imported, or `null` when it has imported none. Returned whatever `historyLimit` is, because a run with no file waiting reads this file again (a snapshot stream).
+        /// The newest file the stream has imported. Absent when it has imported none. Returned whatever `historyLimit` is, because a run with no file waiting reads this file again (a snapshot stream).
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("lastProcessed")]
         public ImportFile? LastProcessed { get; set; } = default!;
@@ -327,23 +333,93 @@ namespace Viu.Emporix.ImportServiceModels
         public string? SourceEntity { get; set; } = default!;
 
         /// <summary>
-        /// The target writer code, for example `emporix.customEntity`.
+        /// Where the stream writes. Possible values:
+        /// <br/>
+        /// <br/>* `emporix.customEntity` – instances of a custom entity type, named by `targetType`.
+        /// <br/>* `emporix.product` – products. `STANDALONE` streams only.
+        /// <br/>* `emporix.category` – categories of the tenant's category tree. `STANDALONE` streams only.
+        /// <br/>* `emporix.price` – prices of products.
+        /// <br/>* `emporix.availability` – stock of products at a site.
+        /// <br/>* `emporix.media` – images of products, linked by URL. The images stay where they are hosted.
+        /// <br/>* `emporix.categoryAssignment` – assignments of products to existing categories.
+        /// <br/>
+        /// <br/>The price, availability, media, and category assignment writers are normally used by a `FAN_OUT`
+        /// <br/>stream whose parent is a product stream. The `FAN_OUT` stream supplies each product's identifier as
+        /// <br/>`productId`. A `STANDALONE` stream that uses them maps `productId` itself.
+        /// <br/>
+        /// <br/>The writers other than `emporix.customEntity` are catalog writers. The Management Dashboard offers them
+        /// <br/>only to tenants for which Emporix has enabled catalog targets. To have them enabled, contact Emporix
+        /// <br/>support.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("targetWriter")]
         public string? TargetWriter { get; set; } = default!;
 
         /// <summary>
-        /// The default target type (custom-entity type identifier).
+        /// For `emporix.customEntity`, the custom entity type the stream writes to. For the other writers, a label that groups the stream's imported records, for example in imported data and statistics. Defaults to `PRODUCT` for `emporix.product` and `CATEGORY` for `emporix.category`. For a `FAN_OUT` stream into a catalog writer, the service sets the label.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("targetType")]
         public string? TargetType { get; set; } = default!;
 
         /// <summary>
-        /// How the stream contributes to the target.
+        /// The stream's position in the configuration. Streams are listed in this order. When dependencies do not decide the run order, streams run in this order.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("seq")]
+        public int? Seq { get; set; } = default!;
+
+        /// <summary>
+        /// How the stream contributes to the target. Possible values:
+        /// <br/>
+        /// <br/>* `STANDALONE` – reads its source and writes its own target objects.
+        /// <br/>* `COMPOSITE_CHILD` – reads its source and writes into the objects of the stream named in
+        /// <br/>  `compositeParent`.
+        /// <br/>* `COMPOSITE_MERGE` – reads its source and adds fields to the objects of the stream named in
+        /// <br/>  `compositeParent`.
+        /// <br/>* `FAN_OUT` – has no source of its own. It reads the records the stream named in `compositeParent`
+        /// <br/>  wrote in the same run, and writes further objects for each of them, for example a product's prices.
+        /// <br/>  It runs after that stream. Objects it created earlier for a record that no longer lists them are
+        /// <br/>  removed.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mode")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamMode>))]
         public ImportStreamMode? Mode { get; set; } = default!;
+
+        /// <summary>
+        /// `FAN_OUT` only. The array in the parent record whose elements each produce one target object, for example `prices[]`. When omitted, one target object is written per parent record.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fanOutPath")]
+        public string? FanOutPath { get; set; } = default!;
+
+        /// <summary>
+        /// `FAN_OUT` only. The element field that identifies an element of `fanOutPath`, for example `currency`, so that a target object keeps its identity when the elements change order. When omitted, a scalar element identifies itself and an object element is identified by its position.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fanOutKey")]
+        public string? FanOutKey { get; set; } = default!;
+
+        /// <summary>
+        /// Whether the stream is a `FAN_OUT` stream with a parent. Derived from `mode` and `compositeParent`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("fanOut")]
+        public bool? FanOut { get; set; } = default!;
+
+        /// <summary>
+        /// Settings for the target writer. Absent when the writer needs none. `emporix.product` reads the
+        /// <br/>following settings:
+        /// <br/>
+        /// <br/>* `matchField` – how existing products are found: `CODE` (the default) or `ID`.
+        /// <br/>* `createMissing` – whether products that are not found are created. Defaults to `true`.
+        /// <br/>* `schemas` – a list of the identifiers of the product mixin schemas the stream writes.
+        /// <br/>* `templateId` – the product template assigned to the products.
+        /// <br/>* `language` – the language of localized fields. Defaults to `en`.
+        /// <br/>* `categoryMatchField` – how the categories to assign are found: `CODE` (the default) or `ID`.
+        /// <br/>
+        /// <br/>`emporix.category` reads `language`, and `emporix.categoryAssignment` reads `categoryMatchField`.
+        /// <br/>`emporix.price` reads `currency`, `countryCode`, `siteCode`, and `priceModelId`, and
+        /// <br/>`emporix.availability` reads `site`. These price and availability settings are fallback values with no
+        /// <br/>default of their own: a record that does not map the field gets the stream's value. A price needs a
+        /// <br/>currency and a country, and stock needs a site, from a mapping or from these settings.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("targetOptions")]
+        public object? TargetOptions { get; set; } = default!;
 
         /// <summary>
         /// The source field whose value is tracked as the delta watermark. A delta run extracts only the records whose value is newer than the last run's.
@@ -359,7 +435,7 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportStreamDeltaFieldFormat? DeltaFieldFormat { get; set; } = default!;
 
         /// <summary>
-        /// For a composite child stream, the name of the stream it contributes to.
+        /// For a `COMPOSITE_CHILD`, `COMPOSITE_MERGE`, or `FAN_OUT` stream, the name of the stream it contributes to or fans out from.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("compositeParent")]
         public string? CompositeParent { get; set; } = default!;
@@ -384,7 +460,19 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportStreamChildStrategy? ChildStrategy { get; set; } = default!;
 
         /// <summary>
-        /// How an existing target object is updated. `PATCH` changes only the mapped fields and preserves everything else; `REPLACE_PUT` replaces the whole object, so fields this import does not manage are cleared.
+        /// How an existing target object is updated. Possible values:
+        /// <br/>
+        /// <br/>* `PATCH` – changes only the mapped fields and keeps everything else.
+        /// <br/>* `MERGE_PUT` – reads the object, merges the mapped fields into it, and writes it back whole.
+        /// <br/>* `REPLACE_PUT` – replaces the whole object, so fields this import does not manage are cleared.
+        /// <br/>
+        /// <br/>The values a stream can use depend on its target writer. The following values are available per
+        /// <br/>writer, with the default listed first:
+        /// <br/>
+        /// <br/>* `emporix.customEntity` – `PATCH`, `MERGE_PUT`, `REPLACE_PUT`.
+        /// <br/>* `emporix.product` and `emporix.category` – `PATCH`.
+        /// <br/>* `emporix.media` – `PATCH`, `REPLACE_PUT`.
+        /// <br/>* `emporix.price`, `emporix.availability`, and `emporix.categoryAssignment` – `REPLACE_PUT`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("writeStrategy")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportStreamWriteStrategy>))]
@@ -471,6 +559,12 @@ namespace Viu.Emporix.ImportServiceModels
         public ImportStreamFileMode? FileMode { get; set; } = default!;
 
         /// <summary>
+        /// Whether the stream treats each file as a snapshot. `true` unless `fileMode` is `INCREMENTAL`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("snapshotFiles")]
+        public bool? SnapshotFiles { get; set; } = default!;
+
+        /// <summary>
         /// For an `EMBED` composite child, the source column its parent matches records by. Required for such a stream: without it the parent cannot find its children and writes an empty array.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("parentKeyField")]
@@ -550,13 +644,13 @@ namespace Viu.Emporix.ImportServiceModels
         public string Cron { get; set; } = default!;
 
         /// <summary>
-        /// The IANA time zone the cron is evaluated in.
+        /// The IANA time zone the cron is evaluated in. Defaults to `UTC`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("timezone")]
         public string? Timezone { get; set; } = default!;
 
         /// <summary>
-        /// Whether the schedule is active.
+        /// Whether the schedule is active. Defaults to `true`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("enabled")]
         public bool? Enabled { get; set; } = default!;
@@ -604,7 +698,11 @@ namespace Viu.Emporix.ImportServiceModels
         public string? Tenant { get; set; } = default!;
 
         /// <summary>
-        /// What triggered the run.
+        /// What triggered the run. Possible values:
+        /// <br/>
+        /// <br/>* `MANUAL` – triggered with the run operation.
+        /// <br/>* `SCHEDULED` – started by the configuration's schedule.
+        /// <br/>* `RETRY` – created by retrying the failed records of an earlier run. `retryOfRunId` names that run.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("trigger")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunTrigger>))]
@@ -766,6 +864,12 @@ namespace Viu.Emporix.ImportServiceModels
         public string? Message { get; set; } = default!;
 
         /// <summary>
+        /// The streams the run was asked to execute, as sent in `streamIds` when it was triggered. Absent when the run executes every stream of the configuration.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("streamIds")]
+        public System.Collections.Generic.ICollection<System.Guid>? StreamIds { get; set; } = default!;
+
+        /// <summary>
         /// When the run retries another run's failed records, the identifier of that original run.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("retryOfRunId")]
@@ -850,7 +954,7 @@ namespace Viu.Emporix.ImportServiceModels
         public string? StreamName { get; set; } = default!;
 
         /// <summary>
-        /// The stream's status within the run. `ABORTED` means the service refused to run the stream because of its configuration, for example because its mappings have never been published. It indicates a configuration problem to fix. The `message` field gives the reason.
+        /// The stream's status within the run. `ABORTED` means the service refused to run the stream because of its configuration, for example because its mappings have never been published. It indicates a configuration problem to fix. The `message` field gives the reason. `CANCELLED` means the run was cancelled while the stream was running.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ImportRunStreamStatus>))]
@@ -1016,10 +1120,17 @@ namespace Viu.Emporix.ImportServiceModels
         public bool? Force { get; set; } = default!;
 
         /// <summary>
-        /// Whether the cancellation was accepted. `false` when the run is unknown or already finished.
+        /// Whether the cancellation was accepted. `false` when the run does not exist, has already finished, or has the `RESUMABLE` status and `force` was not set.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("accepted")]
         public bool? Accepted { get; set; } = default!;
+
+        /// <summary>
+        /// The same value as `accepted`. Kept for clients written against an earlier response. Use `accepted`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("cancelRequested")]
+        [System.Obsolete]
+        public bool? CancelRequested { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -1070,10 +1181,16 @@ namespace Viu.Emporix.ImportServiceModels
         public string? TargetEntity { get; set; } = default!;
 
         /// <summary>
-        /// The pipeline stage the error occurred in.
+        /// The pipeline stage the error occurred in. Possible values:
+        /// <br/>
+        /// <br/>* `EXTRACT` – reading records from the source.
+        /// <br/>* `MAP` – applying the field mappings.
+        /// <br/>* `VALIDATE` – validating the mapped record before the write.
+        /// <br/>* `UPSERT` – writing to the target.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("stage")]
-        public string? Stage { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ErrorRecordStage>))]
+        public ErrorRecordStage? Stage { get; set; } = default!;
 
         /// <summary>
         /// A machine-readable error code:
@@ -1093,6 +1210,8 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>  delimited-file row whose array has more elements than `sourceDataset.arrays.maxElements`. That
         /// <br/>  record is not imported, but the other records are; `message` names the column, its number of
         /// <br/>  elements, and the limit.
+        /// <br/>* `FAN_OUT_REMOVE` – a `FAN_OUT` stream could not remove the objects its parent record no longer
+        /// <br/>  lists. The next run that carries those records tries again.
         /// <br/>* `STREAM_ERROR` – the stream failed as a whole; the record-level detail is in `message`.
         /// <br/>
         /// <br/>`CONFIGURATION` and `EXTERNAL_SYSTEM` are reported as a plain sentence naming what to change.
@@ -1106,6 +1225,12 @@ namespace Viu.Emporix.ImportServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
+
+        /// <summary>
+        /// The source record that failed, as the service read it, when the error concerns one record. Absent for errors that concern the whole stream.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("payload")]
+        public object? Payload { get; set; } = default!;
 
         /// <summary>
         /// When the error was recorded.
@@ -1186,7 +1311,7 @@ namespace Viu.Emporix.ImportServiceModels
         public object? Fields { get; set; } = default!;
 
         /// <summary>
-        /// The last outcome, one of `UPSERTED`, `DELETED`, `DELETED_TARGET`, `FAILED`, or `DRY_RUN`.
+        /// The last outcome, one of `UPSERTED`, `DELETED`, `FAILED`, or `DRY_RUN`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("outcome")]
         public string? Outcome { get; set; } = default!;
@@ -1617,6 +1742,12 @@ namespace Viu.Emporix.ImportServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("cancelled")]
         public int? Cancelled { get; set; } = default!;
+
+        /// <summary>
+        /// The number of runs the service refused to run because of their configuration (`ABORTED`).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("aborted")]
+        public int? Aborted { get; set; } = default!;
 
         /// <summary>
         /// The number of source records read.
@@ -2067,7 +2198,7 @@ namespace Viu.Emporix.ImportServiceModels
     {
 
         /// <summary>
-        /// The run mode. When omitted, defaults to `DELTA`.
+        /// The run mode, `FULL` or `DELTA`. When omitted, defaults to `DELTA`. The value is not case-sensitive. Send one of the listed values. The service does not reject another value and runs the import as `DELTA`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("mode")]
         [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<BodyMode>))]
@@ -2099,7 +2230,7 @@ namespace Viu.Emporix.ImportServiceModels
         public int? SampleSize { get; set; } = default!;
 
         /// <summary>
-        /// What requested this run. Examples: `Dashboard`, an integration scenario name, or a scheduler name. The `trigger` field records only `MANUAL` or `SCHEDULED`. Use `origin` when more than one system calls this endpoint. If you omit `origin` or send a blank value, the service stores the `trigger` value. The service rejects values longer than 40 characters and values that contain control characters. It does not shorten them.
+        /// What requested this run. Examples: `Dashboard`, an integration scenario name, or a scheduler name. The `trigger` field records only how the run started, for example `MANUAL`. Use `origin` when more than one system calls this endpoint. If you omit `origin` or send a blank value, the service stores the `trigger` value. The service rejects values longer than 40 characters and values that contain control characters. It does not shorten them.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("origin")]
         public string? Origin { get; set; } = default!;
@@ -2147,14 +2278,11 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"DELETED")]
         DELETED = 1,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"DELETED_TARGET")]
-        DELETED_TARGET = 2,
-
         [System.Runtime.Serialization.EnumMember(Value = @"FAILED")]
-        FAILED = 3,
+        FAILED = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"DRY_RUN")]
-        DRY_RUN = 4,
+        DRY_RUN = 3,
 
     }
 
@@ -2169,14 +2297,11 @@ namespace Viu.Emporix.ImportServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"DELETED")]
         DELETED = 1,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"DELETED_TARGET")]
-        DELETED_TARGET = 2,
-
         [System.Runtime.Serialization.EnumMember(Value = @"FAILED")]
-        FAILED = 3,
+        FAILED = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"DRY_RUN")]
-        DRY_RUN = 4,
+        DRY_RUN = 3,
 
     }
 
@@ -2202,6 +2327,45 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Text.Json.Serialization.JsonPropertyName("fault")]
         public Fault? Fault { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Response2
+    {
+
+        /// <summary>
+        /// When the error occurred.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
+        public System.DateTimeOffset? Timestamp { get; set; } = default!;
+
+        /// <summary>
+        /// The HTTP status code.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public int? Status { get; set; } = default!;
+
+        /// <summary>
+        /// The HTTP status reason phrase.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("error")]
+        public string? Error { get; set; } = default!;
+
+        /// <summary>
+        /// The request path.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("path")]
+        public string? Path { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2274,33 +2438,24 @@ namespace Viu.Emporix.ImportServiceModels
 
     }
 
+    /// <summary>
+    /// One problem causing the error.
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response2
+    public partial class Details
     {
 
         /// <summary>
-        /// When the error occurred.
+        /// What is wrong.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("timestamp")]
-        public System.DateTimeOffset? Timestamp { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
 
         /// <summary>
-        /// HTTP status code.
+        /// The field the problem concerns, when there is one.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("status")]
-        public int? Status { get; set; } = default!;
-
-        /// <summary>
-        /// HTTP status reason phrase.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("error")]
-        public string? Error { get; set; } = default!;
-
-        /// <summary>
-        /// The request path.
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("path")]
-        public string? Path { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("field")]
+        public string? Field { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2346,6 +2501,9 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"COMPOSITE_MERGE")]
         COMPOSITE_MERGE = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"FAN_OUT")]
+        FAN_OUT = 3,
 
     }
 
@@ -2460,6 +2618,9 @@ namespace Viu.Emporix.ImportServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"SCHEDULED")]
         SCHEDULED = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"RETRY")]
+        RETRY = 2,
 
     }
 
@@ -2594,26 +2755,42 @@ namespace Viu.Emporix.ImportServiceModels
     public enum ImportRunStreamStatus
     {
 
-        [System.Runtime.Serialization.EnumMember(Value = @"QUEUED")]
-        QUEUED = 0,
-
         [System.Runtime.Serialization.EnumMember(Value = @"RUNNING")]
-        RUNNING = 1,
+        RUNNING = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"SUCCEEDED")]
-        SUCCEEDED = 2,
+        SUCCEEDED = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"PARTIAL")]
-        PARTIAL = 3,
+        PARTIAL = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"FAILED")]
-        FAILED = 4,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"SKIPPED")]
-        SKIPPED = 5,
+        FAILED = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"ABORTED")]
-        ABORTED = 6,
+        ABORTED = 4,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CANCELLED")]
+        CANCELLED = 5,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ErrorRecordStage>))]
+    public enum ErrorRecordStage
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"EXTRACT")]
+        EXTRACT = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MAP")]
+        MAP = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"VALIDATE")]
+        VALIDATE = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"UPSERT")]
+        UPSERT = 3,
 
     }
 
