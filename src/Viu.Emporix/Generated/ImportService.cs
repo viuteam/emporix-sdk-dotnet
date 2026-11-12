@@ -336,7 +336,7 @@ namespace Viu.Emporix.ImportServiceModels
         /// Where the stream writes. Possible values:
         /// <br/>
         /// <br/>* `emporix.customEntity` – instances of a custom entity type, named by `targetType`.
-        /// <br/>* `emporix.product` – products. `STANDALONE` streams only.
+        /// <br/>* `emporix.product` – products, including parents and variants. `STANDALONE` streams only.
         /// <br/>* `emporix.category` – categories of the tenant's category tree. `STANDALONE` streams only.
         /// <br/>* `emporix.price` – prices of products.
         /// <br/>* `emporix.availability` – stock of products at a site.
@@ -407,10 +407,25 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>
         /// <br/>* `matchField` – how existing products are found: `CODE` (the default) or `ID`.
         /// <br/>* `createMissing` – whether products that are not found are created. Defaults to `true`.
+        /// <br/>* `variantRole` – what the stream's records are: `NONE` (the default) for products without
+        /// <br/>  variants, `PARENT` for parent products, or `VARIANT` for variants of a parent.
+        /// <br/>* `variantModel` – how a `PARENT` or `VARIANT` stream's products are linked: `DYNAMIC` (the default)
+        /// <br/>  or `TEMPLATE`. With `DYNAMIC`, parents and variants are written as products of type
+        /// <br/>  `DYNAMIC_VARIANT` and need no product template. With `TEMPLATE`, parents are written as
+        /// <br/>  `PARENT_VARIANT` products and variants as `VARIANT` products of the template in `templateId`.
+        /// <br/>* `templateId` – the product template assigned to the products. Required for a `PARENT` or `VARIANT`
+        /// <br/>  stream whose `variantModel` is `TEMPLATE`, and not allowed for one whose `variantModel` is `DYNAMIC`.
         /// <br/>* `schemas` – a list of the identifiers of the product mixin schemas the stream writes.
-        /// <br/>* `templateId` – the product template assigned to the products.
         /// <br/>* `language` – the language of localized fields. Defaults to `en`.
         /// <br/>* `categoryMatchField` – how the categories to assign are found: `CODE` (the default) or `ID`.
+        /// <br/>
+        /// <br/>A `VARIANT` stream maps each record's parent to `parentCode` or `parentId`, and the record's variant
+        /// <br/>attribute values to `variantAttributes.&lt;attribute&gt;`. The parent is found in the Product Service by its
+        /// <br/>code or identifier, so it can come from another stream, another configuration, or the Management
+        /// <br/>Dashboard. When a stream of the same configuration imports the parents, list it in `dependsOn` so that
+        /// <br/>the parents are written first. With `DYNAMIC`, a `VARIANT` stream can also take its parents from another
+        /// <br/>`VARIANT` stream, which adds a level to the product hierarchy, up to four levels. `FAN_OUT` streams of
+        /// <br/>the `VARIANT` stream write the variants' prices, stock, and images.
         /// <br/>
         /// <br/>`emporix.category` reads `language`, and `emporix.categoryAssignment` reads `categoryMatchField`.
         /// <br/>`emporix.price` reads `currency`, `countryCode`, `siteCode`, and `priceModelId`, and
@@ -595,7 +610,7 @@ namespace Viu.Emporix.ImportServiceModels
         public bool? AbortOnSchemaVersionDrift { get; set; } = default!;
 
         /// <summary>
-        /// Names of streams that must run before this one, beyond the ordering a composite parent already implies.
+        /// Names of streams that must run before this one, beyond the ordering a composite parent already implies. A product stream whose `variantRole` is `VARIANT` lists here the stream of the same configuration that imports its parent products, if there is one, so that the parents are written first.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("dependsOn")]
         public System.Collections.Generic.ICollection<string>? DependsOn { get; set; } = default!;
