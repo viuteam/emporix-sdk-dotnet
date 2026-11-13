@@ -9,6 +9,15 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.18.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.18.0...v0.18.1) (2026-11-13)
+
+
+### Fixed
+
+* let emporix-mixins run where only a newer .NET runtime is installed ([#113](https://github.com/viuteam/emporix-sdk-dotnet/issues/113)) ([ca08d53](https://github.com/viuteam/emporix-sdk-dotnet/commit/ca08d53aebec3f7668371662d56aae31d261b8c2))
+* sync generated types with upstream Emporix specifications ([#109](https://github.com/viuteam/emporix-sdk-dotnet/issues/109)) ([5f449c1](https://github.com/viuteam/emporix-sdk-dotnet/commit/5f449c1f61becfde99c282cae24eabfc49180efe))
+* sync generated types with upstream Emporix specifications ([#111](https://github.com/viuteam/emporix-sdk-dotnet/issues/111)) ([0909d17](https://github.com/viuteam/emporix-sdk-dotnet/commit/0909d1728f8347433bfe44ada729121c595cdc24))
+
 ## [0.18.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.17.0...v0.18.0) (2026-11-10)
 
 
