@@ -36,6 +36,17 @@
   </PropertyGroup>
 
   <!--
+    A tool runs on whatever runtime the developer's machine has, not on one the
+    project chose. Without this it starts only where a .NET 10 runtime is
+    installed, so a machine with nothing but .NET 11 cannot run it at all.
+    Major lets it move up to the next major version when 10 is missing, and
+    still prefers 10 where it is there.
+  -->
+  <PropertyGroup>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <!--
     Its own readme rather than the repository's: that one is SDK documentation,
     and a reader who installs a command-line tool wants the commands.
   -->
