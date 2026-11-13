@@ -577,10 +577,17 @@ paths:
       description: |-
         Finds the best price based on specified criteria.
 
-        To simplify, the price matching algorithm is made up of the following steps:
-          * All prices that match the specified criteria are fetched.
-          * A unified `originalValue` is calculated for each price.
+        To simplify, the price matching algorithm is made up of the following steps for each item:
+          * The price lists that match the request are ranked, and the prices from the highest-ranked price lists that contain a price for the item are fetched. If no price list contains a price for the item, the catalog prices that match the specified criteria are fetched.
+          * A unified `originalValue` is calculated for each fetched price.
           * The price with the lowest `effectiveValue` is returned.
+
+        Prices from price lists take precedence over catalog prices. Price lists are ranked by the following criteria, in order of priority. Each criterion only decides between price lists that are equal in the criteria before it:
+          1. Customer match: a price list assigned to at least one of the customer groups of the `principal`, or to the `legalEntityId` or one of its parent legal entities, ranks above a price list that isn't. The number of matched customer groups doesn't change the rank, and customer group, legal entity, and parent legal entity price lists rank the same.
+          2. Country match: a price list assigned to the target country ranks above a price list that isn't.
+          3. Region match: a price list assigned to more of the target country's regions ranks higher.
+
+        Price lists that are equal in all three criteria share a rank. The ranks are checked from the highest to the lowest, and only the first rank that contains a price for the item is used. Prices from the ranks below are not compared, even if they are lower. For an example and a flowchart, see [Influence of price lists on price matching](https://developer.emporix.io/api-documentation/api-guides/prices-and-taxes/price-service/price#influence-of-price-lists-on-price-matching).
 
         To use the price matching functionality, you need to define appropriate tax classes in the Tax Service and then assign them to products for which prices are matched through the Product Service.
 
