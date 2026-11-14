@@ -842,10 +842,8 @@ components:
             type: object
             properties:
               name:
-                allOf:
-                  - $ref: '#/components/schemas/localizedValue'
-                  - type: object
-                    description: Fee name.
+                $ref: '#/components/schemas/localizedValue'
+                description: Fee name.
               yrn:
                 type: string
                 description: Unique identifier of the fee.

@@ -2820,6 +2820,7 @@ namespace Viu.Emporix.AiServiceModels
 
     /// <summary>
     /// Contains information about the job result - whether it was successful or not, what was the agent output etc.
+    /// <br/>A successful agent-chat job includes provenance details in `mixins`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Job
@@ -2862,10 +2863,16 @@ namespace Viu.Emporix.AiServiceModels
         public string? AgentId { get; set; } = default!;
 
         /// <summary>
-        /// Agent message.
+        /// User message that started the job.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
+
+        /// <summary>
+        /// Assistant reply.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("response")]
+        public string? Response { get; set; } = default!;
 
         /// <summary>
         /// Commerce event which triggered the job.
@@ -2874,7 +2881,10 @@ namespace Viu.Emporix.AiServiceModels
         public string? CommerceEvent { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetadataResponse? Metadata { get; set; } = default!;
+        public Metadata2? Metadata { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public ProvenanceMixins? Mixins { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -3068,6 +3078,55 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
 
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public ProvenanceMixins? Mixins { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public ProvenanceMetadata? Metadata { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Provenance details for generated content. Entries are `mixins.provenance.entries`.
+    /// <br/>Clients that display generated content to a person must disclose that the content is AI-generated.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ProvenanceMixins
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("provenance")]
+        public Provenance Provenance { get; set; } = new Provenance();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Schema references for response mixins.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ProvenanceMetadata
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public System.Collections.Generic.IDictionary<string, string>? Mixins { get; set; } = default!;
+
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]
@@ -3214,7 +3273,7 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     /// <summary>
-    /// JSON object in the SSE `data` field when `event` is `done`. At least one of `agent_id`, `agent_type`, or `session_id` is present. Send `session_id` as the `session-id` header on later chat and attachment calls. This event does not repeat the full assistant message.
+    /// JSON object in the SSE `data` field when `event` is `done`. At least one of `agent_id`, `agent_type`, or `session_id` is present. Generated output includes provenance details in `mixins` and `metadata`. Send `session_id` as the `session-id` header on later chat and attachment calls. This event does not repeat the full assistant message.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class ChatStreamDoneData
@@ -3237,6 +3296,12 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("session_id")]
         public string? Session_id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public ProvenanceMixins? Mixins { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public ProvenanceMetadata? Metadata { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -3546,6 +3611,12 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("result")]
         public string? Result { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public ProvenanceMixins? Mixins { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public ProvenanceMetadata? Metadata { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -4576,6 +4647,15 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Metadata2 : MetadataResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public System.Collections.Generic.IDictionary<string, string>? Mixins { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Summary
     {
 
@@ -4643,6 +4723,24 @@ namespace Viu.Emporix.AiServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"IMPORT_FAILED")]
         IMPORT_FAILED = 5,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Provenance
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("entries")]
+        public System.Collections.Generic.ICollection<Entries> Entries { get; set; } = new System.Collections.ObjectModel.Collection<Entries>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
 
     }
 
@@ -4724,6 +4822,70 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Entries
+    {
+
+        /// <summary>
+        /// Source of the content. `ai_generated` means the content was produced by AI.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("origin")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<EntriesOrigin>))]
+        public EntriesOrigin Origin { get; set; } = default!;
+
+        /// <summary>
+        /// Version of the generated content.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("contentVersion")]
+        public int ContentVersion { get; set; } = default!;
+
+        /// <summary>
+        /// Unique identifier of the generation.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("generationId")]
+        public string GenerationId { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the content was generated.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("generatedAt")]
+        public System.DateTimeOffset GeneratedAt { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the generator.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("generator")]
+        public string Generator { get; set; } = default!;
+
+        /// <summary>
+        /// Version of the generator, when available.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("generatorVersion")]
+        public int? GeneratorVersion { get; set; } = default!;
+
+        /// <summary>
+        /// AI model used to generate the content, when available.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("model")]
+        public string? Model { get; set; } = default!;
+
+        /// <summary>
+        /// Review state of the generated content.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("reviewStatus")]
+        public string ReviewStatus { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<MessagesRole>))]
     public enum MessagesRole
     {
@@ -4736,6 +4898,17 @@ namespace Viu.Emporix.AiServiceModels
 
         [System.Runtime.Serialization.EnumMember(Value = @"ASSISTANT")]
         ASSISTANT = 2,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<EntriesOrigin>))]
+    public enum EntriesOrigin
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ai_generated")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("ai_generated")]
+        Ai_generated = 0,
 
     }
 

@@ -15,18 +15,21 @@ paths:
       description: |-
         Creates a new index configuration. Supported providers:
         * Algolia - https://www.algolia.com
-        * Battery Included - https://www.batteryincluded.io
+        * BatteryIncluded - https://www.batteryincluded.io
 
         Identifier of a newly created configuration is a provider name.
         Only one provider can be active per tenant at a time.
 
-        For `BATTERY_INCLUDED`, the service validates `indexName` and `writeKey` against the Battery Included
+        For `BATTERY_INCLUDED`, the service validates `indexName` and `writeKey` against the BatteryIncluded
         host in `apiUrl`, or against the default host when `apiUrl` is not set, before saving.
         Invalid credentials return `400`. If credential validation is temporarily unavailable,
         the request returns `502`. In both cases, the configuration is not stored.
 
         `apiUrl` applies only to `BATTERY_INCLUDED`. An `apiUrl` that is not an `https` address of an
-        allowed Battery Included host, or an `apiUrl` sent for another provider, returns `400`.
+        allowed BatteryIncluded host, or an `apiUrl` sent for another provider, returns `400`.
+
+        `enrichments` applies only to `BATTERY_INCLUDED`. An `enrichments` list with an unknown or `null` value
+        returns `400`. An `enrichments` field sent for another provider also returns `400`, even as an empty list.
       security:
         - OAuth2:
             - indexing.search_manage
@@ -46,7 +49,7 @@ paths:
                   indexName: exampleTenant
                   writeKey: 51ebe89215dddcf85e5dacd5643d17e7
                   provider: ALGOLIA
-              Create Battery Included configuration:
+              Create BatteryIncluded configuration:
                 value:
                   active: true
                   indexName: exampleTenant
@@ -55,13 +58,22 @@ paths:
                   includedMixinPaths:
                     - "*_siteAware.*.OnlineIsService_P"
                     - "*_siteAware.**"
-              Create Battery Included configuration with API URL:
+              Create BatteryIncluded configuration with API URL:
                 value:
                   active: true
                   indexName: exampleTenant
                   writeKey: bi-api-key-abc123
                   provider: BATTERY_INCLUDED
                   apiUrl: https://api-next.batteryincluded.io
+              Create BatteryIncluded configuration without customer segments:
+                value:
+                  active: true
+                  indexName: exampleTenant
+                  writeKey: bi-api-key-abc123
+                  provider: BATTERY_INCLUDED
+                  enrichments:
+                    - AVAILABILITY
+                    - PRICE
         description: ''
       responses:
         '201':
@@ -74,7 +86,7 @@ paths:
                 Algolia creation response:
                   value:
                     id: ALGOLIA
-                Battery Included creation response:
+                BatteryIncluded creation response:
                   value:
                     id: BATTERY_INCLUDED
         '400':
@@ -118,6 +130,9 @@ paths:
                       includedMixinPaths:
                         - "*_siteAware.*.OnlineIsService_P"
                         - "*_siteAware.**"
+                      enrichments:
+                        - AVAILABILITY
+                        - PRICE
               schema:
                 type: array
                 items:
@@ -137,7 +152,7 @@ paths:
       description: |-
         Retrieves a single configuration by a provider name. Supported providers:
         * Algolia - https://www.algolia.com
-        * Battery Included - https://www.batteryincluded.io
+        * BatteryIncluded - https://www.batteryincluded.io
       security:
         - OAuth2:
             - indexing.search_view
@@ -156,7 +171,7 @@ paths:
                     indexName: exampleTenant
                     writeKey: 51ebe89215dddcf85e5dacd5643d17e7
                     provider: ALGOLIA
-                Get Battery Included configuration:
+                Get BatteryIncluded configuration:
                   value:
                     active: true
                     indexName: exampleTenant
@@ -166,6 +181,9 @@ paths:
                     includedMixinPaths:
                       - "*_siteAware.*.OnlineIsService_P"
                       - "*_siteAware.**"
+                    enrichments:
+                      - AVAILABILITY
+                      - PRICE
               schema:
                 $ref: '#/components/schemas/IndexConfiguration'
         '401':
@@ -182,14 +200,18 @@ paths:
       description: |-
         Updates an existing index configuration.
 
-        For `BATTERY_INCLUDED`, the service validates `indexName` and `writeKey` against the Battery Included
+        For `BATTERY_INCLUDED`, the service validates `indexName` and `writeKey` against the BatteryIncluded
         host in `apiUrl`, or against the default host when `apiUrl` is not set, before saving.
         Invalid credentials return `400`. If credential validation is temporarily unavailable,
         the request returns `502`. In both cases, the configuration is left unchanged.
 
         The request replaces the whole configuration. A request without `apiUrl` moves the tenant back to the
-        default Battery Included host, so `writeKey` must be valid on that host. An `apiUrl` that is not an `https` address of an allowed
-        Battery Included host, or an `apiUrl` sent for another provider, returns `400`.
+        default BatteryIncluded host, so `writeKey` must be valid on that host. An `apiUrl` that is not an `https` address of an allowed
+        BatteryIncluded host, or an `apiUrl` sent for another provider, returns `400`.
+
+        A request without `enrichments` resets the tenant to the default set `AVAILABILITY`, `PRICE`, and
+        `CUSTOMER_SEGMENT`. An `enrichments` list with an unknown or `null` value returns `400`. An `enrichments`
+        field sent for another provider also returns `400`, even as an empty list.
       security:
         - OAuth2:
             - indexing.search_manage
@@ -208,7 +230,7 @@ paths:
                   indexName: exampleTenant
                   writeKey: 51ebe89215dddcf85e5dacd5643d17e7
                   provider: ALGOLIA
-              Update Battery Included configuration:
+              Update BatteryIncluded configuration:
                 value:
                   active: true
                   indexName: exampleTenant
@@ -217,13 +239,22 @@ paths:
                   includedMixinPaths:
                     - "*_siteAware"
                     - "catalogAttrs.**.color"
-              Update Battery Included configuration with API URL:
+              Update BatteryIncluded configuration with API URL:
                 value:
                   active: true
                   indexName: exampleTenant
                   writeKey: bi-api-key-abc123
                   provider: BATTERY_INCLUDED
                   apiUrl: https://api-next.batteryincluded.io
+              Update BatteryIncluded configuration without customer segments:
+                value:
+                  active: true
+                  indexName: exampleTenant
+                  writeKey: bi-api-key-abc123
+                  provider: BATTERY_INCLUDED
+                  enrichments:
+                    - AVAILABILITY
+                    - PRICE
       responses:
         '204':
           description: Configuration updated
@@ -317,7 +348,7 @@ paths:
                     applicationId: 8AP2HABA2I
                     indexName: exampleTenant
                     provider: ALGOLIA
-                Public Battery Included configuration:
+                Public BatteryIncluded configuration:
                   value:
                     active: true
                     indexName: exampleTenant
@@ -331,7 +362,7 @@ paths:
       description: |-
         Retrieves a single public configuration by a provider name. Supported providers:
         * Algolia - https://www.algolia.com
-        * Battery Included - https://www.batteryincluded.io
+        * BatteryIncluded - https://www.batteryincluded.io
       security:
         - OAuth2: []
   '/indexing/{tenant}/reindex':
@@ -659,16 +690,16 @@ components:
             apiUrl:
               type: string
               description: >-
-                Optional base URL of the Battery Included API that holds the tenant's index,
+                Optional base URL of the BatteryIncluded API that holds the tenant's index,
                 for example `https://api-next.batteryincluded.io`. Applies only to the
                 `BATTERY_INCLUDED` provider.
 
-                When set, the Indexing Service sends all of the tenant's Battery Included
+                When set, the Indexing Service sends all of the tenant's BatteryIncluded
                 requests to this host and validates `writeKey` against it, so the write key
-                must be valid on this host. When not set, the default Battery Included host
+                must be valid on this host. When not set, the default BatteryIncluded host
                 is used.
 
-                The value must be an `https` address of an allowed Battery Included host,
+                The value must be an `https` address of an allowed BatteryIncluded host,
                 without a path, query, fragment, user information, or port. A trailing slash
                 is allowed. Other values are rejected with `400`. A change takes effect within
                 10 minutes. Change `apiUrl` when no product reindex is running. If the index on
@@ -703,6 +734,35 @@ components:
                 `includedMixinPaths` and `excludedMixinKeys` are mutually exclusive when
                 `includedMixinPaths` is non-empty. Malformed glob patterns are rejected with a
                 validation error on configuration writes.
+            enrichments:
+              type: array
+              items:
+                type: string
+                enum:
+                  - AVAILABILITY
+                  - PRICE
+                  - CUSTOMER_SEGMENT
+                  - FEE
+              description: >-
+                Optional list of the Emporix data dependencies that BatteryIncluded product
+                indexing calls. Applies only to the `BATTERY_INCLUDED` provider. The Product,
+                Site Settings, and Configuration services are always called and are not listed.
+
+                `AVAILABILITY` adds availability data, `PRICE` adds prices, and
+                `CUSTOMER_SEGMENT` adds segment IDs to the site-specific data of the indexed
+                document. `FEE` calls the Fee Service, but fee data is not part of the Battery
+                Included document.
+
+                When this field is not set, the default set `AVAILABILITY`, `PRICE`, and
+                `CUSTOMER_SEGMENT` is used. An empty list means that no optional dependency is
+                called. Values are case sensitive. The stored list is returned as sent. When the
+                field is not set, the response does not contain it, and the default set applies.
+
+                A dependency that is not listed is not called for any site. Its condition counts
+                as met, so a site without prices or availability still contributes to the merged
+                document when `PRICE` or `AVAILABILITY` is not listed. Its data is not part of the indexed document or of
+                the `index.item-updated` webhook events. A change takes effect within 10 minutes.
+                For details, see [How to choose the data that BatteryIncluded indexing uses](https://developer.emporix.io/api-documentation/api-guides/configuration/indexing-service/indexing#how-to-choose-the-data-that-batteryincluded-indexing-uses).
           required:
             - provider
     IndexCreationResponse:
@@ -778,12 +838,12 @@ components:
                 code: 400
                 status: Bad Request
                 message: The provider UNKNOWN_PROVIDER is not supported.
-            Battery Included invalid credentials:
+            BatteryIncluded invalid credentials:
               value:
                 code: 400
                 status: Bad Request
-                message: Battery Included credentials are invalid. Verify the write key and index name.
-            Battery Included API URL not allowed:
+                message: BatteryIncluded credentials are invalid. Verify the write key and index name.
+            BatteryIncluded API URL not allowed:
               value:
                 code: 400
                 status: Bad Request
@@ -793,6 +853,16 @@ components:
                 code: 400
                 status: Bad Request
                 message: '''apiUrl'' applies to BATTERY_INCLUDED only'
+            Unknown enrichments value:
+              value:
+                code: 400
+                status: Bad Request
+                message: 'Invalid ''enrichments'': unknown value(s) [STOCK]; allowed: [AVAILABILITY, PRICE, CUSTOMER_SEGMENT, FEE]'
+            Enrichments for another provider:
+              value:
+                code: 400
+                status: Bad Request
+                message: '''enrichments'' applies to BATTERY_INCLUDED only'
     BadGateway_502:
       description: Upstream dependency was unavailable. Details will be provided in the response payload.
       content:
@@ -800,11 +870,11 @@ components:
           schema:
             $ref: '#/components/schemas/errorMessage'
           examples:
-            Battery Included credential validation unavailable:
+            BatteryIncluded credential validation unavailable:
               value:
                 code: 502
                 status: Bad Gateway
-                message: Battery Included credential validation is temporarily unavailable. Try again later.
+                message: BatteryIncluded credential validation is temporarily unavailable. Try again later.
     NotFound_404:
       description: Resource has not been found.
       content:

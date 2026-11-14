@@ -229,7 +229,8 @@ paths:
                     type: AGENT_CHAT
                     agentId: complaint-agent
                     commerceEvent: product.product-updated
-                    message: |-
+                    message: The invoice EIN251131 for order EON1031 has incorrect information.
+                    response: |-
                       Dear Customer,
 
                       We have successfully processed your support request regarding the incorrect information on invoice EIN251131 for order EON1031. Our team has verified the order and customer details, confirming both the order and legal entity were found.
@@ -237,10 +238,23 @@ paths:
 
                       Best regards,  
                       [Your Support Team]
+                    mixins:
+                      provenance:
+                        entries:
+                          - origin: ai_generated
+                            contentVersion: 1
+                            generationId: req-1
+                            generatedAt: '2025-07-25T10:31:14.509Z'
+                            generator: complaint-agent
+                            generatorVersion: 1
+                            model: gpt-4o-mini
+                            reviewStatus: not_reviewed
                     metadata:
                       version: 1
                       createdAt: '2025-07-25T10:30:27.167Z'
                       modifiedAt: '2025-07-25T10:31:14.509Z'
+                      mixins:
+                        provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
 
         '401':
           $ref: '#/components/responses/401_resp_common'
@@ -299,6 +313,20 @@ paths:
                       agentType: complaint
                       message: Found an order with its details.
                       sessionId: fe91d168-4ce9-4b4d-8451-0029035b34a5
+                      mixins:
+                        provenance:
+                          entries:
+                            - origin: ai_generated
+                              contentVersion: 1
+                              generationId: req-1
+                              generatedAt: '2026-11-12T09:00:00Z'
+                              generator: complaint-agent
+                              generatorVersion: 1
+                              model: gpt-4o-mini
+                              reviewStatus: not_reviewed
+                      metadata:
+                        mixins:
+                          provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
         '400':
           $ref: '#/components/responses/400_resp_common'
         '401':
@@ -311,6 +339,8 @@ paths:
         Allows for communication with Emporix agents. Conversational continuity requires both the `session-id` header and `enabledMemory` set to `true` on the agent. Collaborations configured in `agentCollaborations` run in the same session.
 
         When the request includes `attachments`, each `attachments[].attachmentId` must reference a file already uploaded in this session. Send the upload `sessionId` as the `session-id` header. The attachment must already be attached to the `agentId` in the request body. After a file upload, send that same path `agentId` in the chat body. After reuse, send the target agent's path `agentId` in the chat body. If they differ, the request returns `400`. To use the file with a different agent, first assign the attachment to that agent with `attachmentId` on `POST /ai-service/{tenant}/agentic/{agentId}/attachments` using the target `agentId` in the path, then chat with that target agent.
+
+        Generated replies include provenance details in `mixins` and the corresponding schema reference in `metadata`.
       security:
         - OAuth2:
             - ai.agentexecution_manage_own
@@ -366,7 +396,7 @@ paths:
                     data: {"content":"delivery is available for order EON1243."}
 
                     event: done
-                    data: {"agent_id":"generic-agent","agent_type":"generic","session_id":"33a550d0-d812-4fb2-bb0d-d50dbfe3627b"}
+                    data: {"agent_id":"generic-agent","agent_type":"generic","session_id":"33a550d0-d812-4fb2-bb0d-d50dbfe3627b","mixins":{"provenance":{"entries":[{"origin":"ai_generated","contentVersion":1,"generationId":"req-1","generatedAt":"2026-11-12T09:00:00Z","generator":"generic-agent","generatorVersion":1,"model":"gpt-4o-mini","reviewStatus":"not_reviewed"}]}},"metadata":{"mixins":{"provenance":"https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json"}}}
                 ToolActivity:
                   summary: Tool start, result, and end around a token delta
                   value: |-
@@ -383,7 +413,7 @@ paths:
                     data: {"content":"Quote Q1 is available."}
 
                     event: done
-                    data: {"agent_id":"generic-agent","agent_type":"generic","session_id":"33a550d0-d812-4fb2-bb0d-d50dbfe3627b"}
+                    data: {"agent_id":"generic-agent","agent_type":"generic","session_id":"33a550d0-d812-4fb2-bb0d-d50dbfe3627b","mixins":{"provenance":{"entries":[{"origin":"ai_generated","contentVersion":1,"generationId":"req-1","generatedAt":"2026-11-12T09:00:00Z","generator":"generic-agent","generatorVersion":1,"model":"gpt-4o-mini","reviewStatus":"not_reviewed"}]}},"metadata":{"mixins":{"provenance":"https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json"}}}
                 StreamError:
                   summary: In-stream error before completion
                   value: |-
@@ -405,7 +435,7 @@ paths:
 
         When the request includes `attachments`, each `attachments[].attachmentId` must reference a file already uploaded in this session. Send the upload `sessionId` as the `session-id` header. The attachment must already be attached to the `agentId` in the request body. After a file upload, send that same path `agentId` in the chat body. After reuse, send the target agent's path `agentId` in the chat body. If they differ, the request returns `400`. To use the file with a different agent, first assign the attachment to that agent with `attachmentId` on `POST /ai-service/{tenant}/agentic/{agentId}/attachments` using the target `agentId` in the path, then chat with that target agent.
 
-        The response `Content-Type` is `text/event-stream`. Each frame uses an SSE `event` name and a JSON object in `data`. Concatenate successive `token` `content` values to build the assistant reply. The `done` event carries session metadata, including `session_id` when present. Send that value as the `session-id` header on later chat and attachment calls. The `done` event does not repeat the full message.
+        The response `Content-Type` is `text/event-stream`. Each frame uses an SSE `event` name and a JSON object in `data`. Concatenate successive `token` `content` values to build the assistant reply. The `done` event carries session metadata and provenance details for generated output. Send `session_id`, when present, as the `session-id` header on later chat and attachment calls. The `done` event does not repeat the full message.
 
         Named events:
 
@@ -416,7 +446,7 @@ paths:
         * `tool_start` — The agent started a tool. `data` is `{ "tool_name": "...", "tool_call_id": "..." }`.
         * `tool_end` — The agent finished a tool. `data` uses the same fields as `tool_start`.
         * `tool_result` — Tool output. `data` is `{ "tool_name": "...", "tool_call_id": "...", "output": {} }`. `output` is a JSON object or array. Credential-like keys in `output` are omitted.
-        * `done` — The stream completed. `data` includes `agent_id`, `agent_type`, and `session_id` when present. At least one of these fields is sent.
+        * `done` — The stream completed. `data` includes `agent_id`, `agent_type`, and `session_id` when present, plus provenance details for generated output. At least one identity field is sent.
         * `error` — **The `error` event is in preview mode** - some of the features may not be fully operational yet.
 
           A failure during generation. `data` includes `message` and/or `code`. Example codes are `AGENT_SETUP` and `RECURSION_LIMIT`.
@@ -4092,7 +4122,9 @@ components:
       description: Type of the job.
     Job:
       type: object
-      description: Contains information about the job result - whether it was successful or not, what was the agent output etc.
+      description: |-
+        Contains information about the job result - whether it was successful or not, what was the agent output etc.
+        A successful agent-chat job includes provenance details in `mixins`.
       properties:
         id:
           type: string
@@ -4115,12 +4147,25 @@ components:
           description: Unique identifier of the agent.
         message:
           type: string
-          description: Agent message.
+          description: User message that started the job.
+        response:
+          type: string
+          description: Assistant reply.
         commerceEvent:
           type: string
           description: Commerce event which triggered the job.
         metadata:
-          $ref: '#/components/schemas/MetadataResponse'
+          allOf:
+            - $ref: '#/components/schemas/MetadataResponse'
+            - type: object
+              description: Metadata and schema references for stored job mixins.
+              properties:
+                mixins:
+                  type: object
+                  additionalProperties:
+                    type: string
+        mixins:
+          $ref: '#/components/schemas/ProvenanceMixins'
     ImportResult:
       type: object
       properties:
@@ -4217,6 +4262,72 @@ components:
         message:
           type: string
           description: Agent message.
+        mixins:
+          $ref: '#/components/schemas/ProvenanceMixins'
+        metadata:
+          $ref: '#/components/schemas/ProvenanceMetadata'
+    ProvenanceMixins:
+      type: object
+      description: |-
+        Provenance details for generated content. Entries are `mixins.provenance.entries`.
+        Clients that display generated content to a person must disclose that the content is AI-generated.
+      required:
+        - provenance
+      properties:
+        provenance:
+          type: object
+          required:
+            - entries
+          properties:
+            entries:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required:
+                  - origin
+                  - contentVersion
+                  - generationId
+                  - generatedAt
+                  - generator
+                  - reviewStatus
+                properties:
+                  origin:
+                    type: string
+                    enum: [ai_generated]
+                    description: Source of the content. `ai_generated` means the content was produced by AI.
+                  contentVersion:
+                    type: integer
+                    description: Version of the generated content.
+                  generationId:
+                    type: string
+                    description: Unique identifier of the generation.
+                  generatedAt:
+                    type: string
+                    format: date-time
+                    description: Date and time when the content was generated.
+                  generator:
+                    type: string
+                    description: Identifier of the generator.
+                  generatorVersion:
+                    type: integer
+                    description: Version of the generator, when available.
+                  model:
+                    type: string
+                    description: AI model used to generate the content, when available.
+                  reviewStatus:
+                    type: string
+                    description: Review state of the generated content.
+    ProvenanceMetadata:
+      type: object
+      description: Schema references for response mixins.
+      properties:
+        mixins:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     ChatStreamEventData:
       title: SSE data payload
       description: JSON object in one SSE `data` field. This is not the HTTP response body. The response body is `text/event-stream` text; each named event carries one of these objects in `data`.
@@ -4288,7 +4399,7 @@ components:
     ChatStreamDoneData:
       title: Done event data
       type: object
-      description: JSON object in the SSE `data` field when `event` is `done`. At least one of `agent_id`, `agent_type`, or `session_id` is present. Send `session_id` as the `session-id` header on later chat and attachment calls. This event does not repeat the full assistant message.
+      description: JSON object in the SSE `data` field when `event` is `done`. At least one of `agent_id`, `agent_type`, or `session_id` is present. Generated output includes provenance details in `mixins` and `metadata`. Send `session_id` as the `session-id` header on later chat and attachment calls. This event does not repeat the full assistant message.
       anyOf:
         - required:
             - agent_id
@@ -4306,6 +4417,10 @@ components:
         session_id:
           type: string
           description: Unique identifier of the session. Send this value as the `session-id` header on later chat and attachment calls. Snake_case equivalent of `ChatResponse.sessionId`.
+        mixins:
+          $ref: '#/components/schemas/ProvenanceMixins'
+        metadata:
+          $ref: '#/components/schemas/ProvenanceMetadata'
     ChatStreamErrorData:
       title: Error event data
       type: object
@@ -4460,6 +4575,10 @@ components:
         result:
           type: string
           description: Text generation result.
+        mixins:
+          $ref: '#/components/schemas/ProvenanceMixins'
+        metadata:
+          $ref: '#/components/schemas/ProvenanceMetadata'
     CompletionRequest:
       title: CompletionRequest
       type: object
@@ -5021,6 +5140,19 @@ components:
               value:
                 id: en
                 result: 'Mini pipe cutters are small cutting tools that are designed to precisely and effectively cut through pipes ranging in size from 3 to 16 millimeters. Unlike some larger pipe cutters, these mini versions are conveniently small and light enough to be carried around easily and used in places where a standard-sized cutter may not be able to fit. They are typically made of hardened steel and are designed to work on most types of tubing and thin-walled plastic piping. The continuous interlocking jaws hold the pipe securely while the cutting blade smoothly and accurately creates a precise and neat cutting edge. Mini pipe cutters are the perfect tool for plumbers and those tackling smaller scale pipe work in hard-to-reach places.'
+                mixins:
+                  provenance:
+                    entries:
+                      - origin: ai_generated
+                        contentVersion: 1
+                        generationId: 6f1c0b2e-1a4d-4e7a-9c3b-2d8e5a7b0c11
+                        generatedAt: '2026-11-12T09:00:00Z'
+                        generator: gpt-4o-mini
+                        model: gpt-4o-mini
+                        reviewStatus: not_reviewed
+                metadata:
+                  mixins:
+                    provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     200_resp_GET_jobs:
       description: List of available jobs.
       headers:
@@ -5053,7 +5185,8 @@ components:
                   type: AGENT_CHAT
                   agentId: complaint-agent
                   commerceEvent: product.product-updated
-                  message: |-
+                  message: The invoice EIN251131 for order EON1031 has incorrect information.
+                  response: |-
                     Dear Customer,
 
                     We have successfully processed your support request regarding the incorrect information on invoice EIN251131 for order EON1031. Our team has verified the order and customer details, confirming both the order and legal entity were found.
@@ -5061,10 +5194,23 @@ components:
 
                     Best regards,
                     [Your Support Team]
+                  mixins:
+                    provenance:
+                      entries:
+                        - origin: ai_generated
+                          contentVersion: 1
+                          generationId: req-1
+                          generatedAt: '2025-07-25T10:31:14.509Z'
+                          generator: complaint-agent
+                          generatorVersion: 1
+                          model: gpt-4o-mini
+                          reviewStatus: not_reviewed
                   metadata:
                     version: 1
                     createdAt: '2025-07-25T10:30:27.167Z'
                     modifiedAt: '2025-07-25T10:31:14.509Z'
+                    mixins:
+                      provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     200_resp_GET_agent_requests:
       description: List of agent requests.
       headers:
