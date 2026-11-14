@@ -168,8 +168,12 @@ namespace Viu.Emporix.ProductModels
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public Metadata Metadata { get; set; } = new Metadata();
 
+        /// <summary>
+        /// If the values are populated then the attribute behaves as an enum property. In other words, the attribute in a product instance can contain only values mentioned in this array. For each
+        /// <br/>attribute the value should consist of object with key and localized names.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("values")]
-        public Values2? Values { get; set; } = default!;
+        public Values? Values { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2090,21 +2094,6 @@ namespace Viu.Emporix.ProductModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("defaultValue")]
         public string? DefaultValue { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Values2 : System.Collections.ObjectModel.Collection<Value>
-    {
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
