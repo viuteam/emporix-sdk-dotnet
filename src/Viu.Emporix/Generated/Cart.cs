@@ -380,7 +380,11 @@ namespace Viu.Emporix.CartModels
         [System.Text.Json.Serialization.JsonPropertyName("externalDiscounts")]
         public System.Collections.Generic.ICollection<ExternalDiscount>? ExternalDiscounts { get; set; } = default!;
 
+        /// <summary>
+        /// Optional field which allows fetching external prices if set to EXTERNAL.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("itemType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ItemType>))]
         public ItemType? ItemType { get; set; } = default!;
 
         /// <summary>
@@ -500,6 +504,9 @@ namespace Viu.Emporix.CartModels
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         public string? Id { get; set; } = default!;
 
+        /// <summary>
+        /// Fee name.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("name")]
         public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
 
@@ -779,9 +786,12 @@ namespace Viu.Emporix.CartModels
         [System.Text.Json.Serialization.JsonPropertyName("lineTax")]
         public TaxValueWithQuantity? LineTax { get; set; } = default!;
 
+        /// <summary>
+        /// **This field is deprecated**. Please use `calculatedPrice.totalDiscounts.appliedDiscounts` instead. The `calculatedPrice.totalDiscount.appliedDiscounts` field provides the same value with updated functionality.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("couponDiscounts")]
         [System.Obsolete]
-        public CouponDiscounts2? CouponDiscounts { get; set; } = default!;
+        public CouponDiscounts? CouponDiscounts { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("itemPrice")]
         [System.Obsolete]
@@ -1807,10 +1817,10 @@ namespace Viu.Emporix.CartModels
     {
 
         /// <summary>
-        /// Price’s unique identifier generated when the price is created through the Price Service. This field should not be provided when itemType is EXTERNAL.
+        /// Price’s unique identifier generated when the price is created through the Price Service. Required when `itemType` is `INTERNAL` or not set. Must not be provided when `itemType` is `EXTERNAL`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("priceId")]
-        public string PriceId { get; set; } = default!;
+        public string? PriceId { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("yrn")]
         public string? Yrn { get; set; } = default!;
@@ -2417,7 +2427,11 @@ namespace Viu.Emporix.CartModels
         [System.Text.Json.Serialization.JsonPropertyName("itemYrn")]
         public string? ItemYrn { get; set; } = default!;
 
+        /// <summary>
+        /// Optional field which allows fetching external prices if set to EXTERNAL.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("itemType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ItemType>))]
         public ItemType? ItemType { get; set; } = default!;
 
         /// <summary>
@@ -3538,7 +3552,6 @@ namespace Viu.Emporix.CartModels
 
 
 
-
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class LinePrice
     {
@@ -3562,7 +3575,6 @@ namespace Viu.Emporix.CartModels
         }
 
     }
-
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -3693,22 +3705,6 @@ namespace Viu.Emporix.CartModels
 
         [System.Text.Json.Serialization.JsonPropertyName("currency")]
         public string Currency { get; set; } = default!;
-
-        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Obsolete]
-    public partial class CouponDiscounts2 : System.Collections.ObjectModel.Collection<CouponDiscount>
-    {
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -3979,7 +3975,6 @@ namespace Viu.Emporix.CartModels
         CLOSED = 1,
 
     }
-
 
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]

@@ -2317,12 +2317,10 @@ components:
                 - type: boolean
                 - type: number
         values:
-          allOf:
-            - $ref: '#/components/schemas/values'
-            - type: object
-              description: |-
-                If the values are populated then the attribute behaves as an enum property. In other words, the attribute in a product instance can contain only values mentioned in this array. For each
-                attribute the value should consist of object with key and localized names.
+          $ref: '#/components/schemas/values'
+          description: |-
+            If the values are populated then the attribute behaves as an enum property. In other words, the attribute in a product instance can contain only values mentioned in this array. For each
+            attribute the value should consist of object with key and localized names.
       required:
         - key
         - name
