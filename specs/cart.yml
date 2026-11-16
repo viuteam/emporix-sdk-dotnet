@@ -3730,7 +3730,6 @@ paths:
                 value:
                   itemType: "EXTERNAL"
                   price:
-                    priceId: 5f59fe70fb29e20020be8f12
                     originalAmount: 9.49
                     effectiveAmount: 9.49
                     currency: EUR
@@ -4394,10 +4393,8 @@ components:
           items:
             $ref: '#/components/schemas/externalDiscount'
         itemType:
-          allOf:
-            - $ref: '#/components/schemas/itemType'
-            - type: object
-              description: Optional field which allows fetching external prices if set to EXTERNAL.
+          $ref: '#/components/schemas/itemType'
+          description: Optional field which allows fetching external prices if set to EXTERNAL.
         taxCode:
           description: Tax code. Tax indicated in this field overrides the site's default tax value.
           type: string
@@ -4485,10 +4482,8 @@ components:
           type: string
           description: Unique identifier of the fee.
         name:
-          allOf:
-            - $ref: '#/components/schemas/localizedValue'
-            - type: object
-              description: Fee name.
+          $ref: '#/components/schemas/localizedValue'
+          description: Fee name.
         yrn:
           type: string
           description: Unique identifier of the fee.
@@ -4710,11 +4705,9 @@ components:
                 - rate
                 - quantity
             couponDiscounts:
-              allOf:
-                - $ref: '#/components/schemas/couponDiscounts'
-                - type: object
-                  description: "**This field is deprecated**. Please use `calculatedPrice.totalDiscounts.appliedDiscounts` instead.
-                            The `calculatedPrice.totalDiscount.appliedDiscounts` field provides the same value with updated functionality."
+              $ref: '#/components/schemas/couponDiscounts'
+              description: "**This field is deprecated**. Please use `calculatedPrice.totalDiscounts.appliedDiscounts` instead.
+                The `calculatedPrice.totalDiscount.appliedDiscounts` field provides the same value with updated functionality."
               deprecated: true
             itemPrice:
               allOf:
@@ -5419,7 +5412,7 @@ components:
       properties:
         priceId:
           type: string
-          description: Price’s unique identifier generated when the price is created through the Price Service. This field should not be provided when itemType is EXTERNAL.
+          description: Price’s unique identifier generated when the price is created through the Price Service. Required when `itemType` is `INTERNAL` or not set. Must not be provided when `itemType` is `EXTERNAL`.
         yrn:
           $ref: '#/components/schemas/YRN'
         originalAmount:
@@ -5440,7 +5433,6 @@ components:
         measurementUnit:
           $ref: '#/components/schemas/measurementUnit'
       required:
-        - priceId
         - originalAmount
         - effectiveAmount
         - currency
@@ -5745,10 +5737,8 @@ components:
         itemYrn:
           $ref: '#/components/schemas/YRN'
         itemType:
-          allOf:
-            - $ref: '#/components/schemas/itemType'
-            - type: object
-              description: Optional field which allows fetching external prices if set to EXTERNAL.
+          $ref: '#/components/schemas/itemType'
+          description: Optional field which allows fetching external prices if set to EXTERNAL.
         quantity:
           type: number
           minimum: 0
