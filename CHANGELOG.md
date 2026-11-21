@@ -9,6 +9,13 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.19.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.18.1...v0.19.0) (2026-11-21)
+
+
+### Added
+
+* manage failed webhook messages and their restart jobs ([#116](https://github.com/viuteam/emporix-sdk-dotnet/issues/116)) ([f9c2424](https://github.com/viuteam/emporix-sdk-dotnet/commit/f9c24241e521471ac3dcf29a2cfd2a00a3fe4a99))
+
 ## [0.18.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.18.0...v0.18.1) (2026-11-16)
 
 
