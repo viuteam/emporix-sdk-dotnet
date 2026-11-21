@@ -656,6 +656,12 @@ internal sealed partial class SessionContextJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookConfigUpdate))]
 [JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.WebhookConfigPartialUpdate>))]
 [JsonSerializable(typeof(Viu.Emporix.WebhookModels.WebhookSubscriptions))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.FailedMessage))]
+[JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.FailedMessage>))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.FailedMessageSelection))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.JobId))]
+[JsonSerializable(typeof(Viu.Emporix.WebhookModels.Job))]
+[JsonSerializable(typeof(List<Viu.Emporix.WebhookModels.Job>))]
 [JsonSerializable(typeof(System.Text.Json.JsonElement))]
 internal sealed partial class WebhookJsonContext : JsonSerializerContext;
 
