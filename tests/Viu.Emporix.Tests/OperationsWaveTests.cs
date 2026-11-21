@@ -680,6 +680,25 @@ public class OperationsWaveTests
     }
 
     [Fact]
+    public async Task An_attachment_without_a_content_type_takes_the_one_its_extension_names()
+    {
+        // Since 2026-11-20 Emporix refuses a part whose content type does not
+        // match its extension, which the octet-stream fallback never did.
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, """{"id":"att-1"}""");
+        AiService ai = new(Http(handler), Options());
+
+        await ai.UploadAttachmentAsync("a1", new byte[] { 1 }, "prices.xlsx");
+        await ai.UploadAttachmentAsync("a1", new byte[] { 1 }, "Report.PDF");
+
+        Assert.Contains(
+            "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            handler.RequestBodies[0],
+            StringComparison.Ordinal);
+        Assert.Contains("Content-Type: application/pdf", handler.RequestBodies[1], StringComparison.Ordinal);
+        Assert.Equal("application/octet-stream", AiService.AttachmentContentType("legacy.xls"));
+    }
+
+    [Fact]
     public async Task Reusing_an_attachment_sends_the_id_instead_of_a_file()
     {
         // The same endpoint as the upload, and the specification declares its

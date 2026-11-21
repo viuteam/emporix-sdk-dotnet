@@ -287,12 +287,23 @@ public sealed class AiService
     /// <param name="agentId">Which agent.</param>
     /// <param name="content">The file's bytes.</param>
     /// <param name="fileName">The file name to send it under.</param>
-    /// <param name="contentType">The media type. Falls back to <c>application/octet-stream</c>.</param>
+    /// <param name="contentType">
+    /// The media type. When omitted it follows from the extension of
+    /// <paramref name="fileName"/> for the file types Emporix accepts.
+    /// </param>
     /// <param name="sessionId">Attaches it to an existing conversation.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The attachment's id, to be referenced from a later message.</returns>
-    /// <remarks>Not repeatable: a retry uploads the file a second time.</remarks>
+    /// <remarks>
+    /// <para>
+    /// Emporix accepts JPG, PNG, PDF, CSV, TXT, JSON, XML, HTML and XLSX, and
+    /// refuses with <c>400</c> a file whose extension does not match the
+    /// content type. Any other extension goes as <c>application/octet-stream</c>
+    /// and is refused the same way.
+    /// </para>
+    /// <para>Not repeatable: a retry uploads the file a second time.</para>
+    /// </remarks>
     public async Task<AttachmentResponse?> UploadAttachmentAsync(
         string agentId,
         ReadOnlyMemory<byte> content,
@@ -309,7 +320,7 @@ public sealed class AiService
         ByteArrayContent file = new(content.ToArray());
         file.Headers.ContentType =
             new System.Net.Http.Headers.MediaTypeHeaderValue(
-                contentType ?? "application/octet-stream");
+                contentType ?? AttachmentContentType(fileName));
         form.Add(file, "attachment", fileName);
 
         return await _http.SendAsync(
@@ -488,6 +499,24 @@ public sealed class AiService
 
     private static List<KeyValuePair<string, string>> SessionHeader(string? sessionId)
         => string.IsNullOrWhiteSpace(sessionId) ? [] : [new("session-id", sessionId)];
+
+    // The types the specification lists since 2026-11-20, when Emporix started
+    // refusing a part whose content type does not match its extension. Until
+    // then the octet-stream fallback was accepted.
+    internal static string AttachmentContentType(string fileName)
+        => Path.GetExtension(fileName).ToUpperInvariant() switch
+        {
+            ".JPG" or ".JPEG" => "image/jpeg",
+            ".PNG" => "image/png",
+            ".PDF" => "application/pdf",
+            ".CSV" => "text/csv",
+            ".TXT" or ".TEXT" => "text/plain",
+            ".JSON" => "application/json",
+            ".XML" => "application/xml",
+            ".HTML" or ".HTM" => "text/html",
+            ".XLSX" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            _ => "application/octet-stream",
+        };
 }
 
 /// <summary>
