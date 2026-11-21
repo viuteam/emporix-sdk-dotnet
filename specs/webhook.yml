@@ -14,6 +14,8 @@ tags:
   - name: Config
   - name: Events
   - name: Svix Emporix Shared Account
+  - name: Failed Messages
+  - name: Jobs
 paths:
   '/webhook/{tenant}/config':
     parameters:
@@ -118,6 +120,11 @@ paths:
         - Config
       description: |
         Retrieves a list of webhook configurations for a given tenant. A tenant can have at most one configuration per type: `svix`, `svix_shared`, and `http`.
+
+        **NOTE**
+        When a delivery target keeps failing, the service switches off its owner: the `eventsConfiguration` entry for an entry target, or the whole configuration for the global HTTP target or a Svix target. The owner then returns `active: false` and a `suspendedAt` date. To see the delivery status of every target, set `expand` to `deliveryStatus`.
+      parameters:
+        - $ref: '#/components/parameters/query_expand'
       security:
         - OAuth2:
             - webhook.subscription_read
@@ -149,6 +156,9 @@ paths:
 
         **NOTE**
         For HTTP configurations, `eventsConfiguration` can contain multiple entries for the same `eventType`. Existing entry `id` values must be preserved when updating known entries. Legacy payloads without entry ids are still accepted; the server assigns ids to id-less entries (and reuses an existing id when both the stored config and the payload have exactly one entry for that event type).
+
+        **NOTE**
+        To switch a configuration or an entry back on after the service switched it off for failing deliveries, set its `active` field to `true`. This removes `suspendedAt` and resets the delivery status of its targets. Events stored while it was switched off stay stored. To deliver them, resend or restart them through the failed messages endpoints.
       operationId: PUT-webhook-update-config
       security:
         - OAuth2:
@@ -218,6 +228,9 @@ paths:
         * Deactivate a single endpoint with `UPSERT` on `/configuration/http/eventsConfigurationEntry/{entryId}/active` and value `false`. Events for a deactivated endpoint are dropped without filter evaluation, delivery, or retries; other endpoints are not affected. Set the value back to `true` to resume deliveries.
         * Legacy `/configuration/http/eventsConfiguration/{eventType}` paths remain supported when at most one entry exists for that event type and return `409 Conflict` when multiple entries exist.
         * Create/update requests return `400 Bad Request` when the body supplies a client-minted entry id or the JsonPath `filter` is invalid.
+
+        **NOTE**
+        To switch a configuration or an entry back on after the service switched it off for failing deliveries, use `UPSERT` with the value `true` on `/active` or on `/configuration/http/eventsConfigurationEntry/{entryId}/active`. This removes `suspendedAt` and resets the delivery status of its targets. Events stored while it was switched off stay stored. To deliver them, resend or restart them through the failed messages endpoints.
       security:
         - OAuth2:
             - webhook.subscription_manage
@@ -396,7 +409,12 @@ paths:
       tags:
         - Config
       description: |
-        Retrieves a webhook configuration for a given tenant. 
+        Retrieves a webhook configuration for a given tenant.
+
+        **NOTE**
+        A configuration or an `eventsConfiguration` entry that the service switched off after failing deliveries returns `active: false` and a `suspendedAt` date. To see the delivery status of every target, set `expand` to `deliveryStatus`.
+      parameters:
+        - $ref: '#/components/parameters/query_expand'
       security:
         - OAuth2:
             - webhook.subscription_read
@@ -599,6 +617,394 @@ paths:
         - $ref: '#/components/parameters/to_month'
       tags:
         - Svix Emporix Shared Account
+  '/webhook/{tenant}/failed-messages':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving failed messages
+      operationId: GET-webhook-list-failed-messages
+      tags:
+        - Failed Messages
+      description: |-
+        Retrieves the events that the service stored instead of delivering them. An event is stored when its delivery target has failed too many times in a row, or when the configuration or entry that owns the target was switched off after such failures.
+
+        By default, a target is switched off after 100 failed deliveries in a row. To change this number, set the `webhookFailureThreshold` key in the Configuration Service to an integer from 10 to 1000.
+
+        Stored events are kept for 14 days on production and 1 day on preprod, and then removed.
+
+        The list returns the details of each event without its payload. To retrieve the payload, use the endpoint for retrieving a single failed message.
+
+        You can page through the results in one of two ways:
+        * Use `pageNumber` and `pageSize`.
+        * Use `next` or `prev` with the cursors from the `X-Next-Cursor` and `X-Prev-Cursor` response headers. In this mode, the `X-Total-Count` header is not returned.
+      parameters:
+        - $ref: '#/components/parameters/query_targetType'
+        - $ref: '#/components/parameters/query_configCode'
+        - $ref: '#/components/parameters/query_entryId'
+        - $ref: '#/components/parameters/query_eventType'
+        - $ref: '#/components/parameters/query_q'
+        - $ref: '#/components/parameters/query_failedMessagesSort'
+        - $ref: '#/components/parameters/query_fields'
+        - $ref: '#/components/parameters/query_pageNumber'
+        - $ref: '#/components/parameters/query_pageSize'
+        - $ref: '#/components/parameters/query_next'
+        - $ref: '#/components/parameters/query_prev'
+        - $ref: '#/components/parameters/header_totalCount'
+      responses:
+        '200':
+          description: The request was successful. A list of failed messages is returned.
+          headers:
+            X-Total-Count:
+              description: Total number of failed messages that match the request. Returned only when the `X-Total-Count` request header is set to `true` and no cursor is used.
+              schema:
+                type: integer
+            X-Next-Cursor:
+              description: Cursor for the next page. Pass it in the `next` query parameter. Absent on the last page.
+              schema:
+                type: string
+            X-Prev-Cursor:
+              description: Cursor for the previous page. Pass it in the `prev` query parameter. Absent on the first page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FailedMessage'
+              examples:
+                Response example:
+                  value:
+                    - id: '12052814953937469:http:3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708'
+                      targetId: 'http:3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708'
+                      targetType: ENTRY
+                      configCode: http
+                      entryId: 3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708
+                      eventType: product.created
+                      originalMessageId: '12052814953937469'
+                      publishTime: '2026-11-17T09:41:12.204Z'
+                      errorMessage: Service Unavailable
+                      errorStatusCode: 503
+                      retryCount: 100
+                      failedAt: '2026-11-17T09:58:40.512Z'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_read
+  '/webhook/{tenant}/failed-messages/{failedMessageId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_failedMessageId'
+    get:
+      summary: Retrieving a failed message
+      operationId: GET-webhook-retrieve-failed-message
+      tags:
+        - Failed Messages
+      description: |-
+        Retrieves a single failed message, including its `payload`.
+      responses:
+        '200':
+          description: The request was successful. The failed message is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedMessage'
+              examples:
+                Response example:
+                  value:
+                    id: '12052814953937469:http:3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708'
+                    targetId: 'http:3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708'
+                    targetType: ENTRY
+                    configCode: http
+                    entryId: 3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708
+                    eventType: product.created
+                    originalMessageId: '12052814953937469'
+                    publishTime: '2026-11-17T09:41:12.204Z'
+                    errorMessage: Service Unavailable
+                    errorStatusCode: 503
+                    retryCount: 100
+                    failedAt: '2026-11-17T09:58:40.512Z'
+                    payload:
+                      id: 6745f3a2b1c9d40012ab34cd
+                      code: SUMMER-TSHIRT-01
+                      name:
+                        en: Summer T-shirt
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/FailedMessageNotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_read
+    delete:
+      summary: Deleting a failed message
+      operationId: DELETE-webhook-remove-failed-message
+      tags:
+        - Failed Messages
+      description: |-
+        Deletes a single failed message. The event is not delivered.
+      responses:
+        '204':
+          description: The failed message has been deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/FailedMessageNotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_manage
+  '/webhook/{tenant}/failed-messages/{failedMessageId}/resend':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_failedMessageId'
+    post:
+      summary: Resending a failed message
+      operationId: POST-webhook-resend-failed-message
+      tags:
+        - Failed Messages
+      description: |-
+        Queues a single failed message for delivery again and removes it from the stored messages. The delivery happens asynchronously, after the response.
+
+        The event is delivered with the current configuration of its target, including its destination and excluded fields. The entry `filter` is not evaluated again. If the delivery fails, it counts towards the target's failure limit. When the target reaches the limit, the event is stored again.
+
+        The configuration, and for an entry target the `eventsConfiguration` entry, must exist and be active. If the service switched it off after failing deliveries, switch it back on first.
+      responses:
+        '202':
+          description: The failed message has been accepted for delivery.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/FailedMessageNotFound_404'
+        '409':
+          description: |-
+            The failed message cannot be delivered now. Possible reasons:
+            * The configuration or the entry no longer exists.
+            * The configuration or the entry is not active.
+            * The configuration's provider no longer matches the target type.
+            * The configuration no longer delivers the event type to this target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Switched off configuration:
+                  value:
+                    code: 409
+                    status: Conflict
+                    message: Config 'http' was switched off after failing deliveries; activate it first
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_manage
+  '/webhook/{tenant}/failed-messages/restart':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Restarting failed messages
+      operationId: POST-webhook-restart-failed-messages
+      tags:
+        - Failed Messages
+      description: |-
+        Starts a job that queues the selected failed messages for delivery again, the same way as resending a single message. The response returns the job ID. To follow the job's progress, use the endpoint for retrieving a job.
+
+        All criteria in the request body are optional and are combined with `AND`. If you send no body, or an empty object, the job restarts every stored message.
+
+        The job restarts only the messages stored before it started. It skips any message that cannot be resent, for example because its configuration or entry is not active, and keeps that message stored.
+
+        Only one restart job can run for a tenant at a time.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FailedMessageSelection'
+            examples:
+              Restart one entry:
+                value:
+                  configCode: http
+                  entryId: 3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708
+              Restart selected messages:
+                value:
+                  ids:
+                    - '12052814953937469:http:3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708'
+                    - '12052814953937470:http:3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708'
+      responses:
+        '202':
+          description: The restart job has been started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobId'
+              examples:
+                Response example:
+                  value:
+                    id: 6a1f0c2e9b3d4a5f8e7c6b5a
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '409':
+          description: Another restart job of the tenant is in progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+              examples:
+                Restart in progress:
+                  value:
+                    code: 409
+                    status: Conflict
+                    message: A restart of failed messages is already in progress (job id 6a1f0c2e9b3d4a5f8e7c6b5a)
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_manage
+  '/webhook/{tenant}/failed-messages/delete':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    post:
+      summary: Deleting failed messages
+      operationId: POST-webhook-remove-failed-messages
+      tags:
+        - Failed Messages
+      description: |-
+        Deletes every failed message that matches the selection. The events are not delivered.
+
+        All criteria in the request body are optional and are combined with `AND`. If you send no body, or an empty object, every stored message is deleted.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FailedMessageSelection'
+            examples:
+              Delete one event type:
+                value:
+                  configCode: http
+                  eventType: product.created
+      responses:
+        '204':
+          description: The matching failed messages have been deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_manage
+  '/webhook/{tenant}/jobs':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+    get:
+      summary: Retrieving jobs
+      operationId: GET-webhook-list-jobs
+      tags:
+        - Jobs
+      description: |-
+        Retrieves the tenant's jobs, such as restarts of failed messages, from newest to oldest.
+      parameters:
+        - $ref: '#/components/parameters/query_pageNumber'
+        - $ref: '#/components/parameters/query_pageSize'
+        - $ref: '#/components/parameters/query_jobsSort'
+        - $ref: '#/components/parameters/header_totalCount'
+      responses:
+        '200':
+          description: The request was successful. A list of jobs is returned.
+          headers:
+            X-Total-Count:
+              description: Total number of jobs. Returned only when the `X-Total-Count` request header is set to `true`.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+              examples:
+                Response example:
+                  value:
+                    - id: 6a1f0c2e9b3d4a5f8e7c6b5a
+                      type: failed_message_restart
+                      status: success
+                      selection:
+                        configCode: http
+                        entryId: 3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708
+                      republished: 1250
+                      skipped: 3
+                      response: 'Republished 1250, skipped 3'
+                      metadata:
+                        createdAt: '2026-11-17T10:15:02.118Z'
+                        modifiedAt: '2026-11-17T10:16:47.930Z'
+                        finishedAt: '2026-11-17T10:16:47.930Z'
+        '400':
+          $ref: '#/components/responses/BadRequest_400'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_read
+  '/webhook/{tenant}/jobs/{jobId}':
+    parameters:
+      - $ref: '#/components/parameters/path_tenant'
+      - $ref: '#/components/parameters/path_jobId'
+    get:
+      summary: Retrieving a job
+      operationId: GET-webhook-retrieve-job
+      tags:
+        - Jobs
+      description: |-
+        Retrieves a single job and its progress.
+      responses:
+        '200':
+          description: The request was successful. The job is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              examples:
+                Response example:
+                  $ref: '#/components/examples/JobExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '404':
+          $ref: '#/components/responses/JobNotFound_404'
+        '500':
+          $ref: '#/components/responses/InternalServerError_500'
+      security:
+        - OAuth2:
+            - webhook.subscription_read
 components:
   schemas:
     AbstractWebhookConfig:
@@ -811,7 +1217,198 @@ components:
                   active:
                     type: boolean
                     description: |-
-                      Per-endpoint activation switch. Always returned as an explicit boolean; entries created before the flag existed report `true`. When `false`, events for this endpoint are dropped without filter evaluation, delivery, or retries.
+                      Per-endpoint activation switch. Always returned as an explicit boolean; entries created before the flag existed report `true`. When `false`, events for this endpoint are dropped without filter evaluation, delivery, or retries, unless the service switched the entry off after failing deliveries (`suspendedAt` is set). In that case, its events are stored as failed messages.
+                  suspendedAt:
+                    type: string
+                    format: date-time
+                    readOnly: true
+                    description: |-
+                      Date and time when the service switched the entry off because its target kept failing. Absent otherwise. Setting `active` to `true` removes it.
+                  deliveryStatus:
+                    $ref: '#/components/schemas/DeliveryStatus'
+            deliveryStatus:
+              $ref: '#/components/schemas/DeliveryStatus'
+    DeliveryStatus:
+      type: object
+      readOnly: true
+      description: |-
+        Delivery status of a target. Returned only when the `expand` query parameter contains `deliveryStatus`. The status is returned in the following places:
+        * on each `eventsConfiguration` entry that has an `id`
+        * on the HTTP `configuration` for the global destination
+        * at the top level of `svix` and `svix_shared` configurations
+      properties:
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - FAILING
+          description: |-
+            * `ACTIVE` – Events are delivered to the target.
+            * `FAILING` – Deliveries to the target fail. While the number of failed deliveries in a row is below the failure threshold, the service still sends events to the target. When the threshold is reached, the service stops calling the target and stores its events as failed messages until you switch its configuration or entry back on.
+        consecutiveFailures:
+          type: integer
+          description: Number of failed deliveries in a row. Reset to `0` after a successful delivery. A target that never failed returns `ACTIVE` and `0`.
+        lastErrorMessage:
+          type: string
+          description: Error message of the last failed delivery.
+        lastErrorStatusCode:
+          type: integer
+          description: HTTP status code returned by the target on the last failed delivery, if any.
+        lastFailureAt:
+          type: string
+          format: date-time
+          description: Date and time of the last failed delivery.
+        failingSince:
+          type: string
+          format: date-time
+          description: Date and time when the target became `FAILING`.
+    DeliveryTargetType:
+      type: string
+      enum:
+        - ENTRY
+        - HTTP_GLOBAL
+        - SVIX
+        - SVIX_SHARED
+      description: |-
+        Type of the delivery target:
+        * `ENTRY` – An `eventsConfiguration` entry of an HTTP configuration.
+        * `HTTP_GLOBAL` – The global `destinationUrl` of an HTTP configuration.
+        * `SVIX` – A Svix Custom Account configuration.
+        * `SVIX_SHARED` – A Svix Emporix Shared Account configuration.
+    FailedMessage:
+      type: object
+      description: An event that the service stored instead of delivering it.
+      properties:
+        id:
+          type: string
+          description: Failed message's unique identifier. A failed delivery of the same event to the same target is stored only once.
+        targetId:
+          type: string
+          description: |-
+            Identifier of the delivery target, in one of the following formats:
+            * `{configCode}:{entryId}` for an entry
+            * `{configCode}:global` for the global HTTP destination
+            * `{configCode}:svix` or `{configCode}:svix_shared` for Svix
+        targetType:
+          $ref: '#/components/schemas/DeliveryTargetType'
+        configCode:
+          type: string
+          description: Code of the webhook configuration the target belongs to.
+        entryId:
+          type: string
+          description: Identifier of the `eventsConfiguration` entry. Present only for `ENTRY` targets.
+        eventType:
+          type: string
+          description: Type of the event, for example `product.created`.
+        originalMessageId:
+          type: string
+          description: Identifier of the original event message.
+        publishTime:
+          type: string
+          format: date-time
+          description: Date and time when the original event was published.
+        errorMessage:
+          type: string
+          description: Error message of the failed delivery.
+        errorStatusCode:
+          type: integer
+          description: HTTP status code returned by the target, if any.
+        retryCount:
+          type: integer
+          description: Number of the target's failed deliveries in a row at the time the message was stored.
+        failedAt:
+          type: string
+          format: date-time
+          description: Date and time when the message was stored.
+        payload:
+          type: object
+          description: Event payload, before excluded fields are removed. Returned only when you retrieve a single failed message.
+    FailedMessageSelection:
+      type: object
+      description: |-
+        Selection of failed messages. All criteria are optional and are combined with `AND`. An empty selection matches every stored message.
+      properties:
+        ids:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+          description: Failed message IDs.
+        targetType:
+          $ref: '#/components/schemas/DeliveryTargetType'
+        configCode:
+          type: string
+          description: Code of the webhook configuration.
+        entryId:
+          type: string
+          description: Identifier of the `eventsConfiguration` entry.
+        eventType:
+          type: string
+          description: Type of the event, for example `product.created`.
+    JobId:
+      type: object
+      description: Identifier of the started job.
+      properties:
+        id:
+          type: string
+          description: Job's unique identifier, generated when the job is started.
+    Job:
+      type: object
+      description: A long-running operation, such as a restart of failed messages.
+      properties:
+        id:
+          type: string
+          description: Job's unique identifier, generated when the job is started.
+        type:
+          type: string
+          enum:
+            - failed_message_restart
+          description: |-
+            Type of the job:
+            * `failed_message_restart` – A restart of failed messages.
+        status:
+          type: string
+          enum:
+            - in_progress
+            - success
+            - failure
+          description: |-
+            Status of the job:
+            * `in_progress` – The job is running.
+            * `success` – The job finished. See `republished` and `skipped` for the result.
+            * `failure` – The job stopped. The reason is in `response`.
+        selection:
+          $ref: '#/components/schemas/FailedMessageSelection'
+        republished:
+          type: integer
+          description: Number of failed messages queued for delivery again so far.
+        skipped:
+          type: integer
+          description: Number of failed messages skipped so far. Skipped messages stay stored.
+        response:
+          type: string
+          description: Summary of the result, or the reason why the job failed.
+        metadata:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+              description: Date and time when the job was started.
+            modifiedAt:
+              type: string
+              format: date-time
+              description: Date and time when the job was last modified.
+            finishedAt:
+              type: string
+              format: date-time
+              description: Date and time when the job finished.
+    ConfigSuspendedAt:
+      type: string
+      format: date-time
+      readOnly: true
+      description: |-
+        Date and time when the service switched the configuration off because its global HTTP target or its Svix target kept failing. Absent otherwise. Setting `active` to `true` removes it.
     ConfigCode:
       type: string
       description: |-
@@ -1052,9 +1649,15 @@ components:
                     $ref: '#/components/schemas/ConfigCode'
                   configuration:
                     $ref: '#/components/schemas/ConfigurationGet'
+                  suspendedAt:
+                    $ref: '#/components/schemas/ConfigSuspendedAt'
+                  deliveryStatus:
+                    $ref: '#/components/schemas/DeliveryStatus'
           examples:
             WebhookConfigExample:
               $ref: '#/components/examples/WebhookConfigExample'
+            WebhookConfigWithDeliveryStatusExample:
+              $ref: '#/components/examples/WebhookConfigWithDeliveryStatusExample'
     WebhookConfigsResponse:
       description: Returning list of webhook configs.
       content:
@@ -1071,6 +1674,10 @@ components:
                       $ref: '#/components/schemas/ConfigCode'
                     configuration:
                       $ref: '#/components/schemas/ConfigurationGet'
+                    suspendedAt:
+                      $ref: '#/components/schemas/ConfigSuspendedAt'
+                    deliveryStatus:
+                      $ref: '#/components/schemas/DeliveryStatus'
           examples:
             WebhookConfigsExample:
               $ref: '#/components/examples/WebhookConfigsExample'
@@ -1152,6 +1759,30 @@ components:
           examples:
             NotFoundExample:
               $ref: '#/components/examples/NotFound_404'
+    FailedMessageNotFound_404:
+      description: The failed message does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            NotFoundExample:
+              value:
+                code: 404
+                status: Not Found
+                message: "'failed message' with id='12052814953937469:http:global' on tenant='mytenant' not found"
+    JobNotFound_404:
+      description: The job does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          examples:
+            NotFoundExample:
+              value:
+                code: 404
+                status: Not Found
+                message: "'job' with id='6a1f0c2e9b3d4a5f8e7c6b5a' on tenant='mytenant' not found"
     MultiStatus_207:
       description: Multi Status response containing individual results for each subscription request.
       content:
@@ -1180,6 +1811,46 @@ components:
         code: svix_shared
         provider: SVIX_SHARED
         active: true
+    WebhookConfigWithDeliveryStatusExample:
+      summary: HTTP configuration with a switched-off entry (expand=deliveryStatus)
+      value:
+        code: http
+        provider: HTTP
+        active: true
+        configuration:
+          destinationUrl: 'https://gcp.cloudfunctions.net/webhook?name=General'
+          secretKeyExists: true
+          deliveryStatus:
+            status: ACTIVE
+            consecutiveFailures: 0
+          eventsConfiguration:
+            - id: 3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708
+              eventType: PRODUCT.CREATED
+              destinationUrl: 'https://gcp.cloudfunctions.net/webhook?name=Detailed'
+              secretKeyExists: false
+              active: false
+              suspendedAt: '2026-11-17T09:58:40.512Z'
+              deliveryStatus:
+                status: FAILING
+                consecutiveFailures: 100
+                lastErrorMessage: Service Unavailable
+                lastErrorStatusCode: 503
+                lastFailureAt: '2026-11-17T09:58:40.497Z'
+                failingSince: '2026-11-17T09:58:40.497Z'
+    JobExample:
+      value:
+        id: 6a1f0c2e9b3d4a5f8e7c6b5a
+        type: failed_message_restart
+        status: in_progress
+        selection:
+          configCode: http
+          entryId: 3f1a2b4c-5d6e-7f80-91a2-b3c4d5e6f708
+        republished: 1000
+        skipped: 2
+        response: 'Republished 1000, skipped 2'
+        metadata:
+          createdAt: '2026-11-17T10:15:02.118Z'
+          modifiedAt: '2026-11-17T10:16:01.442Z'
     AmbiguousTenant_400:
       value:
         code: 400
@@ -1298,6 +1969,142 @@ components:
         Month from which statistics should be retrieved.
 
         **Note**: The value should be provided in the "YYYY-MM" format.
+    query_expand:
+      name: expand
+      in: query
+      required: false
+      schema:
+        type: string
+      example: deliveryStatus
+      description: |-
+        Comma-separated list of additional data to return. Unknown values are ignored. Possible values:
+        * `deliveryStatus` – Adds the `deliveryStatus` of every delivery target to the response.
+    path_failedMessageId:
+      name: failedMessageId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Failed message's unique identifier, returned in the `id` field of the failed messages list.
+    path_jobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Job's unique identifier, generated when the job is started.
+    query_targetType:
+      name: targetType
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/DeliveryTargetType'
+      description: Returns only failed messages of this target type.
+    query_configCode:
+      name: configCode
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Returns only failed messages of this webhook configuration.
+    query_entryId:
+      name: entryId
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Returns only failed messages of this `eventsConfiguration` entry.
+    query_eventType:
+      name: eventType
+      in: query
+      required: false
+      schema:
+        type: string
+      example: product.created
+      description: Returns only failed messages of this event type.
+    query_q:
+      name: q
+      in: query
+      required: false
+      schema:
+        type: string
+      example: 'configCode:http errorStatusCode:503'
+      description: |-
+        Search query in the standard Emporix query syntax. It is combined with the other filters with `AND`. You can query every field of a failed message except `payload`.
+
+        **Note**: Put date values in quotation marks, for example `failedAt:>"2026-11-10T11:30:00.000Z"`.
+    query_failedMessagesSort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: 'failedAt:desc'
+      description: |-
+        List of fields used to sort the results, separated by commas, each in the `{fieldName}:asc` or `{fieldName}:desc` format. The results are sorted by `failedAt` in descending order by default. You cannot sort by `payload`.
+
+        **Note**: When you page with cursors, keep the same `sort` value as in the request that returned the cursor.
+    query_jobsSort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: 'metadata.createdAt:desc'
+      description: |-
+        List of fields used to sort the results, separated by commas, each in the `{fieldName}:asc` or `{fieldName}:desc` format. The newest jobs are returned first by default.
+    query_fields:
+      name: fields
+      in: query
+      required: false
+      schema:
+        type: string
+      example: 'id,configCode,eventType,failedAt'
+      description: |-
+        Comma-separated list of fields to return. `id` is always returned. `payload` is never returned in the list.
+    query_pageNumber:
+      name: pageNumber
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      description: Page number to be retrieved. The number of the first page is 1.
+    query_pageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 60
+        minimum: 1
+        maximum: 2000
+      description: Number of items to be retrieved per page.
+    query_next:
+      name: next
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |-
+        Cursor of the next page, taken from the `X-Next-Cursor` response header. Cannot be combined with `prev`.
+    query_prev:
+      name: prev
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |-
+        Cursor of the previous page, taken from the `X-Prev-Cursor` response header. Cannot be combined with `next`.
+    header_totalCount:
+      name: X-Total-Count
+      in: header
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: Flag indicating whether the total count of retrieved items should be returned.
   securitySchemes:
     OAuth2:
       type: oauth2

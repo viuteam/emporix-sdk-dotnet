@@ -1513,7 +1513,10 @@ namespace Viu.Emporix.AiServiceModels
         public McpServerConfigRequest Config { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetadataRequest? Metadata { get; set; } = default!;
+        public McpMetadataRequest? Metadata { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
 
     }
 
@@ -1544,7 +1547,10 @@ namespace Viu.Emporix.AiServiceModels
         public System.Collections.Generic.ICollection<McpToolRequest> Tools { get; set; } = new System.Collections.ObjectModel.Collection<McpToolRequest>();
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetadataRequest? Metadata { get; set; } = default!;
+        public McpMetadataRequest? Metadata { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
 
     }
 
@@ -1589,7 +1595,10 @@ namespace Viu.Emporix.AiServiceModels
         public System.Collections.Generic.ICollection<McpToolResponse>? Tools { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
-        public MetadataResponse? Metadata { get; set; } = default!;
+        public McpMetadataResponse? Metadata { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
 
     }
 
@@ -2580,6 +2589,9 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public Metadata? Metadata { get; set; } = default!;
 
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -2619,6 +2631,12 @@ namespace Viu.Emporix.AiServiceModels
         public AgentMetadataResponse? Metadata { get; set; } = default!;
 
         /// <summary>
+        /// Mixin values keyed by name. Present when the agent stores mixins.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
+        /// <summary>
         /// Stored history of previous agent configurations. Present only when the request sets `allVersions=true`. Omitted otherwise.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("versions")]
@@ -2648,6 +2666,12 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public AgentVersionMetadata Metadata { get; set; } = new AgentVersionMetadata();
 
+        /// <summary>
+        /// Mixin values stored with this version.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -2674,6 +2698,12 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("changeNote")]
         public string? ChangeNote { get; set; } = default!;
+
+        /// <summary>
+        /// JSON Schema URLs for the mixins stored in this version.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public System.Collections.Generic.IDictionary<string, string>? Mixins { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2730,6 +2760,33 @@ namespace Viu.Emporix.AiServiceModels
 
     }
 
+    /// <summary>
+    /// Map of mixin names to the URLs of their JSON Schemas.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MixinSchemaUrls : System.Collections.Generic.Dictionary<string, string>
+    {
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class McpMetadataRequest : MetadataRequest
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public MixinSchemaUrls? Mixins { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class McpMetadataResponse : MetadataResponse
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public MixinSchemaUrls? Mixins { get; set; } = default!;
+
+    }
+
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class MetadataRequest
     {
@@ -2781,6 +2838,9 @@ namespace Viu.Emporix.AiServiceModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("changeNote")]
         public string? ChangeNote { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public MixinSchemaUrls? Mixins { get; set; } = default!;
 
     }
 
@@ -3089,11 +3149,97 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
 
+        /// <summary>
+        /// Generated images and files. Omitted when the reply has none.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("artifacts")]
+        public System.Collections.Generic.ICollection<System.Text.Json.JsonElement>? Artifacts { get; set; } = default!;
+
         [System.Text.Json.Serialization.JsonPropertyName("mixins")]
         public ProvenanceMixins? Mixins { get; set; } = default!;
 
         [System.Text.Json.Serialization.JsonPropertyName("metadata")]
         public ProvenanceMetadata? Metadata { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Metadata for one generated image or file.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatArtifact
+    {
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// A generated file that was not stored.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChatArtifactFailed
+    {
+
+        /// <summary>
+        /// Generated content type.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("kind")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatArtifactFailedKind>))]
+        public ChatArtifactFailedKind Kind { get; set; } = default!;
+
+        /// <summary>
+        /// File name.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("filename")]
+        public string Filename { get; set; } = default!;
+
+        /// <summary>
+        /// Media type of the file.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mimeType")]
+        public string MimeType { get; set; } = default!;
+
+        /// <summary>
+        /// Size in bytes.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("size")]
+        public int Size { get; set; } = default!;
+
+        /// <summary>
+        /// `failed`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatArtifactFailedStatus>))]
+        public ChatArtifactFailedStatus Status { get; set; } = default!;
+
+        /// <summary>
+        /// Failure code.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("errorCode")]
+        public string? ErrorCode { get; set; } = default!;
+
+        /// <summary>
+        /// Generation identifier.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("generationId")]
+        public string? GenerationId { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -3152,68 +3298,61 @@ namespace Viu.Emporix.AiServiceModels
     /// <summary>
     /// **The `artifact` event is in preview mode** - some of the features may not be fully operational yet.
     /// <br/>
-    /// <br/>JSON object in the SSE `data` field when `event` is `artifact`. The agent published one image or file. Bytes stay in Media Service. A `failed` status does not fail the text stream.
-    /// <br/>
-    /// <br/>The agent publishes artifacts only when it has the built-in file generator (`file_generator`) in `nativeTools` and the caller's token includes the `media.asset_manage` scope. Downloading a ready asset requires the `media.asset_read` scope. Only the chat stream sends artifacts. The synchronous chat endpoint and agent jobs do not.
+    /// <br/>JSON object in the SSE `data` field when `event` is `artifact`.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class ChatStreamArtifactData
     {
 
         /// <summary>
-        /// Media Service asset id. Present when `status` is `ready`. Absent while `status` is `pending`. Download with `GET /media/{tenant}/assets/{artifact_id}/download`.
+        /// Media asset id. Present when `status` is `ready`.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("artifact_id")]
-        public string? Artifact_id { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("artifactId")]
+        public string? ArtifactId { get; set; } = default!;
 
         /// <summary>
-        /// Correlates the pending image card with the later ready or failed event. Absent when the artifact was not produced by image generation.
+        /// Present for a generated image. Required when `status` is `pending`.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("generation_id")]
-        public string? Generation_id { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("generationId")]
+        public string? GenerationId { get; set; } = default!;
 
         /// <summary>
-        /// Image preview or file download.
+        /// Generated content type. `pending` is `image` only.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("kind")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatStreamArtifactDataKind>))]
         public ChatStreamArtifactDataKind Kind { get; set; } = default!;
 
         /// <summary>
-        /// Display name of the artifact.
+        /// File name.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("filename")]
         public string Filename { get; set; } = default!;
 
         /// <summary>
-        /// Media type of the stored asset.
+        /// Media type of the file.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("mime_type")]
-        public string Mime_type { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("mimeType")]
+        public string MimeType { get; set; } = default!;
 
         /// <summary>
-        /// Size of the stored asset in bytes. `0` when generation failed before upload.
+        /// Size in bytes.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("size")]
         public int Size { get; set; } = default!;
 
         /// <summary>
-        /// `pending` means an image is still generating. `ready` means the asset can be downloaded. `failed` means this item failed and the text answer continues.
+        /// `pending`, `ready`, or `failed`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatStreamArtifactDataStatus>))]
         public ChatStreamArtifactDataStatus Status { get; set; } = default!;
 
         /// <summary>
-        /// Stable failure code. Present when `status` is `failed`. Possible values:
-        /// <br/>* `CAPABILITY_UNAVAILABLE` — the agent's model provider cannot generate images.
-        /// <br/>* `INVALID_CONTENT` — the requested file content was rejected.
-        /// <br/>* `OVERSIZED` — the image or file exceeds the size limit.
-        /// <br/>* `UPLOAD_FAILED` — the asset could not be stored in Media Service.
+        /// Failure code. Present when `status` is `failed`.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("error_code")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<ChatStreamArtifactDataError_code>))]
-        public ChatStreamArtifactDataError_code? Error_code { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonPropertyName("errorCode")]
+        public string? ErrorCode { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -4748,6 +4887,9 @@ namespace Viu.Emporix.AiServiceModels
         [System.Text.Json.Serialization.JsonPropertyName("changeNote")]
         public string? ChangeNote { get; set; } = default!;
 
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public MixinSchemaUrls? Mixins { get; set; } = default!;
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -4850,6 +4992,58 @@ namespace Viu.Emporix.AiServiceModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatArtifactKind>))]
+    public enum ChatArtifactKind
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"image")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("image")]
+        Image = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"file")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("file")]
+        File = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatArtifactStatus>))]
+    public enum ChatArtifactStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ready")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("ready")]
+        Ready = 0,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatArtifactFailedKind>))]
+    public enum ChatArtifactFailedKind
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"image")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("image")]
+        Image = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"file")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("file")]
+        File = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatArtifactFailedStatus>))]
+    public enum ChatArtifactFailedStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"failed")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("failed")]
+        Failed = 0,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Provenance
     {
 
@@ -4898,25 +5092,6 @@ namespace Viu.Emporix.AiServiceModels
         [System.Runtime.Serialization.EnumMember(Value = @"failed")]
         [System.Text.Json.Serialization.JsonStringEnumMemberName("failed")]
         Failed = 2,
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ChatStreamArtifactDataError_code>))]
-    public enum ChatStreamArtifactDataError_code
-    {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"CAPABILITY_UNAVAILABLE")]
-        CAPABILITY_UNAVAILABLE = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"INVALID_CONTENT")]
-        INVALID_CONTENT = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"OVERSIZED")]
-        OVERSIZED = 2,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"UPLOAD_FAILED")]
-        UPLOAD_FAILED = 3,
 
     }
 
@@ -5043,7 +5218,7 @@ namespace Viu.Emporix.AiServiceModels
         public string GenerationId { get; set; } = default!;
 
         /// <summary>
-        /// Date and time when the content was generated.
+        /// Date and time when the content was generated. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-30T13:18:02.379Z`
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("generatedAt")]
         public System.DateTimeOffset GeneratedAt { get; set; } = default!;
@@ -5067,10 +5242,18 @@ namespace Viu.Emporix.AiServiceModels
         public string? Model { get; set; } = default!;
 
         /// <summary>
-        /// Review state of the generated content.
+        /// Review state of the generated content. A generation response uses `not_reviewed`.
+        /// <br/>An entry stored when a person saves applied AI content uses `reviewed`.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("reviewStatus")]
         public string ReviewStatus { get; set; } = default!;
+
+        /// <summary>
+        /// Entity fields this generation wrote. Generation responses omit it.
+        /// <br/>A client records it when the person applies the generation.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("aiGeneratedFields")]
+        public System.Collections.Generic.ICollection<string>? AiGeneratedFields { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

@@ -109,6 +109,90 @@ public class PlatformWaveTests
         Assert.Equal("/iam/acme/groups/g%2F1?forceDelete=true", Uri(handler, 1));
     }
 
+    // ---------- Webhook failed messages and jobs ----------
+
+    [Fact]
+    public async Task The_failed_message_list_sends_only_the_filters_the_caller_chose()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """[{"id":"m1","targetType":"ENTRY","configCode":"orders","failedAt":"2026-11-20T10:00:00Z"}]""");
+        WebhookService webhooks = new(Http(handler), Options());
+
+        PaginatedItems<WebhookModels.FailedMessage> page = await webhooks.FailedMessages.ListAsync();
+        await webhooks.FailedMessages.ListAsync(
+            query: "configCode:orders", sort: "failedAt:asc", pageNumber: 2, pageSize: 10, includeTotalCount: true);
+
+        Assert.Equal("/webhook/acme/failed-messages?pageNumber=1&pageSize=60", Uri(handler, 0));
+        Assert.Null(handler.HeaderAt(0, "X-Total-Count"));
+        Assert.Equal(
+            "/webhook/acme/failed-messages?pageNumber=2&pageSize=10&q=configCode%3Aorders&sort=failedAt%3Aasc",
+            Uri(handler, 1));
+        Assert.Equal("true", handler.HeaderAt(1, "X-Total-Count"));
+        Assert.Equal(WebhookModels.DeliveryTargetType.ENTRY, page.Items.Single().TargetType);
+        Assert.True(IsRepeatable(handler));
+    }
+
+    [Fact]
+    public async Task Resending_and_restarting_are_never_repeated_and_a_restart_without_selection_takes_all()
+    {
+        // Both hand events to someone else's endpoint. An empty body is how
+        // Emporix spells «every stored message» for a restart.
+        StubHttpMessageHandler resend = new(HttpStatusCode.Accepted, string.Empty);
+        StubHttpMessageHandler restart = new(HttpStatusCode.Accepted, """{"id":"job-1"}""");
+
+        await new WebhookService(Http(resend), Options()).FailedMessages.ResendAsync("m/1");
+        WebhookModels.JobId? job =
+            await new WebhookService(Http(restart), Options()).FailedMessages.RestartAsync();
+
+        Assert.Equal(HttpMethod.Post, resend.RequestMethods[0]);
+        Assert.Equal("/webhook/acme/failed-messages/m%2F1/resend", Uri(resend));
+        Assert.False(IsRepeatable(resend));
+        Assert.Equal("/webhook/acme/failed-messages/restart", Uri(restart));
+        Assert.Equal("{}", restart.RequestBodies[0]);
+        Assert.False(IsRepeatable(restart));
+        Assert.Equal("job-1", job!.Id);
+    }
+
+    [Fact]
+    public async Task Deleting_by_selection_refuses_one_that_would_select_everything()
+    {
+        // Emporix deletes every stored message for an empty selection. A filter
+        // that came out blank must not get there; DeleteAllAsync says it by name.
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        WebhookFailedMessageOperations failed = new WebhookService(Http(handler), Options()).FailedMessages;
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            failed.DeleteMatchingAsync(new WebhookModels.FailedMessageSelection()));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            failed.DeleteMatchingAsync(new WebhookModels.FailedMessageSelection { ConfigCode = " ", Ids = [] }));
+        Assert.Equal(0, handler.CallCount);
+
+        await failed.DeleteMatchingAsync(new WebhookModels.FailedMessageSelection { EventType = "product.created" });
+        await failed.DeleteAllAsync();
+
+        Assert.Equal("/webhook/acme/failed-messages/delete", Uri(handler, 0));
+        Assert.Equal("""{"eventType":"product.created"}""", handler.RequestBodies[0]);
+        Assert.Equal("/webhook/acme/failed-messages/delete", Uri(handler, 1));
+        Assert.Equal("{}", handler.RequestBodies[1]);
+        Assert.False(IsRepeatable(handler));
+    }
+
+    [Fact]
+    public async Task A_restart_job_is_read_by_id_and_repeatably()
+    {
+        StubHttpMessageHandler handler = new(
+            HttpStatusCode.OK,
+            """{"id":"job-1","type":"failed_message_restart","status":"in_progress","republished":3,"skipped":1}""");
+
+        WebhookModels.Job? job = await new WebhookService(Http(handler), Options()).Jobs.GetAsync("job-1");
+
+        Assert.Equal("/webhook/acme/jobs/job-1", Uri(handler));
+        Assert.Equal(WebhookModels.JobStatus.In_progress, job!.Status);
+        Assert.Equal(3, job.Republished);
+        Assert.True(IsRepeatable(handler));
+    }
+
     [Fact]
     public async Task The_me_calls_are_their_own_endpoints()
     {

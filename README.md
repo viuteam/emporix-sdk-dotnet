@@ -526,7 +526,7 @@ chose. Each service hangs off the client under a name that says what it owns:
 | `client.Vendors` | who sells, in a marketplace |
 | `client.Currencies` | currencies and exchange rates |
 | `client.Countries` | countries and regions |
-| `client.Webhooks` | Emporix calling out when something happens |
+| `client.Webhooks` | Emporix calling out when something happens, and the events a switched-off target missed |
 | `client.Units` | units of measure, and converting between them |
 | `client.SequentialIds` | order numbers and the like |
 | `client.Configuration` | tenant and client configuration |

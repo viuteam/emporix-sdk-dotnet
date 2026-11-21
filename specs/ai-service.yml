@@ -327,6 +327,13 @@ paths:
                       metadata:
                         mixins:
                           provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
+                      artifacts:
+                        - artifactId: 6ae990f848a9ad145cebb466
+                          kind: image
+                          filename: image.png
+                          mimeType: image/png
+                          size: 18432
+                          status: ready
         '400':
           $ref: '#/components/responses/400_resp_common'
         '401':
@@ -341,6 +348,8 @@ paths:
         When the request includes `attachments`, each `attachments[].attachmentId` must reference a file already uploaded in this session. Send the upload `sessionId` as the `session-id` header. The attachment must already be attached to the `agentId` in the request body. After a file upload, send that same path `agentId` in the chat body. After reuse, send the target agent's path `agentId` in the chat body. If they differ, the request returns `400`. To use the file with a different agent, first assign the attachment to that agent with `attachmentId` on `POST /ai-service/{tenant}/agentic/{agentId}/attachments` using the target `agentId` in the path, then chat with that target agent.
 
         Generated replies include provenance details in `mixins` and the corresponding schema reference in `metadata`.
+
+        When the agent generates an image or a file, `artifacts` lists that file. Download a ready file with `artifactId`.
       security:
         - OAuth2:
             - ai.agentexecution_manage_own
@@ -383,7 +392,7 @@ paths:
                   * `tool_result` — `ChatStreamToolResultData`
                   * `artifact` — **The `artifact` event is in preview mode** - some of the features may not be fully operational yet.
 
-                    One image or file the agent decided to publish. The agent needs the built-in file generator (`file_generator`) in `nativeTools`, and the caller's token must include `media.asset_manage`. The image can come from the configured provider's image generation, and the file can come from the built-in file generator or from a tool result the agent included in its final answer. Download the private asset with `GET /media/{tenant}/assets/{artifact_id}/download`. The event carries no bytes and no URL. Image generation first sends `status` `pending` with `generation_id`. A provider that cannot draw returns `status` `failed` and `error_code` `CAPABILITY_UNAVAILABLE`. That failure does not fail the text stream.
+                    `ChatStreamArtifactData`
                   * `done` — `ChatStreamDoneData`
                   * `error` — **The `error` event is in preview mode** - some of the features may not be fully operational yet.
 
@@ -399,7 +408,7 @@ paths:
                     data: {"content":"delivery is available for order EON1243."}
 
                     event: artifact
-                    data: {"artifact_id":"6f1c0b2e-1a2b-4c3d-9e8f-112233445566","kind":"image","filename":"forest.png","mime_type":"image/png","size":184233,"status":"ready"}
+                    data: {"artifactId":"6f1c0b2e-1a2b-4c3d-9e8f-112233445566","kind":"image","filename":"forest.png","mimeType":"image/png","size":184233,"status":"ready"}
 
                     event: done
                     data: {"agent_id":"generic-agent","agent_type":"generic","session_id":"33a550d0-d812-4fb2-bb0d-d50dbfe3627b","mixins":{"provenance":{"entries":[{"origin":"ai_generated","contentVersion":1,"generationId":"req-1","generatedAt":"2026-11-12T09:00:00Z","generator":"generic-agent","generatorVersion":1,"model":"gpt-4o-mini","reviewStatus":"not_reviewed"}]}},"metadata":{"mixins":{"provenance":"https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json"}}}
@@ -454,13 +463,11 @@ paths:
         * `tool_result` — Tool output. `data` is `{ "tool_name": "...", "tool_call_id": "...", "output": {} }`. `output` is a JSON object or array. Credential-like keys in `output` are omitted.
         * `artifact` — **The `artifact` event is in preview mode** - some of the features may not be fully operational yet.
 
-          One image or file the agent decided to publish. `data` is `ChatStreamArtifactData`. The event carries no bytes and no URL.
+          One generated image or file. `data` is `ChatStreamArtifactData`.
         * `done` — The stream completed. `data` includes `agent_id`, `agent_type`, and `session_id` when present, plus provenance details for generated output. At least one identity field is sent.
         * `error` — **The `error` event is in preview mode** - some of the features may not be fully operational yet.
 
           A failure during generation. `data` includes `message` and/or `code`. Example codes are `AGENT_SETUP` and `RECURSION_LIMIT`.
-
-        SSE `data` fields use snake_case (`session_id`, `agent_id`, `agent_type`). They are not the camelCase fields of the synchronous chat `ChatResponse` (`sessionId`, `agentId`, `agentType`).
 
         HTTP `400`, `401`, `403`, and `500` responses are JSON problem bodies, not SSE events. They occur when the request is rejected before the stream starts. Unknown event names are not forwarded. Frames without an event name and with no data may appear as keepalives; ignore them.
       security:
@@ -558,14 +565,18 @@ paths:
 
         Send exactly one of `attachment` or `attachmentId`. Sending both or neither returns `400`.
 
-        **Upload a file:** Send the `attachment` form field. The response is `201` with the new attachment `id` and `sessionId`. Supported file extensions:
-          - jpg
-          - jpeg
-          - png
-          - pdf
-          - csv
-          - text
-          - txt
+        **Upload a file:** Send the `attachment` form field. The response is `201` with the new attachment `id` and `sessionId`. The following file extensions and content types are supported:
+          - jpg, jpeg – `image/jpeg`
+          - png – `image/png`
+          - pdf – `application/pdf`
+          - csv – `text/csv`
+          - text, txt – `text/plain`
+          - json – `application/json`
+          - xml – `application/xml` or `text/xml`
+          - html, htm – `text/html`
+          - xlsx – `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+
+        The file extension must match the content type of the `attachment` part. Content type parameters, such as `charset=utf-8`, are ignored. Legacy Excel files (`xls`) are not supported. An unsupported content type or file extension returns `400`, and the error message lists the supported file extensions.
 
         **Assign existing media:** Send `attachmentId` and the target agent's `agentId` in the path. Use either the `attachmentId` form field or an `application/json` body with `attachmentId`. The response is `200` with the attachment `id` and `sessionId`. If you omit the `session-id` header, the response includes the generated `sessionId`.
 
@@ -881,7 +892,7 @@ paths:
         '409':
           $ref: '#/components/responses/409_resp_common'
       description: |-
-        Updates or creates a specified product by replacing all of its existing data with data from the request body.
+        Updates or creates a specified agent by replacing all of its existing data with data from the request body.
         If the `metadata.version` is provided then optimistic locking is enabled and version must match the version in the database.
         A successful update increments `metadata.version` and stores the previous configuration. A request that sends a stale `metadata.version` returns `409`.
       security:
@@ -3196,7 +3207,9 @@ components:
             config:
               $ref: '#/components/schemas/McpServerConfigRequest'
             metadata:
-              $ref: '#/components/schemas/MetadataRequest'
+              $ref: '#/components/schemas/McpMetadataRequest'
+            mixins:
+              $ref: '#/components/schemas/MixinValuesRequest'
           required:
             - name
             - transport
@@ -3226,7 +3239,9 @@ components:
               items:
                 $ref: '#/components/schemas/McpToolRequest'
             metadata:
-              $ref: '#/components/schemas/MetadataRequest'
+              $ref: '#/components/schemas/McpMetadataRequest'
+            mixins:
+              $ref: '#/components/schemas/MixinValuesRequest'
           required:
             - name
             - type
@@ -3252,7 +3267,9 @@ components:
             config:
               $ref: '#/components/schemas/McpServerConfigResponse'
             metadata:
-              $ref: '#/components/schemas/MetadataResponse'
+              $ref: '#/components/schemas/McpMetadataResponse'
+            mixins:
+              $ref: '#/components/schemas/McpMixinValuesResponse'
     DynamicMcpServerResponse:
       allOf:
         - $ref: '#/components/schemas/BaseManagedMcpServer'
@@ -3275,7 +3292,9 @@ components:
               items:
                 $ref: '#/components/schemas/McpToolResponse'
             metadata:
-              $ref: '#/components/schemas/MetadataResponse'
+              $ref: '#/components/schemas/McpMetadataResponse'
+            mixins:
+              $ref: '#/components/schemas/McpMixinValuesResponse'
     McpServerResponse:
       oneOf:
         - $ref: '#/components/schemas/CustomMcpServerResponse'
@@ -4023,6 +4042,10 @@ components:
                     changeNote:
                       type: string
                       description: Optional note stored on this version. A blank value clears the live note. The next successful update archives the note with this version.
+                    mixins:
+                      $ref: '#/components/schemas/MixinSchemaUrls'
+            mixins:
+              $ref: '#/components/schemas/MixinValuesRequest'
           required:
             - llmConfig
             - mcpServers
@@ -4055,6 +4078,10 @@ components:
               description: Prompt which is inherited from the template (if agent is created based on the template). The prompt provided by the user is then concatenated with this prompt.
             metadata:
               $ref: '#/components/schemas/AgentMetadataResponse'
+            mixins:
+              type: object
+              additionalProperties: true
+              description: Mixin values keyed by name. Present when the agent stores mixins.
             versions:
               type: array
               description: Stored history of previous agent configurations. Present only when the request sets `allVersions=true`. Omitted otherwise.
@@ -4079,6 +4106,10 @@ components:
               $ref: '#/components/schemas/AgentMcpServersResponse'
             metadata:
               $ref: '#/components/schemas/AgentVersionMetadata'
+            mixins:
+              type: object
+              additionalProperties: true
+              description: Mixin values stored with this version.
           required:
             - metadata
     AgentVersionMetadata:
@@ -4098,6 +4129,11 @@ components:
         changeNote:
           type: string
           description: Note stored with this snapshot.
+        mixins:
+          type: object
+          additionalProperties:
+            type: string
+          description: JSON Schema URLs for the mixins stored in this version.
     ModifiedBy:
       type: object
       description: Who last changed the agent.
@@ -4122,6 +4158,35 @@ components:
         lastName:
           type: string
           description: Last name of the customer or employee.
+    MixinSchemaUrls:
+      type: object
+      additionalProperties:
+        type: string
+      description: Map of mixin names to the URLs of their JSON Schemas.
+    MixinValuesRequest:
+      type: object
+      nullable: true
+      additionalProperties: true
+      description: |-
+        Mixin values keyed by name. When `metadata.mixins` has a schema URL for a key, that value is validated against the schema. Omitting mixin metadata skips schema validation. Send the full map on every upsert. A missing or null `mixins` clears stored mixins.
+    McpMetadataRequest:
+      allOf:
+        - $ref: '#/components/schemas/MetadataRequest'
+        - type: object
+          properties:
+            mixins:
+              $ref: '#/components/schemas/MixinSchemaUrls'
+    McpMetadataResponse:
+      allOf:
+        - $ref: '#/components/schemas/MetadataResponse'
+        - type: object
+          properties:
+            mixins:
+              $ref: '#/components/schemas/MixinSchemaUrls'
+    McpMixinValuesResponse:
+      type: object
+      additionalProperties: true
+      description: Mixin values keyed by name. Present when the MCP server stores mixins.
     MetadataRequest:
       type: object
       properties:
@@ -4156,6 +4221,8 @@ components:
             changeNote:
               type: string
               description: Note stored for this live version.
+            mixins:
+              $ref: '#/components/schemas/MixinSchemaUrls'
 
     # Jobs:
     JobStatus:
@@ -4308,10 +4375,87 @@ components:
         message:
           type: string
           description: Agent message.
+        artifacts:
+          type: array
+          description: Generated images and files. Omitted when the reply has none.
+          items:
+            $ref: '#/components/schemas/ChatArtifact'
         mixins:
           $ref: '#/components/schemas/ProvenanceMixins'
         metadata:
           $ref: '#/components/schemas/ProvenanceMetadata'
+    ChatArtifact:
+      description: Metadata for one generated image or file.
+      oneOf:
+        - $ref: '#/components/schemas/ChatArtifactReady'
+        - $ref: '#/components/schemas/ChatArtifactFailed'
+    ChatArtifactReady:
+      type: object
+      description: A generated file whose bytes are stored. `artifactId` is present.
+      required:
+        - artifactId
+        - kind
+        - filename
+        - mimeType
+        - size
+        - status
+      properties:
+        artifactId:
+          type: string
+          description: Media asset id.
+        kind:
+          type: string
+          enum: [image, file]
+          description: Generated content type.
+        filename:
+          type: string
+          description: File name.
+        mimeType:
+          type: string
+          description: Media type of the file.
+        size:
+          type: integer
+          description: Size in bytes.
+        status:
+          type: string
+          enum: [ready]
+          description: '`ready`.'
+        generationId:
+          type: string
+          description: Generation identifier.
+    ChatArtifactFailed:
+      type: object
+      description: A generated file that was not stored.
+      required:
+        - kind
+        - filename
+        - mimeType
+        - size
+        - status
+      properties:
+        kind:
+          type: string
+          enum: [image, file]
+          description: Generated content type.
+        filename:
+          type: string
+          description: File name.
+        mimeType:
+          type: string
+          description: Media type of the file.
+        size:
+          type: integer
+          description: Size in bytes.
+        status:
+          type: string
+          enum: [failed]
+          description: '`failed`.'
+        errorCode:
+          type: string
+          description: Failure code.
+        generationId:
+          type: string
+          description: Generation identifier.
     ProvenanceMixins:
       type: object
       description: |-
@@ -4351,7 +4495,7 @@ components:
                   generatedAt:
                     type: string
                     format: date-time
-                    description: Date and time when the content was generated.
+                    description: 'Date and time when the content was generated. The value is approved as an ISO-8601 representation of an Instant. For example: `2022-04-30T13:18:02.379Z`'
                   generator:
                     type: string
                     description: Identifier of the generator.
@@ -4363,7 +4507,16 @@ components:
                     description: AI model used to generate the content, when available.
                   reviewStatus:
                     type: string
-                    description: Review state of the generated content.
+                    description: |-
+                      Review state of the generated content. A generation response uses `not_reviewed`.
+                      An entry stored when a person saves applied AI content uses `reviewed`.
+                  aiGeneratedFields:
+                    type: array
+                    items:
+                      type: string
+                    description: |-
+                      Entity fields this generation wrote. Generation responses omit it.
+                      A client records it when the person applies the generation.
     ProvenanceMetadata:
       type: object
       description: Schema references for response mixins.
@@ -4380,58 +4533,40 @@ components:
       description: |-
         **The `artifact` event is in preview mode** - some of the features may not be fully operational yet.
 
-        JSON object in the SSE `data` field when `event` is `artifact`. The agent published one image or file. Bytes stay in Media Service. A `failed` status does not fail the text stream.
-
-        The agent publishes artifacts only when it has the built-in file generator (`file_generator`) in `nativeTools` and the caller's token includes the `media.asset_manage` scope. Downloading a ready asset requires the `media.asset_read` scope. Only the chat stream sends artifacts. The synchronous chat endpoint and agent jobs do not.
+        JSON object in the SSE `data` field when `event` is `artifact`.
       required:
         - kind
         - filename
-        - mime_type
+        - mimeType
         - size
         - status
       properties:
-        artifact_id:
+        artifactId:
           type: string
-          description: Media Service asset id. Present when `status` is `ready`. Absent while `status` is `pending`. Download with `GET /media/{tenant}/assets/{artifact_id}/download`.
-        generation_id:
+          description: Media asset id. Present when `status` is `ready`.
+        generationId:
           type: string
-          description: Correlates the pending image card with the later ready or failed event. Absent when the artifact was not produced by image generation.
+          description: Present for a generated image. Required when `status` is `pending`.
         kind:
           type: string
-          enum:
-            - image
-            - file
-          description: Image preview or file download.
+          enum: [image, file]
+          description: Generated content type. `pending` is `image` only.
         filename:
           type: string
-          description: Display name of the artifact.
-        mime_type:
+          description: File name.
+        mimeType:
           type: string
-          description: Media type of the stored asset.
+          description: Media type of the file.
         size:
           type: integer
-          minimum: 0
-          description: Size of the stored asset in bytes. `0` when generation failed before upload.
+          description: Size in bytes.
         status:
           type: string
-          enum:
-            - pending
-            - ready
-            - failed
-          description: '`pending` means an image is still generating. `ready` means the asset can be downloaded. `failed` means this item failed and the text answer continues.'
-        error_code:
+          enum: [pending, ready, failed]
+          description: '`pending`, `ready`, or `failed`.'
+        errorCode:
           type: string
-          enum:
-            - CAPABILITY_UNAVAILABLE
-            - INVALID_CONTENT
-            - OVERSIZED
-            - UPLOAD_FAILED
-          description: |-
-            Stable failure code. Present when `status` is `failed`. Possible values:
-            * `CAPABILITY_UNAVAILABLE` — the agent's model provider cannot generate images.
-            * `INVALID_CONTENT` — the requested file content was rejected.
-            * `OVERSIZED` — the image or file exceeds the size limit.
-            * `UPLOAD_FAILED` — the asset could not be stored in Media Service.
+          description: Failure code. Present when `status` is `failed`.
     ChatStreamEventData:
       title: SSE data payload
       description: JSON object in one SSE `data` field. This is not the HTTP response body. The response body is `text/event-stream` text; each named event carries one of these objects in `data`.
@@ -4440,9 +4575,9 @@ components:
         - $ref: '#/components/schemas/ChatStreamThinkingData'
         - $ref: '#/components/schemas/ChatStreamToolMetaData'
         - $ref: '#/components/schemas/ChatStreamToolResultData'
+        - $ref: '#/components/schemas/ChatStreamArtifactData'
         - $ref: '#/components/schemas/ChatStreamDoneData'
         - $ref: '#/components/schemas/ChatStreamErrorData'
-        - $ref: '#/components/schemas/ChatStreamArtifactData'
     ChatStreamTokenData:
       title: Token event data
       type: object
@@ -5758,6 +5893,22 @@ components:
           authorizationHeaderName: Authorization
           authorizationHeaderToken:
             id: token-id
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 1
+                generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+        metadata:
+          version: 1
+          createdAt: '2026-11-13T10:00:00.000Z'
+          modifiedAt: '2026-11-13T10:00:00.000Z'
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     McpServersResponse:
       value:
         - id: mcp-custom
@@ -5770,6 +5921,22 @@ components:
             authorizationHeaderName: Authorization
             authorizationHeaderToken:
               id: token-id
+          mixins:
+            provenance:
+              entries:
+                - origin: ai_generated
+                  contentVersion: 1
+                  generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                  generatedAt: '2026-11-13T10:00:00Z'
+                  generator: agent-chat
+                  model: gpt-4o-mini
+                  reviewStatus: reviewed
+          metadata:
+            version: 1
+            createdAt: '2026-11-13T10:00:00.000Z'
+            modifiedAt: '2026-11-13T10:00:00.000Z'
+            mixins:
+              provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
         - id: mcp-dynamic
           name: Dynamic MCP Server
           type: dynamic
@@ -5788,6 +5955,24 @@ components:
                   functionId: fn-get-order
                   method: GET
                   argsLocation: query
+          mixins:
+            provenance:
+              entries:
+                - origin: ai_generated
+                  contentVersion: 1
+                  generationId: 7a2d3c1f-5b2e-4f4b-8d1c-2e3f4a5b6c7d
+                  generatedAt: '2026-11-13T10:00:00Z'
+                  generator: agent-chat
+                  model: gpt-4o-mini
+                  reviewStatus: reviewed
+                  aiGeneratedFields:
+                    - tools[0]
+          metadata:
+            version: 1
+            createdAt: '2026-11-13T10:00:00.000Z'
+            modifiedAt: '2026-11-13T10:00:00.000Z'
+            mixins:
+              provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     CommerceEventsResponse:
       value:
         events:
@@ -5903,6 +6088,18 @@ components:
           - name: slack
             config:
               teamId: T0445953
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 2
+                generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+                aiGeneratedFields:
+                  - outputFormat
         metadata:
           version: 2
           createdAt: '2025-07-25T10:31:14.509Z'
@@ -5910,6 +6107,8 @@ components:
           modifiedBy:
             type: EMPLOYEE
             id: jane.doe
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     AgentWithVersionHistory:
       value:
         id: "123"
@@ -5936,12 +6135,26 @@ components:
             enabled: false
             triggers:
               - type: endpoint
+            mixins:
+              provenance:
+                entries:
+                  - origin: ai_generated
+                    contentVersion: 2
+                    generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                    generatedAt: '2026-11-13T10:00:00Z'
+                    generator: agent-chat
+                    model: gpt-4o-mini
+                    reviewStatus: reviewed
+                    aiGeneratedFields:
+                      - outputFormat
             metadata:
               version: 2
               modifiedAt: '2025-07-26T10:31:14.509Z'
               modifiedBy:
                 type: SYSTEM
               changeNote: deleted native tool
+              mixins:
+                provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     AgentsResponse:
       value:
         - id: "123"
@@ -5976,12 +6189,26 @@ components:
             - name: slack
               config:
                 teamId: T0445953
+          mixins:
+            provenance:
+              entries:
+                - origin: ai_generated
+                  contentVersion: 2
+                  generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                  generatedAt: '2026-11-13T10:00:00Z'
+                  generator: agent-chat
+                  model: gpt-4o-mini
+                  reviewStatus: reviewed
+                  aiGeneratedFields:
+                    - outputFormat
           metadata:
             version: 2
             createdAt: '2025-07-25T10:31:14.509Z'
             modifiedAt: '2025-07-26T10:31:14.509Z'
             modifiedBy:
               type: EXTERNAL
+            mixins:
+              provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     CustomMcpServerRequest:
       value:
         name: Custom MCP Server
@@ -5993,6 +6220,20 @@ components:
           authorizationHeaderName: Authorization
           authorizationHeaderToken:
             id: token-id
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 1
+                generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+        metadata:
+          version: 1
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     DynamicMcpServerRequest:
       value:
         name: Dynamic MCP Server
@@ -6011,6 +6252,22 @@ components:
                 functionId: fn-get-order
                 method: GET
                 argsLocation: query
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 1
+                generationId: 7a2d3c1f-5b2e-4f4b-8d1c-2e3f4a5b6c7d
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+                aiGeneratedFields:
+                  - tools[0]
+        metadata:
+          version: 1
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     CustomMcpServerResponse:
       value:
         id: mcp-custom
@@ -6023,6 +6280,22 @@ components:
           authorizationHeaderName: Authorization
           authorizationHeaderToken:
             id: token-id
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 1
+                generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+        metadata:
+          version: 1
+          createdAt: '2026-11-13T10:00:00.000Z'
+          modifiedAt: '2026-11-13T10:00:00.000Z'
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     DynamicMcpServerResponse:
       value:
         id: mcp-dynamic
@@ -6043,6 +6316,24 @@ components:
                 functionId: fn-get-order
                 method: GET
                 argsLocation: query
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 1
+                generationId: 7a2d3c1f-5b2e-4f4b-8d1c-2e3f4a5b6c7d
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+                aiGeneratedFields:
+                  - tools[0]
+        metadata:
+          version: 1
+          createdAt: '2026-11-13T10:00:00.000Z'
+          modifiedAt: '2026-11-13T10:00:00.000Z'
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     TokenRequest:
       value:
         name: OpenAI Token
@@ -6166,6 +6457,22 @@ components:
             allowedOperations:
               - sendMessage
               - collaborateOnChannel
+        mixins:
+          provenance:
+            entries:
+              - origin: ai_generated
+                contentVersion: 1
+                generationId: 6f1c2b0e-4a1d-4e3a-9c0b-1d2e3f4a5b6c
+                generatedAt: '2026-11-13T10:00:00Z'
+                generator: agent-chat
+                model: gpt-4o-mini
+                reviewStatus: reviewed
+                aiGeneratedFields:
+                  - outputFormat
+        metadata:
+          version: 1
+          mixins:
+            provenance: https://res.cloudinary.com/saas-ag/raw/upload/provenance_lswyqe.json
     ExportResponse:
       value:
         jobId: job-id-of-export-job

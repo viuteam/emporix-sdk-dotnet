@@ -299,6 +299,324 @@ namespace Viu.Emporix.WebhookModels
     }
 
     /// <summary>
+    /// Delivery status of a target. Returned only when the `expand` query parameter contains `deliveryStatus`. The status is returned in the following places:
+    /// <br/>* on each `eventsConfiguration` entry that has an `id`
+    /// <br/>* on the HTTP `configuration` for the global destination
+    /// <br/>* at the top level of `svix` and `svix_shared` configurations
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class DeliveryStatus
+    {
+
+        /// <summary>
+        /// * `ACTIVE` – Events are delivered to the target.
+        /// <br/>* `FAILING` – Deliveries to the target fail. While the number of failed deliveries in a row is below the failure threshold, the service still sends events to the target. When the threshold is reached, the service stops calling the target and stores its events as failed messages until you switch its configuration or entry back on.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DeliveryStatusStatus>))]
+        public DeliveryStatusStatus? Status { get; set; } = default!;
+
+        /// <summary>
+        /// Number of failed deliveries in a row. Reset to `0` after a successful delivery. A target that never failed returns `ACTIVE` and `0`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("consecutiveFailures")]
+        public int? ConsecutiveFailures { get; set; } = default!;
+
+        /// <summary>
+        /// Error message of the last failed delivery.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("lastErrorMessage")]
+        public string? LastErrorMessage { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status code returned by the target on the last failed delivery, if any.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("lastErrorStatusCode")]
+        public int? LastErrorStatusCode { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time of the last failed delivery.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("lastFailureAt")]
+        public System.DateTimeOffset? LastFailureAt { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the target became `FAILING`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("failingSince")]
+        public System.DateTimeOffset? FailingSince { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Type of the delivery target:
+    /// <br/>* `ENTRY` – An `eventsConfiguration` entry of an HTTP configuration.
+    /// <br/>* `HTTP_GLOBAL` – The global `destinationUrl` of an HTTP configuration.
+    /// <br/>* `SVIX` – A Svix Custom Account configuration.
+    /// <br/>* `SVIX_SHARED` – A Svix Emporix Shared Account configuration.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DeliveryTargetType>))]
+    public enum DeliveryTargetType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ENTRY")]
+        ENTRY = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"HTTP_GLOBAL")]
+        HTTP_GLOBAL = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SVIX")]
+        SVIX = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"SVIX_SHARED")]
+        SVIX_SHARED = 3,
+
+    }
+
+    /// <summary>
+    /// An event that the service stored instead of delivering it.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FailedMessage
+    {
+
+        /// <summary>
+        /// Failed message's unique identifier. A failed delivery of the same event to the same target is stored only once.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the delivery target, in one of the following formats:
+        /// <br/>* `{configCode}:{entryId}` for an entry
+        /// <br/>* `{configCode}:global` for the global HTTP destination
+        /// <br/>* `{configCode}:svix` or `{configCode}:svix_shared` for Svix
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("targetId")]
+        public string? TargetId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("targetType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DeliveryTargetType>))]
+        public DeliveryTargetType? TargetType { get; set; } = default!;
+
+        /// <summary>
+        /// Code of the webhook configuration the target belongs to.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("configCode")]
+        public string? ConfigCode { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the `eventsConfiguration` entry. Present only for `ENTRY` targets.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("entryId")]
+        public string? EntryId { get; set; } = default!;
+
+        /// <summary>
+        /// Type of the event, for example `product.created`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("eventType")]
+        public string? EventType { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the original event message.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("originalMessageId")]
+        public string? OriginalMessageId { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the original event was published.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("publishTime")]
+        public System.DateTimeOffset? PublishTime { get; set; } = default!;
+
+        /// <summary>
+        /// Error message of the failed delivery.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("errorMessage")]
+        public string? ErrorMessage { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status code returned by the target, if any.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("errorStatusCode")]
+        public int? ErrorStatusCode { get; set; } = default!;
+
+        /// <summary>
+        /// Number of the target's failed deliveries in a row at the time the message was stored.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("retryCount")]
+        public int? RetryCount { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the message was stored.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("failedAt")]
+        public System.DateTimeOffset? FailedAt { get; set; } = default!;
+
+        /// <summary>
+        /// Event payload, before excluded fields are removed. Returned only when you retrieve a single failed message.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("payload")]
+        public object? Payload { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Selection of failed messages. All criteria are optional and are combined with `AND`. An empty selection matches every stored message.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FailedMessageSelection
+    {
+
+        /// <summary>
+        /// Failed message IDs.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ids")]
+        public System.Collections.Generic.ICollection<string>? Ids { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("targetType")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<DeliveryTargetType>))]
+        public DeliveryTargetType? TargetType { get; set; } = default!;
+
+        /// <summary>
+        /// Code of the webhook configuration.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("configCode")]
+        public string? ConfigCode { get; set; } = default!;
+
+        /// <summary>
+        /// Identifier of the `eventsConfiguration` entry.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("entryId")]
+        public string? EntryId { get; set; } = default!;
+
+        /// <summary>
+        /// Type of the event, for example `product.created`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("eventType")]
+        public string? EventType { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Identifier of the started job.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class JobId
+    {
+
+        /// <summary>
+        /// Job's unique identifier, generated when the job is started.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// A long-running operation, such as a restart of failed messages.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Job
+    {
+
+        /// <summary>
+        /// Job's unique identifier, generated when the job is started.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// Type of the job:
+        /// <br/>* `failed_message_restart` – A restart of failed messages.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<JobType>))]
+        public JobType? Type { get; set; } = default!;
+
+        /// <summary>
+        /// Status of the job:
+        /// <br/>* `in_progress` – The job is running.
+        /// <br/>* `success` – The job finished. See `republished` and `skipped` for the result.
+        /// <br/>* `failure` – The job stopped. The reason is in `response`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(Viu.Emporix.NullOnUnknownEnumConverter<JobStatus>))]
+        public JobStatus? Status { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("selection")]
+        public FailedMessageSelection? Selection { get; set; } = default!;
+
+        /// <summary>
+        /// Number of failed messages queued for delivery again so far.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("republished")]
+        public int? Republished { get; set; } = default!;
+
+        /// <summary>
+        /// Number of failed messages skipped so far. Skipped messages stay stored.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("skipped")]
+        public int? Skipped { get; set; } = default!;
+
+        /// <summary>
+        /// Summary of the result, or the reason why the job failed.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("response")]
+        public string? Response { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public Metadata2? Metadata { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
     /// Webhook provider strategy. Maps to configuration types as follows:
     /// <br/>
     /// <br/>* `SVIX` – `svix`
@@ -741,6 +1059,12 @@ namespace Viu.Emporix.WebhookModels
         [System.Text.Json.Serialization.JsonPropertyName("configuration")]
         public System.Text.Json.JsonElement? Configuration { get; set; } = default!;
 
+        [System.Text.Json.Serialization.JsonPropertyName("suspendedAt")]
+        public System.DateTimeOffset? SuspendedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("deliveryStatus")]
+        public DeliveryStatus? DeliveryStatus { get; set; } = default!;
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -752,6 +1076,12 @@ namespace Viu.Emporix.WebhookModels
 
         [System.Text.Json.Serialization.JsonPropertyName("configuration")]
         public System.Text.Json.JsonElement? Configuration { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("suspendedAt")]
+        public System.DateTimeOffset? SuspendedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("deliveryStatus")]
+        public DeliveryStatus? DeliveryStatus { get; set; } = default!;
 
     }
 
@@ -917,10 +1247,95 @@ namespace Viu.Emporix.WebhookModels
         public System.Collections.Generic.ICollection<string>? ExcludedFields { get; set; } = default!;
 
         /// <summary>
-        /// Per-endpoint activation switch. Always returned as an explicit boolean; entries created before the flag existed report `true`. When `false`, events for this endpoint are dropped without filter evaluation, delivery, or retries.
+        /// Per-endpoint activation switch. Always returned as an explicit boolean; entries created before the flag existed report `true`. When `false`, events for this endpoint are dropped without filter evaluation, delivery, or retries, unless the service switched the entry off after failing deliveries (`suspendedAt` is set). In that case, its events are stored as failed messages.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("active")]
         public bool? Active { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the service switched the entry off because its target kept failing. Absent otherwise. Setting `active` to `true` removes it.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("suspendedAt")]
+        public System.DateTimeOffset? SuspendedAt { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("deliveryStatus")]
+        public DeliveryStatus? DeliveryStatus { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<DeliveryStatusStatus>))]
+    public enum DeliveryStatusStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ACTIVE")]
+        ACTIVE = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"FAILING")]
+        FAILING = 1,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobType>))]
+    public enum JobType
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"failed_message_restart")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("failed_message_restart")]
+        Failed_message_restart = 0,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<JobStatus>))]
+    public enum JobStatus
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"in_progress")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("in_progress")]
+        In_progress = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"success")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("success")]
+        Success = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"failure")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("failure")]
+        Failure = 2,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Metadata2
+    {
+
+        /// <summary>
+        /// Date and time when the job was started.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("createdAt")]
+        public System.DateTimeOffset? CreatedAt { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the job was last modified.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("modifiedAt")]
+        public System.DateTimeOffset? ModifiedAt { get; set; } = default!;
+
+        /// <summary>
+        /// Date and time when the job finished.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("finishedAt")]
+        public System.DateTimeOffset? FinishedAt { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Options;
 
 namespace Viu.Emporix;
@@ -6,9 +7,19 @@ namespace Viu.Emporix;
 /// Webhooks — Emporix calling out when something happens.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A configuration says where to deliver and which events to send. The
 /// subscriptions are what a tenant is actually signed up to; the dashboard and
 /// statistics belong to the delivery provider behind it.
+/// </para>
+/// <para>
+/// A delivery target that keeps failing is switched off: by default after 100
+/// failures in a row, Emporix stops calling it, sets <c>suspendedAt</c> on its
+/// configuration or entry, and stores its events as
+/// <see cref="FailedMessages"/> instead. Setting <c>active</c> back to
+/// <see langword="true"/> through <see cref="ReplaceAsync"/> or
+/// <see cref="UpdateAsync"/> switches it on again.
+/// </para>
 /// </remarks>
 public sealed class WebhookService
 {
@@ -25,6 +36,12 @@ public sealed class WebhookService
     }
 
     private string BasePath => $"/webhook/{_tenant}/config";
+
+    /// <summary>The events stored for a switched-off delivery target.</summary>
+    public WebhookFailedMessageOperations FailedMessages => new(_http, _tenant);
+
+    /// <summary>The jobs that restart failed messages.</summary>
+    public WebhookJobOperations Jobs => new(_http, _tenant);
 
     /// <summary>Lists the webhook configurations.</summary>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
@@ -250,6 +267,352 @@ public sealed class WebhookService
             },
             WebhookJsonContext.Default.JsonElement,
             cancellationToken).ConfigureAwait(false);
+}
+
+/// <summary>
+/// The events stored for a delivery target Emporix switched off.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Reached through <see cref="WebhookService.FailedMessages"/>. Emporix keeps
+/// them for 14 days on production and one day on preprod. Each can be sent
+/// again, restarted as part of a selection, or deleted.
+/// </para>
+/// <para>
+/// Sending again goes to the target's current configuration and counts towards
+/// its failure limit, so switch the target back on first: a message whose
+/// configuration or entry is not active is not sent.
+/// </para>
+/// </remarks>
+public sealed class WebhookFailedMessageOperations
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal WebhookFailedMessageOperations(EmporixHttpClient http, string tenant)
+    {
+        _http = http;
+        _tenant = tenant;
+    }
+
+    private string BasePath => $"/webhook/{_tenant}/failed-messages";
+
+    /// <summary>Fetches one page of failed messages, without their payloads.</summary>
+    /// <param name="query">
+    /// An optional Emporix filter over any field but the payload, for example
+    /// <c>configCode:orders</c>. Date values go in quotation marks.
+    /// </param>
+    /// <param name="sort">
+    /// Fields to sort by, such as <c>failedAt:asc</c>. Emporix sorts newest first
+    /// when omitted.
+    /// </param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size, at most 2,000.</param>
+    /// <param name="includeTotalCount">Ask Emporix for the total number of matches.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>A list never carries the payload; <see cref="GetAsync"/> does.</remarks>
+    public async Task<PaginatedItems<WebhookModels.FailedMessage>> ListAsync(
+        string? query = null,
+        string? sort = null,
+        int pageNumber = 1,
+        int pageSize = 60,
+        bool includeTotalCount = false,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Query =
+                [
+                    new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
+                    new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+                    new("q", query),
+                    new("sort", sort),
+                ],
+                Headers = includeTotalCount ? [new("X-Total-Count", "true")] : null,
+                Idempotent = true,
+            },
+            WebhookJsonContext.Default.ListFailedMessage,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Fetches a failed message, payload included.</summary>
+    /// <param name="failedMessageId">The failed message id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixNotFoundException">No failed message exists with this id.</exception>
+    public async Task<WebhookModels.FailedMessage?> GetAsync(
+        string failedMessageId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(failedMessageId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(failedMessageId)}",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            WebhookJsonContext.Default.FailedMessage,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Sends one failed message again and removes it from the store.</summary>
+    /// <param name="failedMessageId">The failed message id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <para>
+    /// The delivery happens after the call returns. Emporix answers <c>409</c>
+    /// when the message's configuration or entry is not active.
+    /// </para>
+    /// <para>
+    /// Not repeatable: it hands an event to someone else's endpoint.
+    /// </para>
+    /// </remarks>
+    public Task ResendAsync(
+        string failedMessageId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(failedMessageId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/{Uri.EscapeDataString(failedMessageId)}/resend",
+                Auth = Defaults.Service(auth),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Starts a job that sends the selected failed messages again.</summary>
+    /// <param name="selection">
+    /// Which messages, every criterion combined with AND. Omitted or empty, it
+    /// selects every stored message.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>The job's id, to follow with <see cref="WebhookJobOperations.GetAsync"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// The job takes only the messages stored before it started, and skips and
+    /// keeps any whose configuration or entry is not active. One restart job runs
+    /// per tenant at a time; starting another answers <c>409</c>.
+    /// </para>
+    /// <para>
+    /// Not repeatable, for the same reason <see cref="ResendAsync"/> is not.
+    /// </para>
+    /// </remarks>
+    public async Task<WebhookModels.JobId?> RestartAsync(
+        WebhookModels.FailedMessageSelection? selection = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/restart",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    selection ?? new WebhookModels.FailedMessageSelection(),
+                    WebhookJsonContext.Default.FailedMessageSelection),
+            },
+            WebhookJsonContext.Default.JobId,
+            cancellationToken).ConfigureAwait(false);
+
+    /// <summary>Deletes a failed message without sending it.</summary>
+    /// <param name="failedMessageId">The failed message id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public Task DeleteAsync(
+        string failedMessageId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(failedMessageId);
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Delete,
+                Path = $"{BasePath}/{Uri.EscapeDataString(failedMessageId)}",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Deletes every failed message the selection matches, without sending them.</summary>
+    /// <param name="selection">Which messages, every criterion combined with AND.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// <para>
+    /// A selection with no criterion is refused here. Emporix reads it as every
+    /// stored message, which is <see cref="DeleteAllAsync"/> and should be asked
+    /// for by name rather than reached through a filter that came out empty.
+    /// </para>
+    /// <para>
+    /// Not repeatable: messages that arrive between two attempts and match the
+    /// selection would go as well.
+    /// </para>
+    /// </remarks>
+    public Task DeleteMatchingAsync(
+        WebhookModels.FailedMessageSelection selection,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(selection);
+
+        if (SelectsEverything(selection))
+        {
+            throw new ArgumentException(
+                "The selection has no criterion, which Emporix reads as every stored message. "
+                + "Use DeleteAllAsync to delete them all.",
+                nameof(selection));
+        }
+
+        return DeleteSelectionAsync(selection, auth, cancellationToken);
+    }
+
+    /// <summary>Deletes every stored failed message, without sending any.</summary>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>The events are lost; nothing undoes this.</remarks>
+    public Task DeleteAllAsync(
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+        => DeleteSelectionAsync(new WebhookModels.FailedMessageSelection(), auth, cancellationToken);
+
+    private Task DeleteSelectionAsync(
+        WebhookModels.FailedMessageSelection selection,
+        AuthContext auth,
+        CancellationToken cancellationToken)
+        => _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Post,
+                Path = $"{BasePath}/delete",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    selection,
+                    WebhookJsonContext.Default.FailedMessageSelection),
+            },
+            cancellationToken);
+
+    // Blank strings count as absent: a filter value that came out empty must
+    // not turn a delete into a delete of everything.
+    private static bool SelectsEverything(WebhookModels.FailedMessageSelection selection)
+        => (selection.Ids is null || selection.Ids.Count == 0)
+            && selection.TargetType is null
+            && string.IsNullOrWhiteSpace(selection.ConfigCode)
+            && string.IsNullOrWhiteSpace(selection.EntryId)
+            && string.IsNullOrWhiteSpace(selection.EventType);
+}
+
+/// <summary>
+/// The jobs that restart failed messages.
+/// </summary>
+/// <remarks>
+/// Reached through <see cref="WebhookService.Jobs"/>. A job comes from
+/// <see cref="WebhookFailedMessageOperations.RestartAsync"/>, and this is where
+/// its progress is read.
+/// </remarks>
+public sealed class WebhookJobOperations
+{
+    private readonly EmporixHttpClient _http;
+    private readonly string _tenant;
+
+    internal WebhookJobOperations(EmporixHttpClient http, string tenant)
+    {
+        _http = http;
+        _tenant = tenant;
+    }
+
+    private string BasePath => $"/webhook/{_tenant}/jobs";
+
+    /// <summary>Fetches one page of the tenant's jobs.</summary>
+    /// <param name="sort">Fields to sort by. Emporix returns the newest first when omitted.</param>
+    /// <param name="pageNumber">The page number, counting from 1.</param>
+    /// <param name="pageSize">The page size, at most 2,000.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    public async Task<PaginatedItems<WebhookModels.Job>> ListAsync(
+        string? sort = null,
+        int pageNumber = 1,
+        int pageSize = 60,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+
+        return await _http.SendPageAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = BasePath,
+                Auth = Defaults.Service(auth),
+                Query =
+                [
+                    new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
+                    new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+                    new("sort", sort),
+                ],
+                Idempotent = true,
+            },
+            WebhookJsonContext.Default.ListJob,
+            pageNumber,
+            pageSize,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Reads how a job is going.</summary>
+    /// <param name="jobId">The job id.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixNotFoundException">No job exists with this id.</exception>
+    /// <remarks>
+    /// The call to poll:
+    /// <code>
+    /// Job? job = await EmporixPolling.WaitForAsync(
+    ///     poll: ct => client.Webhooks.Jobs.GetAsync(jobId, cancellationToken: ct),
+    ///     isComplete: j => j?.Status is not JobStatus.In_progress);
+    /// </code>
+    /// </remarks>
+    public async Task<WebhookModels.Job?> GetAsync(
+        string jobId,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
+
+        return await _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Get,
+                Path = $"{BasePath}/{Uri.EscapeDataString(jobId)}",
+                Auth = Defaults.Service(auth),
+                Idempotent = true,
+            },
+            WebhookJsonContext.Default.Job,
+            cancellationToken).ConfigureAwait(false);
+    }
 }
 
 /// <summary>
