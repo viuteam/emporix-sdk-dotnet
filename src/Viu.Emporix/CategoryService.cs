@@ -530,8 +530,8 @@ public sealed class CategoryService
     /// <summary>Creates several categories in one call.</summary>
     /// <param name="categories">The categories to create.</param>
     /// <param name="publish">
-    /// Publishes the categories whose <c>Published</c> is set. Must agree with
-    /// <c>Published</c> on every entry; not sent when omitted.
+    /// Publishes the categories. Must agree with <c>Published</c> on every
+    /// entry; not sent when omitted.
     /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
@@ -543,9 +543,13 @@ public sealed class CategoryService
     /// kept; without one, Emporix generates it. At most 200 entries.
     /// </para>
     /// <para>
-    /// Emporix defaults <c>publish</c> to <c>false</c>, which stores the
-    /// categories unpublished. Publishing needs the
-    /// <c>category.category_publish</c> scope.
+    /// Emporix checks the flag against each entry. Without it, an entry with
+    /// <c>Published = true</c> fails with <c>400</c> and is not stored; with
+    /// <paramref name="publish"/> <see langword="true"/>, an entry with
+    /// <c>Published = false</c> fails the same way. Create published and
+    /// unpublished categories in separate calls. The specification says a
+    /// missing flag stores them unpublished; a live call on 2026-11-24 rejected
+    /// them instead. Publishing needs the <c>category.category_publish</c> scope.
     /// </para>
     /// <para>
     /// Deliberately not repeatable: a retried create without ids creates every
@@ -600,6 +604,11 @@ public sealed class CategoryService
     /// Each entry carries the version it expects in <c>Metadata</c>, and that
     /// version has to match the stored category. Not repeatable for that
     /// reason: a retry after a lost response finds the version moved on.
+    /// </para>
+    /// <para>
+    /// The specification requires the flag here, but on 2026-11-24 a live bulk
+    /// PATCH ignored it: <c>Published</c> alone decided, in both directions. Pass
+    /// it anyway so the call keeps working if Emporix starts enforcing it.
     /// </para>
     /// </remarks>
     public async Task<IReadOnlyList<CategoryBulkResult>> UpdateManyAsync(
