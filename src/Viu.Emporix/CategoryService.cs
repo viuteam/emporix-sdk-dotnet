@@ -4,7 +4,7 @@ using Viu.Emporix.CategoryModels;
 
 namespace Viu.Emporix;
 
-/// <summary>Paging options for the category list and search calls.</summary>
+/// <summary>Paging and visibility options for the category list and search calls.</summary>
 public sealed class CategoryPageOptions
 {
     /// <summary>The page number. Emporix counts from 1.</summary>
@@ -15,6 +15,13 @@ public sealed class CategoryPageOptions
 
     /// <summary>Requests the total number of matches. Costs Emporix a second query.</summary>
     public bool IncludeTotalCount { get; init; }
+
+    /// <summary>
+    /// Include unpublished categories; not sent when omitted. Needs
+    /// <c>category.category_read_unpublished</c>, which an anonymous token does
+    /// not carry: pass a service token with it.
+    /// </summary>
+    public bool? ShowUnpublished { get; init; }
 }
 
 /// <summary>
@@ -82,16 +89,14 @@ public sealed class CategoryService
                 Method = HttpMethod.Get,
                 Path = $"{BasePath}/{Uri.EscapeDataString(categoryId)}",
                 Auth = Anonymous(auth),
-                Query = showUnpublished is { } flag
-                    ? [new("showUnpublished", flag ? "true" : "false")]
-                    : null,
+                Query = ShowUnpublishedQuery(showUnpublished),
             },
             CategoryJsonContext.Default.Category,
             cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Fetches one page of categories.</summary>
-    /// <param name="options">Page number, page size and total count.</param>
+    /// <param name="options">Page number, page size, total count and unpublished categories.</param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     public Task<PaginatedItems<Category>> ListAsync(
@@ -102,15 +107,25 @@ public sealed class CategoryService
 
     /// <summary>Walks every category, fetching each page only when it is needed.</summary>
     /// <param name="pageSize">The page size; 60 when omitted.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the walk.</param>
     public IAsyncEnumerable<Category> ListAllAsync(
         int pageSize = 60,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
         => PaginatedItems.EnumerateAllAsync(
             (pageNumber, token) => ListAsync(
-                new CategoryPageOptions { PageNumber = pageNumber, PageSize = pageSize },
+                new CategoryPageOptions
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    ShowUnpublished = showUnpublished,
+                },
                 auth,
                 token),
             startPage: 1,
@@ -118,7 +133,7 @@ public sealed class CategoryService
 
     /// <summary>Searches categories with an Emporix filter.</summary>
     /// <param name="query">The filter in Emporix' query language, for example <c>code:shoes</c>.</param>
-    /// <param name="options">Page number, page size and total count.</param>
+    /// <param name="options">Page number, page size, total count and unpublished categories.</param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     public Task<PaginatedItems<Category>> SearchAsync(
@@ -134,6 +149,10 @@ public sealed class CategoryService
 
     /// <summary>Lists a category's direct children.</summary>
     /// <param name="categoryId">The parent category.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
@@ -142,6 +161,7 @@ public sealed class CategoryService
     /// </remarks>
     public async Task<IReadOnlyList<Category>> ListSubcategoriesAsync(
         string categoryId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -153,6 +173,7 @@ public sealed class CategoryService
                 Method = HttpMethod.Get,
                 Path = $"{BasePath}/{Uri.EscapeDataString(categoryId)}/subcategories",
                 Auth = Anonymous(auth),
+                Query = ShowUnpublishedQuery(showUnpublished),
             },
             CategoryJsonContext.Default.ListCategory,
             cancellationToken).ConfigureAwait(false) ?? [];
@@ -160,11 +181,16 @@ public sealed class CategoryService
 
     /// <summary>Lists a category's parents.</summary>
     /// <param name="categoryId">The category.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>The path back to the root — what a breadcrumb is built from.</remarks>
     public async Task<IReadOnlyList<Category>> ListParentsAsync(
         string categoryId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -176,6 +202,7 @@ public sealed class CategoryService
                 Method = HttpMethod.Get,
                 Path = $"{BasePath}/{Uri.EscapeDataString(categoryId)}/parents",
                 Auth = Anonymous(auth),
+                Query = ShowUnpublishedQuery(showUnpublished),
             },
             CategoryJsonContext.Default.ListCategory,
             cancellationToken).ConfigureAwait(false) ?? [];
@@ -183,6 +210,10 @@ public sealed class CategoryService
 
     /// <summary>Fetches the category tree of a root category.</summary>
     /// <param name="rootCategoryId">The root category.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
@@ -192,6 +223,7 @@ public sealed class CategoryService
     /// </remarks>
     public async Task<CategoryTree?> GetTreeAsync(
         string rootCategoryId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -203,6 +235,7 @@ public sealed class CategoryService
                 Method = HttpMethod.Get,
                 Path = $"/category/{_tenant}/category-trees/{Uri.EscapeDataString(rootCategoryId)}",
                 Auth = Anonymous(auth),
+                Query = ShowUnpublishedQuery(showUnpublished),
             },
             CategoryJsonContext.Default.CategoryTree,
             cancellationToken).ConfigureAwait(false);
@@ -253,10 +286,7 @@ public sealed class CategoryService
             query.AddRange(ids.Select(id => new KeyValuePair<string, string?>("categoryIds", id)));
         }
 
-        if (showUnpublished is not null)
-        {
-            query.Add(new("showUnpublished", showUnpublished.Value ? "true" : "false"));
-        }
+        query.AddRange(ShowUnpublishedQuery(showUnpublished));
 
         return await _http.SendAsync(
             new EmporixRequest
@@ -301,9 +331,7 @@ public sealed class CategoryService
                     Method = HttpMethod.Post,
                     Path = $"/category/{_tenant}/category-trees/search",
                     Auth = Anonymous(auth),
-                    Query = showUnpublished is null
-                        ? null
-                        : [new("showUnpublished", showUnpublished.Value ? "true" : "false")],
+                    Query = ShowUnpublishedQuery(showUnpublished),
                     Content = EmporixJsonContent.Create(
                         new CategoryTreeSearchRequest { CategoryIds = ids },
                         CategoryJsonContext.Default.CategoryTreeSearchRequest),
@@ -313,36 +341,48 @@ public sealed class CategoryService
                 cancellationToken).ConfigureAwait(false) ?? [];
     }
 
-    /// <summary>Rebuilds a category tree.</summary>
+    /// <summary>Rebuilds a category tree and returns the rebuilt tree.</summary>
     /// <param name="rootCategoryId">The root category.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories in the returned tree. Needs
+    /// <c>category.category_read_unpublished</c> on top of
+    /// <c>category.category_manage</c>.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
     /// An administrative repair for when the stored tree has drifted from the
     /// assignments it is built from.
     /// </remarks>
-    public Task RebuildTreeAsync(
+    public async Task<CategoryTree?> RebuildTreeAsync(
         string rootCategoryId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rootCategoryId);
 
-        return _http.SendAsync(
+        return await _http.SendAsync(
             new EmporixRequest
             {
                 Method = HttpMethod.Post,
                 Path = $"/category/{_tenant}/category-trees"
                     + $"/{Uri.EscapeDataString(rootCategoryId)}/rebuild",
                 Auth = Defaults.Service(auth),
+                Query = ShowUnpublishedQuery(showUnpublished),
             },
-            cancellationToken);
+            CategoryJsonContext.Default.CategoryTree,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Searches categories with an Emporix query.</summary>
     /// <param name="query">The query expression.</param>
     /// <param name="pageNumber">The page number, counting from 1.</param>
     /// <param name="pageSize">The page size.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
@@ -353,6 +393,7 @@ public sealed class CategoryService
         string query,
         int pageNumber = 1,
         int pageSize = 60,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -370,6 +411,7 @@ public sealed class CategoryService
                 [
                     new("pageNumber", pageNumber.ToString(CultureInfo.InvariantCulture)),
                     new("pageSize", pageSize.ToString(CultureInfo.InvariantCulture)),
+                    .. ShowUnpublishedQuery(showUnpublished),
                 ],
                 Content = EmporixJsonContent.Create(
                     new SearchRequest { Q = query },
@@ -383,6 +425,10 @@ public sealed class CategoryService
     /// <summary>Fetches several categories by id.</summary>
     /// <param name="categoryIds">The categories to fetch.</param>
     /// <param name="chunkSize">How many ids per request. Defaults to 100.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
@@ -393,6 +439,7 @@ public sealed class CategoryService
     public async Task<IReadOnlyList<Category>> GetManyByIdAsync(
         IEnumerable<string> categoryIds,
         int chunkSize = 100,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -413,6 +460,7 @@ public sealed class CategoryService
             all.AddRange(await SearchByQueryAsync(
                 $"id:({string.Join(',', chunk)})",
                 pageSize: chunk.Length,
+                showUnpublished: showUnpublished,
                 auth: auth,
                 cancellationToken: cancellationToken).ConfigureAwait(false));
         }
@@ -698,6 +746,8 @@ public sealed class CategoryService
             parameters.Add(new KeyValuePair<string, string?>("q", query));
         }
 
+        parameters.AddRange(ShowUnpublishedQuery(options.ShowUnpublished));
+
         return await _http.SendPageAsync(
             new EmporixRequest
             {
@@ -712,6 +762,10 @@ public sealed class CategoryService
             options.PageSize,
             cancellationToken).ConfigureAwait(false);
     }
+
+    // Sent only when set, so a caller who passes nothing gets the specification's default.
+    internal static KeyValuePair<string, string?>[] ShowUnpublishedQuery(bool? showUnpublished)
+        => showUnpublished is { } flag ? [new("showUnpublished", flag ? "true" : "false")] : [];
 
     private static AuthContext Anonymous(AuthContext auth)
         => auth.Kind == AuthKind.None ? AuthContext.Anonymous() : auth;
@@ -739,10 +793,16 @@ public sealed class CategoryAssignmentOperations
 
     /// <summary>Lists everything assigned to a category.</summary>
     /// <param name="categoryId">The category id.</param>
+    /// <param name="showUnpublished">
+    /// Include what is assigned to unpublished categories. Needs
+    /// <c>category.category_read_unpublished</c>, which an anonymous token does
+    /// not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     public async Task<IReadOnlyList<CategoryAssignment>> ListAsync(
         string categoryId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -754,6 +814,7 @@ public sealed class CategoryAssignmentOperations
                 Method = HttpMethod.Get,
                 Path = PathFor(categoryId),
                 Auth = auth.Kind == AuthKind.None ? AuthContext.Anonymous() : auth,
+                Query = CategoryService.ShowUnpublishedQuery(showUnpublished),
             },
             CategoryJsonContext.Default.ListCategoryAssignment,
             cancellationToken).ConfigureAwait(false) ?? [];
@@ -989,6 +1050,10 @@ public sealed class CategoryAssignmentOperations
 
     /// <summary>Lists the categories something is assigned to.</summary>
     /// <param name="referenceId">The reference, for example a product id.</param>
+    /// <param name="showUnpublished">
+    /// Include unpublished categories. Needs <c>category.category_read_unpublished</c>,
+    /// which an anonymous token does not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
@@ -997,6 +1062,7 @@ public sealed class CategoryAssignmentOperations
     /// </remarks>
     public async Task<IReadOnlyList<Category>> ListCategoriesByReferenceAsync(
         string referenceId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -1009,6 +1075,7 @@ public sealed class CategoryAssignmentOperations
                 Path = $"/category/{_tenant}/assignments/references"
                     + $"/{Uri.EscapeDataString(referenceId)}",
                 Auth = auth.Kind is AuthKind.None ? AuthContext.Anonymous() : auth,
+                Query = CategoryService.ShowUnpublishedQuery(showUnpublished),
             },
             CategoryJsonContext.Default.ListCategory,
             cancellationToken).ConfigureAwait(false) ?? [];
@@ -1040,6 +1107,11 @@ public sealed class CategoryAssignmentOperations
     /// <summary>Lists what is assigned to a category, of one kind.</summary>
     /// <param name="categoryId">The category.</param>
     /// <param name="referenceType">Which kind to keep, for example products or categories.</param>
+    /// <param name="showUnpublished">
+    /// Include what is assigned to unpublished categories. Needs
+    /// <c>category.category_read_unpublished</c>, which an anonymous token does
+    /// not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <returns>The referenced ids, in the order Emporix returned them.</returns>
@@ -1053,11 +1125,12 @@ public sealed class CategoryAssignmentOperations
     public async Task<IReadOnlyList<string>> ListAssignedIdsAsync(
         string categoryId,
         CategoryAssignmentRefQueryDocumentType referenceType,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
         IReadOnlyList<CategoryAssignment> assignments =
-            await ListAsync(categoryId, auth, cancellationToken).ConfigureAwait(false);
+            await ListAsync(categoryId, showUnpublished, auth, cancellationToken).ConfigureAwait(false);
 
         return
         [

@@ -171,6 +171,65 @@ public class CategoryServiceTests
         Assert.Equal("/category/acme/category-trees/search?showUnpublished=false", Uri(handler, 1));
     }
 
+    // Every read the specification gives the flag carries it, the helpers that
+    // wrap those reads pass it through, and nothing sends it unasked.
+    [Fact]
+    public async Task Reads_send_show_unpublished_only_when_set()
+    {
+        StubHttpMessageHandler handler = new((request, _) => StubHttpMessageHandler.Json(
+            HttpStatusCode.OK,
+            request.RequestUri!.AbsolutePath.Contains("/category-trees/", StringComparison.Ordinal)
+                ? """{"id":"root"}"""
+                : """[{"id":"c1"}]"""));
+        CategoryService categories = Create(handler);
+
+        await categories.ListAsync(new CategoryPageOptions { ShowUnpublished = true });
+        await categories.SearchAsync("code:x", new CategoryPageOptions { ShowUnpublished = false });
+        await foreach (Category _ in categories.ListAllAsync(showUnpublished: true))
+        {
+        }
+
+        await categories.SearchByQueryAsync("code:x", showUnpublished: true);
+        await categories.GetManyByIdAsync(["c1"], showUnpublished: true);
+        await categories.ListSubcategoriesAsync("c1", showUnpublished: true);
+        await categories.ListParentsAsync("c1", showUnpublished: true);
+        await categories.GetTreeAsync("root", showUnpublished: true);
+        await categories.Assignments.ListAsync("c1", showUnpublished: true);
+        await categories.Assignments.ListAssignedIdsAsync(
+            "c1", CategoryAssignmentRefQueryDocumentType.PRODUCT, showUnpublished: true);
+        await categories.Assignments.ListCategoriesByReferenceAsync("p1", showUnpublished: true);
+        await categories.ListParentsAsync("c1");
+
+        Assert.Equal(
+            [
+                "/category/acme/categories?pageNumber=1&pageSize=60&showUnpublished=true",
+                "/category/acme/categories?pageNumber=1&pageSize=60&q=code%3Ax&showUnpublished=false",
+                "/category/acme/categories?pageNumber=1&pageSize=60&showUnpublished=true",
+                "/category/acme/categories/search?pageNumber=1&pageSize=60&showUnpublished=true",
+                "/category/acme/categories/search?pageNumber=1&pageSize=1&showUnpublished=true",
+                "/category/acme/categories/c1/subcategories?showUnpublished=true",
+                "/category/acme/categories/c1/parents?showUnpublished=true",
+                "/category/acme/category-trees/root?showUnpublished=true",
+                "/category/acme/categories/c1/assignments?showUnpublished=true",
+                "/category/acme/categories/c1/assignments?showUnpublished=true",
+                "/category/acme/assignments/references/p1?showUnpublished=true",
+                "/category/acme/categories/c1/parents",
+            ],
+            handler.RequestUris.Select(uri => uri.PathAndQuery));
+    }
+
+    // The flag only shapes the tree Emporix answers with, so the call returns it.
+    [Fact]
+    public async Task Rebuilding_a_tree_returns_the_rebuilt_tree()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"root"}""");
+
+        CategoryTree? tree = await Create(handler).RebuildTreeAsync("root", showUnpublished: true);
+
+        Assert.Equal("root", tree?.Id);
+        Assert.Equal("/category/acme/category-trees/root/rebuild?showUnpublished=true", Uri(handler));
+    }
+
     [Fact]
     public async Task Subcategories_are_one_level_down()
     {
