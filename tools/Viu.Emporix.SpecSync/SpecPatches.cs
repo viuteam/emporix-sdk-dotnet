@@ -289,6 +289,44 @@ internal static partial class SpecPatches
                     ReplaceAll(
                         "              schema:\n                type: array\n                items:\n                  $ref: '#/components/schemas/CategoryList'",
                         "              schema:\n                $ref: '#/components/schemas/CategoryList'")),
+
+                new SpecPatch(
+                    "upstream: the element schema of CategoryBulkPatchRequest is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it CategoryBulkPatch.",
+                    Title(
+                        "categoryBulkPatch",
+                        "    CategoryBulkPatchRequest:\n      type: array\n      description: Partial updates for existing categories. The maximum batch size is 200.\n      maxItems: 200\n      items:\n        type: object\n",
+                        "    CategoryBulkPatchRequest:\n      type: array\n      description: Partial updates for existing categories. The maximum batch size is 200.\n      maxItems: 200\n      items:\n        type: object\n        title: categoryBulkPatch\n")),
+
+                new SpecPatch(
+                    "upstream: the element schema of CategoryBulkItemList is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous2. A title names it CategoryBulkResult.",
+                    Title(
+                        "categoryBulkResult",
+                        "    CategoryBulkItemList:\n      type: array\n      description: One result for each item in the request, in request order.\n      items:\n        type: object\n",
+                        "    CategoryBulkItemList:\n      type: array\n      description: One result for each item in the request, in request order.\n      items:\n        type: object\n        title: categoryBulkResult\n")),
+            ],
+            ["media"] =
+            [
+                new SpecPatch(
+                    "upstream: the element schema of AssetBulkPatchRequest is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous. A title names it AssetBulkPatch.",
+                    Title(
+                        "assetBulkPatch",
+                        "    AssetBulkPatchRequest:\n      type: array\n      maxItems: 200\n      description: Assets to patch. The maximum batch size is 200.\n      items:\n        type: object\n",
+                        "    AssetBulkPatchRequest:\n      type: array\n      maxItems: 200\n      description: Assets to patch. The maximum batch size is 200.\n      items:\n        type: object\n        title: assetBulkPatch\n")),
+
+                new SpecPatch(
+                    "upstream: the element schema of AssetBulkItemList is written "
+                    + "inline with no title, so the generator has no name for it and emits "
+                    + "Anonymous2. A title names it AssetBulkResult.",
+                    Title(
+                        "assetBulkResult",
+                        "    AssetBulkItemList:\n      type: array\n      description: One result for each item in the request, in request order.\n      items:\n        type: object\n",
+                        "    AssetBulkItemList:\n      type: array\n      description: One result for each item in the request, in request order.\n      items:\n        type: object\n        title: assetBulkResult\n")),
             ],
             ["customer-segment"] =
             [

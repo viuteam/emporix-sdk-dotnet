@@ -616,6 +616,12 @@ internal static partial class GeneratedCodeFixer
             // arrayType ahead of SchemaAttribute's, took the name ArrayType, and
             // pushed SchemaAttribute.ArrayType to ArrayType2.
             ["schema"] = [new("SchemaAttribute.ArrayType", "ArrayType", "SchemaFileArrayType")],
+
+            // The bulk patch's inline metadata arrived on 2026-11-23 as Metadata2,
+            // a name callers must spell to set the version and that the next
+            // inline metadata upstream would shift. Pinned before anyone depends
+            // on the number; nothing holds the name today, so nothing is displaced.
+            ["category"] = [new("CategoryBulkPatch.Metadata", "CategoryBulkPatchMetadata", "CategoryBulkPatchMetadataUpstream")],
         };
 
     /// <summary>

@@ -682,6 +682,42 @@ namespace Viu.Emporix.CategoryModels
     }
 
     /// <summary>
+    /// One result for each item in the request, in request order.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CategoryBulkItemList : System.Collections.ObjectModel.Collection<CategoryBulkResult>
+    {
+
+    }
+
+    /// <summary>
+    /// Categories to create. The maximum batch size is 200.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CategoryBulkCreateRequest : System.Collections.ObjectModel.Collection<CategoryCreateRequest>
+    {
+
+    }
+
+    /// <summary>
+    /// Partial updates for existing categories. The maximum batch size is 200.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CategoryBulkPatchRequest : System.Collections.ObjectModel.Collection<CategoryBulkPatch>
+    {
+
+    }
+
+    /// <summary>
+    /// Assignment reference ids to delete for the category. The maximum batch size is 200.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssignmentReferenceBulkDeleteRequest : System.Collections.ObjectModel.Collection<string>
+    {
+
+    }
+
+    /// <summary>
     /// Definition of category tree
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -1233,6 +1269,96 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CategoryBulkPatch
+    {
+
+        /// <summary>
+        /// Category unique identifier generated when the category is created.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string Id { get; set; } = default!;
+
+        /// <summary>
+        /// Localized category name in a form of a map of translations.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("localizedName")]
+        public System.Collections.Generic.IDictionary<string, string>? LocalizedName { get; set; } = default!;
+
+        /// <summary>
+        /// Localized category description in a form of a map of translations.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("localizedDescription")]
+        public System.Collections.Generic.IDictionary<string, string>? LocalizedDescription { get; set; } = default!;
+
+        /// <summary>
+        /// Unique identifier of the parent category.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("parentId")]
+        public string? ParentId { get; set; } = default!;
+
+        /// <summary>
+        /// Provides localized category name or code without diacritics for the URL.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("localizedSlug")]
+        public System.Collections.Generic.IDictionary<string, string>? LocalizedSlug { get; set; } = default!;
+
+        /// <summary>
+        /// List of external category numbers (ECNs) unique for every category.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ecn")]
+        public System.Collections.Generic.ICollection<string>? Ecn { get; set; } = default!;
+
+        /// <summary>
+        /// Unique category identifier, defined by the tenant.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        public string? Code { get; set; } = default!;
+
+        /// <summary>
+        /// Category validity.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("validity")]
+        public System.Collections.Generic.IDictionary<string, System.DateTimeOffset>? Validity { get; set; } = default!;
+
+        /// <summary>
+        /// Category position, set in relation to the categories on the same level (sharing the same parent) in the tree.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("position")]
+        public int? Position { get; set; } = default!;
+
+        /// <summary>
+        /// Flag indicating whether the category has been published or not.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("published")]
+        public bool? Published { get; set; } = default!;
+
+        /// <summary>
+        /// List of classification mixins defined by this category.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("ownClassificationMixins")]
+        public System.Collections.Generic.ICollection<OwnClassificationMixin>? OwnClassificationMixins { get; set; } = default!;
+
+        /// <summary>
+        /// Custom category attributes that need to be included directly in the mixins object.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public CategoryBulkPatchMetadata Metadata { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class BulkAssignment
     {
 
@@ -1322,6 +1448,57 @@ namespace Viu.Emporix.CategoryModels
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CategoryBulkResult
+    {
+
+        /// <summary>
+        /// Position of the item in the request array. The first item has index 0.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("index")]
+        public int Index { get; set; } = default!;
+
+        /// <summary>
+        /// Category id or assignment reference id. Present when the item succeeds.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status code for this item.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        public int Code { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status for this item.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public string Status { get; set; } = default!;
+
+        /// <summary>
+        /// Error message. Present only when the item fails.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        /// <summary>
+        /// Problems that caused the item to fail. Present only when the item fails.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("details")]
+        public System.Collections.Generic.ICollection<Details2>? Details { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -1519,6 +1696,18 @@ namespace Viu.Emporix.CategoryModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CategoryBulkPatchMetadata : MetadataUpdate
+    {
+
+        /// <summary>
+        /// Category version. Must match the stored category.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("version")]
+        public int Version { get; set; } = default!;
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Ref4
     {
 
@@ -1534,6 +1723,27 @@ namespace Viu.Emporix.CategoryModels
         [System.Text.Json.Serialization.JsonPropertyName("type")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Ref4Type>))]
         public Ref4Type Type { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Details2
+    {
+
+        /// <summary>
+        /// Description of one problem.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

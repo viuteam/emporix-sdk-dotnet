@@ -66,6 +66,7 @@ internal sealed class SearchQueryBody
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BasicProductBulkUpdate>))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.ResourceLocation))]
 [JsonSerializable(typeof(List<Viu.Emporix.ProductModels.BulkResponse>))]
+[JsonSerializable(typeof(List<Viu.Emporix.ProductModels.ProductBulkPartialUpdate>))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationRequest))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationResponse))]
 [JsonSerializable(typeof(Viu.Emporix.ProductModels.DynamicVariantRecalculationJobResponse))]
@@ -159,6 +160,10 @@ internal sealed partial class CartJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentUpsertRequest))]
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.BulkAssignmentResponse))]
 [JsonSerializable(typeof(Viu.Emporix.CategoryModels.AssignmentRequest))]
+[JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.CategoryCreateRequest>))]
+[JsonSerializable(typeof(List<Viu.Emporix.CategoryModels.CategoryBulkPatch>))]
+[JsonSerializable(typeof(Viu.Emporix.CategoryModels.CategoryBulkItemList))]
+[JsonSerializable(typeof(List<string>))]
 internal sealed partial class CategoryJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the brand service. See <see cref="ProductJsonContext"/>.</summary>
@@ -258,6 +263,8 @@ internal sealed partial class PriceJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.AvailabilityBulkDto>))]
 [JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.AvailabilityDeleteBulkDto>))]
 [JsonSerializable(typeof(List<Viu.Emporix.AvailabilityModels.BulkResponse>))]
+[JsonSerializable(typeof(List<Viu.Emporix.AvailabilityChange>))]
+[JsonSerializable(typeof(List<Viu.Emporix.AvailabilityBulkPatch>))]
 internal sealed partial class AvailabilityJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the checkout service. See <see cref="ProductJsonContext"/>.</summary>
@@ -308,6 +315,10 @@ internal sealed partial class OrderJsonContext : JsonSerializerContext;
 [JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetReferenceUpdate))]
 // The body of a JSON Patch on an asset: an array, not an object.
 [JsonSerializable(typeof(List<Viu.Emporix.MediaPatchOperation>))]
+[JsonSerializable(typeof(List<Viu.Emporix.MediaBulkPatch>))]
+[JsonSerializable(typeof(List<Viu.Emporix.MediaModels.AssetCreateLink>))]
+[JsonSerializable(typeof(Viu.Emporix.MediaModels.AssetBulkItemList))]
+[JsonSerializable(typeof(List<string>))]
 internal sealed partial class MediaJsonContext : JsonSerializerContext;
 
 /// <summary>Serialization for the tax service. See <see cref="ProductJsonContext"/>.</summary>

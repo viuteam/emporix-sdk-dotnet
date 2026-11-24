@@ -52,3 +52,22 @@ public sealed class MediaPatchOperation
     [JsonPropertyName("value")]
     public JsonElement? Value { get; init; }
 }
+
+/// <summary>
+/// The changes to one asset, as an entry of a bulk partial update.
+/// </summary>
+/// <remarks>
+/// Hand-written for the same reason as <see cref="MediaPatchOperation"/>: the
+/// generated <c>MediaModels.AssetBulkPatch</c> holds the generated operation,
+/// whose <c>object</c> value a source-generated context cannot reliably write.
+/// </remarks>
+public sealed class MediaBulkPatch
+{
+    /// <summary>The asset id.</summary>
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    /// <summary>The JSON Patch operations to apply to this asset.</summary>
+    [JsonPropertyName("data")]
+    public required IReadOnlyList<MediaPatchOperation> Operations { get; init; }
+}

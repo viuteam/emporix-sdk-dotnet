@@ -181,6 +181,257 @@ paths:
       operationId: GET-media-list-assets
       tags:
         - Assets
+  '/media/{tenant}/assets/bulk':
+    parameters:
+      - $ref: '#/components/parameters/trait_tenant'
+      - $ref: '#/components/parameters/header_vendor_id'
+    post:
+      summary: Creating assets in bulk
+      description: |-
+        Creates up to 200 assets in one call. The response contains one result for each item.
+        - To create assets of the `BLOB` type, use the `multipart/form-data` request body. The `body` part is a JSON array, and the request has one `file` part for each object in that array, in the same order.
+        - To create assets of the `LINK` type, use the `application/json` request body.
+      operationId: POST-media-create-assets-bulk
+      security:
+        - OAuth2:
+            - media.asset_manage
+        - OAuth2:
+            - media.asset_manage_by_vendor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetBulkCreateLinkRequest'
+            examples:
+              Two link assets:
+                value:
+                  - id: 123e06ecf0452c2d6c0b81390
+                    type: LINK
+                    access: PUBLIC
+                    url: 'https://example.com/media/category-banner.html'
+                    refIds:
+                      - id: 123e06ecf0452c2d6c0b81392
+                        type: CATEGORY
+                  - id: 567e06ecf0452c2d6c0b81391
+                    type: LINK
+                    access: PRIVATE
+                    url: 'https://example.com/media/supplier-contract.html'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AssetBulkCreateMultipart'
+            examples:
+              Two blob assets:
+                value:
+                  body:
+                    - id: 890e06ecf0452c2d6c0b81393
+                      type: BLOB
+                      access: PUBLIC
+                      refIds:
+                        - id: 890e06ecf0452c2d6c0b81392
+                          type: PRODUCT
+                      details:
+                        filename: cordless-driver
+                        mimeType: image/jpeg
+                    - id: 890e06ecf0452c2d6c0b81394
+                      type: BLOB
+                      access: PRIVATE
+                      details:
+                        filename: contract
+                        mimeType: application/pdf
+                  file:
+                    - externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+                    - externalValue: 'https://res.cloudinary.com/saas-ag/image/upload/v1695804155/emporix-logo-white-2f5e621206edefea6015fb4793959376_nswfbz.png'
+      responses:
+        '207':
+          description: Multi-status. One result is returned for each asset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetBulkItemList'
+              examples:
+                One link created and one blob rejected:
+                  value:
+                    - index: 0
+                      code: 400
+                      status: Bad Request
+                      message: Asset of 'BLOB' type can only be created from multipart request.
+                    - index: 1
+                      id: 567e06ecf0452c2d6c0b81391
+                      code: 201
+                      status: Created
+        '400':
+          description: The request was rejected before any asset was stored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Too many assets:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Maximum size of the payload array is 200.
+                Body is not an array:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Bulk create body must be an array
+                File count does not match:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: The number of files must match the number of items.
+                Multipart body is not valid JSON:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Provided `body` part is incorrect. Cannot read JSON value.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Assets
+    patch:
+      summary: Partially updating assets in bulk
+      description: |-
+        Partially updates up to 200 assets in one call. Each item has an `id` and `data`. `data` is the same JSON Patch document that [Partially updating an asset](https://developer.emporix.io/api-documentation/api-guides/media/media/api-reference/assets#patch-media-tenant-assets-assetid) accepts. The response contains one result for each item.
+      operationId: PATCH-media-patch-assets-bulk
+      security:
+        - OAuth2:
+            - media.asset_manage
+        - OAuth2:
+            - media.asset_manage_by_vendor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetBulkPatchRequest'
+            examples:
+              Replace two link URLs:
+                value:
+                  - id: 123e06ecf0452c2d6c0b81390
+                    data:
+                      - op: replace
+                        path: /url
+                        value: 'https://example.com/media/category-banner-spring.html'
+                  - id: 567e06ecf0452c2d6c0b81391
+                    data:
+                      - op: replace
+                        path: /url
+                        value: 'https://example.com/media/supplier-contract-v2.html'
+      responses:
+        '207':
+          description: Multi-status. One result is returned for each asset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetBulkItemList'
+              examples:
+                One asset missing and one asset patched:
+                  value:
+                    - index: 0
+                      id: 333e06ecf0452c2d6c0b81395
+                      code: 404
+                      status: Not Found
+                      message: Error while getting asset
+                    - index: 1
+                      id: 567e06ecf0452c2d6c0b81391
+                      code: 204
+                      status: No Content
+        '400':
+          description: The request was rejected before any asset was changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Too many assets:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Maximum size of the payload array is 200.
+                Body is not an array:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Bulk patch body must be an array
+                Item has no id:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Each bulk patch item must have an id
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Assets
+    delete:
+      summary: Deleting assets in bulk
+      description: |-
+        Deletes up to 200 assets in one call. The body is a JSON array of asset ids. The response contains one result for each id.
+      operationId: DELETE-media-delete-assets-bulk
+      security:
+        - OAuth2:
+            - media.asset_manage
+        - OAuth2:
+            - media.asset_manage_by_vendor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetBulkDeleteRequest'
+            examples:
+              Two asset ids:
+                value:
+                  - 123e06ecf0452c2d6c0b81390
+                  - 567e06ecf0452c2d6c0b81391
+      responses:
+        '207':
+          description: Multi-status. One result is returned for each id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetBulkItemList'
+              examples:
+                Both assets deleted:
+                  value:
+                    - index: 0
+                      id: 123e06ecf0452c2d6c0b81390
+                      code: 204
+                      status: No Content
+                    - index: 1
+                      id: 567e06ecf0452c2d6c0b81391
+                      code: 204
+                      status: No Content
+        '400':
+          description: The request was rejected before any asset was deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorMessage'
+              examples:
+                Too many assets:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Maximum size of the payload array is 200.
+        '401':
+          $ref: '#/components/responses/Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/Forbidden_403'
+        '500':
+          $ref: '#/components/responses/InternalServiceError_500'
+      tags:
+        - Assets
   '/media/{tenant}/assets/{assetId}':
     parameters:
       - $ref: '#/components/parameters/trait_tenant'
@@ -710,6 +961,94 @@ components:
       required:
         - op
         - path
+    AssetBulkItemList:
+      type: array
+      description: One result for each item in the request, in request order.
+      items:
+        type: object
+        title: assetBulkResult
+        required:
+          - index
+          - code
+          - status
+        properties:
+          index:
+            type: integer
+            description: Position of the item in the request array. The first item has index 0.
+          id:
+            type: string
+            description: Unique identifier of the asset. A rejected create does not keep this identifier.
+          code:
+            type: integer
+            format: int32
+            description: HTTP status code for this item.
+          status:
+            type: string
+            description: HTTP status for this item.
+          message:
+            type: string
+            description: Error message. Present when the item fails.
+          details:
+            type: array
+            description: Problems that caused the item to fail. Present when the item fails with details.
+            items:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Description of one problem.
+    AssetBulkCreateLinkRequest:
+      type: array
+      maxItems: 200
+      description: Link assets to create. The maximum batch size is 200.
+      items:
+        $ref: '#/components/schemas/AssetCreateLink'
+    AssetBulkCreateMultipart:
+      title: Asset Bulk Create Multipart Payload
+      type: object
+      properties:
+        body:
+          type: array
+          maxItems: 200
+          description: Blob create objects. One object for each file, in the same order.
+          items:
+            $ref: '#/components/schemas/AssetCreateBlob'
+        file:
+          type: array
+          maxItems: 200
+          description: File parts. One file for each object in `body`, in the same order. The max file size is 30 MB.
+          items:
+            type: string
+            format: binary
+      required:
+        - body
+        - file
+    AssetBulkPatchRequest:
+      type: array
+      maxItems: 200
+      description: Assets to patch. The maximum batch size is 200.
+      items:
+        type: object
+        title: assetBulkPatch
+        required:
+          - id
+          - data
+        properties:
+          id:
+            type: string
+            description: Unique identifier of the asset to patch.
+          data:
+            type: array
+            description: JSON Patch operations to apply to this asset. The operations are the same as for a single asset patch.
+            items:
+              $ref: '#/components/schemas/PatchOperation'
+    AssetBulkDeleteRequest:
+      type: array
+      maxItems: 200
+      description: Unique identifiers of the assets to delete. The maximum batch size is 200.
+      items:
+        type: string
+        description: Unique identifier of an asset.
     Asset:
       title: Asset
       type: object
@@ -1313,6 +1652,14 @@ components:
       schema:
         type: string
       description: Unique identifier of an asset.
+    header_vendor_id:
+      name: vendor-id
+      in: header
+      required: false
+      description: |
+        Optional vendor id for this call. Each operation describes the result when the asset or product belongs to another vendor.
+      schema:
+        type: string
     query_disposition:
       name: disposition
       in: query

@@ -769,6 +769,56 @@ public sealed partial class ProductService
                 cancellationToken).ConfigureAwait(false) ?? [];
     }
 
+    /// <summary>Changes individual fields of several products in one call.</summary>
+    /// <param name="changes">The changes, one entry per product.</param>
+    /// <param name="options">Fine-tuning for the write.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per entry, in input order.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each entry on its own: <c>204</c> when it
+    /// landed, <c>404</c> for a product that does not exist, which the call does
+    /// not create. Fields an entry leaves out stay as they are. At most 200
+    /// entries.
+    /// </para>
+    /// <para>
+    /// The bulk counterpart of <see cref="UpdateAsync"/>, not of
+    /// <see cref="UpdateManyAsync"/>, which replaces products in full.
+    /// </para>
+    /// <para>
+    /// Not marked repeatable: an entry may carry the version it expects in
+    /// <c>Metadata</c>, and a retry after a lost response finds it moved on.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<BulkResponse>> PatchManyAsync(
+        IEnumerable<ProductBulkPartialUpdate> changes,
+        ProductWriteOptions? options = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(changes);
+
+        List<ProductBulkPartialUpdate> body = [.. changes];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Patch,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Service(auth),
+                    Query = WriteQuery(options),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        ProductJsonContext.Default.ListProductBulkPartialUpdate),
+                },
+                ProductJsonContext.Default.ListBulkResponse,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
     /// <summary>Starts recalculating dynamic variants.</summary>
     /// <param name="request">Which products to recalculate.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>

@@ -362,6 +362,322 @@ paths:
       security:
         - OAuth2:
           - category.category_manage
+    delete:
+      tags:
+        - Category Assignment Resources
+      summary: Deleting category assignments by reference in bulk
+      description: |
+        Deletes assignments for one category by reference id in bulk. The maximum batch size is 200. An assignment with the same reference id on another category is left in place. An empty array returns `207` with an empty result list.
+      operationId: DELETE-category-tree-delete-assignments-by-reference-bulk
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - name: categoryId
+          in: path
+          description: |
+            Category unique identifier generated when the category is created.
+          required: true
+          schema:
+            type: string
+            example: 084bcaf6-66b8-4ddd-9489-65c5f6449e94
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentReferenceBulkDeleteRequest'
+            examples:
+              Delete two references:
+                value:
+                  - '1639265'
+                  - '1639266'
+      responses:
+        '207':
+          description: Multi-status. One result is returned for each reference id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryBulkItemList'
+              examples:
+                One reference deleted and one missing:
+                  value:
+                    - index: 0
+                      id: '1639265'
+                      code: 204
+                      status: No Content
+                    - index: 1
+                      code: 404
+                      status: Not Found
+                      message: Error while deleting assignment
+                      details:
+                        - message: Assignment with reference id '1639266' not found
+        '400':
+          description: The request was rejected before any assignment was deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Too many references:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Maximum size of the payload array is 200.
+                    details:
+                      - Maximum size of the payload array is 200.
+                Null body:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Required Body [referenceIds] not specified
+                    details:
+                      - Required Body [referenceIds] not specified
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: Scope validation failed
+                    details:
+                      - 'Required scope(s): category.category_manage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - OAuth2:
+          - category.category_manage
+  /category/{tenant}/categories/bulk:
+    post:
+      tags:
+        - Category Resources
+      summary: Creating categories in bulk
+      description: |
+        Creates categories in one call. The maximum batch size is 200. A supplied `id` is kept. When `id` is omitted, the service generates one. An empty array returns `207` with an empty result list.
+        ***
+        ### Additional scope info
+
+        * `category.category_publish` - Only required if you want to publish the category when creating it.
+      operationId: POST-category-tree-create-categories-bulk
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - name: publish
+          in: query
+          description: |
+            When `true`, a category whose `published` field is `true` is published. When `false`, the category is stored and is not published. The query value must match `published` on every item.
+            Possible values:
+            * `true`
+            * `false`
+
+            **Note**: To publish a category you need to have `category.category_publish` scope.
+          schema:
+            type: boolean
+            example: true
+            default: false
+        - $ref: '#/components/parameters/header_Content-Language'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryBulkCreateRequest'
+            examples:
+              Two categories:
+                value:
+                  - id: beverages
+                    localizedName:
+                      en: Beverages
+                      de: Getränke
+                    published: true
+                  - localizedName:
+                      en: Snacks
+                      de: Snacks
+                    published: true
+      responses:
+        '207':
+          description: Multi-status. One result is returned for each category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryBulkItemList'
+              examples:
+                One category created and one rejected:
+                  value:
+                    - index: 0
+                      id: beverages
+                      code: 201
+                      status: Created
+                    - index: 1
+                      code: 400
+                      status: Bad Request
+                      message: There is a validation error. Please check the details.
+                      details:
+                        - message: 'categoryRequests[1].localizedName: must not be empty'
+        '400':
+          description: The request was rejected before any category was stored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Too many categories:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Maximum size of the payload array is 200.
+                    details:
+                      - Maximum size of the payload array is 200.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a proper scope for this action
+                    details:
+                      - 'Required scope(s): category.category_manage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - OAuth2:
+          - category.category_manage
+    patch:
+      tags:
+        - Category Resources
+      summary: Partially updating categories in bulk
+      description: |
+        Partially updates existing categories in one call. The maximum batch size is 200. A category that does not exist is not created. Omitted fields remain unchanged. The version specified in `metadata` must match the stored category. An empty array returns `207` with an empty result list.
+        ***
+        ### Additional scope info
+
+        * `category.category_publish` - Only required if you want to publish the category when updating it.
+        * `category.category_unpublish` - Only required if you want to unpublish the category when updating it.
+      operationId: PATCH-category-tree-patch-categories-bulk
+      parameters:
+        - $ref: '#/components/parameters/path_tenant'
+        - name: publish
+          in: query
+          description: |
+            When `true`, a category whose `published` field is `true` is published. When `false`, a category whose `published` field is `false` is unpublished. The value must match the `published` field of each item that sets it.
+            Possible values:
+            * `true`
+            * `false`
+
+            **Note**: To publish a category you need to have `category.category_publish` scope.
+            **Note**: To unpublish a category you need to have `category.category_unpublish` scope.
+          schema:
+            type: boolean
+            example: true
+            default: false
+        - $ref: '#/components/parameters/header_Content-Language'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryBulkPatchRequest'
+            examples:
+              Rename two categories:
+                value:
+                  - id: beverages
+                    localizedName:
+                      en: Beverages and drinks
+                    metadata:
+                      version: 1
+                  - id: snacks
+                    localizedName:
+                      en: Snacks and nuts
+                    metadata:
+                      version: 3
+      responses:
+        '207':
+          description: Multi-status. One result is returned for each category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryBulkItemList'
+              examples:
+                Both categories patched:
+                  value:
+                    - index: 0
+                      id: beverages
+                      code: 204
+                      status: No Content
+                    - index: 1
+                      id: snacks
+                      code: 204
+                      status: No Content
+        '400':
+          description: The request was rejected before any category was updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Too many categories:
+                  value:
+                    code: 400
+                    status: Bad Request
+                    message: Maximum size of the payload array is 200.
+                    details:
+                      - Maximum size of the payload array is 200.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Permission denied due to insufficient rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                example:
+                  value:
+                    code: 403
+                    status: Forbidden
+                    message: You need a proper scope for this action
+                    details:
+                      - 'Required scope(s): category.category_manage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - OAuth2:
+          - category.category_manage
   /category/{tenant}/categories:
     get:
       tags:
@@ -3175,6 +3491,31 @@ paths:
             - category.category_manage
             - category.category_read_unpublished
 components:
+  parameters:
+    path_tenant:
+      name: tenant
+      in: path
+      description: |
+        Your Emporix tenant name.
+
+        **Note**: The tenant should always be written in lowercase.
+      required: true
+      schema:
+        type: string
+        example: saasdev2
+    header_Content-Language:
+      name: Content-Language
+      in: header
+      description: |
+        The Content-Language request HTTP header defines language(s) that can be used in the payload. Request body may contain only translations that are matching the languages specified in the header. Possible values:
+        * `*` - request body may contain translations for all languages specified in tenant configuration. This is also the default behaviour if the header is not set.
+        * `en`, `en,de`, `fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5` - request body may contain only translations for languages specified in the header (if they are available in tenant configuration).
+
+        **Note**: For category requests, localized fields (such as `localizedName`, `localizedDescription`, `localizedSlug`) must always be provided as maps of language codes to values, regardless of the Content-Language header value.
+      schema:
+        type: string
+        example: '*'
+        default: '*'
   schemas:
     AssignmentDeprecated:
       type: object
@@ -3764,6 +4105,133 @@ components:
           description: Custom category attributes that need to be included directly in the mixins object.
         metadata:
           $ref: '#/components/schemas/MetadataUpdate'
+    CategoryBulkItemList:
+      type: array
+      description: One result for each item in the request, in request order.
+      items:
+        type: object
+        title: categoryBulkResult
+        required:
+          - index
+          - code
+          - status
+        properties:
+          index:
+            type: integer
+            description: Position of the item in the request array. The first item has index 0.
+          id:
+            type: string
+            description: Category id or assignment reference id. Present when the item succeeds.
+          code:
+            type: integer
+            format: int32
+            description: HTTP status code for this item.
+          status:
+            type: string
+            description: HTTP status for this item.
+          message:
+            type: string
+            description: Error message. Present only when the item fails.
+          details:
+            type: array
+            description: Problems that caused the item to fail. Present only when the item fails.
+            items:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Description of one problem.
+    CategoryBulkCreateRequest:
+      type: array
+      description: Categories to create. The maximum batch size is 200.
+      maxItems: 200
+      items:
+        $ref: '#/components/schemas/CategoryCreateRequest'
+    CategoryBulkPatchRequest:
+      type: array
+      description: Partial updates for existing categories. The maximum batch size is 200.
+      maxItems: 200
+      items:
+        type: object
+        title: categoryBulkPatch
+        required:
+          - id
+          - metadata
+        properties:
+          id:
+            type: string
+            description: Category unique identifier generated when the category is created.
+          localizedName:
+            type: object
+            additionalProperties:
+              type: string
+            description: Localized category name in a form of a map of translations.
+          localizedDescription:
+            type: object
+            additionalProperties:
+              type: string
+            description: Localized category description in a form of a map of translations.
+          parentId:
+            type: string
+            description: Unique identifier of the parent category.
+            nullable: true
+          localizedSlug:
+            type: object
+            additionalProperties:
+              type: string
+            description: Provides localized category name or code without diacritics for the URL.
+          ecn:
+            type: array
+            description: List of external category numbers (ECNs) unique for every category.
+            nullable: true
+            items:
+              type: string
+          code:
+            type: string
+            description: Unique category identifier, defined by the tenant.
+            nullable: true
+          validity:
+            type: object
+            additionalProperties:
+              type: string
+              format: date-time
+            description: Category validity.
+          position:
+            type: integer
+            description: Category position, set in relation to the categories on the same level (sharing the same parent) in the tree.
+            format: int32
+            nullable: true
+          published:
+            type: boolean
+            description: Flag indicating whether the category has been published or not.
+            nullable: true
+          ownClassificationMixins:
+            type: array
+            description: List of classification mixins defined by this category.
+            items:
+              $ref: '#/components/schemas/OwnClassificationMixin'
+          mixins:
+            type: object
+            additionalProperties: true
+            description: Custom category attributes that need to be included directly in the mixins object.
+          metadata:
+            allOf:
+              - $ref: '#/components/schemas/MetadataUpdate'
+              - type: object
+                properties:
+                  version:
+                    type: integer
+                    format: int32
+                    description: Category version. Must match the stored category.
+                required:
+                  - version
+    AssignmentReferenceBulkDeleteRequest:
+      type: array
+      description: Assignment reference ids to delete for the category. The maximum batch size is 200.
+      maxItems: 200
+      items:
+        type: string
+        description: Assignment reference identifier, for example a product id.
     CategoryTree:
       type: object
       description: Definition of category tree

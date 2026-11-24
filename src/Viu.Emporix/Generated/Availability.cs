@@ -160,6 +160,73 @@ namespace Viu.Emporix.AvailabilityModels
 
     }
 
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AvailabilityPatchOperation
+    {
+
+        /// <summary>
+        /// Patch operation. `REPLACE` sets the field. `REMOVE` removes the field.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("op")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AvailabilityPatchOperationOp>))]
+        public AvailabilityPatchOperationOp Op { get; set; } = default!;
+
+        /// <summary>
+        /// Path of the field to change. The path starts with `/`.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("path")]
+        public string Path { get; set; } = default!;
+
+        /// <summary>
+        /// New value for a `REPLACE` operation.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("value")]
+        public object? Value { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AvailabilityPatchBulkDto
+    {
+
+        /// <summary>
+        /// Unique identifier of the product.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("productId")]
+        public string ProductId { get; set; } = default!;
+
+        /// <summary>
+        /// Site code, defined when the site is created.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("site")]
+        public string Site { get; set; } = default!;
+
+        /// <summary>
+        /// JSON Patch operations applied to the stored availability.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.Generic.ICollection<AvailabilityPatchOperation> Data { get; set; } = new System.Collections.ObjectModel.Collection<AvailabilityPatchOperation>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
     /// <summary>
     /// Availability details.
     /// </summary>
@@ -862,6 +929,19 @@ namespace Viu.Emporix.AvailabilityModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<AvailabilityPatchOperationOp>))]
+    public enum AvailabilityPatchOperationOp
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"REPLACE")]
+        REPLACE = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"REMOVE")]
+        REMOVE = 1,
 
     }
 

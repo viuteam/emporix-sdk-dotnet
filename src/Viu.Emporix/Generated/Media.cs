@@ -194,6 +194,69 @@ namespace Viu.Emporix.MediaModels
 
     }
 
+    /// <summary>
+    /// One result for each item in the request, in request order.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkItemList : System.Collections.ObjectModel.Collection<AssetBulkResult>
+    {
+
+    }
+
+    /// <summary>
+    /// Link assets to create. The maximum batch size is 200.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkCreateLinkRequest : System.Collections.ObjectModel.Collection<AssetCreateLink>
+    {
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkCreateMultipart
+    {
+
+        /// <summary>
+        /// Blob create objects. One object for each file, in the same order.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("body")]
+        public System.Collections.Generic.ICollection<AssetCreateBlob> Body { get; set; } = new System.Collections.ObjectModel.Collection<AssetCreateBlob>();
+
+        /// <summary>
+        /// File parts. One file for each object in `body`, in the same order. The max file size is 30 MB.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("file")]
+        public System.Collections.Generic.ICollection<byte[]> File { get; set; } = new System.Collections.ObjectModel.Collection<byte[]>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
+    /// Assets to patch. The maximum batch size is 200.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkPatchRequest : System.Collections.ObjectModel.Collection<AssetBulkPatch>
+    {
+
+    }
+
+    /// <summary>
+    /// Unique identifiers of the assets to delete. The maximum batch size is 200.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkDeleteRequest : System.Collections.ObjectModel.Collection<string>
+    {
+
+    }
+
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Asset
     {
@@ -637,6 +700,33 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkPatch
+    {
+
+        /// <summary>
+        /// Unique identifier of the asset to patch.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string Id { get; set; } = default!;
+
+        /// <summary>
+        /// JSON Patch operations to apply to this asset. The operations are the same as for a single asset patch.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public System.Collections.Generic.ICollection<PatchOperation> Data { get; set; } = new System.Collections.ObjectModel.Collection<PatchOperation>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Disposition>))]
     public enum Disposition
     {
@@ -675,6 +765,57 @@ namespace Viu.Emporix.MediaModels
 
         [System.Text.Json.Serialization.JsonPropertyName("fault")]
         public Fault? Fault { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AssetBulkResult
+    {
+
+        /// <summary>
+        /// Position of the item in the request array. The first item has index 0.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("index")]
+        public int Index { get; set; } = default!;
+
+        /// <summary>
+        /// Unique identifier of the asset. A rejected create does not keep this identifier.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status code for this item.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        public int Code { get; set; } = default!;
+
+        /// <summary>
+        /// HTTP status for this item.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public string Status { get; set; } = default!;
+
+        /// <summary>
+        /// Error message. Present when the item fails.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        /// <summary>
+        /// Problems that caused the item to fail. Present when the item fails with details.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("details")]
+        public System.Collections.Generic.ICollection<Details>? Details { get; set; } = default!;
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -905,6 +1046,27 @@ namespace Viu.Emporix.MediaModels
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class Details
+    {
+
+        /// <summary>
+        /// Description of one problem.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("message")]
+        public string? Message { get; set; } = default!;
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<UploadMethod>))]
     public enum UploadMethod
     {
@@ -933,6 +1095,33 @@ namespace Viu.Emporix.MediaModels
             set { _additionalProperties = value; }
         }
 
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileParameter
+    {
+        public FileParameter(System.IO.Stream data)
+            : this (data, null, null)
+        {
+        }
+
+        public FileParameter(System.IO.Stream data, string? fileName)
+            : this (data, fileName, null)
+        {
+        }
+
+        public FileParameter(System.IO.Stream data, string? fileName, string? contentType)
+        {
+            Data = data;
+            FileName = fileName;
+            ContentType = contentType;
+        }
+
+        public System.IO.Stream Data { get; private set; }
+
+        public string? FileName { get; private set; }
+
+        public string? ContentType { get; private set; }
     }
 
 
