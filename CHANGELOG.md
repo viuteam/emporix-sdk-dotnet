@@ -9,6 +9,26 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.20.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.19.0...v0.20.0) (2026-11-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* ListAllAsync, SearchByQueryAsync, GetManyByIdAsync, ListSubcategoriesAsync, ListParentsAsync, GetTreeAsync and RebuildTreeAsync on CategoryService, and ListAsync, ListAssignedIdsAsync and ListCategoriesByReferenceAsync on CategoryAssignmentOperations gain an optional showUnpublished parameter before auth. RebuildTreeAsync returns Task of CategoryTree instead of Task. Code compiled against the old signatures must be rebuilt, and a call that passes auth without its name no longer compiles.
+* CategoryService.GetAsync gains an optional showUnpublished parameter before auth. Code compiled against the old signature must be rebuilt, and a call that passes auth without its name no longer compiles.
+* CategoryService.CreateAsync, ReplaceAsync and UpdateAsync gain an optional publish parameter before auth. Code compiled against the old signatures must be rebuilt, and a call that passes auth without its name no longer compiles.
+
+### Added
+
+* bulk and partial updates for availability, categories, media and products ([#118](https://github.com/viuteam/emporix-sdk-dotnet/issues/118)) ([aeacbde](https://github.com/viuteam/emporix-sdk-dotnet/commit/aeacbde13ea64ab6189866fc2253fbe6311e2d6e))
+
+
+### Fixed
+
+* read unpublished categories by id ([#121](https://github.com/viuteam/emporix-sdk-dotnet/issues/121)) ([11b28d1](https://github.com/viuteam/emporix-sdk-dotnet/commit/11b28d17c3d9c2dbc007163304251f1156ff921d))
+* send showUnpublished on every category read that declares it ([#122](https://github.com/viuteam/emporix-sdk-dotnet/issues/122)) ([924c509](https://github.com/viuteam/emporix-sdk-dotnet/commit/924c509204db8297b30ef29441a849df59f69300))
+* send the publish flag on single category writes ([#119](https://github.com/viuteam/emporix-sdk-dotnet/issues/119)) ([2ad99e6](https://github.com/viuteam/emporix-sdk-dotnet/commit/2ad99e64cb1cacf95f487e16f646b86d92cdce8a))
+
 ## [0.19.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.18.1...v0.19.0) (2026-11-21)
 
 
