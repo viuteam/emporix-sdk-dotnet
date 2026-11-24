@@ -477,6 +477,52 @@ paths:
         '500':
           $ref: '#/components/responses/ServerErrorResponse500'
       operationId: PUT-availability-update-product
+    patch:
+      tags:
+        - Availabilities
+      summary: Partially updating availability information of a product
+      description: |-
+        Updates only the fields named in the JSON Patch on one stored availability. Each item in the array sets or removes one field. Fields the patch does not name stay as they are.
+
+        A stored availability returns `204` with an empty body.
+
+        The following results apply when the availability cannot be changed:
+
+        * No stored availability, including a calculated bundle – `404` with the message `There is no availability for productId: {productId} and site: {site}`. The call does not create an availability.
+        * An operation that cannot be applied, a missing product, a missing site, a vendor that does not own the product, or mixin metadata that would fail an update – `400`. The stored availability stays unchanged.
+
+        **Note**: A site named `main` aggregates availability from other sites. Availability for that single site cannot be retrieved later.
+
+        ***
+
+        The `availability.availability_manage_by_vendor` scope is only required when updating availabilities belonging to the vendor.
+      security:
+        - OAuth2:
+            - availability.availability_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvailabilityPatchOperation'
+            examples:
+              Stock level:
+                $ref: '#/components/examples/AvailabilityPatch'
+      responses:
+        '204':
+          description: The request was successful. The availability has been updated.
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '404':
+          $ref: '#/components/responses/NotFoundResponse404'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PATCH-availability-update-product
     delete:
       tags:
         - Availabilities
@@ -614,6 +660,63 @@ paths:
         '500':
           $ref: '#/components/responses/ServerErrorResponse500'
       operationId: PUT-availability-tenant-availability-bulk
+    patch:
+      tags:
+        - Availabilities
+      summary: Partially updating multiple availabilities
+      description: |-
+        Updates only the fields named in each item's JSON Patch. The maximum batch size is 200. Each item identifies one availability by `productId` and `site`, and `data` holds the patch operations. The call returns `207` and one result for each item. A failed item does not stop the others.
+
+        The following results apply to one item:
+
+        * A stored availability returns `204`. `id` is `{site}:{productId}`.
+        * No stored availability, including a calculated bundle, returns `404` with the message `There is no availability for productId: {productId} and site: {site}`. The item has no `id`, and no availability is created.
+        * An operation that cannot be applied, a missing product, a missing site, a vendor that does not own the product, or mixin metadata that would fail an update returns `400`. That stored availability stays unchanged.
+
+        The following results apply to the whole call:
+
+        * A request body with more than 200 items returns `400`. The error details include `Maximum size of the payload array is 200.`
+        * An empty list returns `207` and an empty array.
+
+        **Note**: A site named `main` aggregates availability from other sites. Availability for that single site cannot be retrieved later.
+
+        ***
+
+        The `availability.availability_manage_by_vendor` scope is only required when updating availabilities belonging to the vendor.
+      security:
+        - OAuth2:
+            - availability.availability_manage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvailabilityPatchBulkDto'
+            examples:
+              Two availabilities:
+                $ref: '#/components/examples/AvailabilityPatchBulkDto'
+      responses:
+        '207':
+          description: Multi-status response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkResponse'
+              examples:
+                Multi-status patch example:
+                  $ref: '#/components/examples/BulkPatchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestResponse400'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse401'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse403'
+        '500':
+          $ref: '#/components/responses/ServerErrorResponse500'
+      operationId: PATCH-availability-tenant-availability-bulk
     delete:
       tags:
         - Availabilities
@@ -852,6 +955,46 @@ components:
           type: string
           description: 'Unique identifier of the site.'
           example: 'shop1'
+    AvailabilityPatchOperation:
+      type: object
+      required:
+        - op
+        - path
+      properties:
+        op:
+          type: string
+          description: 'Patch operation. `REPLACE` sets the field. `REMOVE` removes the field.'
+          enum:
+            - REPLACE
+            - REMOVE
+          example: REPLACE
+        path:
+          type: string
+          description: 'Path of the field to change. The path starts with `/`.'
+          example: /stockLevel
+        value:
+          description: 'New value for a `REPLACE` operation.'
+          example: 42
+    AvailabilityPatchBulkDto:
+      type: object
+      required:
+        - productId
+        - site
+        - data
+      properties:
+        productId:
+          type: string
+          description: 'Unique identifier of the product.'
+          example: 5f7c996173fc281cdd412345
+        site:
+          type: string
+          description: 'Site code, defined when the site is created.'
+          example: shop1
+        data:
+          type: array
+          description: 'JSON Patch operations applied to the stored availability.'
+          items:
+            $ref: '#/components/schemas/AvailabilityPatchOperation'
     Availability:
       description: Availability details.
       type: object
@@ -1339,6 +1482,35 @@ components:
       value:
         - productId: '12345'
           site: 'shop1'
+    AvailabilityPatch:
+      value:
+        - op: REPLACE
+          path: /stockLevel
+          value: 42
+    AvailabilityPatchBulkDto:
+      value:
+        - productId: 5f7c996173fc281cdd412345
+          site: shop1
+          data:
+            - op: REPLACE
+              path: /stockLevel
+              value: 42
+        - productId: 5f7c996173fc281cdd412346
+          site: shop1
+          data:
+            - op: REPLACE
+              path: /stockLevel
+              value: 7
+    BulkPatchResponse:
+      value:
+        - id: 'shop1:5f7c996173fc281cdd412345'
+          index: 0
+          code: 204
+          status: No Content
+        - index: 1
+          code: 404
+          status: Not Found
+          message: 'There is no availability for productId: 5f7c996173fc281cdd412346 and site: shop1'
     Availability:
       value:
         id: 'shop1:12345'

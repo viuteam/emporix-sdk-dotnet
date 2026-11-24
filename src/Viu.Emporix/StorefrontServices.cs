@@ -260,6 +260,97 @@ public sealed class AvailabilityService
             cancellationToken);
     }
 
+    /// <summary>Changes individual fields of a product's availability on a site.</summary>
+    /// <param name="productId">The product.</param>
+    /// <param name="siteCode">The site.</param>
+    /// <param name="changes">The JSON Patch operations to apply.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <exception cref="EmporixNotFoundException">
+    /// No availability is stored for the product on the site, a calculated
+    /// bundle's included. The call does not create one.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// Fields the patch does not name stay as they are. A change that cannot be
+    /// applied, a missing product or site, or a vendor that does not own the
+    /// product answers <c>400</c> and leaves the stored availability unchanged.
+    /// </para>
+    /// <para>
+    /// Not marked repeatable. <c>REPLACE</c> and <c>REMOVE</c> leave the same
+    /// state when repeated, but a retried <c>REMOVE</c> after a lost response
+    /// would answer <c>400</c> for a change that did land.
+    /// </para>
+    /// </remarks>
+    public Task PatchAsync(
+        string productId,
+        string siteCode,
+        IEnumerable<AvailabilityChange> changes,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(productId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(siteCode);
+        ArgumentNullException.ThrowIfNull(changes);
+
+        List<AvailabilityChange> body = [.. changes];
+        ArgumentOutOfRangeException.ThrowIfZero(body.Count, nameof(changes));
+
+        return _http.SendAsync(
+            new EmporixRequest
+            {
+                Method = HttpMethod.Patch,
+                Path = $"{BasePath}/{Uri.EscapeDataString(productId)}/{Uri.EscapeDataString(siteCode)}",
+                Auth = Defaults.Service(auth),
+                Content = EmporixJsonContent.Create(
+                    body,
+                    AvailabilityJsonContext.Default.ListAvailabilityChange),
+            },
+            cancellationToken);
+    }
+
+    /// <summary>Changes individual fields of several availabilities in one call.</summary>
+    /// <param name="patches">The changes, one entry per product and site.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per entry, in input order.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each entry on its own: <c>204</c> when it
+    /// landed, <c>404</c> when no availability is stored, which the call does not
+    /// create, and <c>400</c> when a change cannot be applied. A failed entry
+    /// does not stop the others. More than 200 entries reject the whole call.
+    /// </para>
+    /// <para>
+    /// Not marked repeatable, for the reason <see cref="PatchAsync"/> gives.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<AvailabilityModels.BulkResponse>> PatchManyAsync(
+        IEnumerable<AvailabilityBulkPatch> patches,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(patches);
+
+        List<AvailabilityBulkPatch> body = [.. patches];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Patch,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        AvailabilityJsonContext.Default.ListAvailabilityBulkPatch),
+                },
+                AvailabilityJsonContext.Default.ListBulkResponse,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
     /// <summary>Creates availability records in bulk.</summary>
     /// <param name="records">The records to create.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
@@ -1543,6 +1634,133 @@ public sealed class MediaService
                     body, MediaJsonContext.Default.ListMediaPatchOperation),
             },
             cancellationToken);
+    }
+
+    /// <summary>Registers several assets that live at external addresses, in one call.</summary>
+    /// <param name="assets">The assets to register.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per entry, in input order.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each entry on its own; a rejected entry
+    /// does not keep its id. At most 200 entries.
+    /// </para>
+    /// <para>
+    /// Only links. The same endpoint also takes files as
+    /// <c>multipart/form-data</c>, but the specification leaves open how the
+    /// list of descriptions travels next to the files, and nothing has checked
+    /// it against a live tenant. Upload files one at a time with
+    /// <see cref="UploadAsync"/>.
+    /// </para>
+    /// <para>
+    /// Deliberately not repeatable: a retried create registers every asset a
+    /// second time.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<MediaModels.AssetBulkResult>> CreateLinksAsync(
+        IEnumerable<MediaModels.AssetCreateLink> assets,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(assets);
+
+        List<MediaModels.AssetCreateLink> body = [.. assets];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Post,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        MediaJsonContext.Default.ListAssetCreateLink),
+                },
+                MediaJsonContext.Default.AssetBulkItemList,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Changes individual fields of several assets in one call.</summary>
+    /// <param name="patches">The changes, one entry per asset.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per entry, in input order.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each entry on its own. Each entry takes the
+    /// same operations as <see cref="PatchAsync"/>, with the same limits. At
+    /// most 200 entries.
+    /// </para>
+    /// <para>
+    /// Not repeatable, for the reason <see cref="PatchAsync"/> gives: an append
+    /// through <c>/refIds/-</c> adds an entry every time it runs.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<MediaModels.AssetBulkResult>> PatchManyAsync(
+        IEnumerable<MediaBulkPatch> patches,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(patches);
+
+        List<MediaBulkPatch> body = [.. patches];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Patch,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        MediaJsonContext.Default.ListMediaBulkPatch),
+                },
+                MediaJsonContext.Default.AssetBulkItemList,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Deletes several assets in one call.</summary>
+    /// <param name="assetIds">The ids of the assets to delete.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per id, in input order.</returns>
+    /// <remarks>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each id on its own. At most 200 ids.
+    /// Repeatable: a retry finds the assets already gone and reports that per
+    /// id, without changing anything.
+    /// </remarks>
+    public async Task<IReadOnlyList<MediaModels.AssetBulkResult>> DeleteManyAsync(
+        IEnumerable<string> assetIds,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(assetIds);
+
+        List<string> body = [.. assetIds];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Delete,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        MediaJsonContext.Default.ListString),
+                    Idempotent = true,
+                },
+                MediaJsonContext.Default.AssetBulkItemList,
+                cancellationToken).ConfigureAwait(false) ?? [];
     }
 
     /// <summary>Lists the assets attached to a product.</summary>

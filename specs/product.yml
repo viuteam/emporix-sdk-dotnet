@@ -261,6 +261,47 @@ paths:
       summary: Upserting multiple products
       tags:
         - Products
+    patch:
+      summary: Partially updating products in bulk
+      operationId: PATCH-product-update-bulk-products
+      tags:
+        - Products
+      description: |-
+        Partially updates existing products in a bulk. The maximum batch size is 200. A product that does not exist is not created.
+
+        Response for a particular product is returned at the same position (index) at which it is located in the request body.
+        ***
+
+        **Additional scope information**
+
+        * The `product.product_manage_by_vendor` scope is only required for vendor employees to manage products belonging to the vendor.
+        * The `product.product_publish` scope is only required if you want to publish the product when updating it.
+        * The `product.product_unpublish` scope is only required if you want to unpublish the product when updating it.
+
+        ***
+      security:
+        - OAuth2:
+            - product.product_manage
+        - OAuth2:
+            - product.product_manage_by_vendor
+      parameters:
+        - $ref: '#/components/parameters/header_content_language'
+        - $ref: '#/components/parameters/query_skip_variants_generation'
+        - $ref: '#/components/parameters/query_do_index'
+        - $ref: '#/components/parameters/query_skip_related_items_validation'
+      requestBody:
+        $ref: '#/components/requestBodies/productBulkPartialUpdateBody'
+      responses:
+        '207':
+          $ref: '#/components/responses/products_patch_in_bulk_response'
+        '400':
+          $ref: '#/components/responses/common_response_BadRequest_400'
+        '401':
+          $ref: '#/components/responses/common_response_Unauthorized_401'
+        '403':
+          $ref: '#/components/responses/common_response_Forbidden_403'
+        '500':
+          $ref: '#/components/responses/common_response_InternalServerError_500'
   /product/{tenant}/products/recalculate:
     parameters:
       - $ref: '#/components/parameters/path_tenant'
@@ -1735,6 +1776,26 @@ components:
                   id: 62d65a15088ed94ebf093d8d
                   code: 204
                   status: NO_CONTENT
+    products_patch_in_bulk_response:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/bulkResponse'
+          examples:
+            Multi-Status response example:
+              value:
+                - index: 0
+                  id: 62d65a15088ed94ebf093d7d
+                  code: 204
+                  status: NO_CONTENT
+                - index: 1
+                  id: 5c332826a9812100098ff50a
+                  code: 404
+                  status: NOT_FOUND
+                  message: The product with id 5c332826a9812100098ff50a has not been found.
   requestBodies:
     productsSearchBody:
       content:
@@ -2176,6 +2237,24 @@ components:
                   name: "Product 3"
                   metadata:
                     version: 1
+    productBulkPartialUpdateBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            maxItems: 200
+            items:
+              $ref: '#/components/schemas/productBulkPartialUpdate'
+          examples:
+            Partially update two products:
+              value:
+                - id: 62d65a15088ed94ebf093d7d
+                  code: SM-X2-2024
+                  metadata:
+                    version: 1
+                - id: 62d65a15088ed94ebf093d8d
+                  published: true
 
 
     productBulkCreateBody:
@@ -3565,6 +3644,64 @@ components:
               $ref: '#/components/schemas/variantAttributes'
             metadata:
               $ref: '#/components/schemas/productMetadataWithVersion'
+    productBulkPartialUpdate:
+      type: object
+      description: Partially updating an existing product in bulk.
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/localizedValue'
+        code:
+          type: string
+          minLength: 1
+          description: 'Unique product identifier, defined by the user.'
+        description:
+          $ref: '#/components/schemas/localizedValue'
+        vendor:
+          $ref: '#/components/schemas/vendor'
+        taxClasses:
+          $ref: '#/components/schemas/taxClasses'
+        published:
+          $ref: '#/components/schemas/published'
+        weightDependent:
+          type: boolean
+          description: 'Mark the product as weight-dependent if the line item price could change after packaging, as this is necessary to ensure that credit card payments can be authorized.'
+        mixins:
+          $ref: '#/components/schemas/productMixins'
+        relatedItems:
+          description: |
+            List of items in a relationship with the main product. Assuming that in the system the following relation types are defined: `ACCESSORY` and `CONSUMABLE`, the two products: `Printer` and `Ink` exist, then the `Ink` product can be used as a related item with type `CONSUMABLE` for the Printer product.
+            In order to find all printers for which the ink is defined as a `CONSUMABLE` then `q-param` can be used:
+            `products?q=relatedItems.type:CONSUMABLE relatedItems.refId:Ink_Id`
+          type: array
+          items:
+            $ref: '#/components/schemas/relatedItem'
+        brandId:
+          type: string
+          description: 'ID of brand.'
+        brand:
+          $ref: '#/components/schemas/brand'
+        labelIds:
+          type: array
+          items:
+            type: string
+          description: 'Collection of label IDs.'
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/label'
+        template:
+          $ref: '#/components/schemas/template'
+        bundledProducts:
+          $ref: '#/components/schemas/bundledProducts'
+        variantAttributes:
+          $ref: '#/components/schemas/variantAttributes'
+        metadata:
+          $ref: '#/components/schemas/productMetadataWithVersion'
+      required:
+        - id
     vendor:
       type: object
       properties:
@@ -3629,7 +3766,7 @@ components:
         index:
           type: integer
           description: |
-            Index of the processed product, matching the price position in request body.
+            Index of the processed product, matching the product position in the request body.
         id:
           type: string
           description: Product unique identifier.

@@ -488,6 +488,111 @@ public sealed class CategoryService
             cancellationToken);
     }
 
+    /// <summary>Creates several categories in one call.</summary>
+    /// <param name="categories">The categories to create.</param>
+    /// <param name="publish">
+    /// Publishes the categories whose <c>Published</c> is set. Must agree with
+    /// <c>Published</c> on every entry; not sent when omitted.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per entry, in input order.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each entry on its own. A supplied id is
+    /// kept; without one, Emporix generates it. At most 200 entries.
+    /// </para>
+    /// <para>
+    /// Emporix defaults <c>publish</c> to <c>false</c>, which stores the
+    /// categories unpublished. Publishing needs the
+    /// <c>category.category_publish</c> scope.
+    /// </para>
+    /// <para>
+    /// Deliberately not repeatable: a retried create without ids creates every
+    /// category a second time.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<CategoryBulkResult>> CreateManyAsync(
+        IEnumerable<CategoryCreateRequest> categories,
+        bool? publish = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(categories);
+
+        List<CategoryCreateRequest> body = [.. categories];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Post,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Service(auth),
+                    Query = PublishQuery(publish),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        CategoryJsonContext.Default.ListCategoryCreateRequest),
+                },
+                CategoryJsonContext.Default.CategoryBulkItemList,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Changes individual fields of several categories in one call.</summary>
+    /// <param name="changes">The changes, one entry per category.</param>
+    /// <param name="publish">
+    /// Publishes or unpublishes the categories whose <c>Published</c> is set.
+    /// Must agree with <c>Published</c> on every entry that sets it; not sent
+    /// when omitted.
+    /// </param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per entry, in input order.</returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each entry on its own. Fields an entry
+    /// leaves out stay as they are, and a category that does not exist is not
+    /// created. At most 200 entries.
+    /// </para>
+    /// <para>
+    /// Each entry carries the version it expects in <c>Metadata</c>, and that
+    /// version has to match the stored category. Not repeatable for that
+    /// reason: a retry after a lost response finds the version moved on.
+    /// </para>
+    /// </remarks>
+    public async Task<IReadOnlyList<CategoryBulkResult>> UpdateManyAsync(
+        IEnumerable<CategoryBulkPatch> changes,
+        bool? publish = null,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(changes);
+
+        List<CategoryBulkPatch> body = [.. changes];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Patch,
+                    Path = $"{BasePath}/bulk",
+                    Auth = Service(auth),
+                    Query = PublishQuery(publish),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        CategoryJsonContext.Default.ListCategoryBulkPatch),
+                },
+                CategoryJsonContext.Default.CategoryBulkItemList,
+                cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    private static List<KeyValuePair<string, string?>>? PublishQuery(bool? publish)
+        => publish is { } flag ? [new("publish", flag ? "true" : "false")] : null;
+
     /// <summary>Deletes a category.</summary>
     /// <param name="categoryId">The category id.</param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
@@ -776,6 +881,46 @@ public sealed class CategoryAssignmentOperations
             },
             CategoryJsonContext.Default.BulkAssignmentResponse,
             cancellationToken).ConfigureAwait(false) ?? [];
+    }
+
+    /// <summary>Removes several assignments from a category by reference in one call.</summary>
+    /// <param name="categoryId">The category.</param>
+    /// <param name="referenceIds">The references, for example product ids.</param>
+    /// <param name="auth">What to authorise with; a service token when omitted.</param>
+    /// <param name="cancellationToken">Cancels the call.</param>
+    /// <returns>One result per reference, in input order.</returns>
+    /// <remarks>
+    /// <strong>Individual failures do not raise an exception.</strong> Emporix
+    /// answers <c>207</c> and reports each reference on its own. An assignment
+    /// with the same reference on another category stays. At most 200
+    /// references. Repeatable: a retry finds the assignments already gone.
+    /// </remarks>
+    public async Task<IReadOnlyList<CategoryBulkResult>> BulkRemoveByReferenceAsync(
+        string categoryId,
+        IEnumerable<string> referenceIds,
+        AuthContext auth = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(categoryId);
+        ArgumentNullException.ThrowIfNull(referenceIds);
+
+        List<string> body = [.. referenceIds];
+
+        return body.Count == 0
+            ? []
+            : await _http.SendAsync(
+                new EmporixRequest
+                {
+                    Method = HttpMethod.Delete,
+                    Path = $"{PathFor(categoryId)}/references/bulk",
+                    Auth = Defaults.Service(auth),
+                    Content = EmporixJsonContent.Create(
+                        body,
+                        CategoryJsonContext.Default.ListString),
+                    Idempotent = true,
+                },
+                CategoryJsonContext.Default.CategoryBulkItemList,
+                cancellationToken).ConfigureAwait(false) ?? [];
     }
 
     /// <summary>Lists the categories something is assigned to.</summary>

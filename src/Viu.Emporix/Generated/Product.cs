@@ -1837,6 +1837,87 @@ namespace Viu.Emporix.ProductModels
 
     }
 
+    /// <summary>
+    /// Partially updating an existing product in bulk.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ProductBulkPartialUpdate
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string Id { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public Viu.Emporix.LocalizedString? Name { get; set; } = default!;
+
+        /// <summary>
+        /// Unique product identifier, defined by the user.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("code")]
+        public string? Code { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("description")]
+        public Viu.Emporix.LocalizedString? Description { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("vendor")]
+        public Vendor? Vendor { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("taxClasses")]
+        public TaxClasses? TaxClasses { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("published")]
+        public bool? Published { get; set; } = default!;
+
+        /// <summary>
+        /// Mark the product as weight-dependent if the line item price could change after packaging, as this is necessary to ensure that credit card payments can be authorized.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("weightDependent")]
+        public bool? WeightDependent { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("mixins")]
+        public object? Mixins { get; set; } = default!;
+
+        /// <summary>
+        /// List of items in a relationship with the main product. Assuming that in the system the following relation types are defined: `ACCESSORY` and `CONSUMABLE`, the two products: `Printer` and `Ink` exist, then the `Ink` product can be used as a related item with type `CONSUMABLE` for the Printer product.
+        /// <br/>In order to find all printers for which the ink is defined as a `CONSUMABLE` then `q-param` can be used:
+        /// <br/>`products?q=relatedItems.type:CONSUMABLE relatedItems.refId:Ink_Id`
+        /// <br/>
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("relatedItems")]
+        public System.Collections.Generic.ICollection<RelatedItem>? RelatedItems { get; set; } = default!;
+
+        /// <summary>
+        /// ID of brand.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("brandId")]
+        public string? BrandId { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("brand")]
+        public Brand? Brand { get; set; } = default!;
+
+        /// <summary>
+        /// Collection of label IDs.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("labelIds")]
+        public System.Collections.Generic.ICollection<string>? LabelIds { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("labels")]
+        public System.Collections.Generic.ICollection<Label>? Labels { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("template")]
+        public Template? Template { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("bundledProducts")]
+        public BundledProducts? BundledProducts { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("variantAttributes")]
+        public VariantAttributes? VariantAttributes { get; set; } = default!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("metadata")]
+        public ProductMetadataWithVersion? Metadata { get; set; } = default!;
+
+    }
+
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class Vendor
     {
@@ -1938,7 +2019,7 @@ namespace Viu.Emporix.ProductModels
     {
 
         /// <summary>
-        /// Index of the processed product, matching the price position in request body.
+        /// Index of the processed product, matching the product position in the request body.
         /// <br/>
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("index")]

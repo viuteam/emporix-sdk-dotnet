@@ -1,1 +1,32 @@
 #nullable enable
+Viu.Emporix.AvailabilityBulkPatch
+Viu.Emporix.AvailabilityBulkPatch.AvailabilityBulkPatch() -> void
+Viu.Emporix.AvailabilityBulkPatch.Changes.get -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.AvailabilityChange!>!
+Viu.Emporix.AvailabilityBulkPatch.Changes.init -> void
+Viu.Emporix.AvailabilityBulkPatch.ProductId.get -> string!
+Viu.Emporix.AvailabilityBulkPatch.ProductId.init -> void
+Viu.Emporix.AvailabilityBulkPatch.Site.get -> string!
+Viu.Emporix.AvailabilityBulkPatch.Site.init -> void
+Viu.Emporix.AvailabilityChange
+Viu.Emporix.AvailabilityChange.AvailabilityChange() -> void
+Viu.Emporix.AvailabilityChange.Op.get -> Viu.Emporix.AvailabilityModels.AvailabilityPatchOperationOp
+Viu.Emporix.AvailabilityChange.Op.init -> void
+Viu.Emporix.AvailabilityChange.Path.get -> string!
+Viu.Emporix.AvailabilityChange.Path.init -> void
+Viu.Emporix.AvailabilityChange.Value.get -> System.Text.Json.JsonElement?
+Viu.Emporix.AvailabilityChange.Value.init -> void
+Viu.Emporix.AvailabilityService.PatchAsync(string! productId, string! siteCode, System.Collections.Generic.IEnumerable<Viu.Emporix.AvailabilityChange!>! changes, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Viu.Emporix.AvailabilityService.PatchManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.AvailabilityBulkPatch!>! patches, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.AvailabilityModels.BulkResponse!>!>!
+Viu.Emporix.CategoryAssignmentOperations.BulkRemoveByReferenceAsync(string! categoryId, System.Collections.Generic.IEnumerable<string!>! referenceIds, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CategoryModels.CategoryBulkResult!>!>!
+Viu.Emporix.CategoryService.CreateManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.CategoryModels.CategoryCreateRequest!>! categories, bool? publish = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CategoryModels.CategoryBulkResult!>!>!
+Viu.Emporix.CategoryService.UpdateManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.CategoryModels.CategoryBulkPatch!>! changes, bool? publish = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.CategoryModels.CategoryBulkResult!>!>!
+Viu.Emporix.MediaBulkPatch
+Viu.Emporix.MediaBulkPatch.Id.get -> string!
+Viu.Emporix.MediaBulkPatch.Id.init -> void
+Viu.Emporix.MediaBulkPatch.MediaBulkPatch() -> void
+Viu.Emporix.MediaBulkPatch.Operations.get -> System.Collections.Generic.IReadOnlyList<Viu.Emporix.MediaPatchOperation!>!
+Viu.Emporix.MediaBulkPatch.Operations.init -> void
+Viu.Emporix.MediaService.CreateLinksAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.MediaModels.AssetCreateLink!>! assets, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.MediaModels.AssetBulkResult!>!>!
+Viu.Emporix.MediaService.DeleteManyAsync(System.Collections.Generic.IEnumerable<string!>! assetIds, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.MediaModels.AssetBulkResult!>!>!
+Viu.Emporix.MediaService.PatchManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.MediaBulkPatch!>! patches, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.MediaModels.AssetBulkResult!>!>!
+Viu.Emporix.ProductService.PatchManyAsync(System.Collections.Generic.IEnumerable<Viu.Emporix.ProductModels.ProductBulkPartialUpdate!>! changes, Viu.Emporix.ProductWriteOptions? options = null, Viu.Emporix.AuthContext auth = default(Viu.Emporix.AuthContext), System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Viu.Emporix.ProductModels.BulkResponse!>!>!
