@@ -33,6 +33,20 @@ public class CategoryServiceTests
         Assert.Equal("cat1", category?.Id);
     }
 
+    // Emporix answers 404 for an unpublished category unless the flag is sent.
+    [Fact]
+    public async Task Get_sends_show_unpublished_only_when_set()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.OK, """{"id":"cat1"}""");
+        CategoryService categories = Create(handler);
+
+        await categories.GetAsync("cat1", showUnpublished: true);
+        await categories.GetAsync("cat1", showUnpublished: false);
+
+        Assert.Equal("/category/acme/categories/cat1?showUnpublished=true", Uri(handler, 0));
+        Assert.Equal("/category/acme/categories/cat1?showUnpublished=false", Uri(handler, 1));
+    }
+
     [Fact]
     public async Task Reads_default_to_an_anonymous_token()
     {

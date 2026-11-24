@@ -53,11 +53,24 @@ public sealed class CategoryService
 
     /// <summary>Fetches a category by its id.</summary>
     /// <param name="categoryId">The category id.</param>
+    /// <param name="showUnpublished">
+    /// Find the category even when it is unpublished. Needs
+    /// <c>category.category_read_unpublished</c>, which an anonymous token does
+    /// not carry: pass a service token with it.
+    /// </param>
     /// <param name="auth">What to authorise with; anonymous when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
-    /// <exception cref="EmporixNotFoundException">No category exists with this id.</exception>
+    /// <exception cref="EmporixNotFoundException">
+    /// No category exists with this id, or it is unpublished and
+    /// <paramref name="showUnpublished"/> is not <see langword="true"/>.
+    /// </exception>
+    /// <remarks>
+    /// Live on 2026-11-24, an unpublished category answered <c>404</c> without
+    /// the flag even to a token that holds the scope, and <c>200</c> with it.
+    /// </remarks>
     public async Task<Category?> GetAsync(
         string categoryId,
+        bool? showUnpublished = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -69,6 +82,9 @@ public sealed class CategoryService
                 Method = HttpMethod.Get,
                 Path = $"{BasePath}/{Uri.EscapeDataString(categoryId)}",
                 Auth = Anonymous(auth),
+                Query = showUnpublished is { } flag
+                    ? [new("showUnpublished", flag ? "true" : "false")]
+                    : null,
             },
             CategoryJsonContext.Default.Category,
             cancellationToken).ConfigureAwait(false);
