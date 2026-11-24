@@ -57,6 +57,50 @@ public class CategoryServiceTests
         Assert.Equal(AuthKind.Service, auth.Kind);
     }
 
+    // Emporix answers 400 to a create or replace that sets Published without
+    // the publish flag, so the flag has to reach the query.
+    [Fact]
+    public async Task Creating_a_category_sends_publish_only_when_asked()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.Created, """{"id":"cat1"}""");
+        CategoryService categories = Create(handler);
+
+        await categories.CreateAsync(new CategoryCreateRequest { Published = true }, publish: true);
+        await categories.CreateAsync(new CategoryCreateRequest());
+
+        Assert.Equal(HttpMethod.Post, handler.RequestMethods[0]);
+        Assert.Equal("/category/acme/categories?publish=true", Uri(handler, 0));
+        Assert.Equal("/category/acme/categories", Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task Replacing_a_category_sends_publish_only_when_asked()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        CategoryService categories = Create(handler);
+
+        await categories.ReplaceAsync("cat1", new CategoryUpdateRequest { Published = false }, publish: false);
+        await categories.ReplaceAsync("cat1", new CategoryUpdateRequest());
+
+        Assert.Equal(HttpMethod.Put, handler.RequestMethods[0]);
+        Assert.Equal("/category/acme/categories/cat1?publish=false", Uri(handler, 0));
+        Assert.Equal("/category/acme/categories/cat1", Uri(handler, 1));
+    }
+
+    [Fact]
+    public async Task Updating_a_category_sends_publish_only_when_asked()
+    {
+        StubHttpMessageHandler handler = new(HttpStatusCode.NoContent, string.Empty);
+        CategoryService categories = Create(handler);
+
+        await categories.UpdateAsync("cat1", new CategoryPartialUpdateRequest { Published = true }, publish: true);
+        await categories.UpdateAsync("cat1", new CategoryPartialUpdateRequest());
+
+        Assert.Equal(HttpMethod.Patch, handler.RequestMethods[0]);
+        Assert.Equal("/category/acme/categories/cat1?publish=true", Uri(handler, 0));
+        Assert.Equal("/category/acme/categories/cat1", Uri(handler, 1));
+    }
+
     [Fact]
     public async Task The_tree_comes_from_the_tree_endpoint()
     {

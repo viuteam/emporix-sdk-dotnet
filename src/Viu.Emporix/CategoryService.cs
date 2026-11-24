@@ -407,15 +407,29 @@ public sealed class CategoryService
     /// <summary>Replaces a category.</summary>
     /// <param name="categoryId">The category id.</param>
     /// <param name="category">The new state.</param>
+    /// <param name="publish">
+    /// Publishes or unpublishes the category. Must agree with <c>Published</c>;
+    /// not sent when omitted.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <remarks>
+    /// <para>
     /// Unlike <see cref="UpdateAsync"/> this sends the whole category: anything
     /// you leave out is cleared.
+    /// </para>
+    /// <para>
+    /// To publish a category that is not published yet, set <c>Published</c>
+    /// and pass <paramref name="publish"/> as <see langword="true"/>: without the
+    /// flag Emporix answers <c>400</c>. Publishing needs the
+    /// <c>category.category_publish</c> scope, unpublishing
+    /// <c>category.category_unpublish</c>.
+    /// </para>
     /// </remarks>
     public Task ReplaceAsync(
         string categoryId,
         CategoryUpdateRequest category,
+        bool? publish = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -428,6 +442,7 @@ public sealed class CategoryService
                 Method = HttpMethod.Put,
                 Path = $"{BasePath}/{Uri.EscapeDataString(categoryId)}",
                 Auth = Defaults.Service(auth),
+                Query = PublishQuery(publish),
                 Content = EmporixJsonContent.Create(
                     category,
                     CategoryJsonContext.Default.CategoryUpdateRequest),
@@ -437,11 +452,22 @@ public sealed class CategoryService
 
     /// <summary>Creates a category.</summary>
     /// <param name="category">The category to create.</param>
+    /// <param name="publish">
+    /// Publishes the category. Must agree with <c>Published</c>; not sent when
+    /// omitted.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
     /// <exception cref="EmporixInsufficientScopeException">The token lacks <c>category.category_manage</c>.</exception>
+    /// <remarks>
+    /// To create a published category, set <c>Published</c> and pass
+    /// <paramref name="publish"/> as <see langword="true"/>: without the flag
+    /// Emporix answers <c>400</c>. Publishing needs the
+    /// <c>category.category_publish</c> scope.
+    /// </remarks>
     public async Task<CategoryIdResponse?> CreateAsync(
         CategoryCreateRequest category,
+        bool? publish = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -453,6 +479,7 @@ public sealed class CategoryService
                 Method = HttpMethod.Post,
                 Path = BasePath,
                 Auth = Service(auth),
+                Query = PublishQuery(publish),
                 Content = EmporixJsonContent.Create(
                     category,
                     CategoryJsonContext.Default.CategoryCreateRequest),
@@ -464,11 +491,22 @@ public sealed class CategoryService
     /// <summary>Changes individual fields of a category.</summary>
     /// <param name="categoryId">The category id.</param>
     /// <param name="changes">The fields to change.</param>
+    /// <param name="publish">
+    /// Publishes or unpublishes the category. Must agree with <c>Published</c>;
+    /// not sent when omitted.
+    /// </param>
     /// <param name="auth">What to authorise with; a service token when omitted.</param>
     /// <param name="cancellationToken">Cancels the call.</param>
+    /// <remarks>
+    /// The specification requires the flag here as on create and replace, but on
+    /// 2026-11-24 a live PATCH ignored it: <c>Published</c> alone decided, in both
+    /// directions. Pass it anyway so the call keeps working if Emporix starts
+    /// enforcing it.
+    /// </remarks>
     public Task UpdateAsync(
         string categoryId,
         CategoryPartialUpdateRequest changes,
+        bool? publish = null,
         AuthContext auth = default,
         CancellationToken cancellationToken = default)
     {
@@ -481,6 +519,7 @@ public sealed class CategoryService
                 Method = HttpMethod.Patch,
                 Path = $"{BasePath}/{Uri.EscapeDataString(categoryId)}",
                 Auth = Service(auth),
+                Query = PublishQuery(publish),
                 Content = EmporixJsonContent.Create(
                     changes,
                     CategoryJsonContext.Default.CategoryPartialUpdateRequest),
