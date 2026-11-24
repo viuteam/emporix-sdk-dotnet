@@ -55,9 +55,15 @@ public sealed class AuditLogService
     /// <para>
     /// <b>An unfiltered call is not «everything ever».</b> With no conjunctive
     /// <c>occurredAt</c> lower bound in <paramref name="query"/>, Emporix
-    /// silently applies a trailing 30-day window. Widen it with an explicit
+    /// silently applies a trailing 7-day window — 30 days until the
+    /// specification of 2026-11-24. Widen it with an explicit
     /// top-level or <c>AND</c>-ed range — one that appears only inside an
     /// <c>OR</c> arm does not lift the default.
+    /// </para>
+    /// <para>
+    /// <b>Offset pagination only.</b> Emporix also pages this list by cursor,
+    /// without totals; this method never asks for that mode, so the answer
+    /// always carries the page number and the totals.
     /// </para>
     /// <para>
     /// <b><c>entityId</c> needs <c>entity</c>.</b> Filtering by id alone answers

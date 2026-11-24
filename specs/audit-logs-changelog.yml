@@ -25,7 +25,7 @@ paths:
       summary: Retrieving logs
       operationId: GET-changelog-retrieve-tenant-changelogs
       description: |-
-        Retrieves a paginated list of changes for the tenant. Results are ordered by occurrence time.
+        Retrieves a paginated list of changes for the tenant. Results are ordered by occurrence time, newest first.
 
         Filter results with the standard `q` query parameter. Supported fields:
 
@@ -40,31 +40,77 @@ paths:
         Scope a single document with `entity` and `entityId` in `q`. There is no path-based history endpoint.
 
         {% hint style="info" %}
-        When the query omits a conjunctive `occurredAt` from-bound, the API applies a default trailing window of **30 days**. Pass an explicit top-level or `AND` `occurredAt` range to override it. An `occurredAt` only inside an `OR` arm does not disable the default window.
+        When `q` has no `occurredAt` lower bound outside an `OR` condition, the API applies a default window of the last **7 days**, in offset mode and in cursor mode. An `occurredAt` lower bound that appears only inside an `OR` condition does not stop the default window. To use a different window, add an explicit `occurredAt` range to `q` outside an `OR` condition.
         {% endhint %}
+
+        The endpoint supports the following pagination modes, selected with the `pagination` query parameter:
+
+        * `offset` – the default mode. Request a page with `page` and `size`. The response contains the page number and the `totalElements` and `totalPages` totals.
+        * `cursor` – a mode that pages through the entries without counting them. Request a page with `size`, and with `next` or `prev` for every page after the first one. The response contains only `items`, with no totals.
+
+        In cursor mode, the endpoint works in the following way:
+
+        * When an older page exists, the response returns its cursor in the `x-next-cursor` response header. When a newer page exists, the response returns its cursor in the `x-prev-cursor` response header. To retrieve that page, send the `x-next-cursor` value in the `next` query parameter, or the `x-prev-cursor` value in the `prev` query parameter. A `next` or `prev` parameter alone also selects cursor mode.
+        * Entries are ordered by `occurredAt` descending, and then by an internal event identifier descending, so the order of entries with the same timestamp is stable across pages.
+        * A cursor pages inside the time window fixed by the first page. The window starts at the `occurredAt` lower bound in `q`, or at the start of the default window. The window ends at the `occurredAt` upper bound in `q`. If `q` has no upper bound, the window ends at the time of the first request, and entries that occurred after it are not returned on later pages. To include them, request a new first page.
+        * A cursor is bound to the tenant, `q`, and `size` of the request that returned it. Send the same `q` and `size` with every cursor. Otherwise, the request fails with `400`.
+
+        For a step-by-step example, see [How to page with cursors](https://developer.emporix.io/api-documentation/api-guides/utilities/audit-logs-changelog/audit-logs-changelog#how-to-page-with-cursors).
       security:
         - OAuth2:
             - changelog.changelog_read
             - changelog.changelog_manage
       parameters:
         - $ref: '#/components/parameters/query_q'
+        - $ref: '#/components/parameters/query_pagination'
         - $ref: '#/components/parameters/query_page'
         - $ref: '#/components/parameters/query_size'
+        - $ref: '#/components/parameters/query_next'
+        - $ref: '#/components/parameters/query_prev'
       responses:
         '200':
           description: |-
             The request was successful. A paginated list of changed entries has been returned.
+
+            In offset mode, the body also contains the page number and the totals. In cursor mode, the body contains only `items`, and the cursors for the older and the newer pages are returned in the `x-next-cursor` and `x-prev-cursor` response headers. An empty page returns neither cursor header.
+          headers:
+            x-next-cursor:
+              description: |-
+                Cursor mode only. Opaque cursor for the next page, which contains older entries. Send it in the `next` query parameter.
+
+                The header is returned in the following cases:
+
+                * on the first page or a `next` page, when older entries exist
+                * on a `prev` page, when the page is not empty
+              schema:
+                type: string
+            x-prev-cursor:
+              description: |-
+                Cursor mode only. Opaque cursor for the previous page, which contains newer entries. Send it in the `prev` query parameter.
+
+                The header is returned in the following cases:
+
+                * on a `next` page, when the page is not empty
+                * on a `prev` page, when newer entries exist
+
+                The header is never returned on the first page.
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChangelogHistoryResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/ChangelogHistoryResponse'
+                  - $ref: '#/components/schemas/ChangelogCursorPageResponse'
               examples:
                 Order status update:
                   $ref: '#/components/examples/changelogHistoryOrderUpdate'
                 Related group-assignment rows:
                   $ref: '#/components/examples/changelogHistoryRelated'
+                Cursor page:
+                  $ref: '#/components/examples/changelogCursorPage'
         '400':
-          description: Bad Request. The page, size, or q parameter is invalid.
+          description: Bad Request. The `page`, `size`, `pagination`, `next`, `prev`, or `q` parameter is invalid.
           content:
             application/json:
               schema:
@@ -86,6 +132,30 @@ paths:
                   value:
                     status: 400
                     message: entity is required when entityId is provided
+                Malformed cursor:
+                  value:
+                    status: 400
+                    message: The cursor in 'next' is invalid or malformed. Request the first page again without a cursor.
+                Cursor issued for another query:
+                  value:
+                    status: 400
+                    message: 'The cursor in ''next'' does not match the query (tenant, q, size) it was issued for. Request the first page again without a cursor.'
+                Both next and prev:
+                  value:
+                    status: 400
+                    message: The 'next' and 'prev' query parameters cannot be used together.
+                Unknown pagination mode:
+                  value:
+                    status: 400
+                    message: 'pagination must be one of: offset, cursor.'
+                Cursor with offset mode:
+                  value:
+                    status: 400
+                    message: '''next'' and ''prev'' require pagination=cursor.'
+                Page in cursor mode:
+                  value:
+                    status: 400
+                    message: '''page'' is not supported with pagination=cursor; use ''next'' or ''prev''.'
         '401':
           $ref: '#/components/responses/Unauthorized_401'
         '403':
@@ -146,6 +216,8 @@ components:
         type: integer
       description: |
         Page number to be retrieved. The number of the first page is 1.
+
+        **Note:** The `page` parameter is supported only in offset mode. If you send it in cursor mode, the request fails with `400`. In cursor mode, use `next` or `prev`.
     query_size:
       name: size
       in: query
@@ -156,7 +228,45 @@ components:
         maximum: 100
         type: integer
       description: |
-        Number of changed entries to be retrieved per page. Maximum value is 100.
+        Number of changed entries to be retrieved per page, in both pagination modes. Maximum value is 100.
+
+        **Note:** In cursor mode, send the same `size` with every cursor that you received.
+    query_pagination:
+      name: pagination
+      in: query
+      required: false
+      schema:
+        type: string
+        default: offset
+        enum:
+          - offset
+          - cursor
+      description: |-
+        Pagination mode. Possible values:
+        * `offset` – page-number pagination with `page` and `size`. The response contains the totals.
+        * `cursor` – cursor pagination with `size`, and with `next` or `prev`. The response contains only `items`, and the cursors are returned in the `x-next-cursor` and `x-prev-cursor` response headers.
+
+        **Note:** A `next` or `prev` parameter also selects cursor mode when `pagination` is omitted. If you send `next` or `prev` with `pagination=offset`, the request fails with `400`.
+    query_next:
+      name: next
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Cursor mode only. Opaque cursor from the `x-next-cursor` response header. Use it to retrieve the next page, which contains older entries.
+
+        **Note:** You cannot send `next` and `prev` in the same request. Send the same `q` and `size` as in the request that returned the cursor. Otherwise, the request fails with `400`.
+    query_prev:
+      name: prev
+      in: query
+      required: false
+      schema:
+        type: string
+      description: |
+        Cursor mode only. Opaque cursor from the `x-prev-cursor` response header. Use it to retrieve the previous page, which contains newer entries.
+
+        **Note:** You cannot send `next` and `prev` in the same request. Send the same `q` and `size` as in the request that returned the cursor. Otherwise, the request fails with `400`.
   schemas:
     ChangelogHistoryResponse:
       type: object
@@ -186,6 +296,18 @@ components:
         - size
         - totalElements
         - totalPages
+    ChangelogCursorPageResponse:
+      type: object
+      description: |-
+        Page of tenant changelog history returned in cursor mode. The body contains no totals. The cursors for the older and the newer pages are returned in the `x-next-cursor` and `x-prev-cursor` response headers.
+      properties:
+        items:
+          type: array
+          description: List of changed entries for the requested page, newest first. The list is empty when no entries match.
+          items:
+            $ref: '#/components/schemas/ChangelogChangeItem'
+      required:
+        - items
     ChangelogChangeItem:
       type: object
       description: A single changelog entry describing a change to a platform entity.
@@ -311,6 +433,30 @@ components:
         size: 20
         totalElements: 1
         totalPages: 1
+    changelogCursorPage:
+      summary: Cursor page, newest first
+      value:
+        items:
+          - at: '2026-06-01T13:01:29.123Z'
+            type: update
+            entity: order
+            entityId: 6a2bce93592855a33518fc2f
+            paths:
+              status:
+                before: CREATED
+                after: CONFIRMED
+            schemaVersion: v2
+            actor: John Doe
+          - at: '2026-06-01T10:00:00.000Z'
+            type: create
+            entity: group-assignment
+            entityId: 264e59c0-0130-4f1b-a83f-cea06264a397
+            actor: system
+            related:
+              - entity: group
+                entityId: 1gr5e52e-6e27-4ac5-9471-2467d3fb7501
+              - entity: customer
+                entityId: cd6818c8-ec9b-42d4-83c4-8c51dfbe9ce0
   responses:
     Unauthorized_401:
       description: Given request is unauthorized - the authorization token is invalid or has expired. Details will be provided in the response payload.

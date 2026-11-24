@@ -78,6 +78,30 @@ namespace Viu.Emporix.AuditLogsChangelogModels
     }
 
     /// <summary>
+    /// Page of tenant changelog history returned in cursor mode. The body contains no totals. The cursors for the older and the newer pages are returned in the `x-next-cursor` and `x-prev-cursor` response headers.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ChangelogCursorPageResponse
+    {
+
+        /// <summary>
+        /// List of changed entries for the requested page, newest first. The list is empty when no entries match.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        public System.Collections.Generic.ICollection<ChangelogChangeItem> Items { get; set; } = new System.Collections.ObjectModel.Collection<ChangelogChangeItem>();
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    /// <summary>
     /// A single changelog entry describing a change to a platform entity.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -254,6 +278,21 @@ namespace Viu.Emporix.AuditLogsChangelogModels
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter<Pagination>))]
+    public enum Pagination
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"offset")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("offset")]
+        Offset = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"cursor")]
+        [System.Text.Json.Serialization.JsonStringEnumMemberName("cursor")]
+        Cursor = 1,
 
     }
 

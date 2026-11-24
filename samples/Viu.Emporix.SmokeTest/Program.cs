@@ -689,16 +689,16 @@ await runner.RunAsync("shopping lists", async () =>
         : Step.Empty("nobody has a shopping list on this tenant");
 });
 
-await runner.RunAsync("audit log, last 30 days", async () =>
+await runner.RunAsync("audit log, last 7 days", async () =>
 {
-    // Unfiltered means «the last 30 days», not «everything» — Emporix applies
+    // Unfiltered means «the last 7 days», not «everything» — Emporix applies
     // that window itself. An empty answer here is a quiet tenant, not a fault.
     Viu.Emporix.AuditLogsChangelogModels.ChangelogHistoryResponse? page =
         await client.AuditLogs.ListAsync(size: 5, auth: service);
 
     return page is { Items.Count: > 0 }
         ? Step.Ok($"{page.TotalElements} change(s) in the window")
-        : Step.Empty("no change recorded in the last 30 days");
+        : Step.Empty("no change recorded in the last 7 days");
 });
 
 // Media. The one pass that writes, and the reason it exists: attaching an asset

@@ -139,6 +139,9 @@ public class SpecResponseTests
             + "One type serves all three, and legalEntity simply stays empty here.",
         ["POST /approval/{}/approvals reads ApprovalServiceModels.CreatedResource, declared ApprovalServiceModels.ApprovalId"] =
             "Both generated types are exactly { id }; only the name differs, and renaming a public return type would buy nothing.",
+        ["GET /changelog/{}/changelogs reads AuditLogsChangelogModels.ChangelogHistoryResponse, declared oneOf(AuditLogsChangelogModels.ChangelogHistoryResponse | AuditLogsChangelogModels.ChangelogCursorPageResponse)"] =
+            "The oneOf is the pagination mode. The facade never sends pagination, next or prev, so the server stays in "
+            + "offset mode and answers ChangelogHistoryResponse; the cursor body is the other mode's.",
     };
 
     private const string Union =
