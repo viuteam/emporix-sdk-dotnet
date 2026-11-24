@@ -197,9 +197,9 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>* `PROCESSED` – read to completion. Set only once its records have been written, so a run that
         /// <br/>  fails part-way leaves the file importable.
         /// <br/>* `FAILED` – the stream that read the file finished `FAILED`. The file could not be read
-        /// <br/>  (malformed, truncated, wrong charset), or the import failed for another reason, such as the
-        /// <br/>  target being unavailable. Such a file can be queued again with the content the service holds, or
-        /// <br/>  uploaded again. Records that fail individually do not
+        /// <br/>  (malformed CSV or XML, truncated, wrong charset), or the import failed for another reason,
+        /// <br/>  such as the target being unavailable. Such a file can be queued again with the content the
+        /// <br/>  service holds, or uploaded again. Records that fail individually do not
         /// <br/>  put a file here: a stream that finishes with record failures still marks its file imported.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("status")]
@@ -547,10 +547,10 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>* `limit` – the maximum number of records one run reads (`Max records`). A positive number
         /// <br/>  only; text or zero means no cap. A dry run reads at most the smaller of this and its own sample size.
         /// <br/>* `record` – the source record, table, or endpoint to read.
-        /// <br/>* For a file source: the delimited-file format (`delimiter`, `quote`, `escape`, `charset`,
-        /// <br/>  `header`, `skipLines`, `nullLiterals`, `trimValues`, `compression`, `failOnRaggedRow`) and
-        /// <br/>  `arrays`, which reshapes repeated flat columns into nested form. The original columns are kept,
-        /// <br/>  and each array is added beside them under its name followed by `[]` — for example `lineItems[]`
+        /// <br/>* For a file source whose connection reads CSV: the delimited-file format (`delimiter`, `quote`,
+        /// <br/>  `escape`, `charset`, `header`, `skipLines`, `nullLiterals`, `trimValues`, `compression`,
+        /// <br/>  `failOnRaggedRow`) and `arrays`, which reshapes repeated flat columns into nested form. The
+        /// <br/>  original columns are kept, and each array is added beside them under its name followed by `[]` — for example `lineItems[]`
         /// <br/>  for `lineItems.0.sku`, or `COUNTRIES[]` for a delimited `COUNTRIES` column:
         /// <br/>  * `style` – how a repeated column is recognised: `DOT` (`lineItems.0.sku`), `BRACKET`
         /// <br/>    (`lineItems[0].sku`), `SUFFIX` (`phone_1`), or `NONE` (the default), which recognises no
@@ -560,6 +560,28 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>  * `maxElements` – the maximum number of elements one array can hold. Defaults to 1000; the
         /// <br/>    highest allowed value is 10000. A row with a longer array is not truncated: only that row
         /// <br/>    fails, with the error code `REJECTED_BY_SOURCE`, and the rest of the file is imported.
+        /// <br/>* For a file source whose connection reads XML: `nullLiterals`, `trimValues`, `compression`, and
+        /// <br/>  `maxColumns`, which also apply to CSV, and the following properties. For XML, `maxColumns` bounds
+        /// <br/>  the elements and attributes of one record, within the service's own ceiling.
+        /// <br/>  * `recordsPath` – the element that repeats once per record. Use a dotted path below the root
+        /// <br/>    element, for example `CD` for `&lt;CATALOG&gt;&lt;CD&gt;` or `channel.item` for an RSS feed, or an absolute
+        /// <br/>    path that starts with `/` and names the root element, for example `/CATALOG/CD`. A path that
+        /// <br/>    names only the root element, such as `/Invoice`, reads the whole document as one record. When the property is empty, the element is detected
+        /// <br/>    from each file. A stream created in the Import Tool stores the detected path, so every file is
+        /// <br/>    read the same way. If the path matches nothing in a file where another element repeats, the
+        /// <br/>    stream fails with the error code `CONFIGURATION`, and `message` names the element that repeats.
+        /// <br/>    If no other element repeats, the file yields no records.
+        /// <br/>  * `repeatingElements` – a list of element paths, relative to the record, that are always read as
+        /// <br/>    a list, even in a record that contains only one of them. Elements seen repeating at the start
+        /// <br/>    of a file are read as lists anyway.
+        /// <br/>
+        /// <br/>  Each record's fields are named like the fields of an XML response from an HTTP source: child
+        /// <br/>  elements by their dotted path (`Item.Name`), attributes like child elements
+        /// <br/>  (`LineExtensionAmount.currencyID`), the text of an element that also has attributes as `_text`
+        /// <br/>  (`LineExtensionAmount._text`), and repeated elements as a list under their name followed by `[]`
+        /// <br/>  (`AllowanceCharge[]`). Namespace prefixes are dropped. A record with more elements and
+        /// <br/>  attributes than `maxColumns` allows fails alone with the error code `REJECTED_BY_SOURCE`,
+        /// <br/>  and the rest of the file is imported.
         /// <br/>* For an HTTP source: `pagination`, `queryParams`, `bodyTemplate`, and `format` (`JSON` or
         /// <br/>  `XML`).
         /// </summary>
@@ -1214,7 +1236,9 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>* `NO_KEY` – the record's key column was empty, so it cannot be identified.
         /// <br/>* `UPSERT` – the target rejected the write.
         /// <br/>* `CONFIGURATION` – something to change in the import's own configuration, not a fault: a
-        /// <br/>  missing base URL, refused credentials, an unknown path, a stream that names no parent.
+        /// <br/>  missing base URL, refused credentials, an unknown path, a stream that names no parent, an XML
+        /// <br/>  records path that matches nothing while another element repeats, or an XML file that is not well-formed. For a malformed file,
+        /// <br/>  `message` names the file, the line, and the column.
         /// <br/>* `EXTERNAL_SYSTEM` – another system answered with an error, for example the source returning
         /// <br/>  5xx or a source-side extraction failure.
         /// <br/>* `MERGE`, `PATCH_EMBED` – a composite merge or an embed patch onto the parent failed.
@@ -1222,9 +1246,9 @@ namespace Viu.Emporix.ImportServiceModels
         /// <br/>* `MARKER_DELETE`, `TOMBSTONE_DELETE`, `TOMBSTONE_NO_KEY` – a delete detected by a status
         /// <br/>  marker or a tombstone record could not be applied.
         /// <br/>* `REJECTED_BY_SOURCE` – the source rejected a single record because of its data, for example a
-        /// <br/>  delimited-file row whose array has more elements than `sourceDataset.arrays.maxElements`. That
-        /// <br/>  record is not imported, but the other records are; `message` names the column, its number of
-        /// <br/>  elements, and the limit.
+        /// <br/>  delimited-file row whose array has more elements than `sourceDataset.arrays.maxElements`, or an
+        /// <br/>  XML record with more elements and attributes than `sourceDataset.maxColumns` allows. That record is not
+        /// <br/>  imported, but the other records are; `message` names what exceeded the limit.
         /// <br/>* `FAN_OUT_REMOVE` – a `FAN_OUT` stream could not remove the objects its parent record no longer
         /// <br/>  lists. The next run that carries those records tries again.
         /// <br/>* `STREAM_ERROR` – the stream failed as a whole; the record-level detail is in `message`.
