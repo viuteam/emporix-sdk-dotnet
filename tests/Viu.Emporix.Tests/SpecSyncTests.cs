@@ -110,6 +110,32 @@ public class SpecSyncTests
         Assert.Empty(SyncManifest.Diff(null, Manifest(("a", "1"))));
     }
 
+    [Fact]
+    public async Task A_cached_fetch_downloads_once_and_then_reads_offline()
+    {
+        // The CI skill run fetches with no network once Claude starts, from raw
+        // copies an earlier step left behind.
+        string cache = Path.Combine(Path.GetTempPath(), $"spec-cache-{Guid.NewGuid():N}");
+        SpecSource spec = new("media", "https://example.test/media.yml");
+        StubHttpMessageHandler handler = new(System.Net.HttpStatusCode.OK, "openapi: 3.0.0\n");
+        using HttpClient http = new(handler);
+
+        try
+        {
+            string first = await SpecDownload.ReadAsync(http, spec, cache, CancellationToken.None);
+            string second = await SpecDownload.ReadAsync(http, spec, cache, CancellationToken.None);
+
+            Assert.Equal("openapi: 3.0.0\n", first);
+            Assert.Equal(first, second);
+            Assert.Equal(1, handler.CallCount);
+            Assert.Equal(first, await File.ReadAllTextAsync(Path.Combine(cache, "media.yml")));
+        }
+        finally
+        {
+            Directory.Delete(cache, recursive: true);
+        }
+    }
+
     // ---------- Post-processing the generated code ----------
 
     [Fact]
