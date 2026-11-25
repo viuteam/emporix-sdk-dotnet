@@ -77,16 +77,21 @@ test("the sandbox step unloads Ubuntu's bwrap-userns-restrict AppArmor profile",
 
 test("the sandbox's placeholder files are excluded from git before Claude runs", () => {
   const checkout = step("Check out the sync PR with the workflow's skill");
-  for (const name of ["/.bashrc", "/.gitconfig", "/.mcp.json", "/.vscode/", "/.sandbox-tmp/", "/Directory.Build.rsp"]) {
+  for (const name of ["/.bashrc", "/.gitconfig", "/.mcp.json", "/.vscode/", "/.sandbox-tmp/"]) {
     assert.ok(checkout.includes(name), name);
   }
   assert.match(checkout, />> \.git\/info\/exclude/);
 });
 
-test("MSBuild runs in one process inside the sandbox", () =>
-  // The first dry run: worker nodes could not open their named pipes, so
-  // solution builds failed with MSB1025 and update-public-api.sh recorded nothing.
-  assert.match(step("Install sandbox dependencies"), /printf '%s\\n' -maxCpuCount:1 -nodeReuse:false > Directory\.Build\.rsp/));
+test("the sandbox may write /tmp and nothing else beyond the checkout, and reach no domain", () => {
+  // MSBuild binds its worker nodes' pipes under /tmp, ignoring TMPDIR. Without
+  // it the first two dry runs failed solution builds with EACCES and MSB1025.
+  // A -maxCpuCount:1 in Directory.Build.rsp does not help: the dotnet CLI passes
+  // -maxcpucount on the command line, which wins.
+  const { sandbox } = JSON.parse(readFileSync(fileURLToPath(new URL("claude-settings.json", import.meta.url)), "utf8"));
+  assert.deepEqual(sandbox.filesystem, { allowWrite: ["/tmp"] });
+  assert.deepEqual(sandbox.network, { allowedDomains: [] });
+});
 
 test("the turn cap leaves room for subagent turns", () => {
   // The action fails the step when the result's num_turns exceeds --max-turns,

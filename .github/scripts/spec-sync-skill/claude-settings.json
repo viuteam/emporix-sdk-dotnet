@@ -4,6 +4,7 @@
     "failIfUnavailable": true,
     "allowUnsandboxedCommands": false,
     "network": { "allowedDomains": [] },
+    "filesystem": { "allowWrite": ["/tmp"] },
     "credentials": {
       "envVars": [
         { "name": "CLAUDE_CODE_OAUTH_TOKEN", "mode": "deny" },
