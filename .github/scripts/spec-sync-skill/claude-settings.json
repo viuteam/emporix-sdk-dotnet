@@ -1,0 +1,48 @@
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "network": { "allowedDomains": [] },
+    "credentials": {
+      "envVars": [
+        { "name": "CLAUDE_CODE_OAUTH_TOKEN", "mode": "deny" },
+        { "name": "GITHUB_TOKEN", "mode": "deny" },
+        { "name": "GH_TOKEN", "mode": "deny" },
+        { "name": "ACTIONS_RUNTIME_TOKEN", "mode": "deny" },
+        { "name": "ACTIONS_ID_TOKEN_REQUEST_TOKEN", "mode": "deny" }
+      ]
+    }
+  },
+  "permissions": {
+    "deny": [
+      "Read(//proc/**)",
+      "Edit(.git/config)",
+      "Edit(.git/hooks/**)",
+      "Edit(.git/info/**)",
+      "Edit(.claude/**)",
+      "Edit(.github/**)",
+      "Edit(.config/**)",
+      "Edit(scripts/**)",
+      "Edit(**/*.csproj)",
+      "Edit(**/*.props)",
+      "Edit(**/*.targets)",
+      "Edit(global.json)",
+      "Edit(**/NuGet.config)",
+      "Edit(src/Viu.Emporix/PublicAPI.Shipped.txt)",
+      "Write(.git/config)",
+      "Write(.git/hooks/**)",
+      "Write(.git/info/**)",
+      "Write(.claude/**)",
+      "Write(.github/**)",
+      "Write(.config/**)",
+      "Write(scripts/**)",
+      "Write(**/*.csproj)",
+      "Write(**/*.props)",
+      "Write(**/*.targets)",
+      "Write(global.json)",
+      "Write(**/NuGet.config)",
+      "Write(src/Viu.Emporix/PublicAPI.Shipped.txt)"
+    ]
+  }
+}

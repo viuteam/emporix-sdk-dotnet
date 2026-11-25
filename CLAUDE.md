@@ -43,6 +43,18 @@ dotnet run --project tools/Viu.Emporix.SpecSync -- fetch    # download and repai
 dotnet run --project tools/Viu.Emporix.SpecSync -- generate # regenerate types only
 ```
 
+The daily `spec-sync.yml` opens `chore/spec-sync` even when its tests fail, and
+can then run the `emporix-api-sync` skill with Claude, which opens the follow-up
+PR on `chore/spec-sync-skill`. The repository variable `SPEC_SYNC_SKILL`
+(`off`, `rehearsal`, `live`) switches the scheduled run; the workflow's header
+explains the jobs and why the Claude job can write nothing.
+
+```bash
+gh workflow run spec-sync.yml -f skill_mode=dry                      # run the skill, publish nothing
+gh workflow run spec-sync.yml -f skill_mode=dry -f base_ref=<branch> # replay a past sync
+node --test .github/scripts/spec-sync-skill/*.test.mjs               # the gate and publish rules
+```
+
 ```bash
 dotnet publish samples/Viu.Emporix.Sample --configuration Release      # the real AOT check
 dotnet publish samples/Viu.Emporix.Storefront --configuration Release
