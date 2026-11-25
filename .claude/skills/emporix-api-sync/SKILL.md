@@ -372,11 +372,13 @@ it, so the report is what makes the PR checkable.
   phrased.
 - **Commands.** Only these forms are allowed; anything else is refused. Keep
   each Bash call to one of them, piped into `tail` or `head` at most — `cd`,
-  subshells, `$?`, variables and command substitution need an approval nobody
-  can give here.
+  `;`, subshells, `$?`, variables and command substitution need an approval
+  nobody can give here. Search with the Grep tool, not `grep` in Bash.
   - `dotnet build --no-restore`, `dotnet test --no-restore …`,
     `dotnet test --no-build …`. Everything NuGet needs was restored before you
-    started; a restore would need the network.
+    started; a restore would need the network. MSBuild runs in one process
+    through a `Directory.Build.rsp` the workflow wrote, because its worker
+    nodes cannot open named pipes in the sandbox; leave that file alone.
   - `./scripts/update-public-api.sh`
   - `python3 .claude/skills/emporix-api-sync/scripts/annotate_operations.py …`
   - `dotnet run --no-restore --project tools/Viu.Emporix.SpecSync -- fetch`,
@@ -390,7 +392,7 @@ it, so the report is what makes the PR checkable.
 - **Scope.** Change only `src/Viu.Emporix/`, `tests/`,
   `tools/Viu.Emporix.SpecSync/`, `docs/`, `samples/`, `README.md` and
   `CLAUDE.md`, plus `specs/` and `Generated/` through SpecSync. No project file,
-  `.props`, `.targets`, `PublicAPI.Shipped.txt`, nothing under `.github/`,
+  `.props`, `.targets`, `.rsp`, `PublicAPI.Shipped.txt`, nothing under `.github/`,
   `.claude/` or `scripts/`. The workflow rejects a result that touches anything
   else. `Generated/` stays hand-edit-free as always.
 - **Commits.** Commit on `skill-work` with conventional, English subjects, and

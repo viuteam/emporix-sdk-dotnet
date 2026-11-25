@@ -22,7 +22,7 @@ const CHECKS = new Set(["pass", "fail"]);
 // the shipped API baseline stays out, so no break can be hidden.
 const ALLOWED_PREFIXES = ["specs/", "src/Viu.Emporix/", "tests/", "tools/Viu.Emporix.SpecSync/", "docs/", "samples/"];
 const ALLOWED_FILES = new Set(["README.md", "CLAUDE.md"]);
-const FORBIDDEN = [/\.(csproj|props|targets)$/i, /(^|\/)(nuget\.config|global\.json|packages\.lock\.json)$/i, /PublicAPI\.Shipped\.txt$/];
+const FORBIDDEN = [/\.(csproj|props|targets|rsp)$/i, /(^|\/)(nuget\.config|global\.json|packages\.lock\.json)$/i, /PublicAPI\.Shipped\.txt$/];
 // The pattern commit-convention.yml applies to a PR title.
 const CONVENTIONAL = /^(feat|fix|perf|refactor|docs|deps|chore|test|ci|build|style|revert)(\([a-z0-9._-]+\))?!?: .+/;
 

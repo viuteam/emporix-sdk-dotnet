@@ -16,7 +16,8 @@ api_file="src/Viu.Emporix/PublicAPI.Unshipped.txt"
 export DOTNET_CLI_UI_LANGUAGE=en
 
 # The build fails while entries are missing — which is the normal case here.
-build_output="$(dotnet build --nologo 2>&1 || true)"
+build_status=0
+build_output="$(dotnet build --nologo 2>&1)" || build_status=$?
 
 symbols="$(printf '%s\n' "$build_output" \
   | grep -o "RS0016: Symbol '[^']*'" \
@@ -37,6 +38,13 @@ removed="$(printf '%s\n' "$build_output" \
   | sort -u || true)"
 
 if [[ -z "$symbols" && -z "$removed" ]]; then
+  # A build that failed for another reason reports no RS0016 either, and
+  # calling that «up to date» hid an MSBuild failure in the spec-sync sandbox.
+  if [[ $build_status -ne 0 ]]; then
+    printf '%s\n' "$build_output" | tail -n 20 >&2
+    echo "The build failed without a missing API entry — fix the build first." >&2
+    exit 1
+  fi
   echo "No missing entries — PublicAPI.Unshipped.txt is up to date."
   exit 0
 fi

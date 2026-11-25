@@ -58,6 +58,7 @@ test("offendingPaths", () => {
     "src/Viu.Emporix/Viu.Emporix.csproj",
     "tests/Viu.Emporix.Tests/Viu.Emporix.Tests.csproj",
     "src/Directory.Build.props",
+    "tests/Directory.Build.rsp",
     "samples/NuGet.config",
     "src/Viu.Emporix/PublicAPI.Shipped.txt",
     "src/Viu.Emporix.MixinSync/Program.cs",

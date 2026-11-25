@@ -27,6 +27,7 @@
       "Edit(**/*.csproj)",
       "Edit(**/*.props)",
       "Edit(**/*.targets)",
+      "Edit(**/*.rsp)",
       "Edit(global.json)",
       "Edit(**/NuGet.config)",
       "Edit(src/Viu.Emporix/PublicAPI.Shipped.txt)",
@@ -40,6 +41,7 @@
       "Write(**/*.csproj)",
       "Write(**/*.props)",
       "Write(**/*.targets)",
+      "Write(**/*.rsp)",
       "Write(global.json)",
       "Write(**/NuGet.config)",
       "Write(src/Viu.Emporix/PublicAPI.Shipped.txt)"
