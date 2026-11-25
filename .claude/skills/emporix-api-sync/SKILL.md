@@ -376,11 +376,13 @@ it, so the report is what makes the PR checkable.
   nobody can give here. Search with the Grep tool, not `grep` in Bash.
   - `dotnet build --no-restore`, `dotnet test --no-restore …`,
     `dotnet test --no-build …`. Everything NuGet needs was restored before you
-    started; a restore would need the network. If a build fails with
-    `0 Error(s)` or `MSB1025` and a `SocketException` in
-    `NamedPipeServerStream`, the sandbox refused MSBuild's pipes: say so under
-    «Sandbox notes» and retry with `-m:1`.
-  - `./scripts/update-public-api.sh`
+    started; a restore would need the network. **Always add `-m:1`.** The
+    sandbox refuses the Unix sockets MSBuild's worker nodes talk over, and
+    without it a solution build fails with `0 Error(s)` or `MSB1025`.
+  - `./scripts/update-public-api.sh -m:1`. If it says «No missing entries»
+    while the build reports `RS0016`, the checked-out script predates its
+    `-m:1` support: copy the `RS0016` symbols into `PublicAPI.Unshipped.txt`
+    yourself, in the script's format.
   - `python3 .claude/skills/emporix-api-sync/scripts/annotate_operations.py …`
   - `dotnet run --no-restore --project tools/Viu.Emporix.SpecSync -- fetch`,
     then `… -- generate`, only after you added a repair to `SpecPatches.cs`.

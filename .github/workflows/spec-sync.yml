@@ -304,9 +304,9 @@ jobs:
         env:
           CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: '1'
           EMPORIX_SPEC_CACHE: ${{ runner.temp }}/spec-cache
-          # The sandbox writes to the checkout and to /tmp, where MSBuild puts the
-          # pipes of its worker nodes whatever TMPDIR says. Build servers and node
-          # reuse are off, and the temporary directory is one inside the checkout.
+          # The sandbox writes to the checkout only and refuses Unix sockets, so
+          # build servers and node reuse are off, Claude builds with -m:1 as the
+          # skill says, and the temporary directory is one inside the checkout.
           TMPDIR: ${{ github.workspace }}/.sandbox-tmp
           DOTNET_CLI_TELEMETRY_OPTOUT: '1'
           DOTNET_NOLOGO: '1'

@@ -16,8 +16,10 @@ api_file="src/Viu.Emporix/PublicAPI.Unshipped.txt"
 export DOTNET_CLI_UI_LANGUAGE=en
 
 # The build fails while entries are missing — which is the normal case here.
+# Arguments go to dotnet build: the spec-sync sandbox passes -m:1, because it
+# refuses the sockets MSBuild's worker nodes need.
 build_status=0
-build_output="$(dotnet build --nologo 2>&1)" || build_status=$?
+build_output="$(dotnet build --nologo "$@" 2>&1)" || build_status=$?
 
 symbols="$(printf '%s\n' "$build_output" \
   | grep -o "RS0016: Symbol '[^']*'" \

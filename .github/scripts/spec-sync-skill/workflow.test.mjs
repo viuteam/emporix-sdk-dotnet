@@ -83,13 +83,13 @@ test("the sandbox's placeholder files are excluded from git before Claude runs",
   assert.match(checkout, />> \.git\/info\/exclude/);
 });
 
-test("the sandbox may write /tmp and nothing else beyond the checkout, and reach no domain", () => {
-  // MSBuild binds its worker nodes' pipes under /tmp, ignoring TMPDIR. Without
-  // it the first two dry runs failed solution builds with EACCES and MSB1025.
-  // A -maxCpuCount:1 in Directory.Build.rsp does not help: the dotnet CLI passes
-  // -maxcpucount on the command line, which wins.
+test("the sandbox gets no extra write path, no domain and no Unix sockets", () => {
+  // MSBuild's worker nodes need Unix sockets, which the sandbox's seccomp filter
+  // refuses: socket() itself fails with EACCES, so no write path helps. Allowing
+  // every Unix socket would also open the runner's Docker socket, which is root.
+  // Claude passes -m:1 instead, as the skill says.
   const { sandbox } = JSON.parse(readFileSync(fileURLToPath(new URL("claude-settings.json", import.meta.url)), "utf8"));
-  assert.deepEqual(sandbox.filesystem, { allowWrite: ["/tmp"] });
+  assert.equal(sandbox.filesystem, undefined);
   assert.deepEqual(sandbox.network, { allowedDomains: [] });
 });
 

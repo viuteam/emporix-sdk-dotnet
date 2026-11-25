@@ -148,7 +148,9 @@ def uncovered_from_test(root: Path) -> list[str]:
     """Run the coverage test and read the uncovered set out of its failure."""
     result = subprocess.run(
         [
-            "dotnet", "test", "--nologo", "--verbosity", "normal",
+            # -m:1: the spec-sync sandbox refuses the sockets of MSBuild's
+            # worker nodes, and one test project gains nothing from them.
+            "dotnet", "test", "--nologo", "--verbosity", "normal", "-m:1",
             "--filter", "Every_operation_a_specification_declares_has_a_facade",
         ],
         cwd=root, capture_output=True, text=True, check=False,
