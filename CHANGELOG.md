@@ -9,6 +9,13 @@ by Release Please when its release pull request is merged, and the sections belo
 it are generated from the commit history — see
 [docs/releasing.md](docs/releasing.md).
 
+## [0.20.1](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.20.0...v0.20.1) (2026-11-24)
+
+
+### Fixed
+
+* document the 7-day audit log window and vendor cursor paging ([#124](https://github.com/viuteam/emporix-sdk-dotnet/issues/124)) ([541f80e](https://github.com/viuteam/emporix-sdk-dotnet/commit/541f80e59f9b597b0e188e54ee5f1850774eb888))
+
 ## [0.20.0](https://github.com/viuteam/emporix-sdk-dotnet/compare/v0.19.0...v0.20.0) (2026-11-24)
 
 
