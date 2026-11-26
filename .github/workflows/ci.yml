@@ -79,3 +79,20 @@ jobs:
             echo "::error::The public API surface has changed. Run scripts/update-public-api.sh and commit the result."
             exit 1
           fi
+
+  # The scripts of the skill run in spec-sync.yml. They decide what a run with
+  # Claude may publish, so their checks run on every change like the SDK's.
+  spec-sync-skill:
+    name: Spec-sync skill scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Test the gate, packaging and publish scripts
+        run: node --test .github/scripts/spec-sync-skill/*.test.mjs

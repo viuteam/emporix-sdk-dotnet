@@ -2,12 +2,56 @@ name: Emporix specification sync
 
 # Daily check for upstream changes to the Emporix OpenAPI specifications. When
 # the vendored copies drift, regenerate the types, verify they still build and
-# open a single pull request. The full quality gate runs on that PR through
-# ci.yml.
+# open a single pull request on chore/spec-sync. The full quality gate runs on
+# that PR through ci.yml.
+#
+# The PR opens even when tests fail. They fail when Emporix adds an operation no
+# facade wraps, or changes the type a facade reads — the case that needs the
+# most work, and the one that used to leave no PR at all.
+#
+# After the vendoring, two jobs run the `emporix-api-sync` skill with Claude. It
+# is a port of the Node SDK's design (viuteam/emporix-sdk,
+# docs/superpowers/specs/2026-11-23-api-sync-claude-design.md):
+#
+# - `skill` gates first (mode, sync PR, a fingerprint of the spec content, so
+#   the same content never runs twice on a schedule), then runs Claude on the
+#   sync PR's head. It holds only the read-only GITHUB_TOKEN and the Claude
+#   OAuth token, no OIDC permission and nothing that writes, because the build
+#   and tests Claude runs execute code it just wrote. Bash runs in Claude Code's
+#   sandbox without network, the token is scrubbed from subprocesses, and the
+#   result is searched for the token before it is uploaded.
+# - `publish` holds the write permissions and runs no LLM. It validates the
+#   hand-over (a git bundle plus report.md and outcome.json) and pushes
+#   chore/spec-sync-skill and opens or edits its PR, or comments on the sync PR.
+#   It never pushes over a review or a push it did not make.
+#
+# Both PRs are opened with the workflow's GITHUB_TOKEN, so their checks start as
+# «action required»: a maintainer approves them, as for the sync PR before.
+#
+# Modes: scheduled runs read the repository variable SPEC_SYNC_SKILL
+# (off | rehearsal | live; unset is off). A manual run takes the input
+# skill_mode (off | dry | rehearsal | live; default off, so a manual re-run of
+# the vendoring stays as it was). `dry` publishes nothing and writes the report
+# to the job summary; with base_ref it runs on that branch instead of the sync
+# PR, which is how a past sync is replayed.
+#
+# `sync` runs on main only, so a dry run dispatched on a feature branch never
+# opens the sync PR against that branch.
 on:
   schedule:
     - cron: '0 6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      skill_mode:
+        description: Run the emporix-api-sync skill with Claude after the sync
+        type: choice
+        # Quoted: a YAML 1.1 parser reads a bare off as the boolean false.
+        options: ['off', 'dry', 'rehearsal', 'live']
+        default: 'off'
+      base_ref:
+        description: Dry runs only — a branch to run the skill on instead of the sync PR
+        type: string
+        default: ''
 
 concurrency:
   group: spec-sync
@@ -15,12 +59,16 @@ concurrency:
 
 jobs:
   sync:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     permissions:
       contents: write
       pull-requests: write
+
+    outputs:
+      has_changes: ${{ steps.detect.outputs.has_changes }}
 
     steps:
       - uses: actions/checkout@v7
@@ -64,12 +112,19 @@ jobs:
       # The smoke gate: a broken generation fails here, so a broken PR is never
       # opened. The public API file is refreshed because new or removed model
       # types change the declared surface.
-      - name: Build and test
+      - name: Build
         if: steps.detect.outputs.has_changes == 'true'
         run: |
           ./scripts/update-public-api.sh
           dotnet build --configuration Release
-          dotnet test --no-build --configuration Release
+
+      # Not a gate. A failing SpecPathTests or SpecResponseTests is what the
+      # skill run is for, and it needs this PR to work on.
+      - name: Test
+        id: test
+        if: steps.detect.outputs.has_changes == 'true'
+        continue-on-error: true
+        run: dotnet test --no-build --configuration Release
 
       # Titled `fix:` rather than `chore:` on purpose. A sync can retype a
       # property — that is exactly how taxClass.name went from a map to a
@@ -101,7 +156,7 @@ jobs:
 
             - `specs/*.yml` re-fetched from [`emporix/api-references`](https://github.com/emporix/api-references)
             - `src/Viu.Emporix/Generated/` regenerated through NSwag
-            - build and tests pass
+            - ${{ steps.test.outcome == 'success' && 'build and tests pass' || 'the build passes, **the tests fail**. Usually an operation no facade wraps yet, or a response type that moved. When the skill run is on, its follow-up PR from `chore/spec-sync-skill` includes this one: merge that instead.' }}
 
             Review the generated type diff before merging. Watch the sync log for
             repairs reported as **stale** — those mean Emporix fixed a defect and
@@ -113,3 +168,233 @@ jobs:
             specs
             src/Viu.Emporix/Generated
             src/Viu.Emporix/PublicAPI.Unshipped.txt
+
+  skill:
+    needs: sync
+    if: ${{ !cancelled() && ((needs.sync.result == 'success' && needs.sync.outputs.has_changes == 'true') || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      pull-requests: read
+
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+      mode: ${{ steps.gate.outputs.mode }}
+      base_sha: ${{ steps.gate.outputs.base_sha }}
+      bot_pr: ${{ steps.gate.outputs.bot_pr }}
+      fingerprint: ${{ steps.gate.outputs.fingerprint }}
+
+    # Directories under $RUNNER_TEMP (the `runner` context is not available at
+    # job level): spec-sync-skill holds context.json and Claude's report and
+    # outcome; spec-sync-skill-artifact is what gets uploaded; spec-cache holds
+    # the raw upstream specifications. Everything that runs after Claude with
+    # the token lives in root-owned /opt/spec-sync-skill.
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Gate
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SPEC_SYNC_SKILL: ${{ vars.SPEC_SYNC_SKILL }}
+          SKILL_MODE: ${{ inputs.skill_mode }}
+          BASE_REF: ${{ inputs.base_ref }}
+          OUT_DIR: ${{ runner.temp }}/spec-sync-skill
+        run: node .github/scripts/spec-sync-skill/gate.mjs
+
+      # The skill comes from the workflow's own commit, so a dry run on a feature
+      # branch uses that branch's skill. Git must not see the overlay, or Claude
+      # would commit it; on main the files are identical and nothing changes.
+      - name: Check out the sync PR with the workflow's skill
+        if: steps.gate.outputs.run == 'true'
+        env:
+          BASE_SHA: ${{ steps.gate.outputs.base_sha }}
+          SKILL_DIR: .claude/skills/emporix-api-sync
+        run: |
+          mkdir -p "$RUNNER_TEMP/spec-sync-skill-artifact"
+          sudo install -d -m 755 /opt/spec-sync-skill
+          for file in claude-settings.json package.mjs probe.mjs; do
+            sudo install -m 644 ".github/scripts/spec-sync-skill/$file" "/opt/spec-sync-skill/$file"
+          done
+          git checkout -q --detach "$BASE_SHA"
+          git checkout -q "$GITHUB_SHA" -- "$SKILL_DIR"
+          git reset -q -- "$SKILL_DIR"
+          git ls-files -m -- "$SKILL_DIR" | xargs -r git update-index --skip-worktree
+          git ls-files -o --exclude-standard -- "$SKILL_DIR" >> .git/info/exclude
+          # The sandbox's bubblewrap mount points show up in the repo root during
+          # each sandboxed command; a `git add -A` there must not pick them up.
+          # .sandbox-tmp is the temporary directory the Claude step points to.
+          printf '%s\n' /.bashrc /.bash_profile /.zshrc /.zprofile /.profile /.gitconfig \
+            /.gitmodules /.ripgreprc /.mcp.json /.vscode/ /.idea/ /.sandbox-tmp/ >> .git/info/exclude
+          mkdir -p .sandbox-tmp
+          test -z "$(git status --porcelain)"
+          git switch -q -c skill-work
+          git config user.name "emporix-api-sync-skill"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/setup-dotnet@v6
+        if: steps.gate.outputs.run == 'true'
+        with:
+          dotnet-version: '10.0.x'
+
+      # Claude's Bash has no network, so everything NuGet needs is restored
+      # here, and Claude builds with --no-restore.
+      - name: Restore and build
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          dotnet tool restore
+          dotnet restore
+          dotnet build --no-restore
+
+      # SpecSync applies its repairs on fetch. A repair Claude adds takes effect
+      # only through a fetch, so the raw upstream files are kept for one it runs
+      # offline. The vendored state of the sync PR is put back afterwards.
+      - name: Keep the raw specifications
+        if: steps.gate.outputs.run == 'true'
+        env:
+          EMPORIX_SPEC_CACHE: ${{ runner.temp }}/spec-cache
+        run: |
+          dotnet run --no-build --project tools/Viu.Emporix.SpecSync -- fetch
+          git checkout -q -- specs
+          test -z "$(git status --porcelain)"
+
+      # Claude Code's Bash sandbox needs bubblewrap and socat, and Ubuntu 24.04
+      # restricts the unprivileged user namespaces bubblewrap uses. Ubuntu 26.04
+      # also ships the AppArmor profile bwrap-userns-restrict, which runs
+      # bwrap's children without capabilities, so the sandbox's nested user
+      # namespace fails and every Bash call with it (anthropics/claude-code#105194).
+      # Unloading it on this throwaway runner lets the sandbox start. A failure
+      # here must stop the run instead of letting it continue unsandboxed.
+      - name: Install sandbox dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends bubblewrap socat
+          if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          if [ -f /etc/apparmor.d/bwrap-userns-restrict ]; then
+            sudo apparmor_parser -R /etc/apparmor.d/bwrap-userns-restrict
+          fi
+
+      # The code Claude runs can write the checkout, .git/config included, and a
+      # config key such as diff.external or core.fsmonitor makes git run a
+      # command. The steps after Claude hold the token, so they restore this copy
+      # first.
+      - name: Keep a copy of the git config
+        if: steps.gate.outputs.run == 'true'
+        run: sudo install -m 644 .git/config /opt/spec-sync-skill/git-config
+
+      - name: Run the skill
+        id: claude
+        if: steps.gate.outputs.run == 'true'
+        # Inside the job's 60 minutes, so a slow run is a step failure and the
+        # packaging still gets its turn.
+        timeout-minutes: 45
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: '1'
+          EMPORIX_SPEC_CACHE: ${{ runner.temp }}/spec-cache
+          # The sandbox writes to the checkout only and refuses Unix sockets, so
+          # build servers and node reuse are off, Claude builds with -m:1 as the
+          # skill says, and the temporary directory is one inside the checkout.
+          TMPDIR: ${{ github.workspace }}/.sandbox-tmp
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+          DOTNET_NOLOGO: '1'
+          DOTNET_CLI_UI_LANGUAGE: en
+          DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+          MSBUILDDISABLENODEREUSE: '1'
+          UseSharedCompilation: 'false'
+          # The audit needs the network. The restore above audited, and the
+          # checks on the PR audit again.
+          NuGetAudit: 'false'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          settings: /opt/spec-sync-skill/claude-settings.json
+          prompt: |
+            /emporix-api-sync
+            CI mode: follow "Running unattended in CI" in the skill.
+            Mode: ${{ steps.gate.outputs.mode }}
+            Context file: ${{ runner.temp }}/spec-sync-skill/context.json
+            Output directory: ${{ runner.temp }}/spec-sync-skill
+          claude_args: >-
+            --permission-mode default --model opus --max-turns 200
+            --add-dir ${{ runner.temp }}/spec-sync-skill
+            --allowedTools "Read,Glob,Grep,Skill,Edit(src/Viu.Emporix/**),Edit(tests/**),Edit(tools/Viu.Emporix.SpecSync/**),Edit(docs/**),Edit(samples/**),Edit(README.md),Edit(CLAUDE.md),Edit(/${{ runner.temp }}/spec-sync-skill/**),Write(src/Viu.Emporix/**),Write(tests/**),Write(tools/Viu.Emporix.SpecSync/**),Write(docs/**),Write(samples/**),Write(README.md),Write(CLAUDE.md),Write(/${{ runner.temp }}/spec-sync-skill/**),Bash(dotnet build --no-restore:*),Bash(dotnet test --no-restore:*),Bash(dotnet test --no-build:*),Bash(dotnet run --no-restore --project tools/Viu.Emporix.SpecSync:*),Bash(dotnet run --no-build --project tools/Viu.Emporix.SpecSync:*),Bash(./scripts/update-public-api.sh:*),Bash(python3 .claude/skills/emporix-api-sync/scripts/annotate_operations.py:*),Bash(node /opt/spec-sync-skill/probe.mjs),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git restore:*),WebFetch(domain:developer.emporix.io),WebFetch(domain:github.com),WebFetch(domain:raw.githubusercontent.com)"
+
+      # The repository is public and GitHub masks secrets in logs only, so the
+      # token must not reach a commit, the report or the artifact. The protected
+      # script bundles the commits, then searches every object the bundle carries
+      # and the report files for the token; it fails closed on an empty token.
+      # `rm` fails if .git is no longer a directory, which stops the step.
+      - name: Package and check the result
+        id: package
+        if: always() && steps.gate.outputs.run == 'true'
+        env:
+          TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          BASE_SHA: ${{ steps.gate.outputs.base_sha }}
+          MODE: ${{ steps.gate.outputs.mode }}
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        run: |
+          rm -f .git/config
+          sudo cat /opt/spec-sync-skill/git-config > .git/config
+          node /opt/spec-sync-skill/package.mjs
+
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.gate.outputs.run == 'true' && steps.package.outcome == 'success'
+        with:
+          name: spec-sync-skill
+          path: ${{ runner.temp }}/spec-sync-skill-artifact
+          retention-days: 7
+          if-no-files-found: ignore
+
+  publish:
+    needs: skill
+    if: ${{ !cancelled() && needs.skill.outputs.run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # The workflow's own token: the sync PR is written with it too. No App is
+    # needed; the price is that the PR's checks wait for an approval.
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      # The workflow's own commit: only its publish script runs. The bundle is
+      # fetched into a ref and inspected, never checked out or executed.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: spec-sync-skill
+          path: ${{ runner.temp }}/spec-sync-skill-artifact
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ needs.skill.outputs.mode }}
+          BASE_SHA: ${{ needs.skill.outputs.base_sha }}
+          BOT_PR: ${{ needs.skill.outputs.bot_pr }}
+          FINGERPRINT: ${{ needs.skill.outputs.fingerprint }}
+          SKILL_RESULT: ${{ needs.skill.result }}
+          ARTIFACT_DIR: ${{ runner.temp }}/spec-sync-skill-artifact
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node .github/scripts/spec-sync-skill/publish.mjs

@@ -35,22 +35,18 @@ async Task<int> FetchAsync()
     List<string> staleWarnings = [];
     object gate = new();
 
-    Console.WriteLine($"Downloading {SpecCatalog.All.Count} specifications …");
+    string? cacheDirectory = Environment.GetEnvironmentVariable(SpecDownload.CacheVariable);
+
+    Console.WriteLine(string.IsNullOrEmpty(cacheDirectory)
+        ? $"Downloading {SpecCatalog.All.Count} specifications …"
+        : $"Reading {SpecCatalog.All.Count} specifications through the raw copies in {cacheDirectory} …");
 
     await Parallel.ForEachAsync(
         SpecCatalog.All,
         new ParallelOptions { MaxDegreeOfParallelism = 8 },
         async (spec, cancellationToken) =>
         {
-            using HttpResponseMessage response = await http.GetAsync(spec.Url, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new InvalidOperationException(
-                    $"{spec.Name}: {(int)response.StatusCode} from {spec.Url}");
-            }
-
-            string raw = await response.Content.ReadAsStringAsync(cancellationToken);
+            string raw = await SpecDownload.ReadAsync(http, spec, cacheDirectory, cancellationToken);
 
             // Repair before writing and hashing: the vendored specification is
             // then already correct and the digest stays stable across runs.
